@@ -537,6 +537,11 @@ $tableLabels = [
                         <?php endif; ?>
                     </button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tabBtn-update" data-bs-toggle="tab" data-bs-target="#tab-update" type="button" role="tab">
+                        <i class="fas fa-arrow-up me-1"></i>版本检测
+                    </button>
+                </li>
             </ul>
 
             <div class="tab-content" id="toolsTabContent">
@@ -1370,6 +1375,37 @@ $tableLabels = [
                     </div>
                 </div>
 
+                <!-- ============================================================
+                     6) 版本检测（GitHub Release 在线更新）
+                     ============================================================ -->
+                <div class="tab-pane fade" id="tab-update" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h5 class="mb-0"><i class="fas fa-arrow-up"></i>版本检测</h5>
+                                <span class="card-subtitle">通过 GitHub API 检测最新 Release 版本</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">当前版本</label>
+                                <input type="text" class="form-control" value="<?php echo $functions->escape(defined('APP_VERSION') ? APP_VERSION : '未知'); ?>" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">仓库地址</label>
+                                <input type="text" class="form-control" value="https://github.com/xuanyu1937/XYdaohang" readonly>
+                            </div>
+                            <div id="updateCheckResult" class="mb-3" style="display:none;"></div>
+                            <button type="button" class="btn btn-primary" id="checkUpdateBtn" onclick="checkForUpdate()">
+                                <i class="fas fa-sync-alt me-1"></i>检测新版本
+                            </button>
+                            <div id="updateSpinner" class="mt-3" style="display:none;">
+                                <span class="spinner-border spinner-border-sm me-2"></span>正在检测...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -1381,6 +1417,68 @@ $tableLabels = [
     // 通用确认框
     function confirmTools(msg) {
         return window.confirm(msg);
+    }
+
+    // 版本检测：通过 GitHub API 获取最新 Release
+    function checkForUpdate() {
+        var btn = document.getElementById('checkUpdateBtn');
+        var spinner = document.getElementById('updateSpinner');
+        var result = document.getElementById('updateCheckResult');
+
+        btn.disabled = true;
+        spinner.style.display = 'block';
+        result.style.display = 'none';
+
+        var currentVersion = '<?php echo $functions->escape(defined('APP_VERSION') ? APP_VERSION : '0.0.0'); ?>';
+
+        fetch('https://api.github.com/repos/xuanyu1937/XYdaohang/releases/latest', {
+            headers: { 'Accept': 'application/vnd.github.v3+json' }
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            spinner.style.display = 'none';
+            btn.disabled = false;
+            result.style.display = 'block';
+
+            if (!data.tag_name) {
+                result.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-1"></i>未获取到 Release 信息，请稍后重试</div>';
+                return;
+            }
+
+            var latestVersion = data.tag_name.replace(/^v/, '');
+            var isNew = compareVersions(latestVersion, currentVersion) > 0;
+
+            if (isNew) {
+                result.innerHTML =
+                    '<div class="alert alert-success">' +
+                    '<h6><i class="fas fa-arrow-up me-1"></i>发现新版本：v' + latestVersion + '</h6>' +
+                    '<p class="mb-2">' + (data.body || '').replace(/\n/g, '<br>').substring(0, 500) + '</p>' +
+                    '<a href="' + data.html_url + '" target="_blank" class="btn btn-sm btn-success me-2"><i class="fas fa-download me-1"></i>前往下载</a>' +
+                    '<a href="https://github.com/xuanyu1937/XYdaohang/releases" target="_blank" class="btn btn-sm btn-outline-secondary">查看全部版本</a>' +
+                    '</div>';
+            } else {
+                result.innerHTML = '<div class="alert alert-info"><i class="fas fa-check-circle me-1"></i>当前已是最新版本（v' + currentVersion + '）</div>';
+            }
+        })
+        .catch(function () {
+            spinner.style.display = 'none';
+            btn.disabled = false;
+            result.style.display = 'block';
+            result.innerHTML = '<div class="alert alert-danger"><i class="fas fa-times-circle me-1"></i>检测失败，请检查网络连接后重试</div>';
+        });
+    }
+
+    // 版本号比较：返回 -1/0/1
+    function compareVersions(a, b) {
+        var pa = a.split('.').map(Number);
+        var pb = b.split('.').map(Number);
+        for (var i = 0; i < Math.max(pa.length, pb.length); i++) {
+            var na = pa[i] || 0;
+            var nb = pb[i] || 0;
+            if (na > nb) return 1;
+            if (na < nb) return -1;
+        }
+        return 0;
     }
 
     // 复制文本（优先使用 Clipboard API，失败时回退到临时 textarea）
@@ -1438,7 +1536,7 @@ $tableLabels = [
             storedTab = null;
         }
 
-        var valid = ['backup', 'api', 'cron', 'mail', 'messages'];
+        var valid = ['backup', 'api', 'cron', 'mail', 'messages', 'update'];
         var target = serverTab || storedTab;
 
         if (valid.indexOf(target) === -1) {

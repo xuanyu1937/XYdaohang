@@ -341,14 +341,51 @@ class UserService extends BaseService
             return null;
         }
 
-        $stmt = $this->db->prepare(
-            'SELECT id, email, username, is_admin, is_default_user, status, created_at, last_login
-             FROM users WHERE id = ? LIMIT 1'
-        );
-        $stmt->execute([(int) $id]);
-        $user = $stmt->fetch();
+        try {
+            $stmt = $this->db->prepare(
+                'SELECT id, email, username, is_admin, is_default_user, status, created_at, last_login, avatar
+                 FROM users WHERE id = ? LIMIT 1'
+            );
+            $stmt->execute([(int) $id]);
+            $user = $stmt->fetch();
+        } catch (Throwable $error) {
+            // 老库无 avatar 列时退回旧查询
+            $stmt = $this->db->prepare(
+                'SELECT id, email, username, is_admin, is_default_user, status, created_at, last_login
+                 FROM users WHERE id = ? LIMIT 1'
+            );
+            $stmt->execute([(int) $id]);
+            $user = $stmt->fetch();
+        }
 
         return $user ?: null;
+    }
+
+    /**
+     * 更新用户头像。
+     *
+     * @param int $id 用户 id
+     * @param string $avatar 头像路径或 URL，空字符串表示清除头像
+     * @return bool
+     */
+    public function updateAvatar($id, $avatar)
+    {
+        $id = (int) $id;
+        $avatar = trim((string) $avatar);
+
+        if ($id <= 0 || !$this->usersTableExists()) {
+            return false;
+        }
+
+        try {
+            $stmt = $this->db->prepare('UPDATE users SET avatar = ? WHERE id = ?');
+            $stmt->execute([$avatar === '' ? null : $avatar, $id]);
+
+            return $stmt->rowCount() >= 0;
+        } catch (Throwable $error) {
+            // 老库无 avatar 列时忽略
+            return false;
+        }
     }
 
     public function findByEmail($email)
@@ -1134,6 +1171,55 @@ class AiService extends BaseService
 
 class CategoryEngine extends BaseService
 {
+    /** @var int 当前用户 id（0 = 访客），用于分组隔离与私密可见性判断 */
+    protected $userId = 0;
+
+    /**
+     * 设置当前用户 id，影响 all() / nameToId() / ensure() 的可见范围。
+     */
+    public function setUserId($userId)
+    {
+        $this->userId = (int) $userId;
+    }
+
+    /**
+     * 后台管理专用：返回全部分类（含所有用户的私密分组），附带所属用户名。
+     */
+    public function allAdmin($withCounts = false)
+    {
+        $countCounts = $withCounts ? ', (SELECT COUNT(*) FROM nav_links nl
+                          WHERE nl.category_id = c.id AND nl.is_active = 1 AND nl.deleted_at IS NULL) AS link_count' : '';
+
+        try {
+            $sql = 'SELECT c.id, c.parent_id, c.name, c.icon, c.sort_order, c.remark, c.user_id, c.is_private,
+                           u.username AS owner_name'
+                . $countCounts
+                . ' FROM categories c'
+                . ' LEFT JOIN users u ON c.user_id = u.id'
+                . ' ORDER BY c.user_id, c.sort_order, c.id';
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+
+            return $stmt->fetchAll();
+        } catch (Throwable $error) {
+            // 老库无 user_id / is_private 列时退回旧结构
+            $legacyCounts = $withCounts ? ', (SELECT COUNT(*) FROM nav_links nl
+                          WHERE nl.category_id = c.id AND nl.is_active = 1) AS link_count' : '';
+
+            $sql = 'SELECT c.id, NULL AS parent_id, c.name, NULL AS icon, c.sort_order, NULL AS remark,
+                           0 AS user_id, 0 AS is_private, NULL AS owner_name'
+                . $legacyCounts
+                . ' FROM categories c ORDER BY c.sort_order, c.id';
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+
+            return $stmt->fetchAll();
+        }
+    }
+
+    /**
     /**
      * 关键词 → 分类名 的默认规则（仅用于自动归类建议，命中优先级从上到下）。
      */
@@ -1162,28 +1248,48 @@ class CategoryEngine extends BaseService
 
     /**
      * 全部分类（含层级信息）。
-     * 未执行 v2 升级脚本的老库会缺少 parent_id / icon / remark，这里退回到旧结构查询，
-     * 避免前台因为一个新增列而白屏。
+     *
+     * @param int $userId 当前用户 id（0 = 访客）。
+     *   - 访客：仅可见公共分组（user_id = 0）且非私密（is_private = 0）
+     *   - 登录用户：可见公共分组 + 自己创建的分组（含私密）
+     * @param bool $withCounts 是否附带链接数量
+     * @return array
      */
-    public function all($withCounts = false)
+    public function all($userId = null, $withCounts = false)
     {
+        $userId = $userId === null ? (int) $this->userId : (int) $userId;
         $countCounts = $withCounts ? ', (SELECT COUNT(*) FROM nav_links nl
                           WHERE nl.category_id = c.id AND nl.is_active = 1 AND nl.deleted_at IS NULL) AS link_count' : '';
 
+        // 可见性条件：
+        //   访客：user_id = 0 AND is_private = 0
+        //   登录用户：(user_id = 0 AND is_private = 0) OR user_id = ?
+        $where = $userId > 0
+            ? ' WHERE (c.user_id = 0 AND c.is_private = 0) OR c.user_id = ?'
+            : ' WHERE c.user_id = 0 AND c.is_private = 0';
+
         try {
-            $sql = 'SELECT c.id, c.parent_id, c.name, c.icon, c.sort_order, c.remark'
+            $sql = 'SELECT c.id, c.parent_id, c.name, c.icon, c.sort_order, c.remark, c.user_id, c.is_private'
                 . $countCounts
-                . ' FROM categories c ORDER BY c.sort_order, c.id';
+                . ' FROM categories c'
+                . $where
+                . ' ORDER BY c.sort_order, c.id';
 
             $stmt = $this->db->prepare($sql);
-            $stmt->execute();
+
+            if ($userId > 0) {
+                $stmt->execute([$userId]);
+            } else {
+                $stmt->execute();
+            }
 
             return $stmt->fetchAll();
         } catch (Throwable $error) {
+            // 老库尚无 user_id / is_private 列时退回旧结构（全部分类）
             $legacyCounts = $withCounts ? ', (SELECT COUNT(*) FROM nav_links nl
                           WHERE nl.category_id = c.id AND nl.is_active = 1) AS link_count' : '';
 
-            $sql = 'SELECT c.id, NULL AS parent_id, c.name, NULL AS icon, c.sort_order, NULL AS remark'
+            $sql = 'SELECT c.id, NULL AS parent_id, c.name, NULL AS icon, c.sort_order, NULL AS remark, 0 AS user_id, 0 AS is_private'
                 . $legacyCounts
                 . ' FROM categories c ORDER BY c.sort_order, c.id';
 
@@ -1194,30 +1300,33 @@ class CategoryEngine extends BaseService
         }
     }
 
-    public function nameToId()
+    public function nameToId($userId = null)
     {
         $map = [];
 
-        foreach ($this->all() as $row) {
+        foreach ($this->all($userId) as $row) {
             $map[(string) $row['name']] = (int) $row['id'];
         }
 
         return $map;
     }
 
-    public function findByName($name)
+    public function findByName($name, $userId = null)
     {
-        $stmt = $this->db->prepare('SELECT id, name FROM categories WHERE name = ? LIMIT 1');
-        $stmt->execute([trim((string) $name)]);
+        $userId = $userId === null ? (int) $this->userId : (int) $userId;
+        $stmt = $this->db->prepare('SELECT id, name FROM categories WHERE name = ? AND user_id = ? LIMIT 1');
+        $stmt->execute([trim((string) $name), $userId]);
 
         return $stmt->fetch() ?: null;
     }
 
     /**
      * 分类不存在时创建（用于书签文件夹导入）。
+     * 分类归属当前用户（$this->userId），仅在该用户的分组内查重。
      */
-    public function ensure($name, $icon = '', $parentId = null)
+    public function ensure($name, $icon = '', $parentId = null, $userId = null)
     {
+        $userId = $userId === null ? (int) $this->userId : (int) $userId;
         $name = trim((string) $name);
 
         if ($name === '') {
@@ -1226,18 +1335,27 @@ class CategoryEngine extends BaseService
 
         $name = $this->textCut($name, 50);
 
-        $existing = $this->findByName($name);
+        $existing = $this->findByName($name, $userId);
 
         if ($existing) {
             return (int) $existing['id'];
         }
 
-        $stmt = $this->db->prepare(
-            'INSERT INTO categories (parent_id, name, icon, sort_order, created_at) 
-             VALUES (?, ?, ?, (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM (SELECT sort_order FROM categories) t), NOW())'
-        );
+        try {
+            $stmt = $this->db->prepare(
+                'INSERT INTO categories (parent_id, name, icon, sort_order, user_id, is_private, created_at) 
+                 VALUES (?, ?, ?, (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM (SELECT sort_order FROM categories) t), ?, 0, NOW())'
+            );
 
-        $stmt->execute([$parentId ? (int) $parentId : null, $name, (string) $icon]);
+            $stmt->execute([$parentId ? (int) $parentId : null, $name, (string) $icon, $userId]);
+        } catch (Throwable $error) {
+            // 老库无 user_id / is_private 列时退回旧写法
+            $stmt = $this->db->prepare(
+                'INSERT INTO categories (parent_id, name, icon, sort_order, created_at) 
+                 VALUES (?, ?, ?, (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM (SELECT sort_order FROM categories) t), NOW())'
+            );
+            $stmt->execute([$parentId ? (int) $parentId : null, $name, (string) $icon]);
+        }
 
         return (int) $this->db->lastInsertId();
     }

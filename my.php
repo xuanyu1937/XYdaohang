@@ -22,6 +22,68 @@ if (!$user) {
 $userId = (int) $user['id'];
 $db = Database::getInstance()->getConnection();
 $engine = new CategoryEngine($functions);
+$engine->setUserId($userId);
+
+// 头像上传处理
+$avatarMessage = '';
+$avatarError = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_avatar'])) {
+    $functions->requireSameOrigin();
+
+    $action = (string) ($_POST['avatar_action'] ?? 'upload');
+
+    if ($action === 'remove') {
+        if ($users->updateAvatar($userId, '')) {
+            $avatarMessage = '头像已清除';
+        } else {
+            $avatarError = '清除头像失败，请稍后重试';
+        }
+    } elseif (!empty($_FILES['avatar_file']['name'])) {
+        $file = $_FILES['avatar_file'];
+
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            $avatarError = '上传失败，请重试';
+        } else {
+            $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp'];
+            $finfo = function_exists('finfo_open') ? finfo_open(FILEINFO_MIME_TYPE) : null;
+            $mimeType = $finfo ? finfo_file($finfo, $file['tmp_name']) : ($file['type'] ?? '');
+            if ($finfo) {
+                finfo_close($finfo);
+            }
+
+            if (!isset($allowed[$mimeType])) {
+                $avatarError = '仅支持 JPG / PNG / GIF / WebP 格式';
+            } elseif ($file['size'] > 2 * 1024 * 1024) {
+                $avatarError = '头像大小不能超过 2MB';
+            } else {
+                $uploadDir = __DIR__ . '/uploads/avatars';
+                if (!is_dir($uploadDir)) {
+                    @mkdir($uploadDir, 0755, true);
+                }
+
+                $ext = $allowed[$mimeType];
+                $fileName = 'avatar_' . $userId . '_' . time() . '.' . $ext;
+                $destPath = $uploadDir . '/' . $fileName;
+
+                if (move_uploaded_file($file['tmp_name'], $destPath)) {
+                    $relativePath = 'uploads/avatars/' . $fileName;
+                    if ($users->updateAvatar($userId, $relativePath)) {
+                        $avatarMessage = '头像更新成功';
+                        $user = $users->findById($userId); // 刷新用户信息
+                    } else {
+                        @unlink($destPath);
+                        $avatarError = '保存头像失败，请稍后重试';
+                    }
+                } else {
+                    $avatarError = '保存头像失败，请检查目录权限';
+                }
+            }
+        }
+    } else {
+        $avatarError = '请选择要上传的头像图片';
+    }
+}
 
 $brandName = trim((string) $functions->getSetting('site_title'));
 $brandName = $brandName !== '' ? $brandName : '轩宇-导航';
@@ -305,6 +367,34 @@ $hasLinks = $totalLinks > 0;
             color: #fff;
             font-size: 14px;
             font-weight: 700;
+        }
+
+        .my-avatar-img {
+            width: 34px;
+            height: 34px;
+            flex: 0 0 34px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .my-avatar-edit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border: none;
+            border-radius: 50%;
+            background: var(--surface-2);
+            color: var(--text-2);
+            cursor: pointer;
+            font-size: 11px;
+            transition: background 0.16s ease, color 0.16s ease;
+        }
+
+        .my-avatar-edit:hover {
+            background: var(--primary-soft);
+            color: var(--primary);
         }
 
         .my-username {
@@ -813,8 +903,20 @@ $hasLinks = $totalLinks > 0;
 
             <div class="header-tools">
                 <div class="my-userbar">
-                    <span class="my-avatar" aria-hidden="true"><?php echo $functions->escape($brandInitial); ?></span>
+                    <?php
+                    $userAvatar = trim((string) ($user['avatar'] ?? ''));
+                    $avatarUrl = $userAvatar !== '' ? $functions->getLogoDisplayUrl($userAvatar) : '';
+                    ?>
+                    <?php if ($avatarUrl !== ''): ?>
+                        <img class="my-avatar-img" src="<?php echo $functions->escape($avatarUrl); ?>" alt="头像" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <span class="my-avatar" aria-hidden="true" style="display:none;"><?php echo $functions->escape($brandInitial); ?></span>
+                    <?php else: ?>
+                        <span class="my-avatar" aria-hidden="true"><?php echo $functions->escape($brandInitial); ?></span>
+                    <?php endif; ?>
                     <span class="my-username" title="<?php echo $functions->escape($user['username']); ?>"><?php echo $functions->escape($user['username']); ?></span>
+                    <button type="button" class="my-avatar-edit" id="avatarEditBtn" title="设置头像">
+                        <i class="fas fa-camera"></i>
+                    </button>
                 </div>
                 <button type="button" class="theme-toggle" id="themeToggle" aria-label="切换深浅色" title="切换深浅色">
                     <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1159,6 +1261,56 @@ $hasLinks = $totalLinks > 0;
         </div>
     </dialog>
 
+    <!-- 头像设置弹窗 -->
+    <dialog class="my-dialog" id="avatarDialog">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="my-dialog-head">
+                <h3>设置头像</h3>
+                <button type="button" class="my-iconbtn" id="avatarDialogClose" aria-label="关闭">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+                </button>
+            </div>
+
+            <div class="my-dialog-body">
+                <?php if ($avatarMessage !== ''): ?>
+                    <p class="my-msg" role="alert" style="display:block; color: var(--success, #16a34a);"><?php echo $functions->escape($avatarMessage); ?></p>
+                <?php endif; ?>
+                <?php if ($avatarError !== ''): ?>
+                    <p class="my-msg is-error" role="alert" style="display:block;"><?php echo $functions->escape($avatarError); ?></p>
+                <?php endif; ?>
+
+                <div class="my-field">
+                    <label>当前头像</label>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <?php if ($avatarUrl !== ''): ?>
+                            <img src="<?php echo $functions->escape($avatarUrl); ?>" alt="当前头像" style="width:64px;height:64px;border-radius:50%;object-fit:cover;">
+                        <?php else: ?>
+                            <span style="width:64px;height:64px;border-radius:50%;background:var(--primary,#667eea);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;"><?php echo $functions->escape($brandInitial); ?></span>
+                        <?php endif; ?>
+                        <span class="my-note">支持 JPG / PNG / GIF / WebP，最大 2MB</span>
+                    </div>
+                </div>
+
+                <div class="my-field">
+                    <label for="avatarFile">上传新头像</label>
+                    <input type="file" id="avatarFile" name="avatar_file" accept="image/jpeg,image/png,image/gif,image/webp">
+                </div>
+            </div>
+
+            <div class="my-dialog-foot">
+                <button type="submit" name="update_avatar" value="1" class="my-btn is-primary">
+                    <i class="fas fa-upload"></i> 上传头像
+                </button>
+                <?php if ($avatarUrl !== ''): ?>
+                    <button type="submit" name="update_avatar" value="1" formaction="" class="my-btn" onclick="document.getElementById('avatarAction').value='remove';">
+                        <i class="fas fa-trash"></i> 清除头像
+                    </button>
+                <?php endif; ?>
+                <input type="hidden" name="avatar_action" id="avatarAction" value="upload">
+            </div>
+        </form>
+    </dialog>
+
     <script>
         (function () {
             'use strict';
@@ -1320,6 +1472,22 @@ $hasLinks = $totalLinks > 0;
             qs('#emptyAddBtn') && qs('#emptyAddBtn').addEventListener('click', function () { openLinkDialog(null); });
             qs('#linkDialogClose') && qs('#linkDialogClose').addEventListener('click', closeLinkDialog);
             qs('#linkCancel') && qs('#linkCancel').addEventListener('click', closeLinkDialog);
+
+            // 头像设置弹窗
+            var avatarDialog = qs('#avatarDialog');
+            var avatarEditBtn = qs('#avatarEditBtn');
+            var avatarDialogClose = qs('#avatarDialogClose');
+
+            if (avatarEditBtn && avatarDialog) {
+                avatarEditBtn.addEventListener('click', function () {
+                    avatarDialog.showModal();
+                });
+            }
+            if (avatarDialogClose && avatarDialog) {
+                avatarDialogClose.addEventListener('click', function () {
+                    avatarDialog.close();
+                });
+            }
 
             var fetchBtn = qs('#fetchBtn');
 

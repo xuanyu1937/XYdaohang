@@ -1,10 +1,10 @@
-# 轩宇-导航 v2.0.1 部署清单
+# 轩宇-导航 v2.1.0 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1 + MySQL 5.7
-当前版本：v2.0.1
+当前版本：v2.1.0
 
-> 升级顺序：**先备份数据库 → 上传文件 → 执行 upgrade_v2.0.0.sql → 清缓存刷新**。
+> 升级顺序：**先备份数据库 → 上传文件 → 执行 upgrade_v2.1.0.sql → 清缓存刷新**（从 v2.0.x 升级需同时执行 v2.0.0 和 v2.1.0 脚本）。
 
 ## 一、必须覆盖上传
 
@@ -18,6 +18,7 @@
 - 全新服务器部署.txt
 - VERSION、CHANGELOG.md、README.md、UPLOAD_LIST.md、copyright.txt
 - upgrade_v2.0.0.sql（旧站升级用；全新安装由 install.php 自动建表，不需要）
+- upgrade_v2.1.0.sql（从 v2.0.x 升级用；全新安装不需要）
 - upgrade_v1.1.3.sql（仅当仍停留在更早版本时使用）
 - web.config（IIS 安全规则 + /api/sites 重写；主机锁定 rewrite 节点导致 500.19 时删除该节点）
 - htaccess（Apache 环境重命名为 .htaccess）
@@ -31,6 +32,7 @@
 - categories.php、nav_links.php（v2 增强）
 - settings.php（v2 新增「前台体验」与「AI 分类推荐」分区）
 - applications.php、profile.php
+- messages.php（v2.1.0 新增：留言管理）
 - check_update.php、update_progress.php、test.php（已改为 410，可直接删除这三个文件）
 
 ### api/

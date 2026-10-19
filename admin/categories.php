@@ -87,6 +87,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
     $icon = $hasV2Columns ? trim((string) ($_POST['icon'] ?? '')) : '';
     $remark = $hasV2Columns ? trim((string) ($_POST['remark'] ?? '')) : '';
     $parentId = $hasV2Columns ? (int) ($_POST['parent_id'] ?? 0) : 0;
+    $ownerId = (int) ($_POST['user_id'] ?? 0);
+    $isPrivate = isset($_POST['is_private']) ? 1 : 0;
 
     $name = navCategoryTrim($name, 50);
     $icon = navCategoryTrim($icon, 100);
@@ -107,7 +109,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
         }
 
         try {
-            if ($hasV2Columns) {
+            // 探测 v2.1 新增列是否就绪
+            $hasV21Columns = true;
+            try {
+                $db->query('SELECT user_id, is_private FROM categories LIMIT 1');
+            } catch (Throwable $probeError) {
+                $hasV21Columns = false;
+            }
+
+            if ($hasV2Columns && $hasV21Columns) {
+                $stmt = $db->prepare(
+                    'INSERT INTO categories (parent_id, name, icon, sort_order, remark, user_id, is_private) VALUES (?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([$parentId > 0 ? $parentId : null, $name, $icon, $sortOrder, $remark, $ownerId, $isPrivate]);
+            } elseif ($hasV2Columns) {
                 $stmt = $db->prepare(
                     'INSERT INTO categories (parent_id, name, icon, sort_order, remark) VALUES (?, ?, ?, ?, ?)'
                 );
@@ -134,6 +149,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_category'])) {
     $icon = $hasV2Columns ? trim((string) ($_POST['icon'] ?? '')) : '';
     $remark = $hasV2Columns ? trim((string) ($_POST['remark'] ?? '')) : '';
     $parentId = $hasV2Columns ? (int) ($_POST['parent_id'] ?? 0) : 0;
+    $ownerId = (int) ($_POST['user_id'] ?? 0);
+    $isPrivate = isset($_POST['is_private']) ? 1 : 0;
 
     $name = navCategoryTrim($name, 50);
     $icon = navCategoryTrim($icon, 100);
@@ -165,7 +182,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_category'])) {
 
         if ($error === '') {
             try {
-                if ($hasV2Columns) {
+                // 探测 v2.1 新增列是否就绪
+                $hasV21Columns = true;
+                try {
+                    $db->query('SELECT user_id, is_private FROM categories LIMIT 1');
+                } catch (Throwable $probeError) {
+                    $hasV21Columns = false;
+                }
+
+                if ($hasV2Columns && $hasV21Columns) {
+                    $stmt = $db->prepare(
+                        'UPDATE categories SET parent_id = ?, name = ?, icon = ?, sort_order = ?, remark = ?, user_id = ?, is_private = ? WHERE id = ?'
+                    );
+                    $stmt->execute([$parentId > 0 ? $parentId : null, $name, $icon, $sortOrder, $remark, $ownerId, $isPrivate, $id]);
+                } elseif ($hasV2Columns) {
                     $stmt = $db->prepare(
                         'UPDATE categories SET parent_id = ?, name = ?, icon = ?, sort_order = ?, remark = ? WHERE id = ?'
                     );
@@ -211,7 +241,12 @@ if (isset($_GET['delete'])) {
 /* ----------------------------- 数据读取 ----------------------------- */
 
 if ($hasV2Columns) {
-    $categories = $db->query('SELECT * FROM categories ORDER BY sort_order, id')->fetchAll();
+    $categories = $db->query(
+        'SELECT c.*, u.username AS owner_name
+         FROM categories c
+         LEFT JOIN users u ON c.user_id = u.id
+         ORDER BY c.sort_order, c.id'
+    )->fetchAll();
 } else {
     $categories = $db->query('SELECT * FROM categories ORDER BY sort_order, id')->fetchAll();
 
@@ -219,7 +254,16 @@ if ($hasV2Columns) {
         $categories[$index]['parent_id'] = null;
         $categories[$index]['icon'] = null;
         $categories[$index]['remark'] = null;
+        $categories[$index]['owner_name'] = null;
     }
+}
+
+// 用户列表（供归属用户下拉）
+$userList = [];
+try {
+    $userList = $db->query('SELECT id, username FROM users ORDER BY username')->fetchAll();
+} catch (Throwable $error) {
+    // users 表不存在时为空
 }
 
 // 组织成两级树：一级分类按原顺序，子分类挂在其父级之后
@@ -505,6 +549,26 @@ if (isset($_GET['edit'])) {
                                                           maxlength="255"
                                                           placeholder="可留空，例如：该分类的收录范围"><?php echo $editCategory ? $functions->escape((string) ($editCategory['remark'] ?? '')) : ''; ?></textarea>
                                             </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label" for="user_id">归属用户</label>
+                                                <select id="user_id" name="user_id" class="form-select">
+                                                    <option value="0">公共分组（所有用户可见）</option>
+                                                    <?php foreach ($userList as $u): ?>
+                                                        <option value="<?php echo (int) $u['id']; ?>"
+                                                            <?php echo $editCategory && (int) ($editCategory['user_id'] ?? 0) === (int) $u['id'] ? 'selected' : ''; ?>>
+                                                            <?php echo $functions->escape($u['username']); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                                <small class="text-muted">选择用户后，该分组仅该用户可管理；设为公共则所有用户可见</small>
+                                            </div>
+
+                                            <div class="mb-3 form-check">
+                                                <input type="checkbox" class="form-check-input" id="is_private" name="is_private" value="1"
+                                                    <?php echo $editCategory && !empty($editCategory['is_private']) ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="is_private">私密分组（仅归属用户本人可见，其他用户不可查看）</label>
+                                            </div>
                                         <?php endif; ?>
                                         
                                         <div class="d-grid gap-2">
@@ -547,6 +611,7 @@ if (isset($_GET['edit'])) {
                                                     <th>分类名称</th>
                                                     <?php if ($hasV2Columns): ?>
                                                         <th width="110">上级分类</th>
+                                                        <th width="100">归属</th>
                                                     <?php endif; ?>
                                                     <th width="90">排序</th>
                                                     <th width="90">链接数</th>
@@ -579,6 +644,9 @@ if (isset($_GET['edit'])) {
                                                                             <span class="category-icon-chip"><?php echo $functions->escape($icon); ?></span>
                                                                         <?php endif; ?>
                                                                         <span class="cell-title"><?php echo $functions->escape($category['name']); ?></span>
+                                                                        <?php if (!empty($category['is_private'])): ?>
+                                                                            <span class="badge badge-soft-warning"><i class="fas fa-lock"></i> 私密</span>
+                                                                        <?php endif; ?>
                                                                         <?php if (!$isChild && $childCount > 0): ?>
                                                                             <span class="badge badge-soft-info"><?php echo $childCount; ?> 个子分类</span>
                                                                         <?php endif; ?>
@@ -598,6 +666,18 @@ if (isset($_GET['edit'])) {
                                                                 <?php else: ?>
                                                                     <span class="text-muted">一级分类</span>
                                                                 <?php endif; ?>
+                                                            </td>
+                                                            <td>
+                                                                <?php
+                                                                $ownerId = (int) ($category['user_id'] ?? 0);
+                                                                if ($ownerId > 0 && isset($category['owner_name'])) {
+                                                                    echo '<span class="badge badge-soft-primary">' . $functions->escape($category['owner_name']) . '</span>';
+                                                                } elseif ($ownerId > 0) {
+                                                                    echo '<span class="badge badge-soft-primary">用户#' . $ownerId . '</span>';
+                                                                } else {
+                                                                    echo '<span class="text-muted">公共</span>';
+                                                                }
+                                                                ?>
                                                             </td>
                                                         <?php endif; ?>
                                                         <td><span class="sort-chip"><?php echo (int) $category['sort_order']; ?></span></td>

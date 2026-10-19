@@ -8,6 +8,6 @@ if (basename((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === basename(__FILE__
     exit;
 }
 
-define('APP_VERSION', '2.0.1');
+define('APP_VERSION', '2.1.0');
 define('APP_RELEASE', '2026-10-20');
-define('APP_UPDATE_TIME', '2026-10-20 10:00:00');
+define('APP_UPDATE_TIME', '2026-10-20 12:00:00');

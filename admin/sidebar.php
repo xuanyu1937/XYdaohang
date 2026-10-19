@@ -474,12 +474,16 @@ try {
             <i class="fas fa-chart-line"></i>
             <span>数据统计</span>
         </a>
-        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'tools.php' ? 'active' : ''; ?>" href="tools.php">
-            <i class="fas fa-toolbox"></i>
-            <span>系统工具</span>
+        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'messages.php' ? 'active' : ''; ?>" href="messages.php">
+            <i class="fas fa-envelope"></i>
+            <span>留言管理</span>
             <?php if ($unreadMessages > 0): ?>
                 <span class="badge bg-danger"><?php echo $unreadMessages; ?></span>
             <?php endif; ?>
+        </a>
+        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'tools.php' ? 'active' : ''; ?>" href="tools.php">
+            <i class="fas fa-toolbox"></i>
+            <span>系统工具</span>
         </a>
         <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'active' : ''; ?>" href="profile.php">
             <i class="fas fa-user"></i>

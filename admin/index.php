@@ -31,6 +31,15 @@ $recentApplications = $functions->getLatestApplications(5);
 
 $popularCategories = $functions->getPopularCategories(5);
 
+// 未读留言数量
+$unreadMessages = 0;
+try {
+    $msgStmt = $db->query("SELECT COUNT(*) AS total FROM contact_messages WHERE is_read = 0");
+    $unreadMessages = (int) ($msgStmt->fetch()['total'] ?? 0);
+} catch (Throwable $error) {
+    // contact_messages 表不存在时为 0
+}
+
 $phpVersion = phpversion();
 $mysqlVersion = $db->query("SELECT VERSION() as version")->fetch()['version'];
 $serverSoftware = $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown';
@@ -330,6 +339,18 @@ $currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.1.3';
                             </div>
                         </div>
                     </div>
+
+                    <!-- 未读留言提示 -->
+                    <?php if ($unreadMessages > 0): ?>
+                        <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+                            <div>
+                                <i class="fas fa-envelope me-2"></i>
+                                你有 <strong><?php echo $unreadMessages; ?></strong> 条未读留言，
+                                <a href="messages.php" class="alert-link">点击查看</a>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
+                        </div>
+                    <?php endif; ?>
                     
                     <div class="row">
                         <div class="col-md-8 mb-4">

@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `status` enum('active','banned') NOT NULL DEFAULT 'active',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `last_login` timestamp NULL DEFAULT NULL,
+  `avatar` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `username` (`username`)
@@ -55,10 +56,13 @@ CREATE TABLE IF NOT EXISTS `categories` (
   `icon` varchar(100) DEFAULT NULL,
   `sort_order` int(11) DEFAULT '0',
   `remark` varchar(255) DEFAULT NULL,
+  `user_id` int(11) NOT NULL DEFAULT '0',
+  `is_private` tinyint(1) NOT NULL DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `parent_id` (`parent_id`)
+  KEY `parent_id` (`parent_id`),
+  KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 创建nav_links表（导航主表；user_id=0 公共导航）

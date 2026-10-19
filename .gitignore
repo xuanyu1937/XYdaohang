@@ -5,6 +5,8 @@ cache/*
 !cache/.htaccess
 uploads/logos/*
 !uploads/logos/.htaccess
+uploads/avatars/*
+!uploads/avatars/.htaccess
 
 # 本地回滚备份：含旧版源码与完整配置，禁止上传
 backups/

@@ -16,6 +16,32 @@ $functions->recordVisit();
 $currentUser = $users->currentUser();
 $viewUserId = $currentUser ? (int) $currentUser['id'] : $users->defaultViewUserId();
 $isOwner = $currentUser && (int) $currentUser['id'] === $viewUserId;
+$engine->setUserId($viewUserId);
+
+// 头像：登录用户显示自己的头像，访客显示管理员头像
+$displayAvatar = '';
+$displayAvatarInitial = $brandName !== '' ? mb_substr($brandName, 0, 1, 'UTF-8') : '轩';
+if ($currentUser) {
+    $displayAvatarInitial = mb_substr($currentUser['username'], 0, 1, 'UTF-8');
+    if (!empty($currentUser['avatar'])) {
+        $displayAvatar = $functions->getLogoDisplayUrl((string) $currentUser['avatar']);
+    }
+} else {
+    // 访客：取管理员头像作为默认头像
+    try {
+        $adminStmt = $db->prepare('SELECT avatar, username FROM users WHERE is_admin = 1 ORDER BY id LIMIT 1');
+        $adminStmt->execute();
+        $adminRow = $adminStmt->fetch();
+        if ($adminRow) {
+            $displayAvatarInitial = mb_substr((string) $adminRow['username'], 0, 1, 'UTF-8');
+            if (!empty($adminRow['avatar'])) {
+                $displayAvatar = $functions->getLogoDisplayUrl((string) $adminRow['avatar']);
+            }
+        }
+    } catch (Throwable $error) {
+        // users 表不存在时忽略
+    }
+}
 
 $siteTitle = trim((string) $functions->getSetting('site_title'));
 $siteDescription = trim((string) $functions->getSetting('site_description'));
@@ -543,7 +569,12 @@ if ($bgImage !== '') {
                 <?php if ($currentUser): ?>
                     <details class="user-menu" id="userMenu">
                         <summary class="tool-btn user-summary">
-                            <span class="user-avatar" aria-hidden="true"><?php echo $functions->escape($functions->textCut($currentUser['username'], 1)); ?></span>
+                            <?php if ($displayAvatar !== ''): ?>
+                                <img class="user-avatar-img" src="<?php echo $functions->escape($displayAvatar); ?>" alt="头像" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
+                                <span class="user-avatar" aria-hidden="true" style="display:none;"><?php echo $functions->escape($displayAvatarInitial); ?></span>
+                            <?php else: ?>
+                                <span class="user-avatar" aria-hidden="true"><?php echo $functions->escape($displayAvatarInitial); ?></span>
+                            <?php endif; ?>
                             <span class="user-name"><?php echo $functions->escape($currentUser['username']); ?></span>
                             <svg class="user-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                                 <path d="m6 9 6 6 6-6"></path>
@@ -561,6 +592,11 @@ if ($bgImage !== '') {
                     </details>
                 <?php else: ?>
                     <div class="auth-links">
+                        <?php if ($displayAvatar !== ''): ?>
+                            <img class="user-avatar-img" src="<?php echo $functions->escape($displayAvatar); ?>" alt="管理员头像" style="width:34px;height:34px;border-radius:50%;object-fit:cover;margin-right:8px;">
+                        <?php else: ?>
+                            <span class="user-avatar" aria-hidden="true" style="margin-right:8px;"><?php echo $functions->escape($displayAvatarInitial); ?></span>
+                        <?php endif; ?>
                         <a class="tool-btn tool-text" href="login.php">登录</a>
                         <a class="tool-btn tool-text is-primary" href="register.php">注册</a>
                     </div>

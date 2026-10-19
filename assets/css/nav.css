@@ -1395,6 +1395,14 @@ body[data-monitor="0"] .site-speed {
     font-weight: 700;
 }
 
+.user-avatar-img {
+    width: 26px;
+    height: 26px;
+    flex: 0 0 26px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
 .user-name {
     max-width: 90px;
     overflow: hidden;
