@@ -611,6 +611,102 @@ class UserService extends BaseService
     }
 
     /**
+     * 创建密码重置令牌（忘记密码）。
+     *
+     * 数据库只存令牌的 SHA-256 哈希与过期时间，令牌明文只出现在邮件链接里。
+     * 出于防枚举考虑，邮箱不存在时返回 ok=true 但 token 为空（调用方不发邮件）。
+     *
+     * @return array{ok:bool, token?:string, user?:array, error?:string}
+     */
+    public function createPasswordReset($email)
+    {
+        if (!$this->usersTableExists()) {
+            return ['ok' => false, 'error' => '用户系统不可用'];
+        }
+
+        $user = $this->findByEmail($email);
+
+        if (!$user || ($user['status'] ?? self::STATUS_ACTIVE) === self::STATUS_BANNED) {
+            // 统一提示，避免暴露邮箱是否注册
+            return ['ok' => true, 'token' => null, 'user' => null];
+        }
+
+        // 老库未升级 reset_token_hash / reset_expires 列时提示先升级
+        try {
+            $this->db->query('SELECT reset_token_hash, reset_expires FROM users LIMIT 1');
+        } catch (Throwable $error) {
+            return ['ok' => false, 'error' => '站点数据库尚未升级，暂不支持找回密码'];
+        }
+
+        try {
+            $token = bin2hex(random_bytes(32));
+        } catch (Throwable $error) {
+            return ['ok' => false, 'error' => '令牌生成失败，请重试'];
+        }
+
+        $hash = hash('sha256', $token);
+        $expires = time() + 3600; // 1 小时有效
+
+        $stmt = $this->db->prepare('UPDATE users SET reset_token_hash = ?, reset_expires = ? WHERE id = ?');
+        $stmt->execute([$hash, $expires, (int) $user['id']]);
+
+        return ['ok' => true, 'token' => $token, 'user' => $user];
+    }
+
+    /**
+     * 按重置令牌查找有效用户；无效或过期返回 null。
+     */
+    public function findByResetToken($token)
+    {
+        $token = trim((string) $token);
+
+        if ($token === '' || !preg_match('/^[a-f0-9]{64}$/', $token)) {
+            return null;
+        }
+
+        try {
+            $stmt = $this->db->prepare('SELECT * FROM users WHERE reset_token_hash = ? LIMIT 1');
+            $stmt->execute([hash('sha256', $token)]);
+            $user = $stmt->fetch();
+        } catch (Throwable $error) {
+            return null;
+        }
+
+        if (!$user) {
+            return null;
+        }
+
+        if ((int) ($user['reset_expires'] ?? 0) < time()) {
+            return null;
+        }
+
+        return $user;
+    }
+
+    /**
+     * 通过重置令牌重设密码，成功后清除令牌。
+     */
+    public function resetPasswordByToken($token, $newPassword)
+    {
+        $user = $this->findByResetToken($token);
+
+        if (!$user) {
+            return ['ok' => false, 'error' => '重置链接无效或已过期，请重新申请'];
+        }
+
+        $newPassword = (string) $newPassword;
+
+        if (strlen($newPassword) < 8 || strlen($newPassword) > 72) {
+            return ['ok' => false, 'error' => '密码长度需为 8-72 位'];
+        }
+
+        $stmt = $this->db->prepare('UPDATE users SET password_hash = ?, reset_token_hash = NULL, reset_expires = NULL WHERE id = ?');
+        $stmt->execute([password_hash($newPassword, PASSWORD_DEFAULT), (int) $user['id']]);
+
+        return ['ok' => true, 'user' => $user];
+    }
+
+    /**
      * 删除用户，同时清理其私有导航与分享。
      */
     public function delete($id)
@@ -668,6 +764,9 @@ class SiteInfoService extends BaseService
     const CACHE_FAIL_TTL = 1800;   // 失败缓存 30 分钟
     const MAX_BYTES = 524288;
 
+    /** @var string 最近一次请求拿到的 Location 头（3xx 时） */
+    protected $lastRedirectUrl = '';
+
     /**
      * 抓取站点信息。
      *
@@ -715,6 +814,56 @@ class SiteInfoService extends BaseService
         }
 
         $html = $this->download($url);
+
+        // 3xx 重定向：最多安全跟随 2 次（重定向目标也走 SSRF 校验）
+        $redirectsLeft = 2;
+
+        while ($redirectsLeft-- > 0 && $html === '') {
+            $location = $this->lastRedirectUrl;
+
+            if ($location === '') {
+                break;
+            }
+
+            $next = $this->absoluteUrl($location, $url);
+
+            if ($next === '') {
+                break;
+            }
+
+            $parts = parse_url($next);
+
+            if (!$parts || empty($parts['host'])) {
+                break;
+            }
+
+            $nextHost = strtolower(trim($parts['host'], '[]'));
+
+            if ($nextHost === '' || in_array($nextHost, ['localhost'], true)
+                || substr($nextHost, -6) === '.local'
+                || substr($nextHost, -9) === '.internal'
+                || substr($nextHost, -4) === '.lan'
+            ) {
+                break;
+            }
+
+            $allowed = true;
+
+            foreach ($this->resolveIps($nextHost) as $ip) {
+                if (!$this->isPublicIp($ip)) {
+                    $allowed = false;
+                    break;
+                }
+            }
+
+            if (!$allowed) {
+                break;
+            }
+
+            $url = $next;
+            $host = $nextHost;
+            $html = $this->download($url);
+        }
 
         $payload = [
             'ok' => false,
@@ -769,6 +918,15 @@ class SiteInfoService extends BaseService
             foreach ($matches[0] as $tag) {
                 if (preg_match('/href\s*=\s*["\'](.*?)["\']/is', $tag, $href)) {
                     $icons[] = $this->absoluteUrl($href[1], $url);
+                }
+            }
+        }
+
+        // og:image / twitter:image / msapplication-TileImage 作为兜底图标候选
+        if (preg_match_all('/<meta[^>]+(?:property|name)\s*=\s*["\'](?:og:image|twitter:image|msapplication-TileImage)["\'][^>]*>/i', $html, $matches)) {
+            foreach ($matches[0] as $tag) {
+                if (preg_match('/content\s*=\s*["\'](.*?)["\']/is', $tag, $content)) {
+                    $icons[] = $this->absoluteUrl($content[1], $url);
                 }
             }
         }
@@ -885,6 +1043,8 @@ class SiteInfoService extends BaseService
         $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
             . '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
+        $this->lastRedirectUrl = '';
+
         if (function_exists('curl_init')) {
             $ch = curl_init($url);
             $options = [
@@ -899,6 +1059,7 @@ class SiteInfoService extends BaseService
                 CURLOPT_SSL_VERIFYPEER => true,
                 CURLOPT_SSL_VERIFYHOST => 2,
                 CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                CURLOPT_HEADER => true,
             ];
 
             if (defined('CURLOPT_REDIR_PROTOCOLS')) {
@@ -906,8 +1067,44 @@ class SiteInfoService extends BaseService
             }
 
             curl_setopt_array($ch, $options);
-            $html = curl_exec($ch);
+            $raw = curl_exec($ch);
             curl_close($ch);
+
+            if (is_string($raw) && $raw !== '') {
+                // 分离 header / body（可能有多段 header）
+                $html = $raw;
+                $lastHeader = '';
+
+                while (preg_match("/\r?\n\r?\n/", $html, $m, PREG_OFFSET_CAPTURE)) {
+                    $split = $m[0][1];
+                    $lastHeader = substr($html, 0, $split);
+                    $rest = substr($html, $split + strlen($m[0][0]));
+
+                    // 若 body 仍以 HTTP/ 开头，说明还有 header 段（如 100-continue）
+                    if (preg_match('#^HTTP/\d#i', ltrim($rest))) {
+                        $html = $rest;
+                        continue;
+                    }
+
+                    $html = $rest;
+                    break;
+                }
+
+                if (preg_match('/^Location:\s*(\S+)/im', $lastHeader, $m)) {
+                    $status = 0;
+
+                    if (preg_match('#^HTTP/\S+\s+(\d{3})#', $lastHeader, $sm)) {
+                        $status = (int) $sm[1];
+                    }
+
+                    if ($status >= 300 && $status < 400) {
+                        $this->lastRedirectUrl = trim($m[1]);
+                        return '';
+                    }
+                }
+            } else {
+                $html = '';
+            }
         } else {
             $context = stream_context_create([
                 'http' => [
@@ -926,6 +1123,25 @@ class SiteInfoService extends BaseService
             ]);
 
             $html = @file_get_contents($url, false, $context);
+
+            // 从 $http_response_header 提取 Location
+            if (isset($http_response_header) && is_array($http_response_header)) {
+                $status = 0;
+                $location = '';
+
+                foreach ($http_response_header as $line) {
+                    if (preg_match('#^HTTP/\S+\s+(\d{3})#', $line, $sm)) {
+                        $status = (int) $sm[1];
+                    } elseif (preg_match('/^Location:\s*(\S+)/i', $line, $lm)) {
+                        $location = trim($lm[1]);
+                    }
+                }
+
+                if ($status >= 300 && $status < 400 && $location !== '') {
+                    $this->lastRedirectUrl = $location;
+                    return '';
+                }
+            }
         }
 
         if (!is_string($html)) {

@@ -51,11 +51,63 @@ if (file_exists($configFile)) {
     error_log("SMTP配置文件不存在: " . realpath($configFile));
 }
 
-// 自动抓取功能已关闭，避免未登录用户借助服务端请求探测内网（SSRF）。
-// 需要图标/标题时请手动填写，或由后台管理员维护。
+// 自动抓取走 SiteInfoService（带 SSRF 防护与缓存），并按 IP 限流防止滥用。
 if (isset($_GET['action']) && $_GET['action'] === 'fetch_site_info') {
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['success' => false, 'error' => '自动抓取功能已关闭，请手动填写'], JSON_UNESCAPED_UNICODE);
+
+    // v2.2.0 起恢复自动抓取：委托带 SSRF 防护的 SiteInfoService，限流防止滥用
+    $rateKey = 'apply_fetch_' . (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+    $rateCount = (int) ($_SESSION[$rateKey] ?? 0);
+    $rateStart = (int) ($_SESSION[$rateKey . '_start'] ?? 0);
+
+    if (time() - $rateStart > 600) {
+        $rateCount = 0;
+        $rateStart = time();
+    }
+
+    if ($rateCount >= 20) {
+        echo json_encode(['success' => false, 'error' => '操作过于频繁，请 10 分钟后再试'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $_SESSION[$rateKey] = $rateCount + 1;
+    $_SESSION[$rateKey . '_start'] = $rateStart;
+
+    $fetchUrl = isset($_GET['url']) && is_string($_GET['url']) ? trim($_GET['url']) : '';
+
+    if ($fetchUrl === '') {
+        echo json_encode(['success' => false, 'error' => '请输入网址'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if (!preg_match('#^https?://#i', $fetchUrl)) {
+        $fetchUrl = 'https://' . ltrim($fetchUrl, '/');
+    }
+
+    require_once dirname(__FILE__) . '/includes/Services.php';
+    $metaService = new SiteInfoService($functions);
+    $meta = $metaService->fetch($fetchUrl);
+
+    if (empty($meta['ok'])) {
+        $errorMap = [
+            'invalid_url' => '网址格式不正确',
+            'invalid_scheme' => '仅支持 http/https 网址',
+            'blocked_host' => '该地址不允许抓取',
+            'blocked_ip' => '该地址不允许抓取',
+            'fetch_failed' => '抓取失败，请检查网址能否正常访问',
+            'no_title' => '未获取到网站标题，请手动填写',
+        ];
+        $errorText = isset($errorMap[$meta['error'] ?? '']) ? $errorMap[$meta['error']] : '抓取失败，请手动填写';
+        echo json_encode(['success' => false, 'error' => $errorText], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    echo json_encode([
+        'success' => true,
+        'title' => $meta['title'] ?? '',
+        'description' => $meta['description'] ?? '',
+        'favicon' => !empty($meta['icons'][0]) ? $meta['icons'][0] : '',
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -68,13 +120,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description = isset($_POST['description']) && is_string($_POST['description']) ? trim($_POST['description']) : '';
     $categoryId = isset($_POST['category_id']) && is_scalar($_POST['category_id']) ? $_POST['category_id'] : null;
     
-    if (empty($siteName) || empty($siteUrl) || empty($email)) {
-        $error = '网站名称、网址和邮箱不能为空';
+    if (empty($siteUrl)) {
+        $error = '请输入网站网址';
     } elseif (!filter_var($siteUrl, FILTER_VALIDATE_URL)) {
         $error = '请输入有效的网址';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = '请输入有效的邮箱地址';
+    } elseif ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = '邮箱格式不正确，也可以留空';
     } else {
+        // 名称未填写时自动抓取标题，抓不到就用域名
+        if ($siteName === '') {
+            require_once dirname(__FILE__) . '/includes/Services.php';
+            $metaService = new SiteInfoService($functions);
+            $meta = $metaService->fetch($siteUrl);
+            if (!empty($meta['ok']) && !empty($meta['title'])) {
+                $siteName = $meta['title'];
+            }
+            if ($siteName === '') {
+                $host = parse_url($siteUrl, PHP_URL_HOST);
+                $siteName = $host ? preg_replace('/^www\./i', '', $host) : $siteUrl;
+            }
+            // 名称抓到后顺带补描述（用户未填时）
+            if ($description === '' && !empty($meta['ok']) && !empty($meta['description'])) {
+                $description = $meta['description'];
+            }
+        }
+
         $checkStmt = $db->prepare("SELECT id FROM applications WHERE site_url = ? AND status = 'pending'");
         $checkStmt->execute([$siteUrl]);
         
@@ -747,14 +817,13 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
                 
                 <div>
                     <label class="block text-gray-700 mb-2 font-medium">
-                        <i class="fas fa-globe mr-2"></i>网站名称 *
+                        <i class="fas fa-globe mr-2"></i>网站名称 <span class="text-gray-400 text-sm font-normal">（选填，留空自动获取）</span>
                     </label>
                     <div class="relative">
-                        <input type="text" 
-                               name="site_name" 
+                        <input type="text"
+                               name="site_name"
                                id="site_name"
-                               value="<?php echo htmlspecialchars($_POST['site_name'] ?? ''); ?>" 
-                               required 
+                               value="<?php echo htmlspecialchars($_POST['site_name'] ?? ''); ?>"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <span id="faviconPreview" class="favicon-preview"></span>
                     </div>
@@ -762,16 +831,15 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
                 
                 <div>
                     <label class="block text-gray-700 mb-2 font-medium">
-                        <i class="fas fa-envelope mr-2"></i>联系邮箱 *
+                        <i class="fas fa-envelope mr-2"></i>联系邮箱 <span class="text-gray-400 text-sm font-normal">（选填）</span>
                     </label>
-                    <input type="email" 
-                           name="email" 
+                    <input type="email"
+                           name="email"
                            id="email"
-                           value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" 
-                           required 
+                           value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"
                            placeholder="your-email@example.com"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <p class="text-gray-500 text-sm mt-1">审核结果将通过此邮箱通知您</p>
+                    <p class="text-gray-500 text-sm mt-1">填写后审核结果将通过此邮箱通知您；不填写则无法接收通知</p>
                 </div>
                 
                 <div>

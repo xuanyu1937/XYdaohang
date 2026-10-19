@@ -325,7 +325,7 @@ svg {
 .search-input {
     width: 100%;
     height: 44px;
-    padding: 0 42px 0 41px;
+    padding: 0 76px 0 41px;
     border: 1px solid var(--border);
     border-radius: 11px;
     background: var(--surface);
@@ -360,7 +360,7 @@ svg {
 .search-clear {
     position: absolute;
     top: 50%;
-    right: 8px;
+    right: 42px;
     display: grid;
     place-items: center;
     width: 28px;
@@ -381,6 +381,95 @@ svg {
 .search-clear svg {
     width: 14px;
     height: 14px;
+}
+
+.search-engine {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    z-index: 2;
+}
+
+.search-engine-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 30px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.search-engine-toggle:hover {
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+.search-engine-toggle svg {
+    width: 13px;
+    height: 13px;
+}
+
+.search-engine-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 180px;
+    padding: 5px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--surface);
+    box-shadow: var(--shadow-md);
+    z-index: 20;
+}
+
+.search-engine-option {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.search-engine-option:hover {
+    background: var(--surface-hover);
+}
+
+.search-engine-option.is-active {
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.search-engine-name {
+    font-weight: 600;
+}
+
+.search-engine-desc {
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.search-engine-option.is-active .search-engine-desc {
+    color: var(--primary);
+    opacity: 0.75;
 }
 
 .theme-toggle {
@@ -789,8 +878,8 @@ html[data-theme="dark"] .theme-toggle .icon-sun {
     color: var(--muted);
     font-variant-numeric: tabular-nums;
     font-weight: 500;
-    opacity: 0;
-    transform: translateY(3px);
+    opacity: 1;
+    transform: none;
 }
 
 .site-speed::before {
@@ -824,21 +913,29 @@ html[data-theme="dark"] .theme-toggle .icon-sun {
     color: var(--muted-2);
 }
 
+.site-clicks {
+    opacity: 0;
+}
+
 .site-card:hover .site-clicks,
 .site-card:focus-visible .site-clicks {
-    opacity: 0;
+    opacity: 1;
 }
 
 .site-card:hover .site-speed,
 .site-card:focus-visible .site-speed {
-    opacity: 1;
-    transform: none;
+    opacity: 0;
+    transform: translateY(3px);
 }
 
-/* 关闭监测时不展示状态/速度 UI */
+/* 关闭监测时只展示点击量，隐藏测速与状态 */
 body[data-monitor="0"] .site-status,
 body[data-monitor="0"] .site-speed {
     display: none !important;
+}
+
+body[data-monitor="0"] .site-clicks {
+    opacity: 1;
 }
 
 /* 状态圆点 */

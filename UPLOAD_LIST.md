@@ -1,24 +1,26 @@
-# 轩宇-导航 v2.1.0 部署清单
+# 轩宇-导航 v2.2.0 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1 + MySQL 5.7
-当前版本：v2.1.0
+当前版本：v2.2.0
 
-> 升级顺序：**先备份数据库 → 上传文件 → 执行 upgrade_v2.1.0.sql → 清缓存刷新**（从 v2.0.x 升级需同时执行 v2.0.0 和 v2.1.0 脚本）。
+> 升级顺序：**先备份数据库 → 上传文件 → 执行 upgrade_v2.2.0.sql → 清缓存刷新**（从更早版本升级需依次执行 v2.0.0、v2.1.0、v2.2.0 脚本）。
 
 ## 一、必须覆盖上传
 
 ### 根目录
-- index.php（前台首页，v2 改版）
+- index.php（前台首页：搜索引擎选择器、申请收录入口）
 - login.php、register.php、logout.php、my.php（v2 新增：前台用户与个人导航）
+- forgot.php、reset.php（v2.2.0 新增：忘记密码、重置密码）
 - share.php（v2 新增：分享预览与导入）
 - about.php、contact.php（v2 新增：关于页、联系留言页）
-- detail.php、apply.php、apply(1).php（保持原样）
+- detail.php、apply.php、apply(1).php（apply(1).php 已恢复自动抓取，仅网址必填）
 - install.php（全新服务器安装向导，安装后立即删除）
 - 全新服务器部署.txt
 - VERSION、CHANGELOG.md、README.md、UPLOAD_LIST.md、copyright.txt
 - upgrade_v2.0.0.sql（旧站升级用；全新安装由 install.php 自动建表，不需要）
 - upgrade_v2.1.0.sql（从 v2.0.x 升级用；全新安装不需要）
+- upgrade_v2.2.0.sql（从 v2.1.x 升级用；全新安装不需要）
 - upgrade_v1.1.3.sql（仅当仍停留在更早版本时使用）
 - web.config（IIS 安全规则 + /api/sites 重写；主机锁定 rewrite 节点导致 500.19 时删除该节点）
 - htaccess（Apache 环境重命名为 .htaccess）
@@ -28,7 +30,7 @@
 
 ### admin/
 - index.php、login.php、logout.php、sidebar.php
-- users.php、stats.php、tools.php（v2 新增）
+- users.php、stats.php、tools.php（v2 新增；v2.2.0 版本检测改为服务器端代理）
 - categories.php、nav_links.php（v2 增强）
 - settings.php（v2 新增「前台体验」与「AI 分类推荐」分区）
 - applications.php、profile.php
@@ -41,24 +43,29 @@
 - contact.php（v2 新增：联系留言）
 - ai_suggest.php、health_check.php、stats.php（v2 新增：后台抓取推荐、健康检测、统计）
 - sites.php（v2 新增：开放 REST API）
-- check_update.php、clear_cache.php、get_cache_status.php（已改为 410，可直接删除）
+- user_categories.php（v2.2.0 新增：用户自主分组管理）
+- check_update.php（v2.2.0 新增：服务器端版本检测代理，替代浏览器直连 GitHub）
+- clear_cache.php、get_cache_status.php（已改为 410，可直接删除）
 
 ### includes/
-- bootstrap.php、asset_fallbacks.php
+- bootstrap.php（v2.2.0 兜底版本号更新）
+- asset_fallbacks.php
 - functions.php（新增 textCut 兜底）
 - Services.php（v2 新增：UserService / SiteInfoService / AiService / CategoryEngine /
-  HealthCheckService / BookmarkService / ShareService / MailService / BackupService / ContactService）
-- ConfigManager.php、TemplateParser.php
+  HealthCheckService / BookmarkService / ShareService / MailService / BackupService / ContactService；
+  v2.2.0 增强：SiteInfoService 重定向安全跟随、og:image 兜底；UserService 新增密码重置三方法）
+- ConfigManager.php（v2.2.0 版本号更新）
+- TemplateParser.php
 - UpdateManager.php（已改为 410，可直接删除）
 - .htaccess
 
 ### config/
-- config.php、database.php、smtp.php、version.php（版本号已改为 2.0.1）
+- config.php、database.php、smtp.php、version.php（版本号已改为 2.2.0）
 - .htaccess
 
 ### install/
 - config.php、index.html、install.lock
-- install.sql（已重写为 v2 全量结构）
+- install.sql（已重写为 v2.2.0 全量结构）
 - 全新服务器安装完成后建议删除整个 install/ 目录
 - .htaccess
 
@@ -69,10 +76,11 @@
 
 ### assets/（v2 起后台依赖已全部本地化，可离线自足）
 - 前台自有样式与脚本：
-  - css/nav.css（v2 大幅扩展）
-  - css/auth.css（v2 新增：前台登录/注册页样式）
+  - css/nav.css（v2.2.0：搜索方式选择器样式、测速常驻显示）
+  - css/auth.css（v2.2.0：忘记密码/重置密码页样式）
   - css/page.css（v2 新增：分享/关于/联系页样式）
-  - js/nav.js（v2 扩展）
+  - js/nav.js（v2.2.0：搜索引擎跳转、多关键词 AND、拼音搜索）
+  - js/pinyin-pro.min.js（v2.2.0 新增：拼音搜索本地库，322KB，暴露 window.pinyinPro）
 - 后台依赖（**新增，请一并上传，否则后台要靠 CDN 兜底**）：
   - js/jquery3.7.1.js
   - js/bootstrap.bundle.min.js（Bootstrap 5.3.3，含 Popper）
@@ -100,10 +108,13 @@
 2. 执行 `upgrade_v2.0.0.sql`（phpMyAdmin 导入，或命令行 `mysql -u用户 -p 数据库名 < upgrade_v2.0.0.sql`）。
    - 只新增表、列、索引与设置项，不会删除或改写既有数据。
    - 脚本是**幂等**的：重复执行不会报错，已存在的内容自动跳过，中断后可以放心重跑。
-3. 新增结构：
+3. 若从 v2.0.x 升级，继续执行 `upgrade_v2.1.0.sql`（新增 users.avatar / categories.user_id / categories.is_private）。
+4. 若从 v2.1.x 升级，继续执行 `upgrade_v2.2.0.sql`（新增 users.reset_token_hash / reset_expires 及索引）。
+5. 新增结构：
    - 新表：`users`、`visit_logs`、`api_tokens`、`shares`、`contact_messages`
-   - `categories` 新增：`parent_id`、`icon`、`remark`
+   - `categories` 新增：`parent_id`、`icon`、`remark`、`user_id`、`is_private`
    - `nav_links` 新增：`user_id`、`remark`、`check_status`、`latency_ms`、`last_checked_at`、`deleted_at`
+   - `users` 新增：`avatar`、`reset_token_hash`、`reset_expires`
    - 新增设置项：公告、默认视图、跳转方式、热门数、皮肤、背景图、注册开关、SEO、关于内容、
      默认访客视图、AI 配置、测速标签、联系页开关、定时密钥、失效告警开关
 

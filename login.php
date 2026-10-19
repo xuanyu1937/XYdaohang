@@ -153,6 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        autocomplete="current-password"
                        placeholder="请输入密码">
                 <p class="auth-error" id="passwordError" aria-live="polite"></p>
+                <p class="auth-forgot"><a href="forgot.php">忘记密码？</a></p>
             </div>
 
             <button type="submit" class="auth-submit">登录</button>

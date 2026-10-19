@@ -298,6 +298,21 @@ html[data-theme="dark"] .auth-theme .icon-sun {
     font-size: 12px;
 }
 
+.auth-forgot {
+    margin: 6px 0 0;
+    text-align: right;
+    font-size: 12px;
+}
+
+.auth-forgot a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.auth-forgot a:hover {
+    text-decoration: underline;
+}
+
 .auth-submit {
     width: 100%;
     height: 45px;

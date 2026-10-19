@@ -18,6 +18,10 @@
     var themeColorMeta = document.getElementById('themeColor');
     var searchInput = document.getElementById('siteSearch');
     var searchClear = document.getElementById('searchClear');
+    var searchEngine = document.getElementById('searchEngine');
+    var searchEngineToggle = document.getElementById('searchEngineToggle');
+    var searchEngineMenu = document.getElementById('searchEngineMenu');
+    var searchEngineLabel = document.getElementById('searchEngineLabel');
     var railNav = document.getElementById('railNav');
     var railOpen = document.getElementById('railOpen');
     var railClose = document.getElementById('railClose');
@@ -38,6 +42,13 @@
 
     var MODES = ['grid', 'list', 'compact'];
     var SKINS = ['default', 'purple', 'orange', 'mint'];
+
+    var SEARCH_ENGINES = {
+        site:   { label: '站内', placeholder: '搜索网站，支持拼音（按 / 聚焦）', url: '' },
+        baidu:  { label: '百度', placeholder: '百度搜索，回车新标签页打开', url: 'https://www.baidu.com/s?wd=' },
+        bing:   { label: '必应', placeholder: '必应搜索，回车新标签页打开', url: 'https://www.bing.com/search?q=' },
+        google: { label: '谷歌', placeholder: 'Google 搜索，回车新标签页打开', url: 'https://www.google.com/search?q=' }
+    };
 
     var cards = toArray(document.querySelectorAll('.site-card'));
     var groups = toArray(document.querySelectorAll('.link-group'));
@@ -365,6 +376,14 @@
             return true;
         }
 
+        var terms = state.query.split(/\s+/).filter(function (term) {
+            return term.length > 0;
+        });
+
+        if (terms.length === 0) {
+            return true;
+        }
+
         var haystack = [
             card.getAttribute('data-name') || '',
             card.getAttribute('data-title') || '',
@@ -373,7 +392,51 @@
             card.getAttribute('data-description') || ''
         ].join(' ').toLowerCase();
 
-        return haystack.indexOf(state.query) !== -1;
+        return terms.every(function (term) {
+            if (haystack.indexOf(term) !== -1) {
+                return true;
+            }
+
+            return cardPinyin(card).indexOf(term) !== -1;
+        });
+    }
+
+    var pinyinSupported = typeof window.pinyinPro !== 'undefined' &&
+        typeof window.pinyinPro.pinyin === 'function';
+
+    function cardPinyin(card) {
+        if (card.__pinyinCache !== undefined) {
+            return card.__pinyinCache;
+        }
+
+        var cache = '';
+
+        if (pinyinSupported) {
+            var source = (card.getAttribute('data-name') || '') + ' ' +
+                (card.getAttribute('data-title') || '');
+
+            if (/[\u3400-\u9fff]/.test(source)) {
+                try {
+                    var full = window.pinyinPro.pinyin(source, {
+                        toneType: 'none',
+                        type: 'string'
+                    }).toLowerCase().replace(/[^a-z0-9]+/g, '');
+
+                    var abbr = window.pinyinPro.pinyin(source, {
+                        pattern: 'first',
+                        toneType: 'none',
+                        type: 'string'
+                    }).toLowerCase().replace(/[^a-z0-9]+/g, '');
+
+                    cache = full + ' ' + abbr;
+                } catch (error) {
+                    cache = '';
+                }
+            }
+        }
+
+        card.__pinyinCache = cache;
+        return cache;
     }
 
     function applyFilters() {
@@ -497,6 +560,106 @@
         applyFilters();
     }
 
+    /* ----------------------------------------------------------------------
+       搜索方式：站内 / 百度 / 必应 / Google
+       ---------------------------------------------------------------------- */
+
+    function readStoredEngine() {
+        try {
+            return localStorage.getItem('xy-nav-engine') || 'site';
+        } catch (error) {
+            return 'site';
+        }
+    }
+
+    var currentEngine = SEARCH_ENGINES[readStoredEngine()] ? readStoredEngine() : 'site';
+
+    function applyEngine(engine, persist) {
+        if (!SEARCH_ENGINES[engine]) {
+            engine = 'site';
+        }
+
+        currentEngine = engine;
+
+        if (searchEngineLabel) {
+            searchEngineLabel.textContent = SEARCH_ENGINES[engine].label;
+        }
+
+        if (searchInput) {
+            searchInput.setAttribute('placeholder', SEARCH_ENGINES[engine].placeholder);
+        }
+
+        qsa('.search-engine-option', searchEngineMenu).forEach(function (option) {
+            var active = option.getAttribute('data-engine') === engine;
+            option.classList.toggle('is-active', active);
+            option.setAttribute('aria-checked', active ? 'true' : 'false');
+        });
+
+        if (persist !== false) {
+            store('xy-nav-engine', engine);
+        }
+    }
+
+    function closeEngineMenu() {
+        if (searchEngineMenu) {
+            searchEngineMenu.hidden = true;
+        }
+
+        if (searchEngineToggle) {
+            searchEngineToggle.setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    function openExternalSearch() {
+        if (!searchInput) {
+            return;
+        }
+
+        var keyword = searchInput.value.trim();
+
+        if (keyword === '') {
+            searchInput.focus();
+            return;
+        }
+
+        var engine = SEARCH_ENGINES[currentEngine];
+
+        if (!engine || !engine.url) {
+            commitSearch();
+            return;
+        }
+
+        window.open(engine.url + encodeURIComponent(keyword), '_blank', 'noopener');
+    }
+
+    if (searchEngineToggle && searchEngineMenu) {
+        searchEngineToggle.addEventListener('click', function (event) {
+            event.stopPropagation();
+            var open = searchEngineMenu.hidden;
+            searchEngineMenu.hidden = !open;
+            searchEngineToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+
+        qsa('.search-engine-option', searchEngineMenu).forEach(function (option) {
+            option.addEventListener('click', function () {
+                applyEngine(option.getAttribute('data-engine'));
+                closeEngineMenu();
+
+                if (searchInput) {
+                    searchInput.focus();
+                }
+            });
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!searchEngineMenu.hidden && searchEngine && !searchEngine.contains(event.target)) {
+                closeEngineMenu();
+            }
+        });
+    }
+
+    applyEngine(currentEngine, false);
+
     if (searchInput) {
         searchInput.addEventListener('input', function () {
             updateSearchClear();
@@ -519,7 +682,12 @@
         searchInput.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') {
                 event.preventDefault();
-                commitSearch();
+
+                if (currentEngine !== 'site') {
+                    openExternalSearch();
+                } else {
+                    commitSearch();
+                }
             } else if (event.key === 'Escape') {
                 searchInput.value = '';
                 state.query = '';

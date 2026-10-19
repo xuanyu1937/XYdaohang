@@ -144,8 +144,29 @@ $faviconFor = function ($logoPath, $url) use ($functions) {
 // 按分类分组，保持分类排序。
 $groups = [];
 
+// 当前用户自己的分组（用于「分组管理」弹窗：重命名 / 私密切换 / 删除）
+$ownGroups = [];
+
 foreach ($categories as $category) {
-    $groups[(int) $category['id']] = ['id' => (int) $category['id'], 'name' => (string) $category['name'], 'icon' => (string) ($category['icon'] ?? ''), 'items' => []];
+    $catUserId = isset($category['user_id']) ? (int) $category['user_id'] : 0;
+    $catPrivate = isset($category['is_private']) ? (int) $category['is_private'] : 0;
+
+    $groups[(int) $category['id']] = [
+        'id' => (int) $category['id'],
+        'name' => (string) $category['name'],
+        'icon' => (string) ($category['icon'] ?? ''),
+        'is_private' => $catPrivate,
+        'own' => $catUserId === $userId,
+        'items' => [],
+    ];
+
+    if ($catUserId === $userId) {
+        $ownGroups[] = [
+            'id' => (int) $category['id'],
+            'name' => (string) $category['name'],
+            'is_private' => $catPrivate,
+        ];
+    }
 }
 
 $ungrouped = ['id' => 0, 'name' => '未分类', 'icon' => 'bi-collection', 'items' => []];
@@ -755,6 +776,107 @@ $hasLinks = $totalLinks > 0;
             flex: 1 1 auto;
         }
 
+        /* 分组管理 */
+        .my-group-privacy {
+            margin-left: 6px;
+            font-size: 12px;
+            vertical-align: 1px;
+        }
+
+        .my-group-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .my-group-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface-2);
+        }
+
+        .my-group-item .my-group-name {
+            flex: 1 1 auto;
+            min-width: 0;
+            padding: 6px 10px;
+            border: 1px solid var(--border-strong);
+            border-radius: 8px;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+        }
+
+        .my-group-item .my-group-name:focus {
+            border-color: var(--primary);
+        }
+
+        .my-group-private-toggle {
+            display: inline-flex;
+            flex: 0 0 auto;
+            align-items: center;
+            gap: 4px;
+            color: var(--muted);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .my-group-item .my-btn {
+            flex: 0 0 auto;
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        /* 抓取按钮：主色描边 + 图标，hover 填色，进行中旋转 */
+        #fetchBtn {
+            border-color: var(--primary-border);
+            background: var(--primary-soft);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        #fetchBtn:hover {
+            background: var(--primary);
+            color: var(--primary-contrast);
+            border-color: var(--primary);
+        }
+
+        #fetchBtn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        #fetchBtn.is-busy svg {
+            animation: my-spin 0.9s linear infinite;
+        }
+
+        @keyframes my-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .my-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-2);
+            font-size: 12.5px;
+            cursor: pointer;
+        }
+
+        .my-check input {
+            width: 15px;
+            height: 15px;
+            margin: 0;
+            accent-color: var(--primary);
+        }
+
         .my-note {
             margin: 8px 0 0;
             color: var(--muted);
@@ -969,6 +1091,13 @@ $hasLinks = $totalLinks > 0;
                         </svg>
                         <span class="my-btn-label">我的分享</span>
                     </button>
+                    <button type="button" class="my-btn is-ghost" id="groupManageBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                        </svg>
+                        <span class="my-btn-label">分组管理</span>
+                    </button>
                     <button type="button" class="my-btn is-ghost" id="accountBtn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                             <circle cx="12" cy="8" r="4"></circle>
@@ -989,7 +1118,12 @@ $hasLinks = $totalLinks > 0;
                 <?php foreach ($visibleGroups as $group): ?>
                     <section class="my-group" data-group="<?php echo (int) $group['id']; ?>">
                         <div class="my-group-head">
-                            <h3><?php echo $functions->escape($group['name']); ?></h3>
+                            <h3>
+                                <?php echo $functions->escape($group['name']); ?>
+                                <?php if (!empty($group['is_private'])): ?>
+                                    <span class="my-group-privacy" title="私密分组：仅本人可见">&#x1f512;</span>
+                                <?php endif; ?>
+                            </h3>
                             <span class="my-group-count"><?php echo count($group['items']); ?></span>
                         </div>
 
@@ -1311,6 +1445,39 @@ $hasLinks = $totalLinks > 0;
         </form>
     </dialog>
 
+    <!-- 分组管理 -->
+    <dialog class="my-dialog" id="groupDialog">
+        <div class="my-dialog-head">
+            <h3>分组管理</h3>
+            <button type="button" class="my-iconbtn" id="groupDialogClose" aria-label="关闭">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+            </button>
+        </div>
+
+        <div class="my-dialog-body">
+            <p class="my-msg" id="groupMsg" role="alert"></p>
+
+            <div class="my-field">
+                <label>新建分组</label>
+                <div class="my-field-row">
+                    <input type="text" id="groupNameNew" maxlength="30" autocomplete="off" placeholder="分组名称，如：工作">
+                    <button type="button" class="my-btn is-primary" id="groupCreateBtn">创建</button>
+                </div>
+                <label class="my-check" style="margin-top:8px;">
+                    <input type="checkbox" id="groupPrivateNew">
+                    <span>私密分组（仅本人可见，分享时不包含）</span>
+                </label>
+                <p class="my-note">分组仅属于自己；公共分组请由管理员在后台维护。</p>
+            </div>
+
+            <div class="my-field">
+                <label>我的分组</label>
+                <ul class="my-group-list" id="groupList"></ul>
+                <p class="my-note" id="groupListEmpty" hidden>还没有自己的分组，可先在上面创建一个。</p>
+            </div>
+        </div>
+    </dialog>
+
     <script>
         (function () {
             'use strict';
@@ -1319,6 +1486,8 @@ $hasLinks = $totalLinks > 0;
             var API_AUTH = 'api/auth.php';
             var API_SHARE = 'api/share.php';
             var API_BOOKMARK = 'api/bookmark_import.php';
+            var API_CATEGORIES = 'api/user_categories.php';
+            var OWN_GROUPS = <?php echo json_encode(array_values($ownGroups), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
             function qs(selector, scope) {
                 return (scope || document).querySelector(selector);
@@ -1369,19 +1538,34 @@ $hasLinks = $totalLinks > 0;
             function setBusy(button, busy, busyLabel) {
                 if (!button) { return; }
 
+                var label = button.querySelector('.my-btn-label');
+
                 if (busy) {
-                    button.dataset.idleLabel = button.textContent;
-                    button.textContent = busyLabel || '处理中…';
+                    button.dataset.idleLabel = label ? label.textContent : button.textContent;
+
+                    if (label) {
+                        label.textContent = busyLabel || '处理中…';
+                    } else {
+                        button.textContent = busyLabel || '处理中…';
+                    }
+
                     button.disabled = true;
+                    button.classList.add('is-busy');
                     return;
                 }
 
                 if (button.dataset.idleLabel) {
-                    button.textContent = button.dataset.idleLabel;
+                    if (label) {
+                        label.textContent = button.dataset.idleLabel;
+                    } else {
+                        button.textContent = button.dataset.idleLabel;
+                    }
+
                     delete button.dataset.idleLabel;
                 }
 
                 button.disabled = false;
+                button.classList.remove('is-busy');
             }
 
             function toTop() {
@@ -2057,6 +2241,200 @@ $hasLinks = $totalLinks > 0;
                         qs('#oldPassword').value = '';
                         qs('#newPassword').value = '';
                         qs('#newPasswordConfirm').value = '';
+                    });
+                });
+            }
+
+            /* ----------------------------- 分组管理 ----------------------------- */
+
+            var groupDialog = qs('#groupDialog');
+            var groupMsg = qs('#groupMsg');
+            var groupList = qs('#groupList');
+            var groupListEmpty = qs('#groupListEmpty');
+            var groupNameNew = qs('#groupNameNew');
+            var groupPrivateNew = qs('#groupPrivateNew');
+            var groupCreateBtn = qs('#groupCreateBtn');
+
+            function renderGroupList() {
+                if (!groupList) { return; }
+
+                groupList.innerHTML = '';
+
+                if (!OWN_GROUPS.length) {
+                    groupListEmpty.hidden = false;
+                    return;
+                }
+
+                groupListEmpty.hidden = true;
+
+                OWN_GROUPS.forEach(function (group) {
+                    var li = document.createElement('li');
+                    li.className = 'my-group-item';
+                    li.setAttribute('data-id', group.id);
+
+                    var lock = group.is_private ? '<span class="my-group-privacy" title="私密分组">&#x1f512;</span>' : '';
+
+                    li.innerHTML =
+                        '<input type="text" class="my-group-name" value="' + escapeHtml(group.name) + '" maxlength="30" aria-label="分组名称">' +
+                        lock +
+                        '<label class="my-check my-group-private-toggle" title="私密分组仅本人可见"><input type="checkbox" class="my-group-private" ' + (group.is_private ? 'checked' : '') + '> 私密</label>' +
+                        '<button type="button" class="my-btn my-group-save">保存</button>' +
+                        '<button type="button" class="my-btn is-ghost my-group-del">删除</button>';
+
+                    groupList.appendChild(li);
+                });
+            }
+
+            function refreshCategorySelects() {
+                // 把新建的分组同步进「添加网址」弹窗的分组下拉
+                var select = qs('#linkCategory');
+
+                if (!select) { return; }
+
+                // 先移除自己分组中已不存在的选项，再补充缺失的
+                var known = {};
+                Array.prototype.forEach.call(select.options, function (opt) { known[opt.value] = true; });
+
+                OWN_GROUPS.forEach(function (group) {
+                    if (!known[String(group.id)]) {
+                        var opt = document.createElement('option');
+                        opt.value = group.id;
+                        opt.textContent = (group.is_private ? '\ud83d\udd12 ' : '') + group.name;
+                        select.appendChild(opt);
+                    }
+                });
+            }
+
+            if (qs('#groupManageBtn') && groupDialog) {
+                qs('#groupManageBtn').addEventListener('click', function () {
+                    showMsg(groupMsg, '');
+                    groupNameNew.value = '';
+                    groupPrivateNew.checked = false;
+                    renderGroupList();
+
+                    if (typeof groupDialog.showModal === 'function') {
+                        groupDialog.showModal();
+                    }
+                });
+            }
+
+            if (qs('#groupDialogClose') && groupDialog) {
+                qs('#groupDialogClose').addEventListener('click', function () { groupDialog.close(); });
+            }
+
+            if (groupCreateBtn) {
+                groupCreateBtn.addEventListener('click', function () {
+                    var name = groupNameNew.value.trim();
+
+                    if (name === '') {
+                        showMsg(groupMsg, '请输入分组名称');
+                        return;
+                    }
+
+                    setBusy(groupCreateBtn, true, '创建中…');
+
+                    postForm(API_CATEGORIES, {
+                        action: 'create',
+                        name: name,
+                        is_private: groupPrivateNew.checked ? '1' : '0'
+                    }).then(function (result) {
+                        setBusy(groupCreateBtn, false);
+
+                        if (!result.ok) {
+                            showMsg(groupMsg, result.error || '创建失败');
+                            return;
+                        }
+
+                        if (!result.reused) {
+                            OWN_GROUPS.push({ id: result.id, name: result.name, is_private: result.is_private ? 1 : 0 });
+                        }
+
+                        showMsg(groupMsg, result.reused ? '已存在同名分组，直接复用' : '分组已创建', 'success');
+                        groupNameNew.value = '';
+                        groupPrivateNew.checked = false;
+                        renderGroupList();
+                        refreshCategorySelects();
+                    });
+                });
+            }
+
+            if (groupList) {
+                groupList.addEventListener('click', function (event) {
+                    var item = event.target.closest ? event.target.closest('.my-group-item') : null;
+
+                    if (!item) { return; }
+
+                    var id = parseInt(item.getAttribute('data-id'), 10);
+
+                    if (event.target.classList.contains('my-group-del')) {
+                        if (!window.confirm('删除该分组？分组下的网址会移到「未分类」，不会被删除。')) {
+                            return;
+                        }
+
+                        postForm(API_CATEGORIES, { action: 'delete', id: id }).then(function (result) {
+                            if (!result.ok) {
+                                showMsg(groupMsg, result.error || '删除失败');
+                                return;
+                            }
+
+                            showMsg(groupMsg, '分组已删除', 'success');
+                            window.setTimeout(function () { window.location.reload(); }, 800);
+                        });
+                    }
+                });
+
+                groupList.addEventListener('change', function (event) {
+                    if (!event.target.classList.contains('my-group-private')) { return; }
+
+                    var item = event.target.closest ? event.target.closest('.my-group-item') : null;
+                    var id = item ? parseInt(item.getAttribute('data-id'), 10) : 0;
+
+                    if (!id) { return; }
+
+                    postForm(API_CATEGORIES, {
+                        action: 'set_private',
+                        id: id,
+                        is_private: event.target.checked ? '1' : '0'
+                    }).then(function (result) {
+                        if (!result.ok) {
+                            showMsg(groupMsg, result.error || '设置失败');
+                            event.target.checked = !event.target.checked;
+                            return;
+                        }
+
+                        var found = null;
+                        OWN_GROUPS.forEach(function (group) { if (group.id === id) { found = group; } });
+                        if (found) { found.is_private = event.target.checked ? 1 : 0; }
+
+                        renderGroupList();
+                        showMsg(groupMsg, event.target.checked ? '已设为私密分组' : '已取消私密', 'success');
+                    });
+                });
+
+                groupList.addEventListener('click', function (event) {
+                    if (!event.target.classList.contains('my-group-save')) { return; }
+
+                    var item = event.target.closest ? event.target.closest('.my-group-item') : null;
+                    var input = item ? item.querySelector('.my-group-name') : null;
+                    var id = item ? parseInt(item.getAttribute('data-id'), 10) : 0;
+                    var name = input ? input.value.trim() : '';
+
+                    if (!id || name === '') {
+                        showMsg(groupMsg, '请输入分组名称');
+                        return;
+                    }
+
+                    postForm(API_CATEGORIES, { action: 'rename', id: id, name: name }).then(function (result) {
+                        if (!result.ok) {
+                            showMsg(groupMsg, result.error || '重命名失败');
+                            return;
+                        }
+
+                        OWN_GROUPS.forEach(function (group) { if (group.id === id) { group.name = name; } });
+                        renderGroupList();
+                        refreshCategorySelects();
+                        showMsg(groupMsg, '已保存', 'success');
+                        window.setTimeout(function () { window.location.reload(); }, 800);
                     });
                 });
             }

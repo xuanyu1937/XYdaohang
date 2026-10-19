@@ -1431,8 +1431,10 @@ $tableLabels = [
 
         var currentVersion = '<?php echo $functions->escape(defined('APP_VERSION') ? APP_VERSION : '0.0.0'); ?>';
 
-        fetch('https://api.github.com/repos/xuanyu1937/XYdaohang/releases/latest', {
-            headers: { 'Accept': 'application/vnd.github.v3+json' }
+        // 通过本站接口检测（服务器端抓取 GitHub，避免浏览器直连 api.github.com 被阻断）
+        fetch('../api/check_update.php', {
+            headers: { 'Accept': 'application/json' },
+            credentials: 'same-origin'
         })
         .then(function (res) { return res.json(); })
         .then(function (data) {
@@ -1440,8 +1442,9 @@ $tableLabels = [
             btn.disabled = false;
             result.style.display = 'block';
 
-            if (!data.tag_name) {
-                result.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-1"></i>未获取到 Release 信息，请稍后重试</div>';
+            if (!data.ok || !data.tag_name) {
+                var reason = data.error === 'unauthorized' ? '登录状态已失效，请刷新页面后重试' : '暂时无法连接版本服务器，请稍后重试';
+                result.innerHTML = '<div class="alert alert-warning"><div><i class="fas fa-exclamation-triangle me-1"></i>' + reason + '</div></div>';
                 return;
             }
 
@@ -1450,21 +1453,21 @@ $tableLabels = [
 
             if (isNew) {
                 result.innerHTML =
-                    '<div class="alert alert-success">' +
+                    '<div class="alert alert-success"><div>' +
                     '<h6><i class="fas fa-arrow-up me-1"></i>发现新版本：v' + latestVersion + '</h6>' +
-                    '<p class="mb-2">' + (data.body || '').replace(/\n/g, '<br>').substring(0, 500) + '</p>' +
+                    '<p class="mb-2">' + (data.body || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\n/g, '<br>').substring(0, 500) + '</p>' +
                     '<a href="' + data.html_url + '" target="_blank" class="btn btn-sm btn-success me-2"><i class="fas fa-download me-1"></i>前往下载</a>' +
                     '<a href="https://github.com/xuanyu1937/XYdaohang/releases" target="_blank" class="btn btn-sm btn-outline-secondary">查看全部版本</a>' +
-                    '</div>';
+                    '</div></div>';
             } else {
-                result.innerHTML = '<div class="alert alert-info"><i class="fas fa-check-circle me-1"></i>当前已是最新版本（v' + currentVersion + '）</div>';
+                result.innerHTML = '<div class="alert alert-info"><div><i class="fas fa-check-circle me-1"></i>当前已是最新版本（v' + currentVersion + '）</div></div>';
             }
         })
         .catch(function () {
             spinner.style.display = 'none';
             btn.disabled = false;
             result.style.display = 'block';
-            result.innerHTML = '<div class="alert alert-danger"><i class="fas fa-times-circle me-1"></i>检测失败，请检查网络连接后重试</div>';
+            result.innerHTML = '<div class="alert alert-danger"><div><i class="fas fa-times-circle me-1"></i>检测失败，本站接口无响应，请稍后重试</div></div>';
         });
     }
 

@@ -433,6 +433,7 @@ if ($bgImage !== '') {
     </script>
 
     <link rel="stylesheet" href="assets/css/nav.css">
+    <script src="assets/js/pinyin-pro.min.js" defer></script>
     <script src="assets/js/nav.js" defer></script>
     <noscript>
         <style>
@@ -486,7 +487,7 @@ if ($bgImage !== '') {
                     <input type="search"
                            id="siteSearch"
                            class="search-input"
-                           placeholder="搜索网站（按 / 聚焦）"
+                           placeholder="搜索网站，支持拼音（按 / 聚焦）"
                            autocomplete="off"
                            spellcheck="false"
                            aria-label="搜索网站">
@@ -500,6 +501,38 @@ if ($bgImage !== '') {
                             <path d="m6 6 12 12M18 6 6 18"></path>
                         </svg>
                     </button>
+                    <div class="search-engine" id="searchEngine">
+                        <button type="button"
+                                id="searchEngineToggle"
+                                class="search-engine-toggle"
+                                aria-label="选择搜索方式"
+                                title="选择搜索方式"
+                                aria-expanded="false"
+                                aria-haspopup="menu">
+                            <span id="searchEngineLabel">站内</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m6 9 6 6 6-6"></path>
+                            </svg>
+                        </button>
+                        <div class="search-engine-menu" id="searchEngineMenu" role="menu" aria-label="搜索方式" hidden>
+                            <button type="button" class="search-engine-option" role="menuitemradio" data-engine="site" aria-checked="true">
+                                <span class="search-engine-name">站内搜索</span>
+                                <span class="search-engine-desc">筛选已收录网站</span>
+                            </button>
+                            <button type="button" class="search-engine-option" role="menuitemradio" data-engine="baidu" aria-checked="false">
+                                <span class="search-engine-name">百度</span>
+                                <span class="search-engine-desc">新标签页打开</span>
+                            </button>
+                            <button type="button" class="search-engine-option" role="menuitemradio" data-engine="bing" aria-checked="false">
+                                <span class="search-engine-name">必应</span>
+                                <span class="search-engine-desc">新标签页打开</span>
+                            </button>
+                            <button type="button" class="search-engine-option" role="menuitemradio" data-engine="google" aria-checked="false">
+                                <span class="search-engine-name">Google</span>
+                                <span class="search-engine-desc">新标签页打开</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="skin-picker" id="skinPicker">
@@ -917,6 +950,8 @@ if ($bgImage !== '') {
                 <a href="about.php">关于</a>
                 <span class="footer-sep">·</span>
                 <a href="contact.php">联系管理员</a>
+                <span class="footer-sep">·</span>
+                <a href="apply.php">申请收录</a>
             </p>
         </footer>
     </div>
