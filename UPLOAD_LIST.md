@@ -1,8 +1,8 @@
-# 轩宇-导航 v2.0.0 部署清单
+# 轩宇-导航 v2.0.1 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1 + MySQL 5.7
-当前版本：v2.0.0
+当前版本：v2.0.1
 
 > 升级顺序：**先备份数据库 → 上传文件 → 执行 upgrade_v2.0.0.sql → 清缓存刷新**。
 
@@ -51,7 +51,7 @@
 - .htaccess
 
 ### config/
-- config.php、database.php、smtp.php、version.php（版本号已改为 2.0.0）
+- config.php、database.php、smtp.php、version.php（版本号已改为 2.0.1）
 - .htaccess
 
 ### install/

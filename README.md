@@ -1,7 +1,7 @@
 # 轩宇-导航
 
 网址导航站：前台为原生 HTML + CSS + JS，后台为 PHP 8.1 + MySQL 5.7（Bootstrap 5.3）。
-v2.0.0 起支持前台用户注册与「我的导航」，访客未登录时展示后台指定的默认视图。
+v2.0.0 起支持前台用户注册与「我的导航」，访客未登录时展示后台指定的默认视图。v2.0.1 为 bug 修复版本。
 
 ## 运行要求
 - PHP 8.1（需 PDO_MySQL，建议启用 curl、mbstring、fileinfo）
@@ -11,7 +11,7 @@ v2.0.0 起支持前台用户注册与「我的导航」，访客未登录时展�
 > 说明：部分主机未启用 mbstring 时功能仍可运行（内部已做兜底），但中文截断只能按字节近似处理，仍建议开启。
 
 ## 当前版本
-- `VERSION` / `config/version.php`：**2.0.0**
+- `VERSION` / `config/version.php`：**2.0.1**
 - 完整变更记录见 [CHANGELOG.md](CHANGELOG.md)
 
 ## 从 v1.1.x 升级到 v2.0.0
