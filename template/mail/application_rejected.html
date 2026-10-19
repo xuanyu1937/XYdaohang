@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>申请审核结果通知</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        neutral: {
+                            light: '#6c757d',
+                            DEFAULT: '#495057'
+                        },
+                        danger: '#dc3545',
+                        link: '#0066cc',
+                        warning: '#856404'
+                    },
+                    fontFamily: {
+                        sans: ['Arial', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .bg-gradient-neutral {
+                background: linear-gradient(135deg, theme('colors.neutral.light'), theme('colors.neutral.DEFAULT'));
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 leading-relaxed">
+    <div class="max-w-[600px] mx-auto my-5 bg-white rounded-xl overflow-hidden shadow-md">
+        <!-- 头部 -->
+        <div class="bg-gradient-neutral text-white py-8 px-5 text-center">
+            <h1 class="text-xl font-bold flex items-center justify-center gap-2">
+                <i class="fas fa-file-alt"></i> 您的网站申请审核结果
+            </h1>
+            <p class="opacity-90 mt-2">{{site_title}}</p>
+        </div>
+        
+        <!-- 内容区 -->
+        <div class="p-8">
+            <p class="mb-4">尊敬的 {{site_name}} 网站管理员，您好！</p>
+            
+            <p class="mb-6">感谢您提交网站收录申请。经过我们的审核，很抱歉地通知您，您的网站申请未能通过本次审核。</p>
+            
+            <!-- 驳回原因 -->
+            <div class="bg-gray-50 rounded-lg p-5 border-l-4 border-danger mb-6">
+                <p class="font-bold text-danger mb-3 flex items-center gap-2">
+                    <i class="fas fa-times-circle"></i> 可能的原因（包括但不限于）：
+                </p>
+                <ul class="pl-6 space-y-2 text-gray-700">
+                    <li>网站内容不符合收录标准或收录政策</li>
+                    <li>网站无法正常访问或加载速度过慢</li>
+                    <li>网站存在安全风险或违规内容</li>
+                    <li>网站内容与现有收录网站过于相似</li>
+                    <li>网站描述或分类信息不完整</li>
+                    <li>提供的Logo质量不符合要求</li>
+                </ul>
+            </div>
+            
+            <!-- 优化建议 -->
+            <div class="bg-blue-50 rounded-lg p-5 border border-blue-200 mb-6">
+                <p class="font-bold text-link mb-3 flex items-center gap-2">
+                    <i class="fas fa-lightbulb"></i> 您可以采取以下措施：
+                </p>
+                <ul class="pl-6 space-y-2 text-gray-700">
+                    <li>检查并优化您的网站内容，确保符合收录标准</li>
+                    <li>确保您的网站能够稳定、快速访问</li>
+                    <li>完善网站描述和分类信息</li>
+                    <li>提供高质量的网站Logo（建议尺寸：200×200px）</li>
+                    <li>确保网站无安全漏洞和违规内容</li>
+                </ul>
+            </div>
+            
+            <!-- 温馨提示 -->
+            <div class="bg-amber-50 rounded-lg p-5 mb-6">
+                <p class="font-bold text-warning mb-3 flex items-center gap-2">
+                    <i class="fas fa-info-circle"></i> 温馨提示：
+                </p>
+                <p class="text-gray-700 mb-2">我们欢迎您优化网站后再次提交申请。建议您仔细阅读网站收录标准，确保您的网站符合要求后再提交申请。</p>
+                <p class="text-gray-700">再次申请时，您可以在申请描述中说明您已经针对之前的审核意见进行了优化。</p>
+            </div>
+            
+            <p class="text-gray-500 text-sm mt-4">
+                如果您对审核结果有任何疑问，或者需要了解详细的审核标准，请随时联系我们。
+            </p>
+        </div>
+        
+        <!-- 底部 -->
+        <div class="bg-gray-50 text-center py-6 px-5 border-t border-gray-200 text-gray-500 text-sm">
+            <p class="mb-2">此邮件由系统自动发送，请勿直接回复。</p>
+            <p class="mb-2">{{site_title}} &copy; {{current_year}} 版权所有</p>
+            <p class="text-xs text-gray-400">感谢您对我们工作的支持</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,28 @@
+# 运行时产物（保留目录保护文件）
+logs/*
+!logs/.htaccess
+cache/*
+!cache/.htaccess
+uploads/logos/*
+!uploads/logos/.htaccess
+
+# 本地回滚备份：含旧版源码与完整配置，禁止上传
+backups/
+
+# 本地环境覆盖配置
+config/database.local.php
+
+# 安装锁
+install/install.lock
+
+# 探针与临时文件
+_dsh_probe.php
+_dsh_probe_7f3a9c2e.php
+dshprobe7f3a9c2e.php
+_dsh_delete_test.tmp
+www/
+
+# 系统杂项
+*.log
+Thumbs.db
+.DS_Store

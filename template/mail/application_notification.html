@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>新网站申请通知</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#667eea',
+                        secondary: '#764ba2',
+                        accent: '#2196F3',
+                        pending: '#ff9800',
+                    },
+                    fontFamily: {
+                        sans: ['Microsoft YaHei', 'Segoe UI', 'Arial', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .bg-gradient-primary {
+                background: linear-gradient(135deg, theme('colors.primary'), theme('colors.secondary'));
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-md hover:-translate-y-1;
+            }
+            .btn-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:opacity-95;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 leading-relaxed">
+    <div class="max-w-[600px] mx-auto my-5 bg-white rounded-xl overflow-hidden shadow-md border border-gray-100">
+        <!-- 头部 -->
+        <div class="bg-gradient-primary text-white py-10 px-5 text-center relative overflow-hidden">
+            <div class="absolute inset-0 opacity-20">
+                <div class="absolute w-[200%] h-[200%] -top-1/2 -left-1/2 bg-radial-gradient-circle"></div>
+            </div>
+            <h1 class="text-2xl font-bold relative z-10 flex items-center justify-center gap-2">
+                <i class="fas fa-envelope-open-text"></i> 新网站申请通知
+            </h1>
+            <p class="opacity-90 relative z-10 mt-2">{{site_title}}</p>
+        </div>
+
+        <!-- 内容区 -->
+        <div class="p-10">
+            <p class="mb-6">您好管理员，收到一个新的网站收录申请，请及时审核。</p>
+
+            <!-- 信息卡片 -->
+            <div class="bg-gray-50 rounded-lg p-6 border-l-4 border-primary card-hover mb-6">
+                <div class="flex items-center py-3 border-b border-gray-200 last:border-0 last:pb-0">
+                    <span class="w-24 font-semibold text-gray-600">申请ID</span>
+                    <span class="flex-1">#{{application_id}}</span>
+                    <span class="bg-pending text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+                        <i class="fas fa-clock text-xs"></i> 待审核
+                    </span>
+                </div>
+                <div class="flex items-center py-3 border-b border-gray-200 last:border-0 last:pb-0">
+                    <span class="w-24 font-semibold text-gray-600">网站名称</span>
+                    <span class="flex-1 font-semibold text-primary">{{site_name}}</span>
+                </div>
+                <div class="flex items-center py-3 border-b border-gray-200 last:border-0 last:pb-0">
+                    <span class="w-24 font-semibold text-gray-600">网站地址</span>
+                    <a href="{{site_url}}" target="_blank" class="flex-1 text-primary hover:underline">{{site_url}}</a>
+                </div>
+                <div class="flex items-center py-3 border-b border-gray-200 last:border-0 last:pb-0">
+                    <span class="w-24 font-semibold text-gray-600">申请人邮箱</span>
+                    <a href="mailto:{{email}}" class="flex-1 text-primary hover:underline">{{email}}</a>
+                </div>
+                <div class="flex items-center py-3 border-b border-gray-200 last:border-0 last:pb-0">
+                    <span class="w-24 font-semibold text-gray-600">网站分类</span>
+                    <span class="flex-1 flex items-center gap-1">
+                        <i class="fas fa-folder-open text-gray-500"></i> {{category_name}}
+                    </span>
+                </div>
+                <div class="flex items-center py-3 border-b border-gray-200 last:border-0 last:pb-0">
+                    <span class="w-24 font-semibold text-gray-600">Logo状态</span>
+                    <span class="flex-1 flex items-center gap-1">
+                        {{#if site_logo}}
+                        <i class="fas fa-check-circle text-green-500"></i> 已上传Logo
+                        {{else}}
+                        <i class="fas fa-exclamation-circle text-amber-500"></i> 未上传Logo
+                        {{/if}}
+                    </span>
+                </div>
+                <div class="flex items-center py-3 border-b border-gray-200 last:border-0 last:pb-0">
+                    <span class="w-24 font-semibold text-gray-600">IP地址</span>
+                    <span class="flex-1">{{ip_address}}</span>
+                </div>
+                <div class="flex items-center py-3 border-b border-gray-200 last:border-0 last:pb-0">
+                    <span class="w-24 font-semibold text-gray-600">提交时间</span>
+                    <span class="flex-1">{{submit_time}}</span>
+                </div>
+            </div>
+
+            <!-- 网站描述 -->
+            <div class="bg-blue-50 rounded-lg p-6 border-l-4 border-accent mb-8">
+                <h3 class="font-semibold text-accent flex items-center gap-2 mb-3 text-lg">
+                    <i class="fas fa-file-alt"></i> 网站描述
+                </h3>
+                <p class="mb-3">{{description}}</p>
+                <span class="bg-blue-50 text-accent text-xs px-3 py-1 rounded-full flex items-center gap-1">
+                    <i class="fas fa-info-circle"></i> 请确认描述内容与网站实际相符
+                </span>
+            </div>
+
+            <!-- 按钮 -->
+            <div class="text-center my-8">
+                <a href="{{admin_url}}" target="_blank" class="inline-block bg-gradient-primary text-white font-semibold px-10 py-4 rounded-lg btn-hover shadow-md">
+                    <i class="fas fa-arrow-right mr-2"></i> 前往后台审核
+                </a>
+            </div>
+
+            <p class="text-center text-gray-500 text-sm leading-relaxed">
+                请及时处理此申请，申请者将在 <strong>1-3个工作日</strong> 内收到审核结果通知。<br>
+                点击上方按钮可直接进入审核页面。
+            </p>
+        </div>
+
+        <!-- 底部 -->
+        <div class="bg-gray-50 text-center py-8 px-5 border-t border-gray-200 text-gray-500 text-sm">
+            <p class="mb-2">此邮件由系统自动发送，请勿直接回复。</p>
+            <p class="mb-2">{{site_title}} &copy; {{current_year}} 版权所有</p>
+        </div>
+    </div>
+</body>
+</html>

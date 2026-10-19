@@ -1,0 +1,12 @@
+# 上传目录：只允许图片访问，禁止脚本与 SVG 直接执行。
+<FilesMatch "\.(php|phtml|phar|asp|aspx|cgi|pl|py|sh|svg)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+Options -Indexes

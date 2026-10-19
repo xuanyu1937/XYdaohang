@@ -1,0 +1,26 @@
+# 轩宇-导航 · Apache 安全配置（IIS 请使用 web.config）
+Options -Indexes
+DirectoryIndex index.php index.html
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # 不把不存在的路径重写到首页，避免掩盖 404 和扩大攻击面。
+
+    # 可选：为开放 API 提供不带 .php 的地址（/api/sites → api/sites.php）
+    # 只想用 /api/sites.php 直连的话，可以删掉下面这行。
+    RewriteRule ^api/sites/?$ api/sites.php [L,QSA]
+</IfModule>
+
+# 阻止直接访问敏感目录（PHP 内部 include 不受影响）
+RedirectMatch 403 ^/?(config|includes|install|backups|logs|cache|vendor)(/|$)
+
+# 阻止下载源码/备份/日志类文件
+<FilesMatch "\.(log|sql|lock|ini|bak|zip|dist|md|txt)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order Allow,Deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>申请通过通知</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        success: {
+                            light: '#20c997',
+                            DEFAULT: '#28a745'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Microsoft YaHei', 'Segoe UI', 'Arial', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .bg-gradient-success {
+                background: linear-gradient(135deg, theme('colors.success.DEFAULT'), theme('colors.success.light'));
+            }
+            .btn-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:opacity-95;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 leading-relaxed">
+    <div class="max-w-[600px] mx-auto my-5 bg-white rounded-xl overflow-hidden shadow-md border border-gray-100">
+        <!-- 头部 -->
+        <div class="bg-gradient-success text-white py-10 px-5 text-center">
+            <h1 class="text-2xl font-bold flex items-center justify-center gap-2">
+                <i class="fas fa-check-circle"></i> 恭喜！您的网站申请已通过审核
+            </h1>
+            <p class="opacity-90 mt-2">{{site_title}}</p>
+        </div>
+        
+        <!-- 内容区 -->
+        <div class="p-10">
+            <div class="text-center mb-8">
+                <i class="fas fa-trophy text-4xl text-amber-400 mb-4"></i>
+                <p class="text-xl text-success font-medium">恭喜您！您的网站已成功通过审核</p>
+            </div>
+            
+            <p class="mb-4">尊敬的 {{site_name}} 网站管理员，您好！</p>
+            
+            <p class="mb-6">我们很高兴地通知您，您提交的网站收录申请已经通过审核！您的网站现已被正式收录到我们的导航站中。</p>
+            
+            <!-- 信息卡片 -->
+            <div class="bg-green-50 rounded-lg p-6 border-l-4 border-success mb-8">
+                <div class="flex items-center py-3 border-b border-gray-200 last:border-0 last:pb-0">
+                    <span class="w-24 font-semibold text-gray-600">网站名称</span>
+                    <span class="flex-1 font-semibold text-success">{{site_name}}</span>
+                </div>
+                <div class="flex items-center py-3 border-b border-gray-200 last:border-0 last:pb-0">
+                    <span class="w-24 font-semibold text-gray-600">网站地址</span>
+                    <a href="{{site_url}}" target="_blank" class="flex-1 text-success hover:underline">{{site_url}}</a>
+                </div>
+                <div class="flex items-center py-3 border-b border-gray-200 last:border-0 last:pb-0">
+                    <span class="w-24 font-semibold text-gray-600">审核时间</span>
+                    <span class="flex-1">{{approval_date}}</span>
+                </div>
+            </div>
+            
+            <!-- 按钮 -->
+            <div class="text-center my-8">
+                <a href="{{index_url}}" target="_blank" class="inline-block bg-gradient-success text-white font-semibold px-10 py-4 rounded-lg btn-hover shadow-md">
+                    <i class="fas fa-external-link-alt mr-2"></i> 查看导航首页
+                </a>
+            </div>
+            
+            <p class="font-semibold flex items-center gap-2 mb-3">
+                <i class="fas fa-list-alt text-success"></i> 注意事项：
+            </p>
+            <ul class="pl-6 text-gray-600 space-y-2 mb-6">
+                <li>请确保您的网站持续可用，我们会定期检查收录网站的状态</li>
+                <li>如果您的网站信息有变更，请及时联系我们更新</li>
+                <li>欢迎推荐更多优质网站给我们</li>
+                <li>感谢您对我们的支持！</li>
+            </ul>
+            
+            <p class="text-gray-500 text-sm mt-4">
+                如果您有任何疑问或需要帮助，请随时回复此邮件联系我们。
+            </p>
+        </div>
+        
+        <div class="bg-gray-50 text-center py-8 px-5 border-t border-gray-200 text-gray-500 text-sm">
+            <p class="mb-2">此邮件由系统自动发送，请勿直接回复。</p>
+            <p class="mb-2">{{site_title}} &copy; {{current_year}} 版权所有</p>
+            <p class="text-xs text-gray-400 mt-4">如果您不希望收到此类邮件，请勿回复此邮件。</p>
+        </div>
+    </div>
+</body>
+</html>
