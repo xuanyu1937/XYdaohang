@@ -200,13 +200,101 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = '测试邮件已发送至 ' . $to . '，请查收（含垃圾箱）';
         } else {
             $map = [
-                'mail_disabled'     => '邮件功能未启用：请在 config/smtp.php 中设置 enabled => true 并填写 SMTP 账号',
+                'mail_disabled'     => '邮件功能未启用：请先在左侧填写 SMTP 配置并勾选「启用邮件功能」后保存',
                 'phpmailer_missing' => 'PHPMailer 未安装：缺少 vendor/PHPMailer/src 目录',
                 'invalid_recipient' => '收件邮箱为空或格式不正确，且未配置 admin_email',
                 'send_failed'       => '发送失败：SMTP 连接或认证出错，请检查主机、端口、加密方式与账号密码',
             ];
             $code = (string) ($mailResult['error'] ?? 'send_failed');
             $error = '测试邮件发送失败：' . ($map[$code] ?? ('未知错误（' . $code . '）'));
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // ⑤+ 邮件：保存 SMTP 配置（写入 config/smtp.php，无需手动改文件）
+    // ------------------------------------------------------------------
+    if ($action === 'save_mail_config') {
+        $mailEnabledInput = isset($_POST['mail_enabled']);
+        $host = trim((string) ($_POST['mail_host'] ?? ''));
+        $port = (int) ($_POST['mail_port'] ?? 0);
+        $encryption = strtolower(trim((string) ($_POST['mail_encryption'] ?? '')));
+        $username = trim((string) ($_POST['mail_username'] ?? ''));
+        $password = (string) ($_POST['mail_password'] ?? '');   // 密码不做 trim，避免改动合法空格
+        $fromAddress = trim((string) ($_POST['mail_from_address'] ?? ''));
+        $adminEmail = trim((string) ($_POST['mail_admin_email'] ?? ''));
+
+        if (!in_array($encryption, ['', 'ssl', 'tls'], true)) {
+            $encryption = '';
+        }
+
+        if ($port < 1 || $port > 65535) {
+            $error = 'SMTP 端口不合法（1-65535）';
+        } elseif ($mailEnabledInput && $host === '') {
+            $error = '启用邮件功能时 SMTP 主机不能为空';
+        } elseif ($mailEnabledInput && $fromAddress === '') {
+            $error = '启用邮件功能时发件地址不能为空';
+        } elseif ($fromAddress !== '' && !filter_var($fromAddress, FILTER_VALIDATE_EMAIL)) {
+            $error = '发件地址格式不正确';
+        } elseif ($adminEmail !== '' && !filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
+            $error = '管理员收件邮箱格式不正确';
+        } else {
+            $smtpFile = dirname(__DIR__) . '/config/smtp.php';
+
+            // 直接读文件而不是走 MailService::config()，
+            // 避免其静态缓存让下方展示区读到保存前的旧值。
+            $existing = [];
+            if (is_file($smtpFile)) {
+                $loaded = require $smtpFile;
+                if (is_array($loaded)) {
+                    $existing = $loaded;
+                }
+            }
+
+            $smtpDefaults = [
+                'host' => '', 'port' => 465, 'username' => '', 'password' => '',
+                'encryption' => 'ssl', 'timeout' => 30, 'auth' => true, 'debug' => false,
+            ];
+            $existingSmtp = is_array($existing['smtp'] ?? null) ? $existing['smtp'] : [];
+            $newSmtp = array_merge($smtpDefaults, $existingSmtp);
+            $newSmtp['host'] = $host;
+            $newSmtp['port'] = $port;
+            $newSmtp['username'] = $username;
+            $newSmtp['encryption'] = $encryption;
+            if ($password !== '') {
+                // 留空表示保持已保存的密码不变
+                $newSmtp['password'] = $password;
+            }
+
+            $existingFrom = is_array($existing['from'] ?? null) ? $existing['from'] : [];
+            $newFrom = array_merge(['address' => '', 'name' => '轩宇-导航'], $existingFrom);
+            $newFrom['address'] = $fromAddress;
+
+            $new = $existing;
+            $new['enabled'] = $mailEnabledInput;
+            $new['admin_email'] = $adminEmail;
+            $new['smtp'] = $newSmtp;
+            $new['from'] = $newFrom;
+
+            $fileHeader = '<?php' . "\n"
+                . '/**' . "\n"
+                . ' * 轩宇-导航 · 邮件配置' . "\n"
+                . ' * 本文件由后台「系统工具 → 邮件设置与测试」保存生成，也可手动编辑。' . "\n"
+                . ' */' . "\n\n"
+                . "if (basename((string) (\$_SERVER['SCRIPT_FILENAME'] ?? '')) === basename(__FILE__)) {" . "\n"
+                . '    http_response_code(403);' . "\n"
+                . '    exit;' . "\n"
+                . '}' . "\n\n"
+                . 'return ';
+
+            if (@file_put_contents($smtpFile, $fileHeader . var_export($new, true) . ';' . "\n", LOCK_EX) !== false) {
+                // OPcache 默认 2 秒内不重查文件时间戳，主动失效避免本次请求读到旧配置
+                if (function_exists('opcache_invalidate')) {
+                    @opcache_invalidate($smtpFile, true);
+                }
+                $message = '邮件配置已保存到 config/smtp.php' . ($mailEnabledInput ? '' : '（当前为未启用状态）');
+            } else {
+                $error = '配置保存失败：config/smtp.php 不可写，请检查目录权限';
+            }
         }
     }
 
@@ -347,7 +435,6 @@ $mailEncryption = (string) ($mailConfig['smtp']['encryption'] ?? '');
 $mailUsername = (string) ($mailConfig['smtp']['username'] ?? '');
 $mailPasswordSet = trim((string) ($mailConfig['smtp']['password'] ?? '')) !== '';
 $mailFromAddress = (string) ($mailConfig['from']['address'] ?? '');
-$mailFromName = (string) ($mailConfig['from']['name'] ?? '');
 $mailAdminEmail = $mailService->adminEmail();
 
 $unreadMessages = $contactService->countUnread();
@@ -470,12 +557,14 @@ $tableLabels = [
                                 <div class="card-body">
                                     <div class="alert alert-warning small">
                                         <i class="fas fa-triangle-exclamation"></i>
-                                        备份文件包含<strong>用户密码哈希与 API 令牌原文</strong>，导入时会被原样还原，
-                                        因此可以把账号与令牌完整恢复出来。但也正因为如此：
-                                        <strong>请勿把备份文件放到网站根目录或任何可公开访问的位置</strong>，
-                                        也不要在聊天工具里随意发送。
-                                        出于「一份备份外泄即可直接调用付费接口」的考虑，
-                                        <code>settings.ai_api_key</code>（AI 接口密钥）<strong>不会导出</strong>，恢复后需重新填写。
+                                        <div>
+                                            备份文件包含<strong>用户密码哈希与 API 令牌原文</strong>，导入时会被原样还原，
+                                            因此可以把账号与令牌完整恢复出来。但也正因为如此：
+                                            <strong>请勿把备份文件放到网站根目录或任何可公开访问的位置</strong>，
+                                            也不要在聊天工具里随意发送。
+                                            出于「一份备份外泄即可直接调用付费接口」的考虑，
+                                            <code>settings.ai_api_key</code>（AI 接口密钥）<strong>不会导出</strong>，恢复后需重新填写。
+                                        </div>
                                     </div>
 
                                     <form method="POST" class="mb-2">
@@ -696,8 +785,10 @@ $tableLabels = [
 
                                     <div class="alert alert-info small mt-3 mb-0">
                                         <i class="fas fa-circle-info"></i>
-                                        令牌的 <code>user_id</code> 为 <strong>0</strong> 表示管理级（可读写公共与全部条目）；
-                                        大于 0 时仅能读写该用户自己的条目。接口实现见 <code>api/sites.php</code>。
+                                        <div>
+                                            令牌的 <code>user_id</code> 为 <strong>0</strong> 表示管理级（可读写公共与全部条目）；
+                                            大于 0 时仅能读写该用户自己的条目。接口实现见 <code>api/sites.php</code>。
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -797,7 +888,9 @@ $tableLabels = [
                                     <?php if (!$hasTokenTable): ?>
                                         <div class="alert alert-warning mb-0">
                                             <i class="fas fa-triangle-exclamation"></i>
-                                            未检测到 <code>api_tokens</code> 表，请先执行 <code>upgrade_v2.0.0.sql</code> 完成升级。
+                                            <div>
+                                                未检测到 <code>api_tokens</code> 表，请先执行 <code>upgrade_v2.0.0.sql</code> 完成升级。
+                                            </div>
                                         </div>
                                     <?php elseif (empty($tokenRows)): ?>
                                         <div class="text-center py-5 text-muted">
@@ -809,11 +902,13 @@ $tableLabels = [
                             </div>
 
                             <div class="alert alert-light small mt-3 mb-0">
-                                <div class="mb-1"><strong>调用示例：</strong></div>
-                                <pre class="mb-0" style="white-space:pre-wrap;word-break:break-all;">curl -H "Authorization: Bearer &lt;token&gt;" "<?php echo $functions->escape($cronBaseUrl); ?>/api/sites.php?page=1&amp;size=20"</pre>
-                                <div class="mt-2 text-muted">
-                                    支持请求头 <code>Authorization: Bearer &lt;token&gt;</code>、<code>X-Api-Token</code>，也兼容 URL 参数 <code>?token=</code>。
-                                    列表接口可用参数：<code>category</code>、<code>user_id</code>、<code>q</code>、<code>page</code>、<code>size</code>。
+                                <div>
+                                    <div class="mb-1"><strong>调用示例：</strong></div>
+                                    <pre class="mb-0" style="white-space:pre-wrap;word-break:break-all;">curl -H "Authorization: Bearer &lt;token&gt;" "<?php echo $functions->escape($cronBaseUrl); ?>/api/sites.php?page=1&amp;size=20"</pre>
+                                    <div class="mt-2 text-muted">
+                                        支持请求头 <code>Authorization: Bearer &lt;token&gt;</code>、<code>X-Api-Token</code>，也兼容 URL 参数 <code>?token=</code>。
+                                        列表接口可用参数：<code>category</code>、<code>user_id</code>、<code>q</code>、<code>page</code>、<code>size</code>。
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1002,46 +1097,77 @@ $tableLabels = [
                             <div class="card form-card">
                                 <div class="card-header">
                                     <div>
-                                        <h5 class="mb-0"><i class="fas fa-envelope-circle-check"></i>当前邮件配置</h5>
-                                        <span class="card-subtitle">来自 config/smtp.php</span>
+                                        <h5 class="mb-0"><i class="fas fa-envelope-circle-check"></i>邮件配置</h5>
+                                        <span class="card-subtitle">在线填写并保存到 config/smtp.php，无需手动改文件</span>
                                     </div>
                                     <span class="badge <?php echo $mailEnabled ? 'bg-success' : 'bg-secondary'; ?>">
                                         <?php echo $mailEnabled ? '已启用' : '未启用'; ?>
                                     </span>
                                 </div>
                                 <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table admin-table align-middle mb-3">
-                                            <tbody>
-                                                <tr>
-                                                    <td class="text-muted" width="140">功能状态</td>
-                                                    <td>
-                                                        <?php if ($mailEnabled): ?>
-                                                            <span class="badge bg-success">enabled = true</span>
-                                                        <?php else: ?>
-                                                            <span class="badge bg-secondary">enabled = false</span>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                </tr>
-                                                <tr><td class="text-muted">SMTP 主机</td><td><?php echo $mailHost !== '' ? $functions->escape($mailHost) : '<span class="text-muted">未填写</span>'; ?></td></tr>
-                                                <tr><td class="text-muted">端口</td><td><?php echo $mailPort !== '' ? $functions->escape($mailPort) : '<span class="text-muted">未填写</span>'; ?></td></tr>
-                                                <tr><td class="text-muted">加密方式</td><td><?php echo $mailEncryption !== '' ? $functions->escape($mailEncryption) : '<span class="text-muted">未填写</span>'; ?></td></tr>
-                                                <tr><td class="text-muted">SMTP 账号</td><td><?php echo $mailUsername !== '' ? $functions->escape($mailUsername) : '<span class="text-muted">未填写</span>'; ?></td></tr>
-                                                <tr>
-                                                    <td class="text-muted">SMTP 密码</td>
-                                                    <td><?php echo $mailPasswordSet ? '<span class="badge badge-soft-info">已设置（••••••••）</span>' : '<span class="text-muted">未设置</span>'; ?></td>
-                                                </tr>
-                                                <tr><td class="text-muted">发件地址</td><td><?php echo $mailFromAddress !== '' ? $functions->escape($mailFromAddress) : '<span class="text-muted">未填写</span>'; ?><?php echo $mailFromName !== '' ? '（' . $functions->escape($mailFromName) . '）' : ''; ?></td></tr>
-                                                <tr><td class="text-muted">管理员收件邮箱</td><td><?php echo $mailAdminEmail !== '' ? $functions->escape($mailAdminEmail) : '<span class="text-muted">未填写</span>'; ?></td></tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                    <form method="POST">
+                                        <input type="hidden" name="tab" value="mail">
+                                        <input type="hidden" name="action" value="save_mail_config">
 
-                                    <div class="alert alert-info small mb-0">
-                                        <i class="fas fa-circle-info"></i>
-                                        配置文件路径为 <code>config/smtp.php</code>，需手动编辑并把 <code>enabled</code> 改为 <code>true</code>，
-                                        同时填写 SMTP 主机、端口、账号、密码与发件地址后，邮件功能才会生效。
-                                    </div>
+                                        <div class="form-check form-switch mb-3">
+                                            <input class="form-check-input" type="checkbox" name="mail_enabled" id="mailEnabledSwitch" value="1" <?php echo $mailEnabled ? 'checked' : ''; ?>>
+                                            <label class="form-check-label" for="mailEnabledSwitch">启用邮件功能</label>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">SMTP 主机 <span class="text-danger">*</span></label>
+                                            <input type="text" name="mail_host" class="form-control" maxlength="100"
+                                                   value="<?php echo $functions->escape($mailHost); ?>" placeholder="如 smtp.qiye.aliyun.com">
+                                        </div>
+
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-sm-6">
+                                                <label class="form-label">端口 <span class="text-danger">*</span></label>
+                                                <input type="number" name="mail_port" class="form-control" min="1" max="65535"
+                                                       value="<?php echo $mailPort !== '' ? $functions->escape($mailPort) : '465'; ?>" placeholder="465">
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <label class="form-label">加密方式</label>
+                                                <select name="mail_encryption" class="form-select">
+                                                    <option value="ssl" <?php echo $mailEncryption === 'ssl' ? 'selected' : ''; ?>>SSL</option>
+                                                    <option value="tls" <?php echo $mailEncryption === 'tls' ? 'selected' : ''; ?>>TLS</option>
+                                                    <option value="" <?php echo $mailEncryption === '' ? 'selected' : ''; ?>>不加密</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">SMTP 账号</label>
+                                            <input type="text" name="mail_username" class="form-control" maxlength="150" autocomplete="off"
+                                                   value="<?php echo $functions->escape($mailUsername); ?>" placeholder="通常是完整邮箱地址">
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">SMTP 密码</label>
+                                            <input type="password" name="mail_password" class="form-control" maxlength="150" autocomplete="new-password"
+                                                   placeholder="<?php echo $mailPasswordSet ? '已设置，留空则保持不变' : '邮箱密码或客户端授权码'; ?>">
+                                            <small class="text-muted">留空则保持当前已保存的密码不变；QQ/163 等邮箱请填客户端授权码。</small>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">发件地址 <span class="text-danger">*</span></label>
+                                            <input type="email" name="mail_from_address" class="form-control" maxlength="150"
+                                                   value="<?php echo $functions->escape($mailFromAddress); ?>" placeholder="对外显示的发件人邮箱">
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">管理员收件邮箱</label>
+                                            <input type="email" name="mail_admin_email" class="form-control" maxlength="150"
+                                                   value="<?php echo $functions->escape($mailAdminEmail); ?>" placeholder="接收申请通知与告警邮件">
+                                            <small class="text-muted">留空则测试邮件无法使用默认收件人；发件人名称沿用站点标题。</small>
+                                        </div>
+
+                                        <div class="d-grid">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-floppy-disk me-2"></i>保存邮件配置
+                                            </button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -1083,8 +1209,10 @@ $tableLabels = [
                                         <?php else: ?>
                                             <div class="alert alert-danger mb-0">
                                                 <i class="fas fa-circle-xmark"></i>
-                                                发送失败：错误代码 <code><?php echo $functions->escape((string) ($mailResult['error'] ?? 'unknown')); ?></code>，
-                                                具体原因见页面顶部提示。
+                                                <div>
+                                                    发送失败：错误代码 <code><?php echo $functions->escape((string) ($mailResult['error'] ?? 'unknown')); ?></code>，
+                                                    具体原因见页面顶部提示。
+                                                </div>
                                             </div>
                                         <?php endif; ?>
                                     <?php endif; ?>
