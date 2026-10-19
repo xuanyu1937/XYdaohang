@@ -1072,6 +1072,13 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
                                 <label class="form-check-label" for="announcement_enabled">启用顶部公告栏</label>
                             </div>
 
+                            <?php if (!$announcementEnabled || trim((string) $announcementContent) === ''): ?>
+                                <div class="alert alert-info" style="margin-bottom:14px;padding:10px 14px;font-size:13px;border-radius:8px;">
+                                    <i class="fas fa-circle-info"></i>
+                                    当前公告未在前台展示：请勾选「启用顶部公告栏」并填写公告内容，保存后刷新前台首页即可看到滚动公告条。
+                                </div>
+                            <?php endif; ?>
+
                             <div class="field">
                                 <label class="form-label" for="announcement_content">公告内容</label>
                                 <textarea id="announcement_content"

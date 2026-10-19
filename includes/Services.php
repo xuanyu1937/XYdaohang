@@ -1046,64 +1046,82 @@ class SiteInfoService extends BaseService
         $this->lastRedirectUrl = '';
 
         if (function_exists('curl_init')) {
-            $ch = curl_init($url);
-            $options = [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_FOLLOWLOCATION => false,
-                CURLOPT_MAXREDIRS => 0,
-                CURLOPT_MAXFILESIZE => self::MAX_BYTES,
-                CURLOPT_CONNECTTIMEOUT => 3,
-                CURLOPT_TIMEOUT => 5,
-                CURLOPT_USERAGENT => $userAgent,
-                CURLOPT_ENCODING => '',
-                CURLOPT_SSL_VERIFYPEER => true,
-                CURLOPT_SSL_VERIFYHOST => 2,
-                CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
-                CURLOPT_HEADER => true,
+            // 首次请求：严格 SSL + 较短超时；失败则用宽松策略重试一次。
+            $attempts = [
+                ['connect' => 5, 'total' => 10, 'verify' => true],
+                ['connect' => 8, 'total' => 15, 'verify' => false],
             ];
 
-            if (defined('CURLOPT_REDIR_PROTOCOLS')) {
-                $options[CURLOPT_REDIR_PROTOCOLS] = CURLPROTO_HTTP | CURLPROTO_HTTPS;
-            }
+            $html = '';
 
-            curl_setopt_array($ch, $options);
-            $raw = curl_exec($ch);
-            curl_close($ch);
+            foreach ($attempts as $attempt) {
+                $ch = curl_init($url);
+                $options = [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_FOLLOWLOCATION => false,
+                    CURLOPT_MAXREDIRS => 0,
+                    CURLOPT_MAXFILESIZE => self::MAX_BYTES,
+                    CURLOPT_CONNECTTIMEOUT => $attempt['connect'],
+                    CURLOPT_TIMEOUT => $attempt['total'],
+                    CURLOPT_USERAGENT => $userAgent,
+                    CURLOPT_ENCODING => '',
+                    CURLOPT_SSL_VERIFYPEER => $attempt['verify'],
+                    CURLOPT_SSL_VERIFYHOST => $attempt['verify'] ? 2 : 0,
+                    CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                    CURLOPT_HEADER => true,
+                    CURLOPT_HTTPHEADER => [
+                        'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Accept-Language: zh-CN,zh;q=0.9,en;q=0.8',
+                        'Cache-Control: no-cache',
+                    ],
+                ];
 
-            if (is_string($raw) && $raw !== '') {
-                // 分离 header / body（可能有多段 header）
-                $html = $raw;
-                $lastHeader = '';
+                if (defined('CURLOPT_REDIR_PROTOCOLS')) {
+                    $options[CURLOPT_REDIR_PROTOCOLS] = CURLPROTO_HTTP | CURLPROTO_HTTPS;
+                }
 
-                while (preg_match("/\r?\n\r?\n/", $html, $m, PREG_OFFSET_CAPTURE)) {
-                    $split = $m[0][1];
-                    $lastHeader = substr($html, 0, $split);
-                    $rest = substr($html, $split + strlen($m[0][0]));
+                curl_setopt_array($ch, $options);
+                $raw = curl_exec($ch);
+                curl_close($ch);
 
-                    // 若 body 仍以 HTTP/ 开头，说明还有 header 段（如 100-continue）
-                    if (preg_match('#^HTTP/\d#i', ltrim($rest))) {
+                if (is_string($raw) && $raw !== '') {
+                    // 分离 header / body（可能有多段 header）
+                    $html = $raw;
+                    $lastHeader = '';
+
+                    while (preg_match("/\r?\n\r?\n/", $html, $m, PREG_OFFSET_CAPTURE)) {
+                        $split = $m[0][1];
+                        $lastHeader = substr($html, 0, $split);
+                        $rest = substr($html, $split + strlen($m[0][0]));
+
+                        // 若 body 仍以 HTTP/ 开头，说明还有 header 段（如 100-continue）
+                        if (preg_match('#^HTTP/\d#i', ltrim($rest))) {
+                            $html = $rest;
+                            continue;
+                        }
+
                         $html = $rest;
-                        continue;
+                        break;
                     }
 
-                    $html = $rest;
-                    break;
+                    if (preg_match('/^Location:\s*(\S+)/im', $lastHeader, $m)) {
+                        $status = 0;
+
+                        if (preg_match('#^HTTP/\S+\s+(\d{3})#', $lastHeader, $sm)) {
+                            $status = (int) $sm[1];
+                        }
+
+                        if ($status >= 300 && $status < 400) {
+                            $this->lastRedirectUrl = trim($m[1]);
+                            return '';
+                        }
+                    }
+
+                    // 拿到内容就停止重试
+                    if ($html !== '') {
+                        break;
+                    }
                 }
-
-                if (preg_match('/^Location:\s*(\S+)/im', $lastHeader, $m)) {
-                    $status = 0;
-
-                    if (preg_match('#^HTTP/\S+\s+(\d{3})#', $lastHeader, $sm)) {
-                        $status = (int) $sm[1];
-                    }
-
-                    if ($status >= 300 && $status < 400) {
-                        $this->lastRedirectUrl = trim($m[1]);
-                        return '';
-                    }
-                }
-            } else {
-                $html = '';
             }
         } else {
             $context = stream_context_create([

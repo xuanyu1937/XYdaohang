@@ -1,10 +1,10 @@
-# 轩宇-导航 v2.2.0 部署清单
+# 轩宇-导航 v2.2.1 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1 + MySQL 5.7
-当前版本：v2.2.0
+当前版本：v2.2.1
 
-> 升级顺序：**先备份数据库 → 上传文件 → 执行 upgrade_v2.2.0.sql → 清缓存刷新**（从更早版本升级需依次执行 v2.0.0、v2.1.0、v2.2.0 脚本）。
+> 升级顺序：**先备份数据库 → 上传文件 → （仅 v2.1.x 及更早）执行 upgrade_v2.2.0.sql → 清缓存刷新**；v2.2.0 → v2.2.1 为纯代码修复，**无数据库结构变更**，不需要再跑升级脚本。
 
 ## 一、必须覆盖上传
 
@@ -48,19 +48,21 @@
 - clear_cache.php、get_cache_status.php（已改为 410，可直接删除）
 
 ### includes/
-- bootstrap.php（v2.2.0 兜底版本号更新）
+- bootstrap.php（v2.2.1 兜底版本号更新）
 - asset_fallbacks.php
 - functions.php（新增 textCut 兜底）
 - Services.php（v2 新增：UserService / SiteInfoService / AiService / CategoryEngine /
   HealthCheckService / BookmarkService / ShareService / MailService / BackupService / ContactService；
-  v2.2.0 增强：SiteInfoService 重定向安全跟随、og:image 兜底；UserService 新增密码重置三方法）
-- ConfigManager.php（v2.2.0 版本号更新）
+  v2.2.0 增强：SiteInfoService 重定向安全跟随、og:image 兜底；UserService 新增密码重置三方法；
+  v2.2.1 增强：SiteInfoService 下载超时放宽（连接 5s/总 10s）+ 失败宽松重试一次（连接 8s/总 15s/跳过证书校验），
+  补全 Accept / Accept-Language / Cache-Control 请求头）
+- ConfigManager.php（v2.2.1 版本号更新）
 - TemplateParser.php
 - UpdateManager.php（已改为 410，可直接删除）
 - .htaccess
 
 ### config/
-- config.php、database.php、smtp.php、version.php（版本号已改为 2.2.0）
+- config.php、database.php、smtp.php、version.php（版本号已改为 2.2.1）
 - .htaccess
 
 ### install/
@@ -76,7 +78,7 @@
 
 ### assets/（v2 起后台依赖已全部本地化，可离线自足）
 - 前台自有样式与脚本：
-  - css/nav.css（v2.2.0：搜索方式选择器样式、测速常驻显示）
+  - css/nav.css（v2.2.1：搜索框清除按钮与搜索方式选择器间距调整，避免重叠误触）
   - css/auth.css（v2.2.0：忘记密码/重置密码页样式）
   - css/page.css（v2 新增：分享/关于/联系页样式）
   - js/nav.js（v2.2.0：搜索引擎跳转、多关键词 AND、拼音搜索）

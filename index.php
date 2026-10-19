@@ -55,7 +55,7 @@ $gonganNumber = trim((string) $functions->getSetting('gongan_number'));
 
 $monitorEnabled = $functions->getSetting('monitor_enabled') !== '0';
 $showSpeedLabel = $functions->getSetting('show_speed_label') !== '0';
-$announcementEnabled = $functions->getSetting('announcement_enabled') === '1';
+$announcementEnabled = trim((string) $functions->getSetting('announcement_enabled')) === '1';
 $announcementContent = trim((string) $functions->getSetting('announcement_content'));
 
 $frontendTheme = (string) $functions->getSetting('frontend_theme');
@@ -102,13 +102,26 @@ $db = Database::getInstance()->getConnection();
 $rawLinks = [];
 
 try {
-    $stmt = $db->prepare(
-        "SELECT nl.*
-         FROM nav_links nl
-         WHERE nl.user_id = ? AND nl.is_active = 1 AND nl.deleted_at IS NULL
-         ORDER BY COALESCE(nl.clicks, 0) DESC, nl.sort_order ASC, nl.id ASC"
-    );
-    $stmt->execute([$viewUserId]);
+    // 访客（未登录或非本人）视图下，排除私密分组下的链接，避免站长私有数据外泄。
+    if ($isOwner) {
+        $stmt = $db->prepare(
+            "SELECT nl.*
+             FROM nav_links nl
+             WHERE nl.user_id = ? AND nl.is_active = 1 AND nl.deleted_at IS NULL
+             ORDER BY COALESCE(nl.clicks, 0) DESC, nl.sort_order ASC, nl.id ASC"
+        );
+        $stmt->execute([$viewUserId]);
+    } else {
+        $stmt = $db->prepare(
+            "SELECT nl.*
+             FROM nav_links nl
+             LEFT JOIN categories c ON c.id = nl.category_id
+             WHERE nl.user_id = ? AND nl.is_active = 1 AND nl.deleted_at IS NULL
+               AND COALESCE(c.is_private, 0) = 0
+             ORDER BY COALESCE(nl.clicks, 0) DESC, nl.sort_order ASC, nl.id ASC"
+        );
+        $stmt->execute([$viewUserId]);
+    }
     $rawLinks = $stmt->fetchAll();
 } catch (Throwable $error) {
     $viewUserId = 0;

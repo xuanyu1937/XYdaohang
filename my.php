@@ -1370,6 +1370,21 @@ $hasLinks = $totalLinks > 0;
             <p class="my-msg" id="accountMsg" role="alert"></p>
 
             <div class="my-field">
+                <label>头像</label>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <?php if ($avatarUrl !== ''): ?>
+                        <img src="<?php echo $functions->escape($avatarUrl); ?>" alt="当前头像" style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
+                    <?php else: ?>
+                        <span style="width:44px;height:44px;border-radius:50%;background:var(--primary,#667eea);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto;"><?php echo $functions->escape($brandInitial); ?></span>
+                    <?php endif; ?>
+                    <button type="button" class="my-btn" id="accountAvatarBtn">
+                        <i class="fas fa-camera"></i>
+                        <span class="my-btn-label">设置头像</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="my-field">
                 <label>邮箱</label>
                 <input type="text" value="<?php echo $functions->escape($user['email']); ?>" readonly>
             </div>
@@ -1661,9 +1676,19 @@ $hasLinks = $totalLinks > 0;
             var avatarDialog = qs('#avatarDialog');
             var avatarEditBtn = qs('#avatarEditBtn');
             var avatarDialogClose = qs('#avatarDialogClose');
+            var accountAvatarBtn = qs('#accountAvatarBtn');
+            var accountDialog = qs('#accountDialog');
 
             if (avatarEditBtn && avatarDialog) {
                 avatarEditBtn.addEventListener('click', function () {
+                    avatarDialog.showModal();
+                });
+            }
+            if (accountAvatarBtn && avatarDialog) {
+                accountAvatarBtn.addEventListener('click', function () {
+                    if (accountDialog && typeof accountDialog.close === 'function') {
+                        accountDialog.close();
+                    }
                     avatarDialog.showModal();
                 });
             }
@@ -2184,7 +2209,6 @@ $hasLinks = $totalLinks > 0;
 
             /* ----------------------------- 账号设置 ----------------------------- */
 
-            var accountDialog = qs('#accountDialog');
             var accountMsg = qs('#accountMsg');
             var changePasswordBtn = qs('#changePasswordBtn');
 
