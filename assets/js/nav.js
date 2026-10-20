@@ -2208,9 +2208,16 @@
                 mode = localStorage.getItem('nav_open_mode') || 'default';
             } catch (error) { /* 忽略 */ }
 
-            openModeToggle.textContent = mode === 'self'
+            var label = openModeToggle.querySelector('span');
+            var text = mode === 'self'
                 ? '打开方式：当前页'
                 : (mode === 'blank' ? '打开方式：新标签' : '打开方式：默认');
+
+            if (label) {
+                label.textContent = text;
+            } else {
+                openModeToggle.textContent = text;
+            }
         }
 
         if (openModeToggle) {

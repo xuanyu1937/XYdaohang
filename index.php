@@ -440,10 +440,10 @@ if ($bgImage !== '') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.6.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.6.1">
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-    <script src="assets/js/nav.js?v=2.6.0" defer></script>
-    <script src="assets/js/search.js?v=2.6.0" defer></script>
+    <script src="assets/js/nav.js?v=2.6.1" defer></script>
+    <script src="assets/js/search.js?v=2.6.1" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -569,8 +569,14 @@ if ($bgImage !== '') {
                         <div class="user-dropdown">
                             <a class="user-item<?php echo $isOwner ? ' is-current' : ''; ?>" href="index.php">全部导航</a>
                             <a class="user-item" href="my.php">我的导航</a>
-                            <button type="button" class="user-item" id="quickAddTrigger">快捷收藏</button>
-                            <button type="button" class="user-item" id="openModeToggle">打开方式：默认</button>
+                            <button type="button" class="user-item user-item-btn" id="quickAddTrigger">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="15" height="15"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <span>快捷收藏</span>
+                            </button>
+                            <button type="button" class="user-item user-item-btn" id="openModeToggle">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="15" height="15"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path></svg>
+                                <span>打开方式：默认</span>
+                            </button>
                             <?php if ((int) $currentUser['is_admin'] === 1): ?>
                                 <a class="user-item" href="admin/index.php">管理后台</a>
                             <?php endif; ?>

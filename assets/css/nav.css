@@ -1692,10 +1692,27 @@ body[data-monitor="0"] .site-clicks {
 }
 
 .user-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
     padding: 9px 11px;
+    border: 0;
     border-radius: 8px;
+    background: transparent;
     color: var(--text-2);
     font-size: 13px;
+    font-family: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.user-item svg {
+    flex-shrink: 0;
+    color: var(--muted);
+    transition: color 0.15s ease;
 }
 
 .user-item:hover {
@@ -1703,13 +1720,25 @@ body[data-monitor="0"] .site-clicks {
     color: var(--text);
 }
 
+.user-item:hover svg {
+    color: var(--primary);
+}
+
 .user-item.is-current {
     color: var(--primary);
     font-weight: 600;
 }
 
+.user-item.is-current svg {
+    color: var(--primary);
+}
+
 .user-item.is-danger:hover {
     background: var(--danger-soft);
+    color: var(--danger);
+}
+
+.user-item.is-danger:hover svg {
     color: var(--danger);
 }
 
@@ -3087,6 +3116,16 @@ dialog.auth-modal::backdrop {
     align-items: center;
     gap: 6px;
     pointer-events: none;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.site-card:hover .card-corner,
+.site-card:focus-within .card-corner,
+.site-card[data-starred="1"] .card-corner {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .card-corner > * {
@@ -3097,16 +3136,18 @@ dialog.auth-modal::backdrop {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     padding: 0;
     border: 1px solid transparent;
-    border-radius: 8px;
-    background: transparent;
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--surface) 90%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
     color: var(--muted-2);
-    opacity: 0;
     cursor: pointer;
-    transition: opacity 0.16s ease, color 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+    transition: color 0.16s ease, background 0.16s ease, border-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
 }
 
 .card-star svg {
@@ -3114,53 +3155,61 @@ dialog.auth-modal::backdrop {
     height: 15px;
 }
 
-.site-card:hover .card-star,
-.site-card:focus-within .card-star {
-    opacity: 1;
-}
-
 .card-star:hover {
     color: var(--warning);
     background: var(--surface);
     border-color: var(--border);
+    transform: scale(1.08);
+    box-shadow: 0 3px 8px rgba(180, 83, 9, 0.2);
 }
 
 .site-card[data-starred="1"] .card-star {
-    opacity: 1;
     color: var(--warning);
+    border-color: color-mix(in srgb, var(--warning) 28%, transparent);
+    background: color-mix(in srgb, var(--warning) 12%, var(--surface));
+}
+
+.site-card[data-starred="1"] .card-star:hover {
+    box-shadow: 0 3px 10px rgba(180, 83, 9, 0.28);
 }
 
 .card-actions {
     display: none;
     align-items: center;
-    gap: 4px;
-    padding: 3px;
+    gap: 2px;
+    padding: 4px;
     border: 1px solid var(--border);
-    border-radius: 10px;
-    background: color-mix(in srgb, var(--surface) 86%, transparent);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
-    box-shadow: var(--shadow-sm);
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 14px -6px rgba(15, 23, 42, 0.25);
 }
 
 .site-card:hover .card-actions,
 .site-card:focus-within .card-actions {
     display: inline-flex;
+    animation: cardActionsIn 0.18s ease;
+}
+
+@keyframes cardActionsIn {
+    from { opacity: 0; transform: translateY(-3px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .card-action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     padding: 0;
     border: 0;
-    border-radius: 7px;
+    border-radius: 8px;
     background: transparent;
     color: var(--muted);
     cursor: pointer;
-    transition: color 0.14s ease, background 0.14s ease;
+    transition: color 0.14s ease, background 0.14s ease, transform 0.14s ease;
 }
 
 .card-action svg {
@@ -3171,11 +3220,16 @@ dialog.auth-modal::backdrop {
 .card-action:hover {
     color: var(--primary);
     background: var(--primary-soft);
+    transform: scale(1.1);
 }
 
 .card-action-danger:hover {
     color: var(--danger);
     background: var(--danger-soft);
+}
+
+.card-action-danger:hover svg {
+    color: var(--danger);
 }
 
 /* 右键 / 长按 上下文菜单 */
@@ -3330,9 +3384,10 @@ dialog.auth-modal::backdrop {
         display: none !important;
     }
 
-    .card-star,
-    .site-card[data-starred="1"] .card-star {
+    .card-corner,
+    .site-card[data-starred="1"] .card-corner {
         opacity: 1;
+        transform: translateY(0);
     }
 }
 
@@ -3341,6 +3396,15 @@ dialog.auth-modal::backdrop {
 .sites-list[data-view="compact"] .card-corner {
     top: 50%;
     left: 12px;
+    transform: translateY(calc(-50% - 4px));
+}
+
+.sites-list[data-view="list"] .site-card:hover .card-corner,
+.sites-list[data-view="list"] .site-card:focus-within .card-corner,
+.sites-list[data-view="list"] .site-card[data-starred="1"] .card-corner,
+.sites-list[data-view="compact"] .site-card:hover .card-corner,
+.sites-list[data-view="compact"] .site-card:focus-within .card-corner,
+.sites-list[data-view="compact"] .site-card[data-starred="1"] .card-corner {
     transform: translateY(-50%);
 }
 

@@ -3245,7 +3245,7 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-<script src="assets/js/search.js?v=2.6.0" defer></script>
+<script src="assets/js/search.js?v=2.6.1" defer></script>
 
     <!-- 卡片右键 / 长按菜单 -->
     <div class="card-context-menu" id="cardContextMenu" hidden>
