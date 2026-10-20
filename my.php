@@ -1036,7 +1036,8 @@ $hasLinks = $totalLinks > 0;
                 display: none;
             }
 
-            .my-btn .my-btn-label {
+            /* 仅隐藏外层工具栏按钮的 label，对话框/表单项内按钮保留文字语义 */
+            .my-btn:not(.my-dialog .my-btn):not(.my-field-row .my-btn) .my-btn-label {
                 display: none;
             }
 
@@ -1435,7 +1436,10 @@ $hasLinks = $totalLinks > 0;
                         <span style="width:44px;height:44px;border-radius:50%;background:var(--primary,#667eea);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto;"><?php echo $functions->escape($brandInitial); ?></span>
                     <?php endif; ?>
                     <button type="button" class="my-btn" id="accountAvatarBtn">
-                        <i class="fas fa-camera"></i>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                        </svg>
                         <span class="my-btn-label">设置头像</span>
                     </button>
                 </div>
@@ -1453,6 +1457,11 @@ $hasLinks = $totalLinks > 0;
                            value="<?php echo $functions->escape((string) ($user['footer_copyright'] ?? '')); ?>"
                            placeholder="默认使用站点版权，支持 {year} 与 {site} 占位符">
                     <button type="button" class="my-btn" id="saveCopyrightBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
                         <span class="my-btn-label">保存</span>
                     </button>
                 </div>
@@ -1476,7 +1485,13 @@ $hasLinks = $totalLinks > 0;
         </div>
 
         <div class="my-dialog-foot">
-            <button type="button" class="my-btn is-primary" id="changePasswordBtn">修改密码</button>
+            <button type="button" class="my-btn is-primary" id="changePasswordBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span class="my-btn-label">修改密码</span>
+            </button>
         </div>
     </dialog>
 

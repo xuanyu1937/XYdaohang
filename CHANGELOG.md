@@ -1,5 +1,12 @@
 # 轩宇-导航 · 版本记录
 
+## v2.4.2（2026-10-20）
+
+> 紧急热修复，仅改动 `my.php`。覆盖该文件 + 清 `cache/` 即可。
+
+**修复**
+- 账号设置保存按钮显示异常：v2.4.2 之前账号弹窗内「设置头像 / 保存版权 / 修改密码」三个按钮在移动端（≤720px）变成空壳——根因有二：① `@media (max-width: 720px)` 媒体查询把所有 `.my-btn-label` 全局 `display:none`，但这三个按钮**只有 label 没有可见图标**；② 按钮里原本用的 `<i class="fas fa-camera">` 这类 Font Awesome 图标（my.php 根本没引入 FA 资源）也是空壳。修复：三个按钮全部换成内联 SVG 图标 + label；同时把媒体查询里的 label 隐藏规则收窄为仅影响外层工具栏按钮 `.my-btn:not(.my-dialog .my-btn):not(.my-field-row .my-btn) .my-btn-label`，对话框 / 表单项内按钮保留完整文字语义。
+
 ## v2.4.1（2026-10-20）
 
 > 紧急热修复，**仅改动 `assets/js/nav.js` 位置**；覆盖该文件 + 清 `cache/` 即可。
