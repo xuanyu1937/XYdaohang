@@ -145,6 +145,8 @@ switch ($action) {
         $name = userSiteTrim($_POST['name'] ?? '', 100);
         $description = userSiteTrim($_POST['description'] ?? '', 200);
         $logo = userSiteTrim($_POST['logo'] ?? '', 500);
+        $tags = userSiteTrim($_POST['tags'] ?? '', 255);
+        $alias = userSiteTrim($_POST['alias'] ?? '', 255);
         $categoryId = userSiteCategoryId($db, $_POST['category_id'] ?? 0, $userId);
 
         // 名称为空时抓取标题，顺带补齐描述与图标。
@@ -178,10 +180,10 @@ switch ($action) {
         $isStarred = !empty($_POST['is_starred']) ? 1 : 0;
 
         $stmt = $db->prepare(
-            'INSERT INTO nav_links (name, url, logo, description, category_id, user_id, sort_order, is_active, is_starred, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())'
+            'INSERT INTO nav_links (name, url, logo, description, category_id, user_id, sort_order, is_active, is_starred, tags, alias, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, NOW())'
         );
-        $stmt->execute([$name, $url, $logo, $description, $categoryId, $userId, $sort, $isStarred]);
+        $stmt->execute([$name, $url, $logo, $description, $categoryId, $userId, $sort, $isStarred, $tags, $alias]);
 
         $functions->jsonResponse([
             'ok' => true,
@@ -326,6 +328,8 @@ switch ($action) {
 
         $description = userSiteTrim($_POST['description'] ?? '', 200);
         $logo = userSiteTrim($_POST['logo'] ?? '', 500);
+        $tags = userSiteTrim($_POST['tags'] ?? '', 255);
+        $alias = userSiteTrim($_POST['alias'] ?? '', 255);
         $categoryId = userSiteCategoryId($db, $_POST['category_id'] ?? 0, $userId);
 
         if ($categoryId <= 0) {
@@ -334,10 +338,10 @@ switch ($action) {
         }
 
         $stmt = $db->prepare(
-            'UPDATE nav_links SET name = ?, url = ?, logo = ?, description = ?, category_id = ?, updated_at = NOW()
+            'UPDATE nav_links SET name = ?, url = ?, logo = ?, description = ?, category_id = ?, tags = ?, alias = ?, updated_at = NOW()
              WHERE id = ? AND user_id = ?'
         );
-        $stmt->execute([$name, $url, $logo, $description, $categoryId, $id, $userId]);
+        $stmt->execute([$name, $url, $logo, $description, $categoryId, $tags, $alias, $id, $userId]);
 
         $functions->jsonResponse([
             'ok' => true,
@@ -438,6 +442,153 @@ switch ($action) {
         $delStmt->execute($params);
 
         $functions->jsonResponse(['ok' => true, 'count' => count($idList)]);
+        break;
+
+    case 'batch_tag':
+        $ids = $_POST['ids'] ?? [];
+
+        if (is_string($ids)) {
+            $decoded = json_decode($ids, true);
+            $ids = is_array($decoded) ? $decoded : array_filter(array_map('trim', explode(',', $ids)));
+        }
+
+        if (!is_array($ids) || empty($ids)) {
+            $functions->jsonResponse(['ok' => false, 'error' => '请选择网址'], 400);
+        }
+
+        $idList = array_values(array_filter(array_map('intval', $ids), function ($v) { return $v > 0; }));
+
+        if (empty($idList)) {
+            $functions->jsonResponse(['ok' => false, 'error' => '请选择有效的网址'], 400);
+        }
+
+        $placeholders = implode(',', array_fill(0, count($idList), '?'));
+        $checkStmt = $db->prepare("SELECT COUNT(*) AS total FROM nav_links WHERE id IN ($placeholders) AND user_id = ?");
+        $params = $idList;
+        $params[] = $userId;
+        $checkStmt->execute($params);
+        $owned = (int) ($checkStmt->fetch()['total'] ?? 0);
+
+        if ($owned !== count($idList)) {
+            $functions->jsonResponse(['ok' => false, 'error' => '部分网址无权操作'], 403);
+        }
+
+        $newTags = userSiteTrim($_POST['tags'] ?? '', 255);
+        $mode = ($_POST['mode'] ?? 'append') === 'overwrite' ? 'overwrite' : 'append';
+        $newTagArr = array_values(array_filter(array_map('trim', explode(',', $newTags))));
+
+        if ($mode === 'append') {
+            // 逐条读取现有 tags 并合并去重
+            $selectStmt = $db->prepare("SELECT id, tags FROM nav_links WHERE id IN ($placeholders) AND user_id = ?");
+            $selectStmt->execute($params);
+            $rows = $selectStmt->fetchAll();
+            $updateStmt = $db->prepare('UPDATE nav_links SET tags = ?, updated_at = NOW() WHERE id = ? AND user_id = ?');
+
+            foreach ($rows as $row) {
+                $existing = array_values(array_filter(array_map('trim', explode(',', (string) ($row['tags'] ?? '')))));
+                $merged = array_values(array_unique(array_merge($existing, $newTagArr)));
+                $mergedStr = implode(',', array_slice($merged, 0, 20)); // 最多 20 个标签
+                $updateStmt->execute([$mergedStr, (int) $row['id'], $userId]);
+            }
+        } else {
+            $mergedStr = implode(',', array_slice($newTagArr, 0, 20));
+            $updateStmt = $db->prepare("UPDATE nav_links SET tags = ?, updated_at = NOW() WHERE id IN ($placeholders) AND user_id = ?");
+            $updParams = array_merge([$mergedStr], $idList, [$userId]);
+            $updateStmt->execute($updParams);
+        }
+
+        $functions->jsonResponse(['ok' => true, 'count' => count($idList)]);
+        break;
+
+    case 'batch_add':
+        $raw = (string) ($_POST['urls'] ?? '');
+
+        if ($raw === '') {
+            $functions->jsonResponse(['ok' => false, 'error' => '请输入网址'], 400);
+        }
+
+        $lines = preg_split('/\r\n|\r|\n/', $raw);
+        $items = [];
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '') { continue; }
+
+            $name = '';
+            $url = '';
+
+            // 支持「名称,网址」「名称\t网址」或纯网址
+            if (strpos($line, "\t") !== false) {
+                $parts = explode("\t", $line, 2);
+                $name = trim($parts[0]);
+                $url = userSiteNormalizeUrl($parts[1] ?? '');
+            } elseif (strpos($line, ',') !== false && strpos($line, 'http') !== 0) {
+                $parts = explode(',', $line, 2);
+                $name = trim($parts[0]);
+                $url = userSiteNormalizeUrl($parts[1] ?? '');
+            } else {
+                $url = userSiteNormalizeUrl($line);
+            }
+
+            if ($url === '') { continue; }
+            $items[] = ['name' => $name, 'url' => $url];
+        }
+
+        if (empty($items)) {
+            $functions->jsonResponse(['ok' => false, 'error' => '未解析到有效网址'], 400);
+        }
+
+        // 上限校验
+        $countStmt = $db->prepare('SELECT COUNT(*) AS total FROM nav_links WHERE user_id = ?');
+        $countStmt->execute([$userId]);
+        $current = (int) ($countStmt->fetch()['total'] ?? 0);
+
+        $categoryId = userSiteCategoryId($db, $_POST['category_id'] ?? 0, $userId);
+        if ($categoryId <= 0) {
+            $engine = new CategoryEngine($functions);
+            $categoryId = $engine->ensure('未分类', 'bi-collection');
+        }
+
+        $sortStmt = $db->prepare('SELECT COALESCE(MAX(sort_order), 0) AS max_sort FROM nav_links WHERE user_id = ?');
+        $sortStmt->execute([$userId]);
+        $sort = (int) ($sortStmt->fetch()['max_sort'] ?? 0);
+
+        $imported = 0;
+        $skipped = 0;
+        $dupStmt = $db->prepare('SELECT id FROM nav_links WHERE user_id = ? AND url = ? LIMIT 1');
+        $insertStmt = $db->prepare(
+            'INSERT INTO nav_links (name, url, category_id, user_id, sort_order, is_active, is_starred, created_at)
+             VALUES (?, ?, ?, ?, ?, 1, 0, NOW())'
+        );
+
+        $seen = [];
+
+        foreach ($items as $item) {
+            if (isset($seen[$item['url']])) { $skipped++; continue; }
+            $seen[$item['url']] = true;
+
+            $dupStmt->execute([$userId, $item['url']]);
+            if ($dupStmt->fetch()) { $skipped++; continue; }
+
+            if ($current + $imported >= USER_LINK_LIMIT) { break; }
+
+            $name = $item['name'];
+            if ($name === '') {
+                $host = parse_url($item['url'], PHP_URL_HOST);
+                $name = $host ? preg_replace('/^www\./i', '', $host) : $item['url'];
+            }
+
+            $sort++;
+            $insertStmt->execute([$name, $item['url'], $categoryId, $userId, $sort]);
+            $imported++;
+        }
+
+        $functions->jsonResponse([
+            'ok' => true,
+            'imported' => $imported,
+            'skipped' => $skipped,
+            'category_id' => $categoryId,
+        ]);
         break;
 
     case 'sort':

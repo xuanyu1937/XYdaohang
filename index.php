@@ -440,10 +440,10 @@ if ($bgImage !== '') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.6.2">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.7.0">
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-    <script src="assets/js/nav.js?v=2.6.2" defer></script>
-    <script src="assets/js/search.js?v=2.6.2" defer></script>
+    <script src="assets/js/nav.js?v=2.7.0" defer></script>
+    <script src="assets/js/search.js?v=2.7.0" defer></script>
     <noscript>
         <style>
             .site-status,

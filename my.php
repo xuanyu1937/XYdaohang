@@ -107,7 +107,7 @@ $rawLinks = [];
 
 try {
     $stmt = $db->prepare(
-        'SELECT id, name, url, logo, description, category_id, sort_order, clicks, check_status, latency_ms, is_starred
+        'SELECT id, name, url, logo, description, category_id, sort_order, clicks, check_status, latency_ms, is_starred, tags, alias
          FROM nav_links
          WHERE user_id = ? AND deleted_at IS NULL
          ORDER BY sort_order, id'
@@ -207,6 +207,8 @@ foreach ($rawLinks as $row) {
         'description' => (string) ($row['description'] ?? ''),
         'category_id' => $categoryId,
         'favicons' => $faviconFor($row['logo'] ?? '', $url),
+        'tags' => (string) ($row['tags'] ?? ''),
+        'alias' => (string) ($row['alias'] ?? ''),
     ];
 
     if (isset($groups[$categoryId])) {
@@ -255,7 +257,7 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.5.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.7.0">
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -491,8 +493,78 @@ $hasLinks = $totalLinks > 0;
             opacity: 0.45;
         }
 
-        .my-item.is-drop-target {
-            box-shadow: inset 0 2px 0 var(--primary);
+        .my-item.is-drop-before {
+            box-shadow: inset 0 3px 0 var(--primary);
+        }
+
+        .my-item.is-drop-after {
+            box-shadow: inset 0 -3px 0 var(--primary);
+        }
+
+        .my-group.is-drop-before > .my-group-head {
+            box-shadow: inset 0 3px 0 var(--primary);
+        }
+
+        .my-group.is-drop-after > .my-group-head {
+            box-shadow: inset 0 -3px 0 var(--primary);
+        }
+
+        .my-group.is-dragging {
+            opacity: 0.5;
+        }
+
+        .my-inline-input {
+            width: 100%;
+            min-width: 120px;
+            padding: 4px 8px;
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            background: var(--surface);
+            color: var(--text);
+            font-size: inherit;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .my-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 48px;
+            transform: translateX(-50%) translateY(10px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.92);
+            color: #fff;
+            font-size: 14px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            pointer-events: none;
+        }
+
+        .my-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+        }
+
+        .my-toast-undo {
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: transparent;
+            color: #fff;
+            font-size: 13px;
+            padding: 3px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .my-toast-undo:hover {
+            background: rgba(255, 255, 255, 0.15);
         }
 
         .my-handle {
@@ -640,7 +712,10 @@ $hasLinks = $totalLinks > 0;
             z-index: 30;
             display: none;
             align-items: center;
-            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px 14px;
+            max-width: calc(100vw - 32px);
             padding: 12px 16px;
             border: 1px solid var(--border-strong);
             border-radius: 14px;
@@ -663,6 +738,60 @@ $hasLinks = $totalLinks > 0;
 
         body[data-batch="1"] .my-picker {
             display: grid;
+        }
+
+        /* 整理模式：显示拖拽手柄 */
+        body[data-organize="1"] .my-handle {
+            display: grid;
+        }
+
+        body:not([data-organize="1"]) .my-handle {
+            display: none;
+        }
+
+        /* 标签 */
+        .my-tags {
+            display: block;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+        .my-tag {
+            display: inline-block;
+            font-size: 11px;
+            padding: 1px 6px;
+            margin: 0 3px 3px 0;
+            border-radius: 3px;
+            background: rgba(0,0,0,0.06);
+            color: #555;
+        }
+        [data-theme="dark"] .my-tag {
+            background: rgba(255,255,255,0.1);
+            color: #bbb;
+        }
+
+        /* 整理态下卡片可拖拽的视觉提示 */
+        body[data-organize="1"] .my-item {
+            cursor: grab;
+        }
+
+        body[data-organize="1"] .my-item:active {
+            cursor: grabbing;
+        }
+
+        .my-radio {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-right: 16px;
+            color: var(--text-2);
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .my-radio input {
+            width: 15px;
+            height: 15px;
+            accent-color: var(--primary);
         }
 
         .my-batch-all {
@@ -1109,7 +1238,7 @@ $hasLinks = $totalLinks > 0;
         }
     </style>
 </head>
-<body data-picking="0">
+<body data-picking="0" data-organize="0">
     <a class="skip-link" href="#myMain">跳到我的网址</a>
 
     <div class="page-shell">
@@ -1193,12 +1322,12 @@ $hasLinks = $totalLinks > 0;
                         </svg>
                         <span class="my-btn-label">导入书签</span>
                     </button>
-                    <button type="button" class="my-btn" id="batchBtn" <?php echo $hasLinks ? '' : 'aria-disabled="true"'; ?>>
+                    <button type="button" class="my-btn" id="organizeBtn" <?php echo $hasLinks ? '' : 'aria-disabled="true"'; ?>>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M9 11l3 3L22 4"></path>
-                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                            <path d="M3 6h18M3 12h18M3 18h18"></path>
+                            <path d="M9 6l3-3 3 3M9 18l3 3 3-3"></path>
                         </svg>
-                        <span class="my-btn-label">批量操作</span>
+                        <span class="my-btn-label" id="organizeBtnLabel">整理</span>
                     </button>
                     <button type="button" class="my-btn" id="pickBtn" <?php echo $hasLinks ? '' : 'aria-disabled="true"'; ?>>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1259,6 +1388,8 @@ $hasLinks = $totalLinks > 0;
                                      data-description="<?php echo $functions->escape($item['description']); ?>"
                                      data-category="<?php echo (int) $item['category_id']; ?>"
                                      data-logo="<?php echo $functions->escape((string) ($item['logo'] ?? '')); ?>"
+                                     data-tags="<?php echo $functions->escape($item['tags']); ?>"
+                                     data-alias="<?php echo $functions->escape($item['alias']); ?>"
                                      data-starred="<?php echo !empty($item['is_starred']) ? '1' : '0'; ?>">
                                     <span class="my-picker">
                                         <input type="checkbox" value="<?php echo (int) $item['id']; ?>" aria-label="选择 <?php echo $functions->escape($item['name']); ?>">
@@ -1290,6 +1421,13 @@ $hasLinks = $totalLinks > 0;
                                     <span class="my-info">
                                         <span class="my-link-name"><?php echo $functions->escape($item['name']); ?></span>
                                         <span class="my-link-url"><?php echo $functions->escape($item['host']); ?></span>
+                                        <?php if (!empty($item['tags'])): ?>
+                                            <span class="my-tags">
+                                                <?php foreach (array_filter(array_map('trim', explode(',', $item['tags']))) as $tag): ?>
+                                                    <span class="my-tag"><?php echo $functions->escape($tag); ?></span>
+                                                <?php endforeach; ?>
+                                            </span>
+                                        <?php endif; ?>
                                     </span>
 
                                     <span class="my-item-actions">
@@ -1365,6 +1503,10 @@ $hasLinks = $totalLinks > 0;
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="15" height="15"><path d="M5 4h14M5 12h14M5 20h14"></path><path d="M9 8l3-3 3 3M9 16l3 3 3-3"></path></svg>
             <span>批量移动</span>
         </button>
+        <button type="button" class="my-btn" id="batchTagBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="15" height="15"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><circle cx="7" cy="7" r="1.5"></circle></svg>
+            <span>批量打标签</span>
+        </button>
         <button type="button" class="my-btn is-danger" id="batchDeleteBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="15" height="15"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg>
             <span>批量删除</span>
@@ -1398,6 +1540,33 @@ $hasLinks = $totalLinks > 0;
         <div class="my-dialog-foot">
             <button type="button" class="my-btn" id="batchMoveCancel">取消</button>
             <button type="button" class="my-btn is-primary" id="batchMoveSubmit">移动</button>
+        </div>
+    </dialog>
+
+    <!-- 批量打标签弹窗 -->
+    <dialog class="my-dialog" id="batchTagDialog">
+        <div class="my-dialog-head">
+            <h3>批量打标签</h3>
+            <button type="button" class="my-iconbtn" id="batchTagClose" aria-label="关闭">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+            </button>
+        </div>
+        <div class="my-dialog-body">
+            <p class="my-msg" id="batchTagMsg" role="alert"></p>
+            <p class="my-batch-info">为 <strong id="batchTagCount">0</strong> 个网址设置标签：</p>
+            <div class="my-field">
+                <label for="batchTagInput">标签（多个用英文逗号分隔）</label>
+                <input type="text" id="batchTagInput" placeholder="例如：设计,工具,参考" autocomplete="off">
+            </div>
+            <div class="my-field">
+                <label>写入方式</label>
+                <label class="my-radio"><input type="radio" name="batchTagMode" value="append" checked> 追加（合并去重）</label>
+                <label class="my-radio"><input type="radio" name="batchTagMode" value="overwrite"> 覆盖（替换现有标签）</label>
+            </div>
+        </div>
+        <div class="my-dialog-foot">
+            <button type="button" class="my-btn" id="batchTagCancel">取消</button>
+            <button type="button" class="my-btn is-primary" id="batchTagSubmit">应用</button>
         </div>
     </dialog>
 
@@ -1461,6 +1630,16 @@ $hasLinks = $totalLinks > 0;
                     <label for="linkLogo">图标地址</label>
                     <input type="url" id="linkLogo" name="logo" maxlength="500" autocomplete="off" spellcheck="false" placeholder="可留空，自动使用网站图标">
                 </div>
+
+                <div class="my-field">
+                    <label for="linkTags">标签</label>
+                    <input type="text" id="linkTags" name="tags" maxlength="255" autocomplete="off" placeholder="多个标签用英文逗号分隔，例如：设计,工具">
+                </div>
+
+                <div class="my-field">
+                    <label for="linkAlias">别名</label>
+                    <input type="text" id="linkAlias" name="alias" maxlength="255" autocomplete="off" placeholder="可留空，用于搜索时的别称">
+                </div>
             </div>
 
             <div class="my-dialog-foot">
@@ -1509,7 +1688,38 @@ $hasLinks = $totalLinks > 0;
         </div>
         <div class="my-dialog-foot">
             <button type="button" class="my-btn" id="quickAddCancel">取消</button>
+            <button type="button" class="my-btn" id="quickAddBatchBtn">批量粘贴</button>
             <button type="button" class="my-btn is-primary" id="quickAddSubmit">抓取并收藏</button>
+        </div>
+    </dialog>
+
+    <!-- 批量粘贴导入 -->
+    <dialog class="my-dialog" id="batchPasteDialog">
+        <div class="my-dialog-head">
+            <h3>批量粘贴导入</h3>
+            <button type="button" class="my-iconbtn" id="batchPasteClose" aria-label="关闭">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+            </button>
+        </div>
+        <div class="my-dialog-body">
+            <p class="my-msg" id="batchPasteMsg" role="alert"></p>
+            <div class="my-field">
+                <label for="batchPasteText">粘贴网址（每行一个，支持「名称,网址」格式）</label>
+                <textarea id="batchPasteText" rows="8" placeholder="https://example.com&#10;GitHub,https://github.com&#10;..."></textarea>
+            </div>
+            <div class="my-field">
+                <label for="batchPasteCategory">保存到分组</label>
+                <select id="batchPasteCategory">
+                    <option value="0">未分类</option>
+                    <?php foreach ($ownGroups as $group): ?>
+                        <option value="<?php echo (int) $group['id']; ?>"><?php echo $functions->escape(($group['is_private'] ? '🔒 ' : '') . $group['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+        <div class="my-dialog-foot">
+            <button type="button" class="my-btn" id="batchPasteCancel">取消</button>
+            <button type="button" class="my-btn is-primary" id="batchPasteSubmit">开始导入</button>
         </div>
     </dialog>
 
@@ -1940,6 +2150,8 @@ $hasLinks = $totalLinks > 0;
                     linkCategory.value = item.categoryId;
                     linkDescription.value = item.description || '';
                     linkLogo.value = item.logo || '';
+                    if (qs('#linkTags')) { qs('#linkTags').value = item.tags || ''; }
+                    if (qs('#linkAlias')) { qs('#linkAlias').value = item.alias || ''; }
                 } else {
                     linkDialogTitle.textContent = '添加网址';
                     linkId.value = '';
@@ -1947,6 +2159,8 @@ $hasLinks = $totalLinks > 0;
                     linkName.value = '';
                     linkDescription.value = '';
                     linkLogo.value = '';
+                    if (qs('#linkTags')) { qs('#linkTags').value = ''; }
+                    if (qs('#linkAlias')) { qs('#linkAlias').value = ''; }
 
                     if (linkCategory.options.length) {
                         linkCategory.selectedIndex = 0;
@@ -2035,7 +2249,9 @@ $hasLinks = $totalLinks > 0;
                         name: item.getAttribute('data-name'),
                         description: item.getAttribute('data-description'),
                         categoryId: item.getAttribute('data-category'),
-                        logo: item.getAttribute('data-logo') || ''
+                        logo: item.getAttribute('data-logo') || '',
+                        tags: item.getAttribute('data-tags') || '',
+                        alias: item.getAttribute('data-alias') || ''
                     });
                 }
             })();
@@ -2132,7 +2348,9 @@ $hasLinks = $totalLinks > 0;
                     name: linkName.value.trim(),
                     category_id: linkCategory.value,
                     description: linkDescription.value.trim(),
-                    logo: linkLogo.value.trim()
+                    logo: linkLogo.value.trim(),
+                    tags: (qs('#linkTags') ? qs('#linkTags').value.trim() : ''),
+                    alias: (qs('#linkAlias') ? qs('#linkAlias').value.trim() : '')
                 };
 
                 if (linkId.value) {
@@ -2181,7 +2399,9 @@ $hasLinks = $totalLinks > 0;
                             name: item.getAttribute('data-name'),
                             description: item.getAttribute('data-description'),
                             categoryId: item.getAttribute('data-category'),
-                            logo: item.getAttribute('data-logo') || ''
+                            logo: item.getAttribute('data-logo') || '',
+                            tags: item.getAttribute('data-tags') || '',
+                            alias: item.getAttribute('data-alias') || ''
                         });
                     }
 
@@ -2195,17 +2415,49 @@ $hasLinks = $totalLinks > 0;
 
                     if (!row) { return; }
 
-                    if (!window.confirm('确定删除「' + row.getAttribute('data-name') + '」吗？')) {
-                        return;
-                    }
+                    var snap = {
+                        id: row.getAttribute('data-id'),
+                        name: row.getAttribute('data-name'),
+                        url: row.getAttribute('data-url'),
+                        category: row.getAttribute('data-category'),
+                        description: row.getAttribute('data-description') || '',
+                        logo: row.getAttribute('data-logo') || ''
+                    };
 
-                    postForm(API_SITES, { action: 'delete', id: row.getAttribute('data-id') }).then(function (result) {
+                    postForm(API_SITES, { action: 'delete', id: snap.id }).then(function (result) {
                         if (!result.ok) {
                             window.alert(result.error || '删除失败');
                             return;
                         }
 
-                        window.location.reload();
+                        row.style.display = 'none';
+
+                        pushUndo({
+                            type: 'delete',
+                            undo: function () {
+                                postForm(API_SITES, {
+                                    action: 'add',
+                                    url: snap.url,
+                                    name: snap.name,
+                                    category_id: snap.category,
+                                    description: snap.description,
+                                    logo: snap.logo
+                                }).then(function (res) {
+                                    if (res && res.ok) {
+                                        row.style.display = '';
+                                        row.setAttribute('data-id', res.id);
+                                        showToast('已恢复');
+                                    } else {
+                                        showToast('恢复失败');
+                                    }
+                                });
+                            }
+                        });
+
+                        showToast('已删除「' + snap.name + '」', function () {
+                            var entry = popUndo();
+                            if (entry && typeof entry.undo === 'function') { entry.undo(); }
+                        });
                     });
                 }
             });
@@ -2213,10 +2465,12 @@ $hasLinks = $totalLinks > 0;
             /* ----------------------------- 拖拽排序 ----------------------------- */
 
             var dragging = null;
+            var dragOriginCategory = null;
+            var autoScrollTimer = null;
 
             qsa('.my-list[data-sortable]').forEach(function (list) {
                 list.addEventListener('dragstart', function (event) {
-                    if (document.body.getAttribute('data-picking') === '1') {
+                    if (document.body.getAttribute('data-picking') === '1' || document.body.getAttribute('data-organize') !== '1') {
                         event.preventDefault();
                         return;
                     }
@@ -2226,6 +2480,7 @@ $hasLinks = $totalLinks > 0;
                     if (!item) { return; }
 
                     dragging = item;
+                    dragOriginCategory = item.getAttribute('data-category');
                     item.classList.add('is-dragging');
 
                     if (event.dataTransfer) {
@@ -2235,23 +2490,26 @@ $hasLinks = $totalLinks > 0;
                 });
 
                 list.addEventListener('dragover', function (event) {
-                    if (!dragging || dragging.parentNode !== list) { return; }
+                    if (!dragging) { return; }
 
                     event.preventDefault();
                     event.dataTransfer.dropEffect = 'move';
 
                     var target = event.target.closest ? event.target.closest('.my-item') : null;
 
-                    qsa('.my-item.is-drop-target', list).forEach(function (node) {
-                        node.classList.remove('is-drop-target');
+                    qsa('.my-item.is-drop-before, .my-item.is-drop-after').forEach(function (node) {
+                        node.classList.remove('is-drop-before', 'is-drop-after');
                     });
+
+                    // 自动滚动
+                    startAutoScroll(event);
 
                     if (!target || target === dragging) { return; }
 
-                    target.classList.add('is-drop-target');
-
                     var rect = target.getBoundingClientRect();
                     var after = event.clientY > rect.top + rect.height / 2;
+
+                    target.classList.add(after ? 'is-drop-after' : 'is-drop-before');
 
                     if (after) {
                         list.insertBefore(dragging, target.nextSibling);
@@ -2262,29 +2520,121 @@ $hasLinks = $totalLinks > 0;
 
                 list.addEventListener('drop', function (event) {
                     event.preventDefault();
+                    stopAutoScroll();
+                });
+
+                list.addEventListener('dragleave', function (event) {
+                    if (!event.relatedTarget || !list.contains(event.relatedTarget)) {
+                        qsa('.my-item.is-drop-before, .my-item.is-drop-after').forEach(function (node) {
+                            node.classList.remove('is-drop-before', 'is-drop-after');
+                        });
+                    }
                 });
 
                 list.addEventListener('dragend', function () {
                     if (!dragging) { return; }
 
+                    stopAutoScroll();
                     dragging.classList.remove('is-dragging');
-                    qsa('.my-item.is-drop-target').forEach(function (node) {
-                        node.classList.remove('is-drop-target');
+                    qsa('.my-item.is-drop-before, .my-item.is-drop-after').forEach(function (node) {
+                        node.classList.remove('is-drop-before', 'is-drop-after');
                     });
 
+                    var newCategory = dragging.getAttribute('data-category');
+                    var currentList = dragging.closest('.my-group');
+                    var newCatId = currentList ? currentList.getAttribute('data-group') : '0';
+                    var crossGroup = dragOriginCategory !== newCatId;
+
+                    var itemId = dragging.getAttribute('data-id');
+                    var finishedItem = dragging;
+                    var originCat = dragOriginCategory;
                     dragging = null;
-                    persistOrder();
+                    dragOriginCategory = null;
+
+                    if (crossGroup) {
+                        // 跨分组：先 move 更新 category_id，再按分组重排
+                        postForm(API_SITES, { action: 'move', id: itemId, category_id: newCatId }).then(function (res) {
+                            if (!res || !res.ok) {
+                                window.alert((res && res.error) || '移动失败');
+                                window.location.reload();
+                                return;
+                            }
+                            finishedItem.setAttribute('data-category', newCatId);
+                            persistGroupOrder(newCatId);
+                            if (originCat) { persistGroupOrder(originCat); }
+
+                            pushUndo({
+                                type: 'move',
+                                undo: function () {
+                                    postForm(API_SITES, { action: 'move', id: itemId, category_id: originCat }).then(function (r) {
+                                        if (r && r.ok) {
+                                            finishedItem.setAttribute('data-category', originCat);
+                                            var origGroup = document.querySelector('.my-group[data-group="' + originCat + '"] .my-list');
+                                            if (origGroup) { origGroup.appendChild(finishedItem); }
+                                            persistGroupOrder(originCat);
+                                            persistGroupOrder(newCatId);
+                                            showToast('已移回原分组');
+                                        }
+                                    });
+                                }
+                            });
+
+                            showToast('已移动到「' + getGroupName(newCatId) + '」', function () {
+                                var entry = popUndo();
+                                if (entry && typeof entry.undo === 'function') { entry.undo(); }
+                            });
+                        });
+                    } else {
+                        persistGroupOrder(newCatId);
+                    }
                 });
+            });
+
+            function getGroupName(catId) {
+                var group = document.querySelector('.my-group[data-group="' + catId + '"] h3');
+                return group ? group.textContent.trim().replace(/^./, '') : '分组';
+            }
+
+            function startAutoScroll(event) {
+                stopAutoScroll();
+                var threshold = 80;
+                var y = event.clientY;
+                var vh = window.innerHeight;
+
+                autoScrollTimer = setInterval(function () {
+                    if (y < threshold) {
+                        window.scrollBy(0, -8);
+                    } else if (y > vh - threshold) {
+                        window.scrollBy(0, 8);
+                    }
+                }, 16);
+            }
+
+            function stopAutoScroll() {
+                if (autoScrollTimer) {
+                    clearInterval(autoScrollTimer);
+                    autoScrollTimer = null;
+                }
+            }
+
+            document.addEventListener('dragover', function (event) {
+                if (dragging) {
+                    startAutoScroll(event);
+                }
+            });
+
+            document.addEventListener('drop', function () {
+                stopAutoScroll();
             });
 
             var reorderStatus = qs('#reorderStatus');
 
-            function persistOrder() {
-                var items = qsa('.my-item');
-
-                var ids = items.map(function (node) {
-                    return node.getAttribute('data-id');
-                });
+            function persistGroupOrder(catId) {
+                var group = document.querySelector('.my-group[data-group="' + catId + '"]');
+                if (!group) { return; }
+                var items = qsa('.my-item', group);
+                var ids = items.map(function (node) { return node.getAttribute('data-id'); });
+                if (!ids.length) { return; }
 
                 postForm(API_SITES, { action: 'sort', ids: ids }).then(function (result) {
                     if (!result.ok) {
@@ -2293,6 +2643,183 @@ $hasLinks = $totalLinks > 0;
                     }
                 });
             }
+
+            function persistOrder() {
+                // 兼容旧调用：按所有分组逐个重排
+                qsa('.my-group').forEach(function (group) {
+                    persistGroupOrder(group.getAttribute('data-group'));
+                });
+            }
+
+            /* ---------- 分组拖拽排序 ---------- */
+            var draggingGroup = null;
+
+            qsa('.my-group-head').forEach(function (head) {
+                head.setAttribute('draggable', 'true');
+
+                head.addEventListener('dragstart', function (event) {
+                    if (document.body.getAttribute('data-organize') !== '1') {
+                        event.preventDefault();
+                        return;
+                    }
+                    draggingGroup = head.closest('.my-group');
+                    draggingGroup.classList.add('is-dragging');
+                    if (event.dataTransfer) {
+                        event.dataTransfer.effectAllowed = 'move';
+                        event.dataTransfer.setData('text/plain', 'group');
+                    }
+                });
+
+                head.addEventListener('dragover', function (event) {
+                    if (!draggingGroup) { return; }
+                    event.preventDefault();
+                    var group = head.closest('.my-group');
+                    if (group === draggingGroup) { return; }
+                    qsa('.my-group.is-drop-before, .my-group.is-drop-after').forEach(function (g) {
+                        g.classList.remove('is-drop-before', 'is-drop-after');
+                    });
+                    var rect = head.getBoundingClientRect();
+                    var after = event.clientY > rect.top + rect.height / 2;
+                    group.classList.add(after ? 'is-drop-after' : 'is-drop-before');
+                    if (after) {
+                        group.parentNode.insertBefore(draggingGroup, group.nextSibling);
+                    } else {
+                        group.parentNode.insertBefore(draggingGroup, group);
+                    }
+                });
+
+                head.addEventListener('dragend', function () {
+                    if (!draggingGroup) { return; }
+                    draggingGroup.classList.remove('is-dragging');
+                    qsa('.my-group.is-drop-before, .my-group.is-drop-after').forEach(function (g) {
+                        g.classList.remove('is-drop-before', 'is-drop-after');
+                    });
+                    var groups = qsa('.my-group');
+                    var ids = groups.map(function (g) { return g.getAttribute('data-group'); }).filter(function (id) { return id && id !== '0'; });
+                    draggingGroup = null;
+                    if (ids.length > 1) {
+                        postForm(API_CATEGORIES, { action: 'reorder', ids: ids }).then(function (res) {
+                            if (!res || !res.ok) {
+                                window.alert((res && res.error) || '分组排序保存失败');
+                            }
+                        });
+                    }
+                });
+            });
+
+            /* ---------- 内联编辑：网址名称 / 分组标题 ---------- */
+            function startInlineEdit(el, onSave, onCancel) {
+                var original = el.textContent.trim();
+                var input = document.createElement('input');
+                input.type = 'text';
+                input.value = original;
+                input.className = 'my-inline-input';
+                el.textContent = '';
+                el.appendChild(input);
+                input.focus();
+                input.select();
+
+                function finish(save) {
+                    var val = input.value.trim();
+                    input.remove();
+                    if (save && val !== '' && val !== original) {
+                        onSave(val, original);
+                    } else {
+                        el.textContent = original;
+                        if (onCancel) { onCancel(); }
+                    }
+                }
+
+                input.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+                    else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+                });
+                input.addEventListener('blur', function () { finish(true); });
+            }
+
+            // 网址名称双击编辑
+            qsa('.my-link-name').forEach(function (nameEl) {
+                nameEl.style.cursor = 'text';
+                nameEl.addEventListener('dblclick', function () {
+                    var item = nameEl.closest('.my-item');
+                    if (!item) { return; }
+                    var id = item.getAttribute('data-id');
+                    startInlineEdit(nameEl, function (newName, oldName) {
+                        postForm(API_SITES, {
+                            action: 'update',
+                            id: id,
+                            name: newName,
+                            url: item.getAttribute('data-url'),
+                            category_id: item.getAttribute('data-category'),
+                            description: item.getAttribute('data-description') || ''
+                        }).then(function (res) {
+                            if (res && res.ok) {
+                                item.setAttribute('data-name', newName);
+                                nameEl.textContent = newName;
+
+                                pushUndo({
+                                    type: 'edit',
+                                    undo: function () {
+                                        postForm(API_SITES, {
+                                            action: 'update',
+                                            id: id,
+                                            name: oldName,
+                                            url: item.getAttribute('data-url'),
+                                            category_id: item.getAttribute('data-category'),
+                                            description: item.getAttribute('data-description') || ''
+                                        }).then(function (r) {
+                                            if (r && r.ok) {
+                                                item.setAttribute('data-name', oldName);
+                                                nameEl.textContent = oldName;
+                                                showToast('已恢复原名');
+                                            }
+                                        });
+                                    }
+                                });
+
+                                showToast('名称已更新', function () {
+                                    var entry = popUndo();
+                                    if (entry && typeof entry.undo === 'function') { entry.undo(); }
+                                });
+                            } else {
+                                nameEl.textContent = oldName;
+                                showToast((res && res.error) || '保存失败');
+                            }
+                        }).catch(function () {
+                            nameEl.textContent = oldName;
+                            showToast('网络错误');
+                        });
+                    });
+                });
+            });
+
+            // 分组标题双击编辑（仅整理态）
+            qsa('.my-group-head h3').forEach(function (h3) {
+                h3.style.cursor = 'text';
+                h3.addEventListener('dblclick', function () {
+                    if (document.body.getAttribute('data-organize') !== '1') { return; }
+                    var group = h3.closest('.my-group');
+                    if (!group) { return; }
+                    var catId = group.getAttribute('data-group');
+                    if (!catId || catId === '0') { return; } // 未分类不可改名
+                    var privacyEl = h3.querySelector('.my-group-privacy');
+                    var privacyHtml = privacyEl ? privacyEl.outerHTML : '';
+                    startInlineEdit(h3, function (newName, oldName) {
+                        postForm(API_CATEGORIES, { action: 'rename', id: catId, name: newName }).then(function (res) {
+                            if (res && res.ok) {
+                                h3.innerHTML = newName + privacyHtml;
+                                showToast('分组已重命名');
+                            } else {
+                                h3.innerHTML = oldName + privacyHtml;
+                                showToast((res && res.error) || '保存失败');
+                            }
+                        }).catch(function () {
+                            h3.innerHTML = oldName + privacyHtml;
+                            showToast('网络错误');
+                        });
+                    });
+                });
+            });
 
             // 键盘替代方案：聚焦手柄后用上下方向键移动，避免只有拖拽这一种操作方式。
             qsa('.my-handle').forEach(function (handle) {
@@ -2420,12 +2947,14 @@ $hasLinks = $totalLinks > 0;
             qs('#shareDone') && qs('#shareDone').addEventListener('click', function () { shareDialog.close(); });
 
             /* ===== 批量操作 ===== */
-            var batchBtn = qs('#batchBtn');
+            var organizeBtn = qs('#organizeBtn');
+            var organizeBtnLabel = qs('#organizeBtnLabel');
             var batchBar = qs('#batchBar');
             var batchCancelBtn = qs('#batchCancelBtn');
             var batchSelectAll = qs('#batchSelectAll');
             var batchCountNode = qs('#batchCount');
             var batchMoveBtn = qs('#batchMoveBtn');
+            var batchTagBtn = qs('#batchTagBtn');
             var batchDeleteBtn = qs('#batchDeleteBtn');
             var batchMoveDialog = qs('#batchMoveDialog');
             var batchMoveCategory = qs('#batchMoveCategory');
@@ -2434,6 +2963,32 @@ $hasLinks = $totalLinks > 0;
             var batchMoveSubmit = qs('#batchMoveSubmit');
             var batchMoveClose = qs('#batchMoveClose');
             var batchMoveCancel = qs('#batchMoveCancel');
+            var batchTagDialog = qs('#batchTagDialog');
+            var batchTagInput = qs('#batchTagInput');
+            var batchTagCount = qs('#batchTagCount');
+            var batchTagMsg = qs('#batchTagMsg');
+            var batchTagSubmit = qs('#batchTagSubmit');
+            var batchTagClose = qs('#batchTagClose');
+            var batchTagCancel = qs('#batchTagCancel');
+
+            function isOrganizeMode() {
+                return document.body.getAttribute('data-organize') === '1';
+            }
+
+            function enterOrganizeMode() {
+                document.body.setAttribute('data-organize', '1');
+                document.body.setAttribute('data-batch', '1');
+                if (organizeBtnLabel) { organizeBtnLabel.textContent = '完成'; }
+                updateBatchCount();
+            }
+
+            function exitOrganizeMode() {
+                document.body.setAttribute('data-organize', '0');
+                document.body.setAttribute('data-batch', '0');
+                qsa('.my-picker input').forEach(function (input) { input.checked = false; });
+                updateBatchCount();
+                window.location.reload();
+            }
 
             function getBatchIds() {
                 return qsa('.my-picker input:checked').map(function (input) { return input.value; });
@@ -2449,21 +3004,18 @@ $hasLinks = $totalLinks > 0;
                 }
             }
 
-            function exitBatchMode() {
-                document.body.setAttribute('data-batch', '0');
-                qsa('.my-picker input').forEach(function (input) { input.checked = false; });
-                updateBatchCount();
-            }
-
-            if (batchBtn) {
-                batchBtn.addEventListener('click', function () {
-                    document.body.setAttribute('data-batch', '1');
-                    updateBatchCount();
+            if (organizeBtn) {
+                organizeBtn.addEventListener('click', function () {
+                    if (isOrganizeMode()) {
+                        exitOrganizeMode();
+                    } else {
+                        enterOrganizeMode();
+                    }
                 });
             }
 
             if (batchCancelBtn) {
-                batchCancelBtn.addEventListener('click', exitBatchMode);
+                batchCancelBtn.addEventListener('click', exitOrganizeMode);
             }
 
             if (batchSelectAll) {
@@ -2499,7 +3051,7 @@ $hasLinks = $totalLinks > 0;
                         setBusy(batchMoveSubmit, false);
                         if (res && res.ok) {
                             if (batchMoveDialog) { batchMoveDialog.close(); }
-                            exitBatchMode();
+                            exitOrganizeMode();
                             window.location.reload();
                         } else if (batchMoveMsg) {
                             batchMoveMsg.textContent = (res && res.error) || '移动失败';
@@ -2510,6 +3062,53 @@ $hasLinks = $totalLinks > 0;
                         if (batchMoveMsg) {
                             batchMoveMsg.textContent = '网络错误，请稍后重试';
                             batchMoveMsg.className = 'my-msg is-error';
+                        }
+                    });
+                });
+            }
+
+            if (batchTagBtn) {
+                batchTagBtn.addEventListener('click', function () {
+                    var ids = getBatchIds();
+                    if (!ids.length) { window.alert('请先勾选网址'); return; }
+                    if (batchTagCount) { batchTagCount.textContent = ids.length; }
+                    if (batchTagInput) { batchTagInput.value = ''; }
+                    if (batchTagMsg) { batchTagMsg.textContent = ''; batchTagMsg.className = 'my-msg'; }
+                    var radios = document.getElementsByName('batchTagMode');
+                    radios.forEach(function (r) { r.checked = r.value === 'append'; });
+                    if (batchTagDialog && typeof batchTagDialog.showModal === 'function') {
+                        batchTagDialog.showModal();
+                    }
+                });
+            }
+
+            if (batchTagClose) { batchTagClose.addEventListener('click', function () { batchTagDialog.close(); }); }
+            if (batchTagCancel) { batchTagCancel.addEventListener('click', function () { batchTagDialog.close(); }); }
+
+            if (batchTagSubmit) {
+                batchTagSubmit.addEventListener('click', function () {
+                    var ids = getBatchIds();
+                    if (!ids.length) { return; }
+                    var tags = batchTagInput ? batchTagInput.value.trim() : '';
+                    if (!tags) { window.alert('请输入标签'); return; }
+                    var mode = 'append';
+                    document.getElementsByName('batchTagMode').forEach(function (r) { if (r.checked) mode = r.value; });
+                    setBusy(batchTagSubmit, true, '应用中…');
+                    postForm(API_SITES, { action: 'batch_tag', ids: ids.join(','), tags: tags, mode: mode }).then(function (res) {
+                        setBusy(batchTagSubmit, false);
+                        if (res && res.ok) {
+                            if (batchTagDialog) { batchTagDialog.close(); }
+                            showToast('已为 ' + ids.length + ' 个网址更新标签');
+                            exitOrganizeMode();
+                        } else if (batchTagMsg) {
+                            batchTagMsg.textContent = (res && res.error) || '操作失败';
+                            batchTagMsg.className = 'my-msg is-error';
+                        }
+                    }).catch(function () {
+                        setBusy(batchTagSubmit, false);
+                        if (batchTagMsg) {
+                            batchTagMsg.textContent = '网络错误，请稍后重试';
+                            batchTagMsg.className = 'my-msg is-error';
                         }
                     });
                 });
@@ -3112,17 +3711,62 @@ $hasLinks = $totalLinks > 0;
                 return Promise.resolve();
             }
 
-            function showToast(text) {
-                var toast = document.createElement('div');
-                toast.textContent = text;
-                toast.style.cssText = 'position:fixed;left:50%;bottom:48px;transform:translateX(-50%);z-index:10000;padding:10px 20px;border-radius:10px;background:rgba(15,23,42,0.9);color:#fff;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,0.2);opacity:0;transition:opacity 0.2s;';
-                document.body.appendChild(toast);
-                requestAnimationFrame(function () { toast.style.opacity = '1'; });
-                setTimeout(function () {
-                    toast.style.opacity = '0';
-                    setTimeout(function () { toast.remove(); }, 200);
-                }, 1600);
+            /* ---------- 撤销机制 ---------- */
+            var undoStack = [];
+            var UNDO_MAX = 20;
+
+            function pushUndo(entry) {
+                undoStack.push(entry);
+                if (undoStack.length > UNDO_MAX) { undoStack.shift(); }
             }
+
+            function popUndo() {
+                return undoStack.pop();
+            }
+
+            function showToast(text, undoCallback) {
+                var toast = document.createElement('div');
+                toast.className = 'my-toast';
+                var textSpan = document.createElement('span');
+                textSpan.textContent = text;
+                toast.appendChild(textSpan);
+
+                if (typeof undoCallback === 'function') {
+                    var undoBtn = document.createElement('button');
+                    undoBtn.type = 'button';
+                    undoBtn.className = 'my-toast-undo';
+                    undoBtn.textContent = '撤销';
+                    undoBtn.addEventListener('click', function () {
+                        undoCallback();
+                        toast.remove();
+                    });
+                    toast.appendChild(undoBtn);
+                }
+
+                document.body.appendChild(toast);
+                requestAnimationFrame(function () { toast.classList.add('show'); });
+
+                var timer = setTimeout(function () {
+                    toast.classList.remove('show');
+                    setTimeout(function () { toast.remove(); }, 200);
+                }, 5000);
+
+                toast._timer = timer;
+                return toast;
+            }
+
+            // Ctrl+Z / Cmd+Z 撤销
+            document.addEventListener('keydown', function (event) {
+                var isUndo = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && !event.shiftKey;
+                if (!isUndo) { return; }
+                var input = event.target;
+                if (input && (input.tagName === 'INPUT' || input.tagName === 'TEXTAREA')) { return; }
+                event.preventDefault();
+                var entry = popUndo();
+                if (entry && typeof entry.undo === 'function') {
+                    entry.undo();
+                }
+            });
 
             function getItemData(item) {
                 return {
@@ -3410,6 +4054,7 @@ $hasLinks = $totalLinks > 0;
                 var qaClose = qs('#quickAddClose');
                 var qaCancel = qs('#quickAddCancel');
                 var qaSubmit = qs('#quickAddSubmit');
+                var qaBatchBtn = qs('#quickAddBatchBtn');
 
                 if (qaClose) { qaClose.addEventListener('click', function () { closeDialog2(quickAddDialog); }); }
                 if (qaCancel) { qaCancel.addEventListener('click', function () { closeDialog2(quickAddDialog); }); }
@@ -3421,6 +4066,58 @@ $hasLinks = $totalLinks > 0;
                             e.preventDefault();
                             doQuickAdd();
                         }
+                    });
+                }
+
+                // 批量粘贴导入
+                var batchPasteDialog = qs('#batchPasteDialog');
+                if (qaBatchBtn && batchPasteDialog) {
+                    qaBatchBtn.addEventListener('click', function () {
+                        closeDialog2(quickAddDialog);
+                        var bpText = qs('#batchPasteText');
+                        var bpMsg = qs('#batchPasteMsg');
+                        if (bpText) { bpText.value = ''; }
+                        if (bpMsg) { showMsg(bpMsg, ''); }
+                        openDialog2(batchPasteDialog);
+                        setTimeout(function () { if (bpText) { bpText.focus(); } }, 50);
+                    });
+                }
+            }
+
+            // 批量粘贴导入弹窗
+            var batchPasteDialog = qs('#batchPasteDialog');
+            if (batchPasteDialog) {
+                var bpClose = qs('#batchPasteClose');
+                var bpCancel = qs('#batchPasteCancel');
+                var bpSubmit = qs('#batchPasteSubmit');
+                var bpText = qs('#batchPasteText');
+                var bpMsg = qs('#batchPasteMsg');
+                var bpCategory = qs('#batchPasteCategory');
+
+                if (bpClose) { bpClose.addEventListener('click', function () { closeDialog2(batchPasteDialog); }); }
+                if (bpCancel) { bpCancel.addEventListener('click', function () { closeDialog2(batchPasteDialog); }); }
+
+                if (bpSubmit) {
+                    bpSubmit.addEventListener('click', function () {
+                        var text = bpText ? bpText.value.trim() : '';
+                        if (!text) { showMsg(bpMsg, '请粘贴网址'); return; }
+                        setBusy(bpSubmit, true, '导入中…');
+                        postForm(API_SITES, {
+                            action: 'batch_add',
+                            urls: text,
+                            category_id: bpCategory ? bpCategory.value : '0'
+                        }).then(function (res) {
+                            setBusy(bpSubmit, false);
+                            if (res && res.ok) {
+                                showMsg(bpMsg, '导入完成：新增 ' + res.imported + ' 条，跳过重复 ' + res.skipped + ' 条。', 'success');
+                                setTimeout(function () { closeDialog2(batchPasteDialog); window.location.reload(); }, 1200);
+                            } else {
+                                showMsg(bpMsg, (res && res.error) || '导入失败');
+                            }
+                        }).catch(function () {
+                            setBusy(bpSubmit, false);
+                            showMsg(bpMsg, '网络错误，请稍后重试');
+                        });
                     });
                 }
             }
@@ -3474,7 +4171,8 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-<script src="assets/js/search.js?v=2.6.2" defer></script>
+<script src="assets/js/pinyin-pro.min.js" defer></script>
+<script src="assets/js/search.js?v=2.7.0" defer></script>
 
     <!-- 卡片右键 / 长按菜单 -->
     <div class="card-context-menu" id="cardContextMenu" hidden>
