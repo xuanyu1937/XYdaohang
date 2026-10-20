@@ -18,6 +18,7 @@
     var themeColorMeta = document.getElementById('themeColor');
     var searchInput = document.getElementById('siteSearch');
     var searchClear = document.getElementById('searchClear');
+    var searchSubmit = document.getElementById('searchSubmit');
     var searchEngine = document.getElementById('searchEngine');
     var searchEngineToggle = document.getElementById('searchEngineToggle');
     var searchEngineMenu = document.getElementById('searchEngineMenu');
@@ -712,6 +713,23 @@
             state.query = '';
             updateSearchClear();
             applyFilters();
+        });
+    }
+
+    if (searchSubmit) {
+        searchSubmit.addEventListener('click', function () {
+            if (currentEngine !== 'site') {
+                openExternalSearch();
+                return;
+            }
+
+            commitSearch();
+
+            var main = document.getElementById('siteMain');
+
+            if (main && typeof main.scrollIntoView === 'function') {
+                main.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         });
     }
 

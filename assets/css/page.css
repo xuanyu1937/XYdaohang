@@ -353,6 +353,85 @@
     font-size: 12px;
 }
 
+/* ------------------------------- 更新日志 ------------------------------- */
+
+.about-changelog {
+    margin-top: 26px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.about-changelog-title {
+    margin: 0 0 16px;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.changelog-entry {
+    margin-bottom: 22px;
+}
+
+.changelog-entry:last-child {
+    margin-bottom: 0;
+}
+
+.changelog-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.changelog-version {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+.changelog-date {
+    color: var(--muted-2);
+    font-size: 12px;
+}
+
+.changelog-note {
+    margin: 0 0 8px;
+    padding: 8px 11px;
+    border-left: 3px solid var(--primary-border);
+    border-radius: 0 8px 8px 0;
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 12.5px;
+    line-height: 1.7;
+}
+
+.changelog-section-label {
+    margin: 12px 0 6px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.changelog-list {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--text-2);
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.changelog-list li {
+    margin-bottom: 5px;
+}
+
+.changelog-list strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
 /* ------------------------------- 空状态 ------------------------------- */
 
 .page-empty {

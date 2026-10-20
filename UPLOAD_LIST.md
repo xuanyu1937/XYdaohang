@@ -1,18 +1,30 @@
-# 轩宇-导航 v2.2.5 部署清单
+# 轩宇-导航 v2.3.0 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1 + MySQL 5.7
-当前版本：v2.2.5
+当前版本：v2.3.0
 
-> 升级顺序：**先备份数据库 → 上传文件 → （仅 v2.1.x 及更早）执行 upgrade_v2.2.0.sql → 清缓存刷新**；v2.2.x 之间升级为纯代码修复/增强，**无数据库结构变更**，不需要跑升级脚本。可直接在后台「系统工具 → 版本检测 → 上传更新包更新」上传新版 zip 完成在线更新。
+> 升级顺序：**先备份数据库 → 上传文件 → 执行 upgrade_v2.3.0.sql → 清缓存刷新**；本版本含数据库结构变更（`users.footer_copyright` 列），**必须执行升级脚本**。也可直接在后台「系统工具 → 版本检测 → 上传更新包更新」上传新版 zip 完成在线更新，但升级 SQL 仍需手动执行一次。
 
-## 本次 v2.2.5 变动文件
+## 本次 v2.3.0 变动文件
 
 | 文件 | 说明 |
 | --- | --- |
-| `index.php` | 移除访客登录区异常占位头像分支与前端渲染；公告栏新增喇叭图标、移除短文本居中内联样式 |
-| `assets/css/nav.css` | 公告栏视觉强化（浅色提示底 + 主色左侧强调条 + 实心图标 + 「公告」标签 + 加粗正文）；移动端公告栏适配 |
-| `config/version.php`、`VERSION`、`includes/bootstrap.php`、`includes/ConfigManager.php` | 版本号升至 2.2.5 |
+| `index.php` | 搜索框移出头部改为公告栏下方居中三段式（引擎选择 + 输入框 + 搜索按钮）；配色按钮图标换为三色交叠圆；页脚版权按「用户自定义 > 全局设置 > 默认」输出 |
+| `my.php` | 分组管理新增上移/下移排序；添加/编辑网址分组选择器仅显示本人分组（分组私有化）；账号弹窗新增底部版权设置；抓取按钮美化（渐变实心 + 火花图标）；页脚版权接入 |
+| `about.php` | 新增「更新日志」板块（自动解析 CHANGELOG.md，最多 5 个版本）；页脚版权接入 |
+| `api/user_categories.php` | 新增 `action=reorder` 分组排序接口（按 user_id 过滤，越权 ID 静默丢弃） |
+| `api/user_sites.php` | 修复 IDOR：`userSiteCategoryId()` 追加 `AND user_id = ?` 归属校验，禁止把网址归入他人/公共分组 |
+| `api/auth.php` | 新增 `action=update_profile`：保存个人底部版权 |
+| `includes/Services.php` | `UserService` 新增 `footer_copyright` 读取（findById 兼容老库）与 `updateFooterCopyright()` / `footerCopyrightOf()` |
+| `includes/functions.php` | 新增 `footerCopyrightText()`：版权文案三级回落 + `{year}`/`{site}` 占位符替换 |
+| `admin/settings.php` | 「备案信息」卡片扩展为「备案与版权」，新增底部版权输入框与保存 |
+| `assets/css/nav.css` | 搜索区新样式（search-section/bar/box/submit）、引擎选择器改为左侧描边芯片、LOGO 52px 美化、各断点移动端适配 |
+| `assets/css/page.css` | 更新日志板块样式 |
+| `assets/js/nav.js` | 新增搜索按钮点击处理（站内筛选并滚动到列表，外部引擎新标签打开） |
+| `upgrade_v2.3.0.sql` | 新增：`users.footer_copyright` 列 + `settings.footer_copyright` 键（幂等） |
+| `install/install.sql` | users 表同步 `footer_copyright` 列 |
+| `config/version.php`、`VERSION`、`includes/bootstrap.php`、`includes/ConfigManager.php` | 版本号升至 2.3.0 |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档更新 |
 
 > 提示：若线上版本检测仍失败，请在后台重新检测查看提示——若提示「SSL 证书校验失败」，说明服务器需要配置 `php.ini` 的 `curl.cainfo`。
@@ -32,6 +44,7 @@
 - upgrade_v2.0.0.sql（旧站升级用；全新安装由 install.php 自动建表，不需要）
 - upgrade_v2.1.0.sql（从 v2.0.x 升级用；全新安装不需要）
 - upgrade_v2.2.0.sql（从 v2.1.x 升级用；全新安装不需要）
+- upgrade_v2.3.0.sql（从 v2.2.x 升级用，本次必须执行；全新安装不需要）
 - upgrade_v1.1.3.sql（仅当仍停留在更早版本时使用）
 - web.config（IIS 安全规则 + /api/sites 重写；主机锁定 rewrite 节点导致 500.19 时删除该节点）
 - htaccess（Apache 环境重命名为 .htaccess）

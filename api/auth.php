@@ -148,6 +148,24 @@ switch ($action) {
         $functions->jsonResponse(['ok' => true]);
         break;
 
+    case 'update_profile':
+        // 个人资料：自定义底部版权文字（v2.3.0 新增）
+        $user = $users->currentUser();
+
+        if (!$user) {
+            $functions->jsonResponse(['ok' => false, 'error' => '请先登录'], 401);
+        }
+
+        $copyright = (string) ($_POST['footer_copyright'] ?? '');
+        $saved = $users->updateFooterCopyright((int) $user['id'], $copyright);
+
+        if (!$saved) {
+            $functions->jsonResponse(['ok' => false, 'error' => '保存失败：请先执行 upgrade_v2.3.0.sql 升级数据库'], 500);
+        }
+
+        $functions->jsonResponse(['ok' => true]);
+        break;
+
     default:
         $functions->jsonResponse(['ok' => false, 'error' => 'unsupported_action'], 400);
 }

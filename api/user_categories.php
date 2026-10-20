@@ -8,6 +8,7 @@
  * POST action=create       新建分组（name 必填，is_private 可选 0/1）
  * POST action=rename       重命名分组（id + name）
  * POST action=set_private  切换私密标记（id + is_private）
+ * POST action=reorder      自定义排序（ids[] 按展示顺序提交，仅接受本人分组）
  * POST action=delete       删除分组（id；分组下网址自动移到未分类）
  */
 
@@ -139,6 +140,47 @@ switch ($action) {
 
         $stmt = $db->prepare('UPDATE categories SET is_private = ? WHERE id = ? AND user_id = ?');
         $stmt->execute([$isPrivate, $id, $userId]);
+
+        $functions->jsonResponse(['ok' => true]);
+    }
+
+    case 'reorder': {
+        // ids[] 按期望的展示顺序提交；仅接受本人分组，其他 id 直接忽略
+        $ids = $_POST['ids'] ?? [];
+
+        if (!is_array($ids)) {
+            $ids = [$ids];
+        }
+
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), function ($id) {
+            return $id > 0;
+        })));
+
+        if (!$ids) {
+            $functions->jsonResponse(['ok' => false, 'error' => '参数不完整']);
+        }
+
+        // 只保留属于当前用户的分组，越权 id 静默丢弃
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $db->prepare("SELECT id FROM categories WHERE user_id = ? AND id IN ($placeholders)");
+        $stmt->execute(array_merge([$userId], $ids));
+        $ownIds = array_map('intval', array_column($stmt->fetchAll(), 'id'));
+
+        if (!$ownIds) {
+            $functions->jsonResponse(['ok' => false, 'error' => '分组不存在或无权限'], 404);
+        }
+
+        $update = $db->prepare('UPDATE categories SET sort_order = ? WHERE id = ? AND user_id = ?');
+        $sort = 1;
+
+        foreach ($ids as $id) {
+            if (!in_array($id, $ownIds, true)) {
+                continue;
+            }
+
+            $update->execute([$sort, $id, $userId]);
+            $sort++;
+        }
 
         $functions->jsonResponse(['ok' => true]);
     }

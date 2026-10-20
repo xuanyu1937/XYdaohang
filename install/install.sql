@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `last_login` timestamp NULL DEFAULT NULL,
   `avatar` varchar(500) DEFAULT NULL,
+  `footer_copyright` varchar(120) DEFAULT NULL,
   `reset_token_hash` varchar(64) DEFAULT NULL,
   `reset_expires` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),

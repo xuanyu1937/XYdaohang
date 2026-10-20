@@ -69,7 +69,11 @@ if (isset($_POST['save_footer'])) {
     $functions->updateSetting('icp_number', $_POST['icp_number'] ?? '');
     $functions->updateSetting('show_gongan', isset($_POST['show_gongan']) ? '1' : '0');
     $functions->updateSetting('gongan_number', $_POST['gongan_number'] ?? '');
-    $message = '备案设置已保存';
+    // v2.3.0 新增：全站底部版权文字（支持 {year} / {site} 占位符，留空恢复默认）
+    $footerCopyright = trim((string) ($_POST['footer_copyright'] ?? ''));
+    $footerCopyright = function_exists('mb_substr') ? mb_substr($footerCopyright, 0, 120, 'UTF-8') : substr($footerCopyright, 0, 360);
+    $functions->updateSetting('footer_copyright', $footerCopyright);
+    $message = '备案与版权设置已保存';
 }
 
 /* v2.0.0 新增：前台体验（公告 / 显示方式 / 跳转 / 皮肤 / 注册 / 联系页 / SEO / 关于内容） */
@@ -134,6 +138,7 @@ $showICP = $functions->getSetting('show_icp');
 $icpNumber = $functions->getSetting('icp_number');
 $showGongan = $functions->getSetting('show_gongan');
 $gonganNumber = $functions->getSetting('gongan_number');
+$footerCopyright = $functions->getSetting('footer_copyright');
 
 // 新增配置项：未写入过该键时按“开启 / 跟随系统”处理，避免升级后功能被意外关闭
 $monitorEnabled = $functions->getSetting('monitor_enabled');
@@ -960,8 +965,8 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
             <section class="card settings-card">
                 <div class="card-header">
                     <div>
-                        <h5><i class="fas fa-shield-halved"></i>备案信息</h5>
-                        <span class="card-subtitle">控制前台页脚展示的 ICP 与公安备案信息</span>
+                        <h5><i class="fas fa-shield-halved"></i>备案与版权</h5>
+                        <span class="card-subtitle">控制前台页脚展示的 ICP、公安备案与版权信息</span>
                     </div>
                 </div>
                 <div class="card-body">
@@ -1032,11 +1037,32 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
                             </div>
                         </div>
 
+                        <div class="row g-4" style="margin-top:0;">
+                            <div class="col-12">
+                                <div class="license-block">
+                                    <div class="field">
+                                        <label class="form-label" for="footer_copyright">底部版权信息</label>
+                                        <input type="text"
+                                               id="footer_copyright"
+                                               name="footer_copyright"
+                                               class="form-control"
+                                               value="<?php echo $functions->escape((string) $footerCopyright); ?>"
+                                               maxlength="120"
+                                               placeholder="默认：© {year} {site}，例如：© {year} 我的导航 · 保留所有权利">
+                                        <div class="field-foot">
+                                            <span class="form-text">支持 {year}（当前年份）与 {site}（站点名称）占位符；留空恢复默认。登录用户还可在「我的导航 → 账号」中自定义自己页面的版权。</span>
+                                            <span class="char-count" id="copyrightCount"><?php echo strlen((string) $footerCopyright); ?> / 120</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-actions">
-                            <span class="form-actions-note">备案信息仅在前台页脚展示，不影响站点其他内容。</span>
+                            <span class="form-actions-note">备案与版权信息仅在前台页脚展示，不影响站点其他内容。</span>
                             <span class="spacer"></span>
                             <button type="submit" name="save_footer" class="btn btn-outline-primary px-4">
-                                <i class="fas fa-floppy-disk"></i>保存备案设置
+                                <i class="fas fa-floppy-disk"></i>保存备案与版权设置
                             </button>
                         </div>
                     </form>
@@ -1649,6 +1675,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
 
         bindCounter('icp_number', 'icpCount', 50);
         bindCounter('gongan_number', 'gonganCount', 50);
+        bindCounter('footer_copyright', 'copyrightCount', 120);
 
         var monitorToggle = document.getElementById('monitor_enabled');
         if (monitorToggle) {

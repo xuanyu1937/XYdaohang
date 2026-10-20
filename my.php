@@ -834,23 +834,77 @@ $hasLinks = $totalLinks > 0;
             font-size: 12px;
         }
 
-        /* 抓取按钮：主色描边 + 图标，hover 填色，进行中旋转 */
-        #fetchBtn {
+        /* 分组排序：上移 / 下移小图标按钮 */
+        .my-group-order {
+            display: inline-flex;
+            flex: 0 0 auto;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .my-group-move {
+            display: inline-grid;
+            flex: 0 0 auto;
+            place-items: center;
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: var(--surface);
+            color: var(--muted);
+            cursor: pointer;
+            transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+        }
+
+        .my-group-move:hover:not(:disabled) {
             border-color: var(--primary-border);
             background: var(--primary-soft);
             color: var(--primary);
+        }
+
+        .my-group-move:disabled {
+            opacity: 0.35;
+            cursor: default;
+        }
+
+        .my-group-move svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        /* 抓取按钮：主色渐变实心 + 白图标，悬浮上浮、点击下压，进行中图标旋转 */
+        #fetchBtn {
+            position: relative;
+            border-color: transparent;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-filled-hover) 100%);
+            color: var(--primary-contrast);
             font-weight: 600;
+            letter-spacing: 0.02em;
+            box-shadow: 0 6px 14px -6px rgba(29, 78, 216, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+            transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
         }
 
         #fetchBtn:hover {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary-filled-hover) 0%, var(--primary) 100%);
             color: var(--primary-contrast);
-            border-color: var(--primary);
+            transform: translateY(-1px);
+            filter: brightness(1.06);
+            box-shadow: 0 10px 20px -8px rgba(29, 78, 216, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        #fetchBtn:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 8px -4px rgba(29, 78, 216, 0.5);
         }
 
         #fetchBtn svg {
-            width: 14px;
-            height: 14px;
+            width: 15px;
+            height: 15px;
+        }
+
+        #fetchBtn.is-busy {
+            filter: saturate(0.9);
         }
 
         #fetchBtn.is-busy svg {
@@ -1201,7 +1255,7 @@ $hasLinks = $totalLinks > 0;
         </main>
 
         <footer class="site-footer">
-            <p class="copyright">&copy; <?php echo date('Y'); ?> <?php echo $functions->escape($brandName); ?> · 我的导航</p>
+            <p class="copyright"><?php echo $functions->escape($functions->footerCopyrightText((string) ($user['footer_copyright'] ?? ''), $brandName)); ?> · 我的导航</p>
         </footer>
     </div>
 
@@ -1239,9 +1293,10 @@ $hasLinks = $totalLinks > 0;
                     <div class="my-field-row">
                         <input type="url" id="linkUrl" name="url" placeholder="https://example.com" autocomplete="off" spellcheck="false" required>
                         <button type="button" class="my-btn" id="fetchBtn" title="自动获取网站信息">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M20 12a8 8 0 1 1-2.3-5.6"></path>
-                                <path d="M20 4v5h-5"></path>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 3l1.7 4.6L18 9.2l-4.3 1.6L12 15.5l-1.7-4.7L6 9.2l4.3-1.6Z"></path>
+                                <path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8Z"></path>
+                                <path d="M5 16l.6 1.7 1.7.6-1.7.6L5 20.6l-.6-1.7-1.7-.6 1.7-.6Z"></path>
                             </svg>
                             <span class="my-btn-label">抓取</span>
                         </button>
@@ -1257,12 +1312,14 @@ $hasLinks = $totalLinks > 0;
                 <div class="my-field">
                     <label for="linkCategory">分组</label>
                     <select id="linkCategory" name="category_id">
-                        <?php foreach ($categories as $category): ?>
-                            <option value="<?php echo (int) $category['id']; ?>">
-                                <?php echo $functions->escape(($category['parent_id'] ? '　└ ' : '') . $category['name']); ?>
+                        <option value="0">未分类</option>
+                        <?php foreach ($ownGroups as $group): ?>
+                            <option value="<?php echo (int) $group['id']; ?>">
+                                <?php echo $functions->escape(($group['is_private'] ? '🔒 ' : '') . $group['name']); ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
+                    <p class="my-note">仅显示你自己创建的分组，分组数据完全私有。</p>
                 </div>
 
                 <div class="my-field">
@@ -1387,6 +1444,19 @@ $hasLinks = $totalLinks > 0;
             <div class="my-field">
                 <label>邮箱</label>
                 <input type="text" value="<?php echo $functions->escape($user['email']); ?>" readonly>
+            </div>
+
+            <div class="my-field">
+                <label for="footerCopyright">底部版权</label>
+                <div class="my-field-row">
+                    <input type="text" id="footerCopyright" maxlength="120" autocomplete="off"
+                           value="<?php echo $functions->escape((string) ($user['footer_copyright'] ?? '')); ?>"
+                           placeholder="默认使用站点版权，支持 {year} 与 {site} 占位符">
+                    <button type="button" class="my-btn" id="saveCopyrightBtn">
+                        <span class="my-btn-label">保存</span>
+                    </button>
+                </div>
+                <p class="my-note">仅影响你自己页面的页脚版权展示；留空则使用站点默认版权。</p>
             </div>
 
             <div class="my-field">
@@ -2269,6 +2339,33 @@ $hasLinks = $totalLinks > 0;
                 });
             }
 
+            /* ----------------------------- 底部版权（个人设置） ----------------------------- */
+
+            var saveCopyrightBtn = qs('#saveCopyrightBtn');
+            var footerCopyrightInput = qs('#footerCopyright');
+
+            if (saveCopyrightBtn && footerCopyrightInput) {
+                saveCopyrightBtn.addEventListener('click', function () {
+                    setBusy(saveCopyrightBtn, true, '保存中…');
+
+                    postForm(API_AUTH, {
+                        action: 'update_profile',
+                        footer_copyright: footerCopyrightInput.value.trim()
+                    }).then(function (result) {
+                        setBusy(saveCopyrightBtn, false);
+
+                        if (!result.ok) {
+                            showMsg(accountMsg, result.error || '保存失败');
+                            return;
+                        }
+
+                        showMsg(accountMsg, '底部版权已保存', 'success');
+                        // 刷新页面，让页脚立即展示新文案
+                        window.setTimeout(function () { window.location.reload(); }, 700);
+                    });
+                });
+            }
+
             /* ----------------------------- 分组管理 ----------------------------- */
 
             var groupDialog = qs('#groupDialog');
@@ -2278,6 +2375,8 @@ $hasLinks = $totalLinks > 0;
             var groupNameNew = qs('#groupNameNew');
             var groupPrivateNew = qs('#groupPrivateNew');
             var groupCreateBtn = qs('#groupCreateBtn');
+            // 分组顺序在弹窗内被调整过：关闭弹窗时刷新页面，让前台分组顺序即时同步
+            var groupOrderDirty = false;
 
             function renderGroupList() {
                 if (!groupList) { return; }
@@ -2291,7 +2390,7 @@ $hasLinks = $totalLinks > 0;
 
                 groupListEmpty.hidden = true;
 
-                OWN_GROUPS.forEach(function (group) {
+                OWN_GROUPS.forEach(function (group, index) {
                     var li = document.createElement('li');
                     li.className = 'my-group-item';
                     li.setAttribute('data-id', group.id);
@@ -2299,6 +2398,14 @@ $hasLinks = $totalLinks > 0;
                     var lock = group.is_private ? '<span class="my-group-privacy" title="私密分组">&#x1f512;</span>' : '';
 
                     li.innerHTML =
+                        '<span class="my-group-order" aria-label="调整顺序">' +
+                            '<button type="button" class="my-group-move my-group-up" title="上移"' + (index === 0 ? ' disabled' : '') + '>' +
+                                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m6 14 6-6 6 6"></path></svg>' +
+                            '</button>' +
+                            '<button type="button" class="my-group-move my-group-down" title="下移"' + (index === OWN_GROUPS.length - 1 ? ' disabled' : '') + '>' +
+                                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m6 10 6 6 6-6"></path></svg>' +
+                            '</button>' +
+                        '</span>' +
                         '<input type="text" class="my-group-name" value="' + escapeHtml(group.name) + '" maxlength="30" aria-label="分组名称">' +
                         lock +
                         '<label class="my-check my-group-private-toggle" title="私密分组仅本人可见"><input type="checkbox" class="my-group-private" ' + (group.is_private ? 'checked' : '') + '> 私密</label>' +
@@ -2310,22 +2417,41 @@ $hasLinks = $totalLinks > 0;
             }
 
             function refreshCategorySelects() {
-                // 把新建的分组同步进「添加网址」弹窗的分组下拉
+                // 按当前顺序重建「添加网址」弹窗的分组下拉，保证与分组管理一致
                 var select = qs('#linkCategory');
 
                 if (!select) { return; }
 
-                // 先移除自己分组中已不存在的选项，再补充缺失的
-                var known = {};
-                Array.prototype.forEach.call(select.options, function (opt) { known[opt.value] = true; });
+                var current = select.value;
+                select.innerHTML = '';
+
+                var emptyOpt = document.createElement('option');
+                emptyOpt.value = '0';
+                emptyOpt.textContent = '未分类';
+                select.appendChild(emptyOpt);
 
                 OWN_GROUPS.forEach(function (group) {
-                    if (!known[String(group.id)]) {
-                        var opt = document.createElement('option');
-                        opt.value = group.id;
-                        opt.textContent = (group.is_private ? '\ud83d\udd12 ' : '') + group.name;
-                        select.appendChild(opt);
+                    var opt = document.createElement('option');
+                    opt.value = group.id;
+                    opt.textContent = (group.is_private ? '\ud83d\udd12 ' : '') + group.name;
+                    select.appendChild(opt);
+                });
+
+                // 原选项仍存在则保持选中，否则回落到「未分类」
+                select.value = Array.prototype.some.call(select.options, function (opt) { return opt.value === current; }) ? current : '0';
+            }
+
+            function submitGroupOrder() {
+                var ids = OWN_GROUPS.map(function (group) { return group.id; });
+
+                postForm(API_CATEGORIES, { action: 'reorder', ids: ids }).then(function (result) {
+                    if (!result.ok) {
+                        showMsg(groupMsg, result.error || '排序保存失败');
+                        return;
                     }
+
+                    groupOrderDirty = true;
+                    showMsg(groupMsg, '分组顺序已保存', 'success');
                 });
             }
 
@@ -2344,6 +2470,15 @@ $hasLinks = $totalLinks > 0;
 
             if (qs('#groupDialogClose') && groupDialog) {
                 qs('#groupDialogClose').addEventListener('click', function () { groupDialog.close(); });
+            }
+
+            // 调整过顺序后关闭弹窗时刷新页面，前台分组展示顺序即时同步
+            if (groupDialog) {
+                groupDialog.addEventListener('close', function () {
+                    if (groupOrderDirty) {
+                        window.location.reload();
+                    }
+                });
             }
 
             if (groupCreateBtn) {
@@ -2384,6 +2519,32 @@ $hasLinks = $totalLinks > 0;
 
             if (groupList) {
                 groupList.addEventListener('click', function (event) {
+                    var moveBtn = event.target.closest ? event.target.closest('.my-group-move') : null;
+
+                    if (moveBtn && !moveBtn.disabled) {
+                        var moveItem = moveBtn.closest('.my-group-item');
+                        var moveId = moveItem ? parseInt(moveItem.getAttribute('data-id'), 10) : 0;
+                        var from = -1;
+
+                        OWN_GROUPS.forEach(function (group, idx) { if (group.id === moveId) { from = idx; } });
+
+                        if (from >= 0) {
+                            var to = moveBtn.classList.contains('my-group-up') ? from - 1 : from + 1;
+
+                            if (to >= 0 && to < OWN_GROUPS.length) {
+                                var temp = OWN_GROUPS[from];
+                                OWN_GROUPS[from] = OWN_GROUPS[to];
+                                OWN_GROUPS[to] = temp;
+
+                                renderGroupList();
+                                refreshCategorySelects();
+                                submitGroupOrder();
+                            }
+                        }
+
+                        return;
+                    }
+
                     var item = event.target.closest ? event.target.closest('.my-group-item') : null;
 
                     if (!item) { return; }
@@ -2431,6 +2592,7 @@ $hasLinks = $totalLinks > 0;
                         if (found) { found.is_private = event.target.checked ? 1 : 0; }
 
                         renderGroupList();
+                        refreshCategorySelects();
                         showMsg(groupMsg, event.target.checked ? '已设为私密分组' : '已取消私密', 'success');
                     });
                 });

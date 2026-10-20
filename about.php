@@ -31,6 +31,74 @@ if ($aboutContent !== '') {
 }
 
 $version = defined('APP_VERSION') ? APP_VERSION : '2.0.0';
+
+// 更新日志：解析根目录 CHANGELOG.md，按「## vX.Y.Z（日期）」切分，最多展示最近 5 个版本；
+// 文件缺失或无可解析内容时该板块整体不渲染。
+$changelogEntries = [];
+$changelogPath = __DIR__ . '/CHANGELOG.md';
+
+if (is_file($changelogPath) && is_readable($changelogPath)) {
+    $changelogRaw = (string) @file_get_contents($changelogPath);
+
+    if ($changelogRaw !== '' && preg_match_all('/^##\s+(v[\d.]+)（([^）]+)）\s*$/m', $changelogRaw, $heads, PREG_OFFSET_CAPTURE)) {
+        $headCount = count($heads[0]);
+
+        for ($i = 0; $i < $headCount && count($changelogEntries) < 5; $i++) {
+            $bodyStart = $heads[0][$i][1] + strlen($heads[0][$i][0]);
+            $bodyEnd = ($i + 1 < $headCount) ? $heads[0][$i + 1][1] : strlen($changelogRaw);
+            $body = trim(substr($changelogRaw, $bodyStart, $bodyEnd - $bodyStart));
+
+            $notes = [];
+            $sections = [];
+            $section = '';
+
+            foreach (preg_split('/\R/', $body) as $line) {
+                $line = trim($line);
+
+                if ($line === '') {
+                    continue;
+                }
+
+                if (strpos($line, '>') === 0) {
+                    $note = trim((string) preg_replace('/^>\s?/', '', $line));
+
+                    if ($note !== '') {
+                        $notes[] = $note;
+                    }
+                    continue;
+                }
+
+                if (preg_match('/^\*\*(.+)\*\*$/u', $line, $m)) {
+                    $section = trim($m[1]);
+                    continue;
+                }
+
+                if (strpos($line, '-') === 0) {
+                    $text = trim(mb_substr($line, 1));
+                    $title = '';
+
+                    if (preg_match('/^\*\*(.+?)\*\*[:：]?\s*/u', $text, $m)) {
+                        $title = trim($m[1]);
+                        $text = trim(mb_substr($text, mb_strlen($m[0])));
+                    }
+
+                    if (!isset($sections[$section])) {
+                        $sections[$section] = [];
+                    }
+
+                    $sections[$section][] = ['title' => $title, 'text' => $text];
+                }
+            }
+
+            $changelogEntries[] = [
+                'version' => trim($heads[1][$i][0]),
+                'date' => trim($heads[2][$i][0]),
+                'notes' => $notes,
+                'sections' => $sections,
+            ];
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN" data-skin="<?php echo $functions->escape($functions->getSetting('theme_skin')); ?>">
@@ -148,6 +216,41 @@ $version = defined('APP_VERSION') ? APP_VERSION : '2.0.0';
                     <?php endif; ?>
                 </div>
 
+                <?php if ($changelogEntries !== []): ?>
+                    <div class="about-changelog">
+                        <h3 class="about-changelog-title">更新日志</h3>
+
+                        <?php foreach ($changelogEntries as $entry): ?>
+                            <section class="changelog-entry">
+                                <header class="changelog-head">
+                                    <span class="changelog-version"><?php echo $functions->escape($entry['version']); ?></span>
+                                    <time class="changelog-date"><?php echo $functions->escape($entry['date']); ?></time>
+                                </header>
+
+                                <?php foreach ($entry['notes'] as $note): ?>
+                                    <p class="changelog-note"><?php echo $functions->escape($note); ?></p>
+                                <?php endforeach; ?>
+
+                                <?php foreach ($entry['sections'] as $sectionName => $items): ?>
+                                    <?php if ($sectionName !== ''): ?>
+                                        <p class="changelog-section-label"><?php echo $functions->escape($sectionName); ?></p>
+                                    <?php endif; ?>
+                                    <ul class="changelog-list">
+                                        <?php foreach ($items as $item): ?>
+                                            <li>
+                                                <?php if ($item['title'] !== ''): ?>
+                                                    <strong><?php echo $functions->escape($item['title']); ?></strong>：
+                                                <?php endif; ?>
+                                                <?php echo $functions->escape($item['text']); ?>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php endforeach; ?>
+                            </section>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+
                 <div class="about-version">
                     <span>当前版本 <code><?php echo $functions->escape($version); ?></code></span>
                     <span>运行环境 PHP <?php echo $functions->escape(PHP_VERSION); ?></span>
@@ -158,7 +261,7 @@ $version = defined('APP_VERSION') ? APP_VERSION : '2.0.0';
 
         <footer class="site-footer">
             <p class="copyright">
-                <?php echo $functions->escape($brandName); ?>
+                <?php echo $functions->escape($functions->footerCopyrightText('', $brandName)); ?>
                 <span class="footer-sep">·</span>
                 <a href="index.php">首页</a>
                 <span class="footer-sep">·</span>

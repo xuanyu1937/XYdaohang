@@ -73,6 +73,15 @@ $metaTitle = $seoTitle !== '' ? $seoTitle : $brandName . ' - ' . $brandSubtitle;
 $metaDescription = $seoDescription !== '' ? $seoDescription : $brandSubtitle;
 $currentYear = date('Y');
 
+// 页脚版权：优先当前视图用户的自定义版权，其次后台全局设置，最后默认「© 年份 站点名」
+$footerUserCopyright = '';
+if ($currentUser && (int) $currentUser['id'] === $viewUserId) {
+    $footerUserCopyright = trim((string) ($currentUser['footer_copyright'] ?? ''));
+} elseif ($viewUserId > 0) {
+    $footerUserCopyright = $users->footerCopyrightOf($viewUserId);
+}
+$footerCopyrightText = $functions->footerCopyrightText($footerUserCopyright, $brandName);
+
 $brandInitial = $functions->textCut($brandName, 1);
 
 $db = Database::getInstance()->getConnection();
@@ -476,68 +485,12 @@ if ($bgImage !== '') {
             </div>
 
             <div class="header-tools">
-                <div class="search-field">
-                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                        <circle cx="11" cy="11" r="7"></circle>
-                        <path d="m20 20-3.2-3.2"></path>
-                    </svg>
-                    <label class="visually-hidden" for="siteSearch">搜索网站</label>
-                    <input type="search"
-                           id="siteSearch"
-                           class="search-input"
-                           placeholder="搜索网站，支持拼音（按 / 聚焦）"
-                           autocomplete="off"
-                           spellcheck="false"
-                           aria-label="搜索网站">
-                    <button type="button"
-                            id="searchClear"
-                            class="search-clear"
-                            aria-label="清空搜索"
-                            title="清空搜索"
-                            hidden>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                            <path d="m6 6 12 12M18 6 6 18"></path>
-                        </svg>
-                    </button>
-                    <div class="search-engine" id="searchEngine">
-                        <button type="button"
-                                id="searchEngineToggle"
-                                class="search-engine-toggle"
-                                aria-label="选择搜索方式"
-                                title="选择搜索方式"
-                                aria-expanded="false"
-                                aria-haspopup="menu">
-                            <span id="searchEngineLabel">站内</span>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="m6 9 6 6 6-6"></path>
-                            </svg>
-                        </button>
-                        <div class="search-engine-menu" id="searchEngineMenu" role="menu" aria-label="搜索方式" hidden>
-                            <button type="button" class="search-engine-option" role="menuitemradio" data-engine="site" aria-checked="true">
-                                <span class="search-engine-name">站内搜索</span>
-                                <span class="search-engine-desc">筛选已收录网站</span>
-                            </button>
-                            <button type="button" class="search-engine-option" role="menuitemradio" data-engine="baidu" aria-checked="false">
-                                <span class="search-engine-name">百度</span>
-                                <span class="search-engine-desc">新标签页打开</span>
-                            </button>
-                            <button type="button" class="search-engine-option" role="menuitemradio" data-engine="bing" aria-checked="false">
-                                <span class="search-engine-name">必应</span>
-                                <span class="search-engine-desc">新标签页打开</span>
-                            </button>
-                            <button type="button" class="search-engine-option" role="menuitemradio" data-engine="google" aria-checked="false">
-                                <span class="search-engine-name">Google</span>
-                                <span class="search-engine-desc">新标签页打开</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="skin-picker" id="skinPicker">
                     <button type="button" class="tool-btn" id="skinToggle" aria-label="选择配色" title="选择配色" aria-expanded="false">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <circle cx="12" cy="12" r="9"></circle>
-                            <path d="M12 3a9 9 0 0 0 0 18c1.2 0 1.8-.9 1.8-1.8 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-1 .8-1.8 1.8-1.8H16a5 5 0 0 0 5-5c0-3.9-4-7-9-7z"></path>
+                            <circle cx="9" cy="9.5" r="5"></circle>
+                            <circle cx="15" cy="9.5" r="5"></circle>
+                            <circle cx="12" cy="14.5" r="5"></circle>
                         </svg>
                     </button>
                     <div class="skin-menu" id="skinMenu" role="menu" aria-label="配色方案">
@@ -650,6 +603,74 @@ if ($bgImage !== '') {
                 </span>
             </div>
         <?php endif; ?>
+
+        <section class="search-section" aria-label="网站搜索">
+            <div class="search-bar" role="search">
+                <div class="search-engine" id="searchEngine">
+                    <button type="button"
+                            id="searchEngineToggle"
+                            class="search-engine-toggle"
+                            aria-label="选择搜索方式"
+                            title="选择搜索方式"
+                            aria-expanded="false"
+                            aria-haspopup="menu">
+                        <span id="searchEngineLabel">站内</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="m6 9 6 6 6-6"></path>
+                        </svg>
+                    </button>
+                    <div class="search-engine-menu" id="searchEngineMenu" role="menu" aria-label="搜索方式" hidden>
+                        <button type="button" class="search-engine-option" role="menuitemradio" data-engine="site" aria-checked="true">
+                            <span class="search-engine-name">站内搜索</span>
+                            <span class="search-engine-desc">筛选已收录网站</span>
+                        </button>
+                        <button type="button" class="search-engine-option" role="menuitemradio" data-engine="baidu" aria-checked="false">
+                            <span class="search-engine-name">百度</span>
+                            <span class="search-engine-desc">新标签页打开</span>
+                        </button>
+                        <button type="button" class="search-engine-option" role="menuitemradio" data-engine="bing" aria-checked="false">
+                            <span class="search-engine-name">必应</span>
+                            <span class="search-engine-desc">新标签页打开</span>
+                        </button>
+                        <button type="button" class="search-engine-option" role="menuitemradio" data-engine="google" aria-checked="false">
+                            <span class="search-engine-name">Google</span>
+                            <span class="search-engine-desc">新标签页打开</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="search-box">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7"></circle>
+                        <path d="m20 20-3.2-3.2"></path>
+                    </svg>
+                    <label class="visually-hidden" for="siteSearch">搜索网站</label>
+                    <input type="search"
+                           id="siteSearch"
+                           class="search-input"
+                           placeholder="搜索网站，支持拼音（按 / 聚焦）"
+                           autocomplete="off"
+                           spellcheck="false"
+                           aria-label="搜索网站">
+                    <button type="button"
+                            id="searchClear"
+                            class="search-clear"
+                            aria-label="清空搜索"
+                            title="清空搜索"
+                            hidden>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <path d="m6 6 12 12M18 6 6 18"></path>
+                        </svg>
+                    </button>
+                </div>
+                <button type="button" class="search-submit" id="searchSubmit" aria-label="搜索" title="搜索">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7"></circle>
+                        <path d="m20 20-3.2-3.2"></path>
+                    </svg>
+                    <span>搜索</span>
+                </button>
+            </div>
+        </section>
 
         <div class="site-body">
             <aside class="category-rail" id="categoryRail" aria-label="网站分类">
@@ -958,7 +979,7 @@ if ($bgImage !== '') {
             <?php endif; ?>
 
             <p class="copyright">
-                &copy; <?php echo $currentYear; ?> <?php echo $functions->escape($brandName); ?>
+                <?php echo $functions->escape($footerCopyrightText); ?>
                 <span class="footer-sep">·</span>
                 <a href="about.php">关于</a>
                 <span class="footer-sep">·</span>

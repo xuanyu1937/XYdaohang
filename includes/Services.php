@@ -343,13 +343,13 @@ class UserService extends BaseService
 
         try {
             $stmt = $this->db->prepare(
-                'SELECT id, email, username, is_admin, is_default_user, status, created_at, last_login, avatar
+                'SELECT id, email, username, is_admin, is_default_user, status, created_at, last_login, avatar, footer_copyright
                  FROM users WHERE id = ? LIMIT 1'
             );
             $stmt->execute([(int) $id]);
             $user = $stmt->fetch();
         } catch (Throwable $error) {
-            // 老库无 avatar 列时退回旧查询
+            // 老库无 footer_copyright / avatar 列时退回旧查询
             $stmt = $this->db->prepare(
                 'SELECT id, email, username, is_admin, is_default_user, status, created_at, last_login
                  FROM users WHERE id = ? LIMIT 1'
@@ -359,6 +359,60 @@ class UserService extends BaseService
         }
 
         return $user ?: null;
+    }
+
+    /**
+     * 更新用户自定义的底部版权文字。
+     *
+     * @param int $id 用户 id
+     * @param string $copyright 版权文字（支持 {year} / {site} 占位符），空字符串表示恢复默认
+     * @return bool 列不存在（未执行 v2.3.0 升级脚本）时返回 false
+     */
+    public function updateFooterCopyright($id, $copyright)
+    {
+        $id = (int) $id;
+        $copyright = trim((string) $copyright);
+
+        if (function_exists('mb_substr')) {
+            $copyright = mb_substr($copyright, 0, 120, 'UTF-8');
+        } else {
+            $copyright = substr($copyright, 0, 360);
+        }
+
+        if ($id <= 0 || !$this->usersTableExists()) {
+            return false;
+        }
+
+        try {
+            $stmt = $this->db->prepare('UPDATE users SET footer_copyright = ? WHERE id = ?');
+            $stmt->execute([$copyright !== '' ? $copyright : null, $id]);
+
+            return true;
+        } catch (Throwable $error) {
+            return false;
+        }
+    }
+
+    /**
+     * 取指定用户的自定义版权文字；列不存在或无设置时返回空字符串。
+     */
+    public function footerCopyrightOf($id)
+    {
+        $id = (int) $id;
+
+        if ($id <= 0 || !$this->usersTableExists()) {
+            return '';
+        }
+
+        try {
+            $stmt = $this->db->prepare('SELECT footer_copyright FROM users WHERE id = ? LIMIT 1');
+            $stmt->execute([$id]);
+            $row = $stmt->fetch();
+
+            return $row ? trim((string) ($row['footer_copyright'] ?? '')) : '';
+        } catch (Throwable $error) {
+            return '';
+        }
     }
 
     /**

@@ -83,9 +83,9 @@ function userSiteTrim($value, $limit)
 }
 
 /**
- * 校验分类存在且可被用户选用（公共分类）。
+ * 校验分类存在且属于当前用户（分组完全私有化，不允许归入他人/公共分组）。
  */
-function userSiteCategoryId($db, $value)
+function userSiteCategoryId($db, $value, $userId)
 {
     $id = (int) $value;
 
@@ -93,8 +93,8 @@ function userSiteCategoryId($db, $value)
         return 0;
     }
 
-    $stmt = $db->prepare('SELECT id FROM categories WHERE id = ? LIMIT 1');
-    $stmt->execute([$id]);
+    $stmt = $db->prepare('SELECT id FROM categories WHERE id = ? AND user_id = ? LIMIT 1');
+    $stmt->execute([$id, (int) $userId]);
 
     return $stmt->fetch() ? $id : 0;
 }
@@ -145,7 +145,7 @@ switch ($action) {
         $name = userSiteTrim($_POST['name'] ?? '', 100);
         $description = userSiteTrim($_POST['description'] ?? '', 200);
         $logo = userSiteTrim($_POST['logo'] ?? '', 500);
-        $categoryId = userSiteCategoryId($db, $_POST['category_id'] ?? 0);
+        $categoryId = userSiteCategoryId($db, $_POST['category_id'] ?? 0, $userId);
 
         // 名称为空时抓取标题，顺带补齐描述与图标。
         if ($name === '') {
@@ -218,7 +218,7 @@ switch ($action) {
 
         $description = userSiteTrim($_POST['description'] ?? '', 200);
         $logo = userSiteTrim($_POST['logo'] ?? '', 500);
-        $categoryId = userSiteCategoryId($db, $_POST['category_id'] ?? 0);
+        $categoryId = userSiteCategoryId($db, $_POST['category_id'] ?? 0, $userId);
 
         if ($categoryId <= 0) {
             $engine = new CategoryEngine($functions);

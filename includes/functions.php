@@ -43,9 +43,38 @@ class Functions {
     }
     
     public function updateSetting($key, $value) {
-        $stmt = $this->db->prepare("INSERT INTO settings (`key`, value) VALUES (?, ?) 
+        $stmt = $this->db->prepare("INSERT INTO settings (`key`, value) VALUES (?, ?)
                                    ON DUPLICATE KEY UPDATE value = ?");
         return $stmt->execute([$key, $value, $value]);
+    }
+
+    /**
+     * 生成页脚版权文字（v2.3.0 新增）。
+     *
+     * 优先级：用户自定义（$userCopyright）> 后台全局设置 footer_copyright > 默认「© 年份 站点名」。
+     * 自定义与全局设置均支持 {year}（当前年份）与 {site}（站点名称）占位符；
+     * 不含占位符时按原样输出（不再自动补 © 前缀）。
+     *
+     * @param string $userCopyright 当前视图用户的自定义版权（无则传空串）
+     * @param string $brandName     站点名称
+     * @return string 已替换占位符后的纯文本（调用方负责 escape）
+     */
+    public function footerCopyrightText($userCopyright, $brandName) {
+        $template = trim((string) $userCopyright);
+
+        if ($template === '') {
+            $template = trim((string) $this->getSetting('footer_copyright'));
+        }
+
+        if ($template === '') {
+            $template = '© {year} {site}';
+        }
+
+        return str_replace(
+            ['{year}', '{site}'],
+            [date('Y'), trim((string) $brandName)],
+            $template
+        );
     }
     
     // ==================== 访问统计方法 ====================
