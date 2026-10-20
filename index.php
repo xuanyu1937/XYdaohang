@@ -54,6 +54,7 @@ if (!in_array($defaultView, ['grid', 'list', 'compact'], true)) {
 }
 
 $defaultTarget = $functions->getSetting('default_target') === '_self' ? '_self' : '_blank';
+$registerEnabled = $functions->getSetting('register_enabled') !== '0';
 
 $skin = (string) $functions->getSetting('theme_skin');
 if (!in_array($skin, ['default', 'purple', 'orange', 'mint'], true)) {
@@ -576,8 +577,13 @@ if ($bgImage !== '') {
                     </details>
                 <?php else: ?>
                     <div class="auth-links">
-                        <a class="tool-btn tool-text" href="login.php">登录</a>
-                        <a class="tool-btn tool-text is-primary" href="register.php">注册</a>
+                        <button type="button" class="tool-btn auth-trigger" id="authTrigger">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16">
+                                <circle cx="12" cy="8" r="4"></circle>
+                                <path d="M4 21a8 8 0 0 1 16 0"></path>
+                            </svg>
+                            <span>登录<?php echo $registerEnabled ? ' / 注册' : ''; ?></span>
+                        </button>
                     </div>
                 <?php endif; ?>
             </div>
@@ -1013,5 +1019,57 @@ if ($bgImage !== '') {
             </svg>
         </button>
     </div>
+
+    <!-- 登录/注册 统一弹窗（v2.4.0 新增） -->
+    <dialog class="auth-modal" id="authModal">
+        <div class="auth-modal-head">
+            <div class="auth-modal-title">
+                <button type="button" class="auth-tab is-active" data-tab="login">登录</button>
+                <?php if ($registerEnabled): ?>
+                    <button type="button" class="auth-tab" data-tab="register">注册</button>
+                <?php endif; ?>
+            </div>
+            <button type="button" class="auth-close" id="authClose" aria-label="关闭">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+            </button>
+        </div>
+
+        <p class="auth-error" id="authError" role="alert" hidden></p>
+
+        <form class="auth-panel is-active" id="authLoginForm" method="dialog" novalidate>
+            <label class="auth-field">
+                <span>账号</span>
+                <input type="text" id="loginAccount" name="account" autocomplete="username" required placeholder="邮箱或用户名">
+            </label>
+            <label class="auth-field">
+                <span>密码</span>
+                <input type="password" id="loginPassword" name="password" autocomplete="current-password" required placeholder="请输入密码">
+            </label>
+            <button type="submit" class="auth-submit" id="authLoginSubmit">登录</button>
+            <a class="auth-forgot" href="forgot.php" target="_blank" rel="noopener">忘记密码？</a>
+        </form>
+
+        <?php if ($registerEnabled): ?>
+            <form class="auth-panel" id="authRegisterForm" method="dialog" novalidate hidden>
+                <label class="auth-field">
+                    <span>用户名</span>
+                    <input type="text" id="regUsername" name="username" autocomplete="username" required maxlength="24" placeholder="2-24 字符">
+                </label>
+                <label class="auth-field">
+                    <span>邮箱</span>
+                    <input type="email" id="regEmail" name="email" autocomplete="email" required placeholder="用于登录与找回密码">
+                </label>
+                <label class="auth-field">
+                    <span>密码</span>
+                    <input type="password" id="regPassword" name="password" autocomplete="new-password" required minlength="6" placeholder="至少 6 位">
+                </label>
+                <label class="auth-field">
+                    <span>确认密码</span>
+                    <input type="password" id="regPasswordConfirm" name="password_confirm" autocomplete="new-password" required placeholder="再次输入密码">
+                </label>
+                <button type="submit" class="auth-submit" id="authRegisterSubmit">注册</button>
+            </form>
+        <?php endif; ?>
+    </dialog>
 </body>
 </html>

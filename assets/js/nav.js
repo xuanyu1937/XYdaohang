@@ -542,6 +542,12 @@
 
         if (shouldApply !== false) {
             applyFilters();
+
+            // 分类切换后平滑滚动到结果区域顶部（快速定位，减少翻找）
+            var target = document.getElementById('siteMain');
+            if (target && typeof target.scrollIntoView === 'function') {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
     }
 
@@ -1333,3 +1339,149 @@
         updateToTop();
     }
 })();
+
+    /* ----------------------------------------------------------------------
+       登录 / 注册 统一弹窗（v2.4.0）
+       ---------------------------------------------------------------------- */
+
+    var authTrigger = document.getElementById('authTrigger');
+    var authModal = document.getElementById('authModal');
+    var authClose = document.getElementById('authClose');
+    var authError = document.getElementById('authError');
+    var authTabs = qsa('.auth-tab');
+    var authPanels = qsa('.auth-panel');
+
+    function showAuthError(message) {
+        if (!authError) return;
+        if (!message) {
+            authError.hidden = true;
+            authError.textContent = '';
+            return;
+        }
+        authError.textContent = message;
+        authError.hidden = false;
+    }
+
+    function switchAuthTab(tab) {
+        authTabs.forEach(function (btn) {
+            btn.classList.toggle('is-active', btn.getAttribute('data-tab') === tab);
+        });
+        authPanels.forEach(function (panel) {
+            var match = (panel.id === 'authLoginForm' && tab === 'login')
+                     || (panel.id === 'authRegisterForm' && tab === 'register');
+            panel.classList.toggle('is-active', match);
+            panel.hidden = !match;
+        });
+        showAuthError('');
+    }
+
+    if (authTrigger && authModal && typeof authModal.showModal === 'function') {
+        authTrigger.addEventListener('click', function () {
+            // 切换登录/注册 tab 默认值：URL 参数 ?mode=register 可直开注册
+            var hashMode = ((window.location.search || '').match(/[?&]mode=(login|register)/) || [])[1];
+            switchAuthTab(hashMode === 'register' && authTabs.some(function (t) { return t.getAttribute('data-tab') === 'register'; }) ? 'register' : 'login');
+            authModal.showModal();
+        });
+    }
+
+    if (authClose && authModal) {
+        authClose.addEventListener('click', function () {
+            if (typeof authModal.close === 'function') authModal.close();
+        });
+    }
+
+    authTabs.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            switchAuthTab(btn.getAttribute('data-tab'));
+        });
+    });
+
+    // 登录
+    var authLoginSubmit = document.getElementById('authLoginSubmit');
+    var authLoginForm = document.getElementById('authLoginForm');
+
+    if (authLoginSubmit && authLoginForm) {
+        authLoginForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            var account = (document.getElementById('loginAccount').value || '').trim();
+            var password = document.getElementById('loginPassword').value || '';
+
+            if (!account || !password) {
+                showAuthError('请填写账号与密码');
+                return;
+            }
+
+            authLoginSubmit.disabled = true;
+            showAuthError('');
+
+            var body = new URLSearchParams();
+            body.set('action', 'login');
+            body.set('account', account);
+            body.set('password', password);
+
+            fetch('api/auth.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                body: body.toString(),
+                credentials: 'same-origin',
+            }).then(function (resp) { return resp.json().catch(function () { return { ok: false, error: '网络响应异常' }; }); })
+              .then(function (data) {
+                  if (!data || !data.ok) {
+                      showAuthError((data && data.error) || '登录失败，请检查账号与密码');
+                      return;
+                  }
+                  // 登录成功：跳转 my.php（后端已在 login action 启动 session）
+                  window.location.href = data.redirect || 'my.php';
+              })
+              .catch(function (err) { showAuthError('网络错误，请稍后重试'); })
+              .then(function () { authLoginSubmit.disabled = false; });
+        });
+    }
+
+    // 注册
+    var authRegisterSubmit = document.getElementById('authRegisterSubmit');
+    var authRegisterForm = document.getElementById('authRegisterForm');
+
+    if (authRegisterSubmit && authRegisterForm) {
+        authRegisterForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            var username = (document.getElementById('regUsername').value || '').trim();
+            var email = (document.getElementById('regEmail').value || '').trim();
+            var password = document.getElementById('regPassword').value || '';
+            var passwordConfirm = document.getElementById('regPasswordConfirm').value || '';
+
+            if (username.length < 2 || username.length > 24) { showAuthError('用户名长度需在 2-24 字符之间'); return; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAuthError('邮箱格式不正确'); return; }
+            if (password.length < 6) { showAuthError('密码至少 6 位'); return; }
+            if (password !== passwordConfirm) { showAuthError('两次输入的密码不一致'); return; }
+
+            authRegisterSubmit.disabled = true;
+            showAuthError('');
+
+            var body = new URLSearchParams();
+            body.set('action', 'register');
+            body.set('username', username);
+            body.set('email', email);
+            body.set('password', password);
+            body.set('password_confirm', passwordConfirm);
+
+            fetch('api/auth.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                body: body.toString(),
+                credentials: 'same-origin',
+            }).then(function (resp) { return resp.json().catch(function () { return { ok: false, error: '网络响应异常' }; }); })
+              .then(function (data) {
+                  if (!data || !data.ok) {
+                      showAuthError((data && data.error) || '注册失败，请稍后再试');
+                      return;
+                  }
+                  // 注册成功：后端已自动登录，直接跳转 my.php
+                  window.location.href = data.redirect || 'my.php';
+              })
+              .catch(function (err) { showAuthError('网络错误，请稍后重试'); })
+              .then(function () { authRegisterSubmit.disabled = false; });
+        });
+    }
