@@ -80,7 +80,7 @@ switch ($action) {
 
         $functions->jsonResponse([
             'ok' => true,
-            'redirect' => 'my.php',
+            'redirect' => 'index.php',
             'user' => [
                 'id' => (int) $result['user']['id'],
                 'username' => (string) $result['user']['username'],
@@ -111,7 +111,7 @@ switch ($action) {
 
         $functions->jsonResponse([
             'ok' => true,
-            'redirect' => 'my.php',
+            'redirect' => 'index.php',
             'user' => [
                 'id' => (int) $result['user']['id'],
                 'username' => (string) $result['user']['username'],

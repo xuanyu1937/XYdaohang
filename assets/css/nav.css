@@ -3434,3 +3434,214 @@ dialog.auth-modal::backdrop {
     transform: translate(-50%, 0);
 }
 
+
+/* ==========================================================================
+   弹窗通用样式（index.php 与 my.php 共用）
+   ========================================================================== */
+
+.my-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+.my-btn:hover {
+    border-color: var(--primary-border);
+    background: var(--primary-soft);
+    color: var(--primary);
+    transform: translateY(-1px);
+}
+
+.my-btn svg {
+    width: 15px;
+    height: 15px;
+}
+
+.my-btn.is-primary {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: var(--primary-contrast);
+    box-shadow: 0 8px 18px -10px rgba(29, 78, 216, 0.7);
+}
+
+.my-btn.is-primary:hover {
+    border-color: var(--primary-filled-hover);
+    background: var(--primary-filled-hover);
+    color: var(--primary-contrast);
+}
+
+.my-btn.is-ghost {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    color: var(--muted);
+}
+
+.my-btn.is-ghost:hover {
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+.my-btn[aria-disabled="true"] {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.my-iconbtn {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--muted);
+    transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease;
+}
+
+.my-iconbtn:hover {
+    border-color: var(--border);
+    background: var(--surface);
+    color: var(--text);
+}
+
+.my-iconbtn.is-danger:hover {
+    border-color: rgba(220, 38, 38, 0.32);
+    background: var(--danger-soft);
+    color: var(--danger);
+}
+
+.my-iconbtn svg {
+    width: 16px;
+    height: 16px;
+}
+
+dialog.my-dialog {
+    width: min(520px, calc(100vw - 32px));
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow-lg);
+}
+
+dialog.my-dialog::backdrop {
+    background: rgba(8, 14, 26, 0.55);
+    backdrop-filter: blur(2px);
+}
+
+.my-dialog-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.my-dialog-head h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.my-dialog-body {
+    padding: 20px;
+    max-height: min(70vh, 560px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.my-dialog-foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 9px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+}
+
+.my-field {
+    margin-bottom: 14px;
+}
+
+.my-field label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-2);
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+.my-field input,
+.my-field select,
+.my-field textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: 13.5px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.my-field textarea {
+    min-height: 74px;
+    resize: vertical;
+}
+
+.my-field input:focus,
+.my-field select:focus,
+.my-field textarea:focus {
+    border-color: var(--primary);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.my-field-row {
+    display: flex;
+    gap: 8px;
+}
+
+.my-field-row input {
+    flex: 1 1 auto;
+}
+
+.my-msg {
+    display: none;
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    line-height: 1.6;
+}
+
+.my-msg.is-error {
+    display: block;
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    background: var(--danger-soft);
+    color: var(--danger);
+}
+
+.my-msg.is-success {
+    display: block;
+    border: 1px solid rgba(15, 157, 88, 0.3);
+    background: var(--success-soft);
+    color: var(--success);
+}

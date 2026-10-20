@@ -361,6 +361,85 @@ switch ($action) {
         $functions->jsonResponse(['ok' => true]);
         break;
 
+    case 'batch_move':
+        $ids = $_POST['ids'] ?? [];
+
+        if (is_string($ids)) {
+            $decoded = json_decode($ids, true);
+            $ids = is_array($decoded) ? $decoded : array_filter(array_map('trim', explode(',', $ids)));
+        }
+
+        if (!is_array($ids) || empty($ids)) {
+            $functions->jsonResponse(['ok' => false, 'error' => '请选择要移动的网址'], 400);
+        }
+
+        $idList = array_values(array_filter(array_map('intval', $ids), function ($v) { return $v > 0; }));
+
+        if (empty($idList)) {
+            $functions->jsonResponse(['ok' => false, 'error' => '请选择有效的网址'], 400);
+        }
+
+        // 校验所有权
+        $placeholders = implode(',', array_fill(0, count($idList), '?'));
+        $checkStmt = $db->prepare("SELECT COUNT(*) AS total FROM nav_links WHERE id IN ($placeholders) AND user_id = ?");
+        $params = $idList;
+        $params[] = $userId;
+        $checkStmt->execute($params);
+        $owned = (int) ($checkStmt->fetch()['total'] ?? 0);
+
+        if ($owned !== count($idList)) {
+            $functions->jsonResponse(['ok' => false, 'error' => '部分网址无权操作'], 403);
+        }
+
+        $categoryId = userSiteCategoryId($db, $_POST['category_id'] ?? 0, $userId);
+
+        if ($categoryId <= 0) {
+            $engine = new CategoryEngine($functions);
+            $categoryId = $engine->ensure('未分类', 'bi-collection');
+        }
+
+        $updateStmt = $db->prepare("UPDATE nav_links SET category_id = ?, updated_at = NOW() WHERE id IN ($placeholders) AND user_id = ?");
+        $params2 = array_merge([$categoryId], $idList, [$userId]);
+        $updateStmt->execute($params2);
+
+        $functions->jsonResponse(['ok' => true, 'count' => count($idList), 'category_id' => $categoryId]);
+        break;
+
+    case 'batch_delete':
+        $ids = $_POST['ids'] ?? [];
+
+        if (is_string($ids)) {
+            $decoded = json_decode($ids, true);
+            $ids = is_array($decoded) ? $decoded : array_filter(array_map('trim', explode(',', $ids)));
+        }
+
+        if (!is_array($ids) || empty($ids)) {
+            $functions->jsonResponse(['ok' => false, 'error' => '请选择要删除的网址'], 400);
+        }
+
+        $idList = array_values(array_filter(array_map('intval', $ids), function ($v) { return $v > 0; }));
+
+        if (empty($idList)) {
+            $functions->jsonResponse(['ok' => false, 'error' => '请选择有效的网址'], 400);
+        }
+
+        $placeholders = implode(',', array_fill(0, count($idList), '?'));
+        $checkStmt = $db->prepare("SELECT COUNT(*) AS total FROM nav_links WHERE id IN ($placeholders) AND user_id = ?");
+        $params = $idList;
+        $params[] = $userId;
+        $checkStmt->execute($params);
+        $owned = (int) ($checkStmt->fetch()['total'] ?? 0);
+
+        if ($owned !== count($idList)) {
+            $functions->jsonResponse(['ok' => false, 'error' => '部分网址无权操作'], 403);
+        }
+
+        $delStmt = $db->prepare("DELETE FROM nav_links WHERE id IN ($placeholders) AND user_id = ?");
+        $delStmt->execute($params);
+
+        $functions->jsonResponse(['ok' => true, 'count' => count($idList)]);
+        break;
+
     case 'sort':
         $ids = $_POST['ids'] ?? [];
 

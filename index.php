@@ -440,10 +440,10 @@ if ($bgImage !== '') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.6.1">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.6.2">
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-    <script src="assets/js/nav.js?v=2.6.1" defer></script>
-    <script src="assets/js/search.js?v=2.6.1" defer></script>
+    <script src="assets/js/nav.js?v=2.6.2" defer></script>
+    <script src="assets/js/search.js?v=2.6.2" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -1223,6 +1223,55 @@ if ($bgImage !== '') {
             <button type="button" class="my-btn" id="moveCancel">取消</button>
             <button type="button" class="my-btn is-primary" id="moveSubmit">移动</button>
         </div>
+    </dialog>
+
+    <!-- 编辑网址 -->
+    <dialog class="my-dialog" id="editLinkDialog">
+        <form method="dialog" id="editLinkForm">
+            <div class="my-dialog-head">
+                <h3>编辑网址</h3>
+                <button type="button" class="my-iconbtn" id="editLinkClose" aria-label="关闭">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+                </button>
+            </div>
+            <div class="my-dialog-body">
+                <p class="my-msg" id="editLinkMsg" role="alert"></p>
+                <input type="hidden" id="editLinkId" value="">
+                <div class="my-field">
+                    <label for="editLinkUrl">网址</label>
+                    <div class="my-field-row">
+                        <input type="url" id="editLinkUrl" placeholder="https://example.com" autocomplete="off" spellcheck="false" required>
+                        <button type="button" class="my-btn" id="editFetchBtn" title="自动获取网站信息">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="15" height="15"><path d="M12 3l1.7 4.6L18 9.2l-4.3 1.6L12 15.5l-1.7-4.7L6 9.2l4.3-1.6Z"></path><path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8Z"></path></svg>
+                            <span>抓取</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="my-field">
+                    <label for="editLinkName">名称</label>
+                    <input type="text" id="editLinkName" maxlength="100" autocomplete="off" placeholder="网站名称">
+                </div>
+                <div class="my-field">
+                    <label for="editLinkCategory">分组</label>
+                    <select id="editLinkCategory">
+                        <option value="0">未分类</option>
+                        <?php foreach ($categoryRows as $cat): ?>
+                            <?php if ((int) $cat['parent_id'] === 0): ?>
+                                <option value="<?php echo (int) $cat['id']; ?>"><?php echo $functions->escape((string) $cat['name']); ?></option>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="my-field">
+                    <label for="editLinkDescription">备注</label>
+                    <textarea id="editLinkDescription" maxlength="200" autocomplete="off" placeholder="可留空"></textarea>
+                </div>
+            </div>
+            <div class="my-dialog-foot">
+                <button type="button" class="my-btn" id="editLinkCancel">取消</button>
+                <button type="submit" class="my-btn is-primary" id="editLinkSave">保存</button>
+            </div>
+        </form>
     </dialog>
 
     <!-- 卡片右键 / 长按菜单 -->

@@ -653,6 +653,56 @@ $hasLinks = $totalLinks > 0;
             display: flex;
         }
 
+        #batchBar {
+            display: none;
+        }
+
+        body[data-batch="1"] #batchBar {
+            display: flex;
+        }
+
+        body[data-batch="1"] .my-picker {
+            display: grid;
+        }
+
+        .my-batch-all {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-2);
+            font-size: 13px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .my-batch-all input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+        }
+
+        .my-batch-info {
+            margin: 0 0 14px;
+            color: var(--text-2);
+            font-size: 13px;
+        }
+
+        .my-batch-info strong {
+            color: var(--primary);
+        }
+
+        .my-btn.is-danger {
+            border-color: rgba(220, 38, 38, 0.35);
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .my-btn.is-danger:hover {
+            border-color: var(--danger);
+            background: #b91c1c;
+            color: #fff;
+        }
+
         .my-sharebar-text {
             color: var(--text-2);
             font-size: 13px;
@@ -1143,6 +1193,13 @@ $hasLinks = $totalLinks > 0;
                         </svg>
                         <span class="my-btn-label">导入书签</span>
                     </button>
+                    <button type="button" class="my-btn" id="batchBtn" <?php echo $hasLinks ? '' : 'aria-disabled="true"'; ?>>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M9 11l3 3L22 4"></path>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        </svg>
+                        <span class="my-btn-label">批量操作</span>
+                    </button>
                     <button type="button" class="my-btn" id="pickBtn" <?php echo $hasLinks ? '' : 'aria-disabled="true"'; ?>>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"></path>
@@ -1296,6 +1353,53 @@ $hasLinks = $totalLinks > 0;
         <button type="button" class="my-btn is-primary" id="createShareBtn">生成分享链接</button>
         <button type="button" class="my-btn" id="cancelPickBtn">取消</button>
     </div>
+
+    <!-- 批量操作栏 -->
+    <div class="my-sharebar" id="batchBar" role="region" aria-label="批量操作">
+        <label class="my-batch-all">
+            <input type="checkbox" id="batchSelectAll">
+            <span>全选</span>
+        </label>
+        <span class="my-sharebar-text">已选 <strong id="batchCount" aria-live="polite">0</strong> 项</span>
+        <button type="button" class="my-btn" id="batchMoveBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="15" height="15"><path d="M5 4h14M5 12h14M5 20h14"></path><path d="M9 8l3-3 3 3M9 16l3 3 3-3"></path></svg>
+            <span>批量移动</span>
+        </button>
+        <button type="button" class="my-btn is-danger" id="batchDeleteBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="15" height="15"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg>
+            <span>批量删除</span>
+        </button>
+        <button type="button" class="my-btn is-ghost" id="batchCancelBtn">取消</button>
+    </div>
+
+    <!-- 批量移动分组弹窗 -->
+    <dialog class="my-dialog" id="batchMoveDialog">
+        <div class="my-dialog-head">
+            <h3>批量移动到分组</h3>
+            <button type="button" class="my-iconbtn" id="batchMoveClose" aria-label="关闭">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+            </button>
+        </div>
+        <div class="my-dialog-body">
+            <p class="my-msg" id="batchMoveMsg" role="alert"></p>
+            <p class="my-batch-info">将移动 <strong id="batchMoveCount">0</strong> 个网址到：</p>
+            <div class="my-field">
+                <label for="batchMoveCategory">选择目标分组</label>
+                <select id="batchMoveCategory">
+                    <option value="0">未分类</option>
+                    <?php foreach ($ownGroups as $group): ?>
+                        <option value="<?php echo (int) $group['id']; ?>">
+                            <?php echo $functions->escape(($group['is_private'] ? '🔒 ' : '') . $group['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+        <div class="my-dialog-foot">
+            <button type="button" class="my-btn" id="batchMoveCancel">取消</button>
+            <button type="button" class="my-btn is-primary" id="batchMoveSubmit">移动</button>
+        </div>
+    </dialog>
 
     <p class="my-sr" id="reorderStatus" role="status" aria-live="polite"></p>
 
@@ -2315,6 +2419,131 @@ $hasLinks = $totalLinks > 0;
             qs('#shareClose') && qs('#shareClose').addEventListener('click', function () { shareDialog.close(); });
             qs('#shareDone') && qs('#shareDone').addEventListener('click', function () { shareDialog.close(); });
 
+            /* ===== 批量操作 ===== */
+            var batchBtn = qs('#batchBtn');
+            var batchBar = qs('#batchBar');
+            var batchCancelBtn = qs('#batchCancelBtn');
+            var batchSelectAll = qs('#batchSelectAll');
+            var batchCountNode = qs('#batchCount');
+            var batchMoveBtn = qs('#batchMoveBtn');
+            var batchDeleteBtn = qs('#batchDeleteBtn');
+            var batchMoveDialog = qs('#batchMoveDialog');
+            var batchMoveCategory = qs('#batchMoveCategory');
+            var batchMoveCount = qs('#batchMoveCount');
+            var batchMoveMsg = qs('#batchMoveMsg');
+            var batchMoveSubmit = qs('#batchMoveSubmit');
+            var batchMoveClose = qs('#batchMoveClose');
+            var batchMoveCancel = qs('#batchMoveCancel');
+
+            function getBatchIds() {
+                return qsa('.my-picker input:checked').map(function (input) { return input.value; });
+            }
+
+            function updateBatchCount() {
+                var ids = getBatchIds();
+                if (batchCountNode) { batchCountNode.textContent = ids.length; }
+                if (batchSelectAll) {
+                    var total = qsa('.my-picker input').length;
+                    batchSelectAll.checked = total > 0 && ids.length === total;
+                    batchSelectAll.indeterminate = ids.length > 0 && ids.length < total;
+                }
+            }
+
+            function exitBatchMode() {
+                document.body.setAttribute('data-batch', '0');
+                qsa('.my-picker input').forEach(function (input) { input.checked = false; });
+                updateBatchCount();
+            }
+
+            if (batchBtn) {
+                batchBtn.addEventListener('click', function () {
+                    document.body.setAttribute('data-batch', '1');
+                    updateBatchCount();
+                });
+            }
+
+            if (batchCancelBtn) {
+                batchCancelBtn.addEventListener('click', exitBatchMode);
+            }
+
+            if (batchSelectAll) {
+                batchSelectAll.addEventListener('change', function () {
+                    var checked = batchSelectAll.checked;
+                    qsa('.my-picker input').forEach(function (input) { input.checked = checked; });
+                    updateBatchCount();
+                });
+            }
+
+            if (batchMoveBtn) {
+                batchMoveBtn.addEventListener('click', function () {
+                    var ids = getBatchIds();
+                    if (!ids.length) { window.alert('请先勾选要移动的网址'); return; }
+                    if (batchMoveCount) { batchMoveCount.textContent = ids.length; }
+                    if (batchMoveMsg) { batchMoveMsg.textContent = ''; batchMoveMsg.className = 'my-msg'; }
+                    if (batchMoveDialog && typeof batchMoveDialog.showModal === 'function') {
+                        batchMoveDialog.showModal();
+                    }
+                });
+            }
+
+            if (batchMoveClose) { batchMoveClose.addEventListener('click', function () { batchMoveDialog.close(); }); }
+            if (batchMoveCancel) { batchMoveCancel.addEventListener('click', function () { batchMoveDialog.close(); }); }
+
+            if (batchMoveSubmit) {
+                batchMoveSubmit.addEventListener('click', function () {
+                    var ids = getBatchIds();
+                    if (!ids.length) { return; }
+                    var catId = batchMoveCategory ? batchMoveCategory.value : '0';
+                    setBusy(batchMoveSubmit, true, '移动中…');
+                    postForm(API_SITES, { action: 'batch_move', ids: ids.join(','), category_id: catId }).then(function (res) {
+                        setBusy(batchMoveSubmit, false);
+                        if (res && res.ok) {
+                            if (batchMoveDialog) { batchMoveDialog.close(); }
+                            exitBatchMode();
+                            window.location.reload();
+                        } else if (batchMoveMsg) {
+                            batchMoveMsg.textContent = (res && res.error) || '移动失败';
+                            batchMoveMsg.className = 'my-msg is-error';
+                        }
+                    }).catch(function () {
+                        setBusy(batchMoveSubmit, false);
+                        if (batchMoveMsg) {
+                            batchMoveMsg.textContent = '网络错误，请稍后重试';
+                            batchMoveMsg.className = 'my-msg is-error';
+                        }
+                    });
+                });
+            }
+
+            if (batchDeleteBtn) {
+                batchDeleteBtn.addEventListener('click', function () {
+                    var ids = getBatchIds();
+                    if (!ids.length) { window.alert('请先勾选要删除的网址'); return; }
+                    if (!window.confirm('确定删除选中的 ' + ids.length + ' 个网址吗？此操作不可撤销。')) { return; }
+                    setBusy(batchDeleteBtn, true, '删除中…');
+                    postForm(API_SITES, { action: 'batch_delete', ids: ids.join(',') }).then(function (res) {
+                        setBusy(batchDeleteBtn, false);
+                        if (res && res.ok) {
+                            exitBatchMode();
+                            window.location.reload();
+                        } else {
+                            window.alert((res && res.error) || '删除失败');
+                        }
+                    }).catch(function () {
+                        setBusy(batchDeleteBtn, false);
+                        window.alert('网络错误，请稍后重试');
+                    });
+                });
+            }
+
+            document.addEventListener('change', function (event) {
+                if (event.target && event.target.closest && event.target.closest('.my-picker')) {
+                    if (document.body.getAttribute('data-batch') === '1') {
+                        updateBatchCount();
+                    }
+                }
+            });
+
             qs('#copyShareBtn') && qs('#copyShareBtn').addEventListener('click', function () {
                 shareUrl.select();
 
@@ -3245,7 +3474,7 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-<script src="assets/js/search.js?v=2.6.1" defer></script>
+<script src="assets/js/search.js?v=2.6.2" defer></script>
 
     <!-- 卡片右键 / 长按菜单 -->
     <div class="card-context-menu" id="cardContextMenu" hidden>

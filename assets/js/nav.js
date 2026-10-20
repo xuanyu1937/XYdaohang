@@ -1624,6 +1624,7 @@
         var quickAddDialog = document.getElementById('quickAddDialog');
         var qrDialog = document.getElementById('qrDialog');
         var moveDialog = document.getElementById('moveDialog');
+        var editDialog = document.getElementById('editLinkDialog');
         var ctxCard = null;
         var moveId = 0;
         var toastTimer = null;
@@ -1716,6 +1717,8 @@
                 id: card.getAttribute('data-id') || '',
                 url: card.getAttribute('data-url') || card.getAttribute('href') || '',
                 name: card.getAttribute('data-name') || '',
+                category: card.getAttribute('data-category') || '0',
+                description: card.getAttribute('data-description') || '',
                 starred: card.getAttribute('data-starred') === '1',
                 owner: card.getAttribute('data-owner') === '1'
             };
@@ -1819,6 +1822,140 @@
             }
 
             openDlg(moveDialog);
+        }
+
+        var editSaving = false;
+
+        function openEditDialog(card) {
+            if (!editDialog) {
+                return;
+            }
+
+            var data = cardData(card);
+            var idInput = document.getElementById('editLinkId');
+            var urlInput = document.getElementById('editLinkUrl');
+            var nameInput = document.getElementById('editLinkName');
+            var catSelect = document.getElementById('editLinkCategory');
+            var descInput = document.getElementById('editLinkDescription');
+            var msg = document.getElementById('editLinkMsg');
+
+            if (idInput) { idInput.value = data.id; }
+            if (urlInput) { urlInput.value = data.url || ''; }
+            if (nameInput) { nameInput.value = data.name || ''; }
+            if (catSelect) { catSelect.value = data.category || '0'; }
+            if (descInput) { descInput.value = data.description || ''; }
+            if (msg) { msg.textContent = ''; msg.className = 'my-msg'; }
+
+            openDlg(editDialog);
+
+            if (urlInput) {
+                setTimeout(function () { urlInput.focus(); }, 60);
+            }
+        }
+
+        function closeEditDialog() {
+            if (editDialog && typeof editDialog.close === 'function') {
+                editDialog.close();
+            } else if (editDialog) {
+                editDialog.removeAttribute('open');
+            }
+        }
+
+        function fetchEditMeta() {
+            var urlInput = document.getElementById('editLinkUrl');
+            var nameInput = document.getElementById('editLinkName');
+            var descInput = document.getElementById('editLinkDescription');
+            var msg = document.getElementById('editLinkMsg');
+            var btn = document.getElementById('editFetchBtn');
+            var url = urlInput ? urlInput.value.trim() : '';
+
+            if (!url) {
+                if (msg) { msg.textContent = '请先填写网址'; msg.className = 'my-msg is-error'; }
+                return;
+            }
+
+            if (btn) { btn.disabled = true; }
+            if (msg) { msg.textContent = '正在抓取网站信息…'; msg.className = 'my-msg is-success'; }
+
+            postForm({ action: 'fetch', url: url }).then(function (res) {
+                if (btn) { btn.disabled = false; }
+
+                if (!res || !res.ok) {
+                    if (msg) { msg.textContent = (res && res.error) || '抓取失败，可手动填写'; msg.className = 'my-msg is-error'; }
+                    return;
+                }
+
+                var meta = res.meta || {};
+
+                if (meta.title && nameInput && nameInput.value.trim() === '') {
+                    nameInput.value = meta.title;
+                }
+
+                if (meta.description && descInput && descInput.value.trim() === '') {
+                    descInput.value = meta.description;
+                }
+
+                if (urlInput && !/^https?:\/\//i.test(urlInput.value.trim())) {
+                    urlInput.value = res.url || url;
+                }
+
+                if (msg) { msg.textContent = meta.title ? '已获取：' + meta.title : '未获取到标题，可手动填写'; msg.className = 'my-msg is-success'; }
+            }).catch(function () {
+                if (btn) { btn.disabled = false; }
+                if (msg) { msg.textContent = '网络错误，请稍后重试'; msg.className = 'my-msg is-error'; }
+            });
+        }
+
+        function saveEditLink() {
+            if (editSaving) { return; }
+
+            var idInput = document.getElementById('editLinkId');
+            var urlInput = document.getElementById('editLinkUrl');
+            var nameInput = document.getElementById('editLinkName');
+            var catSelect = document.getElementById('editLinkCategory');
+            var descInput = document.getElementById('editLinkDescription');
+            var msg = document.getElementById('editLinkMsg');
+            var saveBtn = document.getElementById('editLinkSave');
+
+            var url = urlInput ? urlInput.value.trim() : '';
+
+            if (!url) {
+                if (msg) { msg.textContent = '请填写网址'; msg.className = 'my-msg is-error'; }
+                if (urlInput) { urlInput.focus(); }
+                return;
+            }
+
+            editSaving = true;
+            if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '保存中…'; }
+
+            var payload = {
+                action: 'update',
+                id: idInput ? idInput.value : '',
+                url: url,
+                name: nameInput ? nameInput.value.trim() : '',
+                category_id: catSelect ? catSelect.value : '0',
+                description: descInput ? descInput.value.trim() : ''
+            };
+
+            postForm(payload).then(function (res) {
+                editSaving = false;
+                if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '保存'; }
+
+                if (!res || !res.ok) {
+                    if (msg) { msg.textContent = (res && res.error) || '保存失败'; msg.className = 'my-msg is-error'; }
+                    return;
+                }
+
+                if (msg) { msg.textContent = '保存成功'; msg.className = 'my-msg is-success'; }
+
+                setTimeout(function () {
+                    window.location.reload();
+                }, 600);
+            }).catch(function () {
+                editSaving = false;
+                if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '保存'; }
+                if (msg) { msg.textContent = '网络错误，请稍后重试'; msg.className = 'my-msg is-error'; }
+            });
         }
 
         function openQuickAdd() {
@@ -1962,7 +2099,7 @@
                     showQr(data.url);
                     break;
                 case 'edit':
-                    window.location.href = 'my.php?edit=' + encodeURIComponent(data.id);
+                    openEditDialog(card);
                     break;
                 case 'move':
                     openMove(card);
@@ -2287,6 +2424,19 @@
                     msg.textContent = '网络错误，请稍后重试';
                 }
             });
+        });
+
+        /* 编辑网址弹窗 */
+        bind('editLinkClose', 'click', closeEditDialog);
+        bind('editLinkCancel', 'click', closeEditDialog);
+        bind('editFetchBtn', 'click', fetchEditMeta);
+        bind('editLinkSave', 'click', function (event) {
+            event.preventDefault();
+            saveEditLink();
+        });
+        bind('editLinkForm', 'submit', function (event) {
+            event.preventDefault();
+            saveEditLink();
         });
     })();
 })();
