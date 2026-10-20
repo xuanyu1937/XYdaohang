@@ -440,10 +440,10 @@ if ($bgImage !== '') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.5.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.6.0">
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-    <script src="assets/js/nav.js?v=2.5.0" defer></script>
-    <script src="assets/js/search.js?v=2.5.0" defer></script>
+    <script src="assets/js/nav.js?v=2.6.0" defer></script>
+    <script src="assets/js/search.js?v=2.6.0" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -569,6 +569,8 @@ if ($bgImage !== '') {
                         <div class="user-dropdown">
                             <a class="user-item<?php echo $isOwner ? ' is-current' : ''; ?>" href="index.php">全部导航</a>
                             <a class="user-item" href="my.php">我的导航</a>
+                            <button type="button" class="user-item" id="quickAddTrigger">快捷收藏</button>
+                            <button type="button" class="user-item" id="openModeToggle">打开方式：默认</button>
                             <?php if ((int) $currentUser['is_admin'] === 1): ?>
                                 <a class="user-item" href="admin/index.php">管理后台</a>
                             <?php endif; ?>
@@ -814,7 +816,9 @@ if ($bgImage !== '') {
                                            data-clicks="<?php echo $clicks; ?>"
                                            data-description="<?php echo $functions->escape((string) ($link['description'] ?? '')); ?>"
                                            data-tags="<?php echo $functions->escape((string) ($link['tags'] ?? '')); ?>"
-                                           data-alias="<?php echo $functions->escape((string) ($link['alias'] ?? '')); ?>">
+                                           data-alias="<?php echo $functions->escape((string) ($link['alias'] ?? '')); ?>"
+                                           data-starred="<?php echo !empty($link['is_starred']) ? '1' : '0'; ?>"
+                                           data-owner="<?php echo $isOwner ? '1' : '0'; ?>">
                                             <span class="site-status"
                                                   data-state="<?php echo $functions->escape($status['state']); ?>"
                                                   data-label="<?php echo $functions->escape($status['label']); ?>"
@@ -863,6 +867,33 @@ if ($bgImage !== '') {
                                                         </span>
                                                     <?php endif; ?>
                                                 </span>
+                                            </span>
+
+                                            <span class="card-corner" role="toolbar" aria-label="卡片操作">
+                                                <span class="card-star" role="button" tabindex="0" aria-label="<?php echo !empty($link['is_starred']) ? '取消收藏' : '收藏'; ?>" title="<?php echo !empty($link['is_starred']) ? '取消收藏' : '收藏'; ?>">
+                                                    <svg viewBox="0 0 24 24" fill="<?php echo !empty($link['is_starred']) ? 'currentColor' : 'none'; ?>" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                                    </svg>
+                                                </span>
+                                                <?php if ($isOwner): ?>
+                                                <span class="card-actions">
+                                                    <span class="card-action" data-action="edit" role="button" tabindex="0" aria-label="编辑" title="编辑">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>
+                                                    </span>
+                                                    <span class="card-action" data-action="copy" role="button" tabindex="0" aria-label="复制链接" title="复制链接">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                                    </span>
+                                                    <span class="card-action" data-action="qrcode" role="button" tabindex="0" aria-label="二维码" title="二维码">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3M21 14v7M14 21h3M17 17h4"></path></svg>
+                                                    </span>
+                                                    <span class="card-action" data-action="move" role="button" tabindex="0" aria-label="移动分组" title="移动分组">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14M5 12h14M5 20h14"></path><path d="M9 8l3-3 3 3M9 16l3 3 3-3"></path></svg>
+                                                    </span>
+                                                    <span class="card-action card-action-danger" data-action="delete" role="button" tabindex="0" aria-label="删除" title="删除">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg>
+                                                    </span>
+                                                </span>
+                                                <?php endif; ?>
                                             </span>
                                         </a>
                                     <?php endforeach; ?>
@@ -895,7 +926,9 @@ if ($bgImage !== '') {
                                            data-clicks="<?php echo $clicks; ?>"
                                            data-description="<?php echo $functions->escape((string) ($link['description'] ?? '')); ?>"
                                            data-tags="<?php echo $functions->escape((string) ($link['tags'] ?? '')); ?>"
-                                           data-alias="<?php echo $functions->escape((string) ($link['alias'] ?? '')); ?>">
+                                           data-alias="<?php echo $functions->escape((string) ($link['alias'] ?? '')); ?>"
+                                           data-starred="<?php echo !empty($link['is_starred']) ? '1' : '0'; ?>"
+                                           data-owner="<?php echo $isOwner ? '1' : '0'; ?>">
                                             <span class="site-status"
                                                   data-state="<?php echo $functions->escape($status['state']); ?>"
                                                   data-label="<?php echo $functions->escape($status['label']); ?>"
@@ -944,6 +977,33 @@ if ($bgImage !== '') {
                                                         </span>
                                                     <?php endif; ?>
                                                 </span>
+                                            </span>
+
+                                            <span class="card-corner" role="toolbar" aria-label="卡片操作">
+                                                <span class="card-star" role="button" tabindex="0" aria-label="<?php echo !empty($link['is_starred']) ? '取消收藏' : '收藏'; ?>" title="<?php echo !empty($link['is_starred']) ? '取消收藏' : '收藏'; ?>">
+                                                    <svg viewBox="0 0 24 24" fill="<?php echo !empty($link['is_starred']) ? 'currentColor' : 'none'; ?>" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                                    </svg>
+                                                </span>
+                                                <?php if ($isOwner): ?>
+                                                <span class="card-actions">
+                                                    <span class="card-action" data-action="edit" role="button" tabindex="0" aria-label="编辑" title="编辑">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>
+                                                    </span>
+                                                    <span class="card-action" data-action="copy" role="button" tabindex="0" aria-label="复制链接" title="复制链接">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                                    </span>
+                                                    <span class="card-action" data-action="qrcode" role="button" tabindex="0" aria-label="二维码" title="二维码">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3M21 14v7M14 21h3M17 17h4"></path></svg>
+                                                    </span>
+                                                    <span class="card-action" data-action="move" role="button" tabindex="0" aria-label="移动分组" title="移动分组">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14M5 12h14M5 20h14"></path><path d="M9 8l3-3 3 3M9 16l3 3 3-3"></path></svg>
+                                                    </span>
+                                                    <span class="card-action card-action-danger" data-action="delete" role="button" tabindex="0" aria-label="删除" title="删除">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg>
+                                                    </span>
+                                                </span>
+                                                <?php endif; ?>
                                             </span>
                                         </a>
                                     <?php endforeach; ?>
@@ -1076,5 +1136,97 @@ if ($bgImage !== '') {
             </form>
         <?php endif; ?>
     </dialog>
+
+    <!-- 快捷收藏 -->
+    <dialog class="my-dialog" id="quickAddDialog">
+        <div class="my-dialog-head">
+            <h3>快捷收藏</h3>
+            <button type="button" class="my-iconbtn" id="quickAddClose" aria-label="关闭">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+            </button>
+        </div>
+        <div class="my-dialog-body">
+            <p class="my-msg" id="quickAddMsg" role="alert"></p>
+            <div class="my-field">
+                <label for="quickAddUrl">网址</label>
+                <input type="url" id="quickAddUrl" placeholder="粘贴网址，回车或点击按钮自动抓取并收藏" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="my-field" id="quickAddPreview" hidden>
+                <label>抓取预览</label>
+                <div class="quick-add-preview">
+                    <span class="qa-icon" aria-hidden="true">
+                        <span class="qa-icon-letter"></span>
+                        <img class="qa-favicon" alt="" width="40" height="40">
+                    </span>
+                    <span class="qa-info">
+                        <span class="qa-name"></span>
+                        <span class="qa-desc"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="my-dialog-foot">
+            <button type="button" class="my-btn" id="quickAddCancel">取消</button>
+            <button type="button" class="my-btn is-primary" id="quickAddSubmit">抓取并收藏</button>
+        </div>
+    </dialog>
+
+    <!-- 二维码 -->
+    <dialog class="my-dialog" id="qrDialog">
+        <div class="my-dialog-head">
+            <h3>网址二维码</h3>
+            <button type="button" class="my-iconbtn" id="qrClose" aria-label="关闭">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+            </button>
+        </div>
+        <div class="my-dialog-body">
+            <div class="qr-box">
+                <img id="qrImage" alt="网址二维码" width="220" height="220">
+            </div>
+            <p class="qr-url" id="qrUrl"></p>
+        </div>
+        <div class="my-dialog-foot">
+            <button type="button" class="my-btn" id="qrCopyBtn">复制链接</button>
+            <button type="button" class="my-btn is-primary" id="qrClose2">关闭</button>
+        </div>
+    </dialog>
+
+    <!-- 移动分组 -->
+    <dialog class="my-dialog" id="moveDialog">
+        <div class="my-dialog-head">
+            <h3>移动到分组</h3>
+            <button type="button" class="my-iconbtn" id="moveClose" aria-label="关闭">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+            </button>
+        </div>
+        <div class="my-dialog-body">
+            <p class="my-msg" id="moveMsg" role="alert"></p>
+            <div class="my-field">
+                <label for="moveCategory">选择目标分组</label>
+                <select id="moveCategory">
+                    <option value="0">未分类</option>
+                    <?php foreach ($categoryRows as $cat): ?>
+                        <?php if ((int) $cat['parent_id'] === 0): ?>
+                            <option value="<?php echo (int) $cat['id']; ?>"><?php echo $functions->escape((string) $cat['name']); ?></option>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+        <div class="my-dialog-foot">
+            <button type="button" class="my-btn" id="moveCancel">取消</button>
+            <button type="button" class="my-btn is-primary" id="moveSubmit">移动</button>
+        </div>
+    </dialog>
+
+    <!-- 卡片右键 / 长按菜单 -->
+    <div class="card-context-menu" id="cardContextMenu" hidden>
+        <button type="button" class="ccm-item" data-action="open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg>新标签打开</button>
+        <button type="button" class="ccm-item" data-action="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>复制链接</button>
+        <button type="button" class="ccm-item" data-action="qrcode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3M21 14v7M14 21h3M17 17h4"></path></svg>二维码</button>
+        <button type="button" class="ccm-item ccm-owner" data-action="edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>编辑</button>
+        <button type="button" class="ccm-item ccm-owner" data-action="move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14M5 12h14M5 20h14"></path><path d="M9 8l3-3 3 3M9 16l3 3 3-3"></path></svg>移动分组</button>
+        <button type="button" class="ccm-item ccm-owner ccm-danger" data-action="delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg>删除</button>
+    </div>
 </body>
 </html>

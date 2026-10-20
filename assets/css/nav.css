@@ -3070,3 +3070,303 @@ dialog.auth-modal::backdrop {
     }
 }
 
+/* ==========================================================================
+   v2.6.0 · 卡片角标 / 悬停操作 / 右键与长按菜单 / 快捷收藏弹窗
+   ========================================================================== */
+
+.site-card {
+    position: relative;
+}
+
+.card-corner {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.card-corner > * {
+    pointer-events: auto;
+}
+
+.card-star {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted-2);
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity 0.16s ease, color 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+.card-star svg {
+    width: 15px;
+    height: 15px;
+}
+
+.site-card:hover .card-star,
+.site-card:focus-within .card-star {
+    opacity: 1;
+}
+
+.card-star:hover {
+    color: var(--warning);
+    background: var(--surface);
+    border-color: var(--border);
+}
+
+.site-card[data-starred="1"] .card-star {
+    opacity: 1;
+    color: var(--warning);
+}
+
+.card-actions {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--surface) 86%, transparent);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-sm);
+}
+
+.site-card:hover .card-actions,
+.site-card:focus-within .card-actions {
+    display: inline-flex;
+}
+
+.card-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.14s ease, background 0.14s ease;
+}
+
+.card-action svg {
+    width: 14px;
+    height: 14px;
+}
+
+.card-action:hover {
+    color: var(--primary);
+    background: var(--primary-soft);
+}
+
+.card-action-danger:hover {
+    color: var(--danger);
+    background: var(--danger-soft);
+}
+
+/* 右键 / 长按 上下文菜单 */
+.card-context-menu {
+    position: fixed;
+    z-index: 9999;
+    min-width: 158px;
+    padding: 5px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--surface);
+    box-shadow: var(--shadow-lg);
+}
+
+.ccm-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 8px 11px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-2);
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.ccm-item svg {
+    width: 14px;
+    height: 14px;
+    color: var(--muted);
+}
+
+.ccm-item:hover {
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+.ccm-item:hover svg {
+    color: var(--primary);
+}
+
+.ccm-danger:hover {
+    background: var(--danger-soft);
+    color: var(--danger);
+}
+
+.ccm-danger:hover svg {
+    color: var(--danger);
+}
+
+/* 快捷收藏预览 */
+.quick-add-preview {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--surface-2);
+}
+
+.quick-add-preview.is-visible {
+    display: flex;
+}
+
+.qa-icon {
+    position: relative;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: linear-gradient(145deg, var(--brand-from), var(--brand-to));
+}
+
+.qa-icon-letter {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.qa-favicon {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+    object-fit: contain;
+    background: #fff;
+}
+
+.qa-info {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.qa-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.qa-desc {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--muted);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* 二维码弹窗 */
+.qr-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.qr-box img {
+    width: 220px;
+    height: 220px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+}
+
+.qr-url {
+    max-width: 100%;
+    font-size: 12.5px;
+    color: var(--muted);
+    word-break: break-all;
+    text-align: center;
+}
+
+/* 移动端：无 hover 能力时隐藏悬停操作条，星标常显，长按弹菜单 */
+@media (hover: none) and (pointer: coarse) {
+    .card-actions {
+        display: none !important;
+    }
+
+    .card-star,
+    .site-card[data-starred="1"] .card-star {
+        opacity: 1;
+    }
+}
+
+/* list / compact 模式：角标垂直居中 */
+.sites-list[data-view="list"] .card-corner,
+.sites-list[data-view="compact"] .card-corner {
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+}
+
+/* 轻提示 */
+.nav-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 34px;
+    z-index: 10000;
+    max-width: min(420px, calc(100vw - 40px));
+    padding: 10px 18px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    box-shadow: var(--shadow-lg);
+    color: var(--text);
+    font-size: 13px;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 12px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.nav-toast.is-visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+

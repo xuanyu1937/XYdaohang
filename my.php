@@ -107,7 +107,7 @@ $rawLinks = [];
 
 try {
     $stmt = $db->prepare(
-        'SELECT id, name, url, logo, description, category_id, sort_order, clicks, check_status, latency_ms
+        'SELECT id, name, url, logo, description, category_id, sort_order, clicks, check_status, latency_ms, is_starred
          FROM nav_links
          WHERE user_id = ? AND deleted_at IS NULL
          ORDER BY sort_order, id'
@@ -591,6 +591,10 @@ $hasLinks = $totalLinks > 0;
             background: transparent;
             color: var(--muted);
             transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease;
+        }
+
+        .my-item[data-starred="1"] .my-item-star {
+            color: var(--warning);
         }
 
         .my-iconbtn:hover {
@@ -1127,6 +1131,12 @@ $hasLinks = $totalLinks > 0;
                         </svg>
                         <span class="my-btn-label">添加网址</span>
                     </button>
+                    <button type="button" class="my-btn" id="quickAddBtn" title="粘贴网址一键收藏，自动抓取标题和图标">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        <span class="my-btn-label">快捷收藏</span>
+                    </button>
                     <button type="button" class="my-btn" id="importBtn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path>
@@ -1191,7 +1201,8 @@ $hasLinks = $totalLinks > 0;
                                      data-url="<?php echo $functions->escape($item['url']); ?>"
                                      data-description="<?php echo $functions->escape($item['description']); ?>"
                                      data-category="<?php echo (int) $item['category_id']; ?>"
-                                     data-logo="<?php echo $functions->escape((string) ($item['logo'] ?? '')); ?>">
+                                     data-logo="<?php echo $functions->escape((string) ($item['logo'] ?? '')); ?>"
+                                     data-starred="<?php echo !empty($item['is_starred']) ? '1' : '0'; ?>">
                                     <span class="my-picker">
                                         <input type="checkbox" value="<?php echo (int) $item['id']; ?>" aria-label="选择 <?php echo $functions->escape($item['name']); ?>">
                                     </span>
@@ -1235,6 +1246,20 @@ $hasLinks = $totalLinks > 0;
                                                 <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path>
                                             </svg>
                                         </a>
+                                        <button type="button" class="my-iconbtn my-item-star" data-action="star" aria-label="<?php echo !empty($item['is_starred']) ? '取消收藏' : '收藏'; ?>" title="<?php echo !empty($item['is_starred']) ? '取消收藏' : '收藏'; ?>">
+                                            <svg viewBox="0 0 24 24" fill="<?php echo !empty($item['is_starred']) ? 'currentColor' : 'none'; ?>" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                            </svg>
+                                        </button>
+                                        <button type="button" class="my-iconbtn" data-action="copy" aria-label="复制链接" title="复制链接">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                        </button>
+                                        <button type="button" class="my-iconbtn" data-action="qrcode" aria-label="二维码" title="二维码">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3M21 14v7M14 21h3M17 17h4"></path></svg>
+                                        </button>
+                                        <button type="button" class="my-iconbtn" data-action="move" aria-label="移动分组" title="移动分组">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14M5 12h14M5 20h14"></path><path d="M9 8l3-3 3 3M9 16l3 3 3-3"></path></svg>
+                                        </button>
                                         <button type="button" class="my-iconbtn js-edit" aria-label="编辑 <?php echo $functions->escape($item['name']); ?>" title="编辑">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                                 <path d="M4 20h4l10-10-4-4L4 16v4z"></path>
@@ -1339,6 +1364,95 @@ $hasLinks = $totalLinks > 0;
                 <button type="submit" class="my-btn is-primary" id="linkSave">保存</button>
             </div>
         </form>
+    </dialog>
+
+    <!-- 快捷收藏 -->
+    <dialog class="my-dialog" id="quickAddDialog">
+        <div class="my-dialog-head">
+            <h3>快捷收藏</h3>
+            <button type="button" class="my-iconbtn" id="quickAddClose" aria-label="关闭">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+            </button>
+        </div>
+        <div class="my-dialog-body">
+            <p class="my-msg" id="quickAddMsg" role="alert"></p>
+            <div class="my-field">
+                <label for="quickAddUrl">网址</label>
+                <input type="url" id="quickAddUrl" placeholder="粘贴网址，回车或点击按钮自动抓取并收藏" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="my-field" id="quickAddPreview" hidden>
+                <label>抓取预览</label>
+                <div class="quick-add-preview">
+                    <span class="qa-icon" aria-hidden="true">
+                        <span class="qa-icon-letter"></span>
+                        <img class="qa-favicon" alt="" width="40" height="40">
+                    </span>
+                    <span class="qa-info">
+                        <span class="qa-name"></span>
+                        <span class="qa-desc"></span>
+                    </span>
+                </div>
+            </div>
+            <div class="my-field" id="quickAddGroupField">
+                <label for="quickAddCategory">保存到分组</label>
+                <select id="quickAddCategory">
+                    <option value="0">未分类</option>
+                    <?php foreach ($ownGroups as $group): ?>
+                        <option value="<?php echo (int) $group['id']; ?>"><?php echo $functions->escape(($group['is_private'] ? '🔒 ' : '') . $group['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+        <div class="my-dialog-foot">
+            <button type="button" class="my-btn" id="quickAddCancel">取消</button>
+            <button type="button" class="my-btn is-primary" id="quickAddSubmit">抓取并收藏</button>
+        </div>
+    </dialog>
+
+    <!-- 二维码 -->
+    <dialog class="my-dialog" id="qrDialog">
+        <div class="my-dialog-head">
+            <h3>网址二维码</h3>
+            <button type="button" class="my-iconbtn" id="qrClose" aria-label="关闭">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+            </button>
+        </div>
+        <div class="my-dialog-body">
+            <div class="qr-box">
+                <img id="qrImage" alt="网址二维码" width="220" height="220">
+            </div>
+            <p class="qr-url" id="qrUrl"></p>
+        </div>
+        <div class="my-dialog-foot">
+            <button type="button" class="my-btn" id="qrCopyBtn">复制链接</button>
+            <button type="button" class="my-btn is-primary" id="qrClose2">关闭</button>
+        </div>
+    </dialog>
+
+    <!-- 移动分组 -->
+    <dialog class="my-dialog" id="moveDialog">
+        <div class="my-dialog-head">
+            <h3>移动到分组</h3>
+            <button type="button" class="my-iconbtn" id="moveClose" aria-label="关闭">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+            </button>
+        </div>
+        <div class="my-dialog-body">
+            <p class="my-msg" id="moveMsg" role="alert"></p>
+            <div class="my-field">
+                <label for="moveCategory">选择目标分组</label>
+                <select id="moveCategory">
+                    <option value="0">未分类</option>
+                    <?php foreach ($ownGroups as $group): ?>
+                        <option value="<?php echo (int) $group['id']; ?>"><?php echo $functions->escape(($group['is_private'] ? '🔒 ' : '') . $group['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+        <div class="my-dialog-foot">
+            <button type="button" class="my-btn" id="moveCancel">取消</button>
+            <button type="button" class="my-btn is-primary" id="moveSubmit">移动</button>
+        </div>
     </dialog>
 
     <!-- 导入书签 -->
@@ -1786,6 +1900,39 @@ $hasLinks = $totalLinks > 0;
 
                 if (addName) {
                     linkName.value = addName;
+                }
+            })();
+
+            // v2.6.0：首页卡片「编辑」跳转入口 —— ?edit=网址ID 自动打开编辑弹窗
+            (function () {
+                if (typeof URLSearchParams === 'undefined') {
+                    return;
+                }
+
+                var params = new URLSearchParams(window.location.search);
+                var editId = params.get('edit');
+
+                if (!editId) {
+                    return;
+                }
+
+                try {
+                    window.history.replaceState({}, '', window.location.pathname);
+                } catch (error) {
+                    /* 旧浏览器忽略 */
+                }
+
+                var item = document.querySelector('.my-item[data-id="' + editId + '"]');
+
+                if (item) {
+                    openLinkDialog({
+                        id: item.getAttribute('data-id'),
+                        url: item.getAttribute('data-url'),
+                        name: item.getAttribute('data-name'),
+                        description: item.getAttribute('data-description'),
+                        categoryId: item.getAttribute('data-category'),
+                        logo: item.getAttribute('data-logo') || ''
+                    });
                 }
             })();
 
@@ -2674,8 +2821,440 @@ $hasLinks = $totalLinks > 0;
 
             toTop();
             updatePickCount();
+
+            /* ----------------------------------------------------------------------
+               v2.6.0 · 卡片交互：收藏 / 快捷收藏 / 复制 / 二维码 / 移动 / 菜单
+               ---------------------------------------------------------------------- */
+
+            var quickAddDialog = qs('#quickAddDialog');
+            var quickAddUrl = qs('#quickAddUrl');
+            var quickAddMsg = qs('#quickAddMsg');
+            var quickAddPreview = qs('#quickAddPreview');
+            var quickAddCategory = qs('#quickAddCategory');
+            var qrDialog = qs('#qrDialog');
+            var qrImage = qs('#qrImage');
+            var qrUrl = qs('#qrUrl');
+            var moveDialog = qs('#moveDialog');
+            var moveCategory = qs('#moveCategory');
+            var moveMsg = qs('#moveMsg');
+            var contextMenu = qs('#cardContextMenu');
+            var contextTarget = null;
+            var longPressTimer = null;
+
+            function openDialog2(dialog) {
+                if (!dialog) { return; }
+
+                if (typeof dialog.showModal === 'function') {
+                    dialog.showModal();
+                } else {
+                    dialog.setAttribute('open', 'open');
+                }
+            }
+
+            function closeDialog2(dialog) {
+                if (!dialog) { return; }
+
+                if (typeof dialog.close === 'function') {
+                    dialog.close();
+                } else {
+                    dialog.removeAttribute('open');
+                }
+            }
+
+            function copyText(text) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    return navigator.clipboard.writeText(text);
+                }
+
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+
+                try {
+                    document.execCommand('copy');
+                } catch (error) {
+                    /* 忽略 */
+                }
+
+                document.body.removeChild(ta);
+                return Promise.resolve();
+            }
+
+            function showToast(text) {
+                var toast = document.createElement('div');
+                toast.textContent = text;
+                toast.style.cssText = 'position:fixed;left:50%;bottom:48px;transform:translateX(-50%);z-index:10000;padding:10px 20px;border-radius:10px;background:rgba(15,23,42,0.9);color:#fff;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,0.2);opacity:0;transition:opacity 0.2s;';
+                document.body.appendChild(toast);
+                requestAnimationFrame(function () { toast.style.opacity = '1'; });
+                setTimeout(function () {
+                    toast.style.opacity = '0';
+                    setTimeout(function () { toast.remove(); }, 200);
+                }, 1600);
+            }
+
+            function getItemData(item) {
+                return {
+                    id: item.getAttribute('data-id'),
+                    url: item.getAttribute('data-url'),
+                    name: item.getAttribute('data-name'),
+                    category: item.getAttribute('data-category'),
+                    starred: item.getAttribute('data-starred') === '1'
+                };
+            }
+
+            function updateStarIcon(item, starred) {
+                var star = item.querySelector('[data-action="star"]');
+
+                if (!star) { return; }
+
+                var svg = star.querySelector('svg');
+
+                if (svg) {
+                    svg.setAttribute('fill', starred ? 'currentColor' : 'none');
+                }
+
+                var label = starred ? '取消收藏' : '收藏';
+                star.setAttribute('aria-label', label);
+                star.setAttribute('title', label);
+            }
+
+            function toggleStar(item) {
+                var data = getItemData(item);
+                var next = data.starred ? 0 : 1;
+
+                postForm(API_SITES, { action: 'star', id: data.id, star: next }).then(function (result) {
+                    if (result.ok) {
+                        item.setAttribute('data-starred', String(result.is_starred));
+                        updateStarIcon(item, result.is_starred);
+                    } else {
+                        showToast(result.error || '操作失败');
+                    }
+                });
+            }
+
+            function showQrDialog(url) {
+                if (!qrDialog || !qrImage) { return; }
+
+                qrImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=' + encodeURIComponent(url);
+
+                if (qrUrl) {
+                    qrUrl.textContent = url;
+                }
+
+                openDialog2(qrDialog);
+            }
+
+            function openMoveDialog(item) {
+                if (!moveDialog) { return; }
+
+                contextTarget = item;
+                var data = getItemData(item);
+
+                if (moveCategory) {
+                    moveCategory.value = data.category || '0';
+                }
+
+                if (moveMsg) {
+                    showMsg(moveMsg, '', '');
+                }
+
+                openDialog2(moveDialog);
+            }
+
+            // 卡片操作按钮（事件委托）
+            document.addEventListener('click', function (event) {
+                var actionEl = event.target.closest ? event.target.closest('[data-action]') : null;
+
+                if (!actionEl) { return; }
+
+                var item = actionEl.closest('.my-item');
+
+                if (!item) { return; }
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                var action = actionEl.getAttribute('data-action');
+                var data = getItemData(item);
+
+                switch (action) {
+                    case 'star':
+                        toggleStar(item);
+                        break;
+                    case 'copy':
+                        copyText(data.url).then(function () { showToast('链接已复制'); });
+                        break;
+                    case 'qrcode':
+                        showQrDialog(data.url);
+                        break;
+                    case 'move':
+                        openMoveDialog(item);
+                        break;
+                }
+            });
+
+            // 右键菜单
+            document.addEventListener('contextmenu', function (event) {
+                var item = event.target.closest ? event.target.closest('.my-item') : null;
+
+                if (!item) { return; }
+
+                event.preventDefault();
+                contextTarget = item;
+
+                if (contextMenu) {
+                    contextMenu.hidden = false;
+                    var x = event.clientX;
+                    var y = event.clientY;
+                    var rect = contextMenu.getBoundingClientRect();
+
+                    if (x + rect.width > window.innerWidth) { x = window.innerWidth - rect.width - 8; }
+                    if (y + rect.height > window.innerHeight) { y = window.innerHeight - rect.height - 8; }
+
+                    contextMenu.style.left = Math.max(8, x) + 'px';
+                    contextMenu.style.top = Math.max(8, y) + 'px';
+                }
+            });
+
+            // 长按菜单（移动端）
+            qsa('.my-item').forEach(function (item) {
+                item.addEventListener('touchstart', function () {
+                    longPressTimer = setTimeout(function () {
+                        contextTarget = item;
+
+                        if (contextMenu) {
+                            contextMenu.hidden = false;
+                            var rect = item.getBoundingClientRect();
+                            var x = rect.left + rect.width / 2;
+                            var y = rect.top + rect.height / 2;
+                            var menuRect = contextMenu.getBoundingClientRect();
+
+                            if (x + menuRect.width > window.innerWidth) { x = window.innerWidth - menuRect.width - 8; }
+                            if (y + menuRect.height > window.innerHeight) { y = window.innerHeight - menuRect.height - 8; }
+
+                            contextMenu.style.left = Math.max(8, x) + 'px';
+                            contextMenu.style.top = Math.max(8, y) + 'px';
+                        }
+                    }, 500);
+                }, { passive: true });
+
+                item.addEventListener('touchmove', function () {
+                    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+                }, { passive: true });
+
+                item.addEventListener('touchend', function () {
+                    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+                });
+            });
+
+            // 菜单点击
+            if (contextMenu) {
+                contextMenu.addEventListener('click', function (event) {
+                    var btn = event.target.closest ? event.target.closest('.ccm-item') : null;
+
+                    if (!btn || !contextTarget) { return; }
+
+                    var action = btn.getAttribute('data-action');
+                    var data = getItemData(contextTarget);
+                    var target = contextTarget;
+
+                    contextMenu.hidden = true;
+
+                    switch (action) {
+                        case 'open':
+                            window.open(data.url, '_blank', 'noopener,noreferrer');
+                            break;
+                        case 'copy':
+                            copyText(data.url).then(function () { showToast('链接已复制'); });
+                            break;
+                        case 'qrcode':
+                            showQrDialog(data.url);
+                            break;
+                        case 'edit':
+                            openLinkDialog({
+                                id: data.id,
+                                url: data.url,
+                                name: data.name,
+                                description: target.getAttribute('data-description'),
+                                categoryId: data.category,
+                                logo: target.getAttribute('data-logo') || ''
+                            });
+                            break;
+                        case 'move':
+                            openMoveDialog(target);
+                            break;
+                        case 'delete':
+                            if (confirm('确定删除「' + data.name + '」吗？')) {
+                                postForm(API_SITES, { action: 'delete', id: data.id }).then(function (result) {
+                                    if (result.ok) {
+                                        target.remove();
+                                    } else {
+                                        alert(result.error || '删除失败');
+                                    }
+                                });
+                            }
+                            break;
+                    }
+                });
+            }
+
+            // 点击空白关闭菜单
+            document.addEventListener('click', function (event) {
+                if (contextMenu && !contextMenu.hidden && !contextMenu.contains(event.target)) {
+                    contextMenu.hidden = true;
+                }
+            });
+
+            document.addEventListener('scroll', function () {
+                if (contextMenu) {
+                    contextMenu.hidden = true;
+                }
+            }, true);
+
+            // 快捷收藏弹窗
+            var quickAddBtn = qs('#quickAddBtn');
+
+            if (quickAddBtn) {
+                quickAddBtn.addEventListener('click', function () {
+                    if (quickAddUrl) { quickAddUrl.value = ''; }
+                    if (quickAddPreview) { quickAddPreview.hidden = true; }
+                    if (quickAddMsg) { showMsg(quickAddMsg, '', ''); }
+
+                    openDialog2(quickAddDialog);
+                    setTimeout(function () { if (quickAddUrl) { quickAddUrl.focus(); } }, 50);
+                });
+            }
+
+            function doQuickAdd() {
+                var url = quickAddUrl ? quickAddUrl.value.trim() : '';
+
+                if (url === '') {
+                    showMsg(quickAddMsg, '请输入网址');
+                    return;
+                }
+
+                showMsg(quickAddMsg, '正在抓取并收藏…', 'success');
+
+                postForm(API_SITES, {
+                    action: 'quick_add',
+                    url: url,
+                    category_id: quickAddCategory ? quickAddCategory.value : 0
+                }).then(function (result) {
+                    if (!result.ok) {
+                        showMsg(quickAddMsg, result.error || '收藏失败');
+                        return;
+                    }
+
+                    if (quickAddPreview) {
+                        var nameEl = quickAddPreview.querySelector('.qa-name');
+                        var descEl = quickAddPreview.querySelector('.qa-desc');
+                        var favEl = quickAddPreview.querySelector('.qa-favicon');
+                        var letterEl = quickAddPreview.querySelector('.qa-icon-letter');
+
+                        if (nameEl) { nameEl.textContent = result.name || url; }
+                        if (descEl) { descEl.textContent = (result.meta && result.meta.description) ? result.meta.description : ''; }
+
+                        if (favEl && result.meta && result.meta.icons && result.meta.icons[0]) {
+                            favEl.src = result.meta.icons[0];
+                            favEl.style.display = '';
+                            if (letterEl) { letterEl.style.display = 'none'; }
+                        } else if (favEl) {
+                            favEl.style.display = 'none';
+                            if (letterEl) {
+                                letterEl.style.display = '';
+                                letterEl.textContent = (result.name || url).charAt(0).toUpperCase();
+                            }
+                        }
+
+                        quickAddPreview.hidden = false;
+                    }
+
+                    showMsg(quickAddMsg, result.message || ('已收藏：' + (result.name || url)), 'success');
+                    setTimeout(function () { closeDialog2(quickAddDialog); window.location.reload(); }, 1200);
+                });
+            }
+
+            if (quickAddDialog) {
+                var qaClose = qs('#quickAddClose');
+                var qaCancel = qs('#quickAddCancel');
+                var qaSubmit = qs('#quickAddSubmit');
+
+                if (qaClose) { qaClose.addEventListener('click', function () { closeDialog2(quickAddDialog); }); }
+                if (qaCancel) { qaCancel.addEventListener('click', function () { closeDialog2(quickAddDialog); }); }
+                if (qaSubmit) { qaSubmit.addEventListener('click', doQuickAdd); }
+
+                if (quickAddUrl) {
+                    quickAddUrl.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            doQuickAdd();
+                        }
+                    });
+                }
+            }
+
+            // 二维码弹窗
+            if (qrDialog) {
+                var qc1 = qs('#qrClose');
+                var qc2 = qs('#qrClose2');
+                var qCopy = qs('#qrCopyBtn');
+
+                if (qc1) { qc1.addEventListener('click', function () { closeDialog2(qrDialog); }); }
+                if (qc2) { qc2.addEventListener('click', function () { closeDialog2(qrDialog); }); }
+                if (qCopy) {
+                    qCopy.addEventListener('click', function () {
+                        if (qrUrl) {
+                            copyText(qrUrl.textContent).then(function () { showToast('链接已复制'); });
+                        }
+                    });
+                }
+            }
+
+            // 移动分组弹窗
+            if (moveDialog) {
+                var mc1 = qs('#moveClose');
+                var mCancel = qs('#moveCancel');
+                var mSubmit = qs('#moveSubmit');
+
+                if (mc1) { mc1.addEventListener('click', function () { closeDialog2(moveDialog); }); }
+                if (mCancel) { mCancel.addEventListener('click', function () { closeDialog2(moveDialog); }); }
+
+                if (mSubmit) {
+                    mSubmit.addEventListener('click', function () {
+                        if (!contextTarget) { return; }
+
+                        var data = getItemData(contextTarget);
+
+                        postForm(API_SITES, {
+                            action: 'move',
+                            id: data.id,
+                            category_id: moveCategory ? moveCategory.value : 0
+                        }).then(function (result) {
+                            if (result.ok) {
+                                showMsg(moveMsg, '已移动', 'success');
+                                setTimeout(function () { closeDialog2(moveDialog); window.location.reload(); }, 600);
+                            } else {
+                                showMsg(moveMsg, result.error || '移动失败');
+                            }
+                        });
+                    });
+                }
+            }
         })();
     </script>
-<script src="assets/js/search.js?v=2.5.0" defer></script>
+<script src="assets/js/search.js?v=2.6.0" defer></script>
+
+    <!-- 卡片右键 / 长按菜单 -->
+    <div class="card-context-menu" id="cardContextMenu" hidden>
+        <button type="button" class="ccm-item" data-action="open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg>新标签打开</button>
+        <button type="button" class="ccm-item" data-action="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>复制链接</button>
+        <button type="button" class="ccm-item" data-action="qrcode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3M21 14v7M14 21h3M17 17h4"></path></svg>二维码</button>
+        <button type="button" class="ccm-item" data-action="edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>编辑</button>
+        <button type="button" class="ccm-item" data-action="move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14M5 12h14M5 20h14"></path><path d="M9 8l3-3 3 3M9 16l3 3 3-3"></path></svg>移动分组</button>
+        <button type="button" class="ccm-item ccm-danger" data-action="delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg>删除</button>
+    </div>
 </body>
 </html>

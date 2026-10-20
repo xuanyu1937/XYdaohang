@@ -175,9 +175,115 @@ switch ($action) {
         $sortStmt->execute([$userId]);
         $sort = (int) ($sortStmt->fetch()['next_sort'] ?? 1);
 
+        $isStarred = !empty($_POST['is_starred']) ? 1 : 0;
+
         $stmt = $db->prepare(
-            'INSERT INTO nav_links (name, url, logo, description, category_id, user_id, sort_order, is_active, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW())'
+            'INSERT INTO nav_links (name, url, logo, description, category_id, user_id, sort_order, is_active, is_starred, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())'
+        );
+        $stmt->execute([$name, $url, $logo, $description, $categoryId, $userId, $sort, $isStarred]);
+
+        $functions->jsonResponse([
+            'ok' => true,
+            'id' => (int) $db->lastInsertId(),
+            'name' => $name,
+            'url' => $url,
+            'category_id' => $categoryId,
+            'is_starred' => $isStarred,
+        ]);
+        break;
+
+    case 'star':
+        $id = (int) ($_POST['id'] ?? 0);
+        $star = !empty($_POST['star']) ? 1 : 0;
+
+        if ($id <= 0 || !userSiteOwned($db, $id, $userId)) {
+            $functions->jsonResponse(['ok' => false, 'error' => '记录不存在或无权操作'], 404);
+        }
+
+        $stmt = $db->prepare('UPDATE nav_links SET is_starred = ?, updated_at = NOW() WHERE id = ? AND user_id = ?');
+        $stmt->execute([$star, $id, $userId]);
+
+        $functions->jsonResponse(['ok' => true, 'id' => $id, 'is_starred' => $star]);
+        break;
+
+    case 'move':
+        $id = (int) ($_POST['id'] ?? 0);
+
+        if ($id <= 0 || !userSiteOwned($db, $id, $userId)) {
+            $functions->jsonResponse(['ok' => false, 'error' => '记录不存在或无权操作'], 404);
+        }
+
+        $categoryId = userSiteCategoryId($db, $_POST['category_id'] ?? 0, $userId);
+
+        if ($categoryId <= 0) {
+            $engine = new CategoryEngine($functions);
+            $categoryId = $engine->ensure('未分类', 'bi-collection');
+        }
+
+        $stmt = $db->prepare('UPDATE nav_links SET category_id = ?, updated_at = NOW() WHERE id = ? AND user_id = ?');
+        $stmt->execute([$categoryId, $id, $userId]);
+
+        $functions->jsonResponse(['ok' => true, 'id' => $id, 'category_id' => $categoryId]);
+        break;
+
+    case 'quick_add':
+        $url = userSiteNormalizeUrl($_POST['url'] ?? '');
+
+        if ($url === '') {
+            $functions->jsonResponse(['ok' => false, 'error' => '请输入有效的网址'], 400);
+        }
+
+        $countStmt = $db->prepare('SELECT COUNT(*) AS total FROM nav_links WHERE user_id = ?');
+        $countStmt->execute([$userId]);
+
+        if ((int) ($countStmt->fetch()['total'] ?? 0) >= USER_LINK_LIMIT) {
+            $functions->jsonResponse(['ok' => false, 'error' => '已达收藏上限（' . USER_LINK_LIMIT . ' 条）'], 400);
+        }
+
+        $dupStmt = $db->prepare('SELECT id FROM nav_links WHERE user_id = ? AND url = ? LIMIT 1');
+        $dupStmt->execute([$userId, $url]);
+        $existing = $dupStmt->fetch();
+
+        if ($existing) {
+            // 已存在则直接标记为收藏
+            $starStmt = $db->prepare('UPDATE nav_links SET is_starred = 1, updated_at = NOW() WHERE id = ? AND user_id = ?');
+            $starStmt->execute([(int) $existing['id'], $userId]);
+
+            $functions->jsonResponse([
+                'ok' => true,
+                'id' => (int) $existing['id'],
+                'duplicate' => true,
+                'is_starred' => 1,
+                'message' => '该网址已在你的导航中，已标记为收藏',
+            ]);
+        }
+
+        // 自动抓取标题、描述、图标
+        $meta = $siteInfo->fetch($url);
+        $name = !empty($meta['ok']) ? trim((string) ($meta['title'] ?? '')) : '';
+        $description = !empty($meta['description']) ? userSiteTrim($meta['description'], 200) : '';
+        $logo = !empty($meta['icons'][0]) ? userSiteTrim($meta['icons'][0], 500) : '';
+
+        if ($name === '') {
+            $host = parse_url($url, PHP_URL_HOST);
+            $name = $host ? preg_replace('/^www\./i', '', $host) : $url;
+        }
+
+        $categoryId = userSiteCategoryId($db, $_POST['category_id'] ?? 0, $userId);
+
+        if ($categoryId <= 0) {
+            $engine = new CategoryEngine($functions);
+            $categoryId = $engine->ensure('未分类', 'bi-collection');
+        }
+
+        $sortStmt = $db->prepare('SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_sort FROM nav_links WHERE user_id = ?');
+        $sortStmt->execute([$userId]);
+        $sort = (int) ($sortStmt->fetch()['next_sort'] ?? 1);
+
+        $stmt = $db->prepare(
+            'INSERT INTO nav_links (name, url, logo, description, category_id, user_id, sort_order, is_active, is_starred, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, NOW())'
         );
         $stmt->execute([$name, $url, $logo, $description, $categoryId, $userId, $sort]);
 
@@ -187,6 +293,8 @@ switch ($action) {
             'name' => $name,
             'url' => $url,
             'category_id' => $categoryId,
+            'is_starred' => 1,
+            'meta' => $meta,
         ]);
         break;
 

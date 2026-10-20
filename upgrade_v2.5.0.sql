@@ -20,16 +20,22 @@
 
 SET NAMES utf8mb4;
 
+-- 取当前选中的数据库名；若未选库则下面每段都会给出明确提示
+SET @db = DATABASE();
+
 -- --------------------------------------------------------------------------
 -- 1. nav_links 表新增 alias 列（网址别名，多个词用空格分隔，用于搜索联想）
 -- --------------------------------------------------------------------------
 SET @nav_col_exists = (
   SELECT COUNT(*) FROM information_schema.COLUMNS
-  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'nav_links' AND COLUMN_NAME = 'alias'
+  WHERE TABLE_SCHEMA = @db AND TABLE_NAME = 'nav_links' AND COLUMN_NAME = 'alias'
 );
-SET @nav_sql = IF(@nav_col_exists = 0,
-  'ALTER TABLE `nav_links` ADD COLUMN `alias` varchar(255) DEFAULT NULL AFTER `remark`',
-  'SET @nav_noop = 1'
+SET @nav_sql = IF(@db IS NULL,
+  'SELECT ''请先选择目标数据库后再执行本脚本（phpMyAdmin 左侧点选数据库，或执行 USE 库名;）'' AS error',
+  IF(@nav_col_exists = 0,
+    CONCAT('ALTER TABLE `', @db, '`.`nav_links` ADD COLUMN `alias` varchar(255) DEFAULT NULL AFTER `remark`'),
+    'SET @nav_noop = 1'
+  )
 );
 PREPARE nav_stmt FROM @nav_sql;
 EXECUTE nav_stmt;
@@ -40,11 +46,14 @@ DEALLOCATE PREPARE nav_stmt;
 -- --------------------------------------------------------------------------
 SET @nav_col_exists = (
   SELECT COUNT(*) FROM information_schema.COLUMNS
-  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'nav_links' AND COLUMN_NAME = 'tags'
+  WHERE TABLE_SCHEMA = @db AND TABLE_NAME = 'nav_links' AND COLUMN_NAME = 'tags'
 );
-SET @nav_sql = IF(@nav_col_exists = 0,
-  'ALTER TABLE `nav_links` ADD COLUMN `tags` varchar(255) DEFAULT NULL AFTER `alias`',
-  'SET @nav_noop = 1'
+SET @nav_sql = IF(@db IS NULL,
+  'SELECT ''请先选择目标数据库后再执行本脚本（phpMyAdmin 左侧点选数据库，或执行 USE 库名;）'' AS error',
+  IF(@nav_col_exists = 0,
+    CONCAT('ALTER TABLE `', @db, '`.`nav_links` ADD COLUMN `tags` varchar(255) DEFAULT NULL AFTER `alias`'),
+    'SET @nav_noop = 1'
+  )
 );
 PREPARE nav_stmt FROM @nav_sql;
 EXECUTE nav_stmt;
