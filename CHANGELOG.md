@@ -1,5 +1,12 @@
 # 轩宇-导航 · 版本记录
 
+## v2.2.3（2026-10-20）
+
+**修复**
+- **修复网站公告不显示**：原公告文本统一使用 `padding-left: 100%` + 滚动动画，短内容会被推到可视区域外导致用户误以为不显示。现改为按内容长度判断：≤40 字符静态居中显示，>40 字符才加 `is-scrolling` 类启用向左滚动动画（`nav.css` 中 `.announce-text` 的 `padding-left` 与 `animation` 移入 `.announce-text.is-scrolling`），`nav.js` 的滚动时长计算也只作用于长内容。
+- **修复登录旁头像异常元素**：未登录状态下 `.auth-links` 中管理员头像使用了内联样式 `width:34px;height:34px;border-radius:50%;margin-right:8px`，与 CSS 类 `.user-avatar` 的 26px 圆角方形不一致，且与 `.auth-links` 的 `gap:8px` 叠加造成间距异常。现移除所有内联样式，统一使用 `.user-avatar` / `.user-avatar-img` 类，与登录按钮高度和间距对齐。
+- **未登录用户权限逻辑保持 v2.2.2**：访客视图下 `nav_links` 查询仍排除私密分组下的链接，未做改动。
+
 ## v2.2.2（2026-10-20）
 
 **新增**

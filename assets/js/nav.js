@@ -753,7 +753,7 @@
     (function initAnnouncement() {
         var text = document.querySelector('.announce-text');
 
-        if (!text) {
+        if (!text || !text.classList.contains('is-scrolling')) {
             return;
         }
 

@@ -639,9 +639,9 @@ if ($bgImage !== '') {
                 <?php else: ?>
                     <div class="auth-links">
                         <?php if ($displayAvatar !== ''): ?>
-                            <img class="user-avatar-img" src="<?php echo $functions->escape($displayAvatar); ?>" alt="管理员头像" style="width:34px;height:34px;border-radius:50%;object-fit:cover;margin-right:8px;">
+                            <img class="user-avatar-img" src="<?php echo $functions->escape($displayAvatar); ?>" alt="管理员头像">
                         <?php else: ?>
-                            <span class="user-avatar" aria-hidden="true" style="margin-right:8px;"><?php echo $functions->escape($displayAvatarInitial); ?></span>
+                            <span class="user-avatar" aria-hidden="true"><?php echo $functions->escape($displayAvatarInitial); ?></span>
                         <?php endif; ?>
                         <a class="tool-btn tool-text" href="login.php">登录</a>
                         <a class="tool-btn tool-text is-primary" href="register.php">注册</a>
@@ -651,10 +651,15 @@ if ($bgImage !== '') {
         </header>
 
         <?php if ($announcementEnabled && $announcementContent !== ''): ?>
+            <?php
+            // 内容较长（超过约 40 个字符）时启用滚动动画，较短时静态居中显示
+            $announceLen = function_exists('mb_strlen') ? mb_strlen($announcementContent, 'UTF-8') : strlen($announcementContent);
+            $announceScroll = $announceLen > 40;
+            ?>
             <div class="announce-bar" role="status" aria-label="站点公告">
                 <span class="announce-tag">公告</span>
                 <span class="announce-viewport">
-                    <span class="announce-text"><?php echo $functions->escape($announcementContent); ?></span>
+                    <span class="announce-text<?php echo $announceScroll ? ' is-scrolling' : ''; ?>"<?php echo $announceScroll ? '' : ' style="display:block;text-align:center;"'; ?>><?php echo $functions->escape($announcementContent); ?></span>
                 </span>
             </div>
         <?php endif; ?>
