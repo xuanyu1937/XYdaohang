@@ -1227,6 +1227,11 @@ body[data-monitor="0"] .site-clicks {
     .header-tools {
         width: 100%;
     }
+
+    .skin-menu {
+        left: 0;
+        right: auto;
+    }
 }
 
 @media (max-width: 620px) {
