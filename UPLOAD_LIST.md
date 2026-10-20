@@ -1,21 +1,18 @@
-# 轩宇-导航 v2.2.4 部署清单
+# 轩宇-导航 v2.2.5 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1 + MySQL 5.7
-当前版本：v2.2.4
+当前版本：v2.2.5
 
 > 升级顺序：**先备份数据库 → 上传文件 → （仅 v2.1.x 及更早）执行 upgrade_v2.2.0.sql → 清缓存刷新**；v2.2.x 之间升级为纯代码修复/增强，**无数据库结构变更**，不需要跑升级脚本。可直接在后台「系统工具 → 版本检测 → 上传更新包更新」上传新版 zip 完成在线更新。
 
-## 本次 v2.2.4 变动文件
+## 本次 v2.2.5 变动文件
 
 | 文件 | 说明 |
 | --- | --- |
-| `api/check_update.php` | 版本检测新增 SSL 证书校验失败时的降级重试；错误原因细分（ssl_error / dns_error / timeout） |
-| `admin/tools.php` | 版本检测前端按错误码提示可操作信息；测试邮件收件人回落至发件地址并优化提示 |
-| `index.php` | 页脚展示版本号；空状态引导区分登录用户与访客 |
-| `assets/js/nav.js` | 测速探测失败自动重试一次；空状态文案改用服务端渲染值 |
-| `assets/css/nav.css` | 新增 `.footer-version`、`.empty-link` 样式 |
-| `config/version.php`、`VERSION`、`includes/bootstrap.php`、`includes/ConfigManager.php` | 版本号升至 2.2.4 |
+| `index.php` | 移除访客登录区异常占位头像分支与前端渲染；公告栏新增喇叭图标、移除短文本居中内联样式 |
+| `assets/css/nav.css` | 公告栏视觉强化（浅色提示底 + 主色左侧强调条 + 实心图标 + 「公告」标签 + 加粗正文）；移动端公告栏适配 |
+| `config/version.php`、`VERSION`、`includes/bootstrap.php`、`includes/ConfigManager.php` | 版本号升至 2.2.5 |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档更新 |
 
 > 提示：若线上版本检测仍失败，请在后台重新检测查看提示——若提示「SSL 证书校验失败」，说明服务器需要配置 `php.ini` 的 `curl.cainfo`。

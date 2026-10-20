@@ -18,28 +18,13 @@ $viewUserId = $currentUser ? (int) $currentUser['id'] : $users->defaultViewUserI
 $isOwner = $currentUser && (int) $currentUser['id'] === $viewUserId;
 $engine->setUserId($viewUserId);
 
-// 头像：登录用户显示自己的头像，访客显示管理员头像
+// 头像：仅登录用户在顶部展示自己的头像；访客区域只保留「登录 / 注册」入口，不再渲染占位头像
 $displayAvatar = '';
 $displayAvatarInitial = $brandName !== '' ? mb_substr($brandName, 0, 1, 'UTF-8') : '轩';
 if ($currentUser) {
     $displayAvatarInitial = mb_substr($currentUser['username'], 0, 1, 'UTF-8');
     if (!empty($currentUser['avatar'])) {
         $displayAvatar = $functions->getLogoDisplayUrl((string) $currentUser['avatar']);
-    }
-} else {
-    // 访客：取管理员头像作为默认头像
-    try {
-        $adminStmt = $db->prepare('SELECT avatar, username FROM users WHERE is_admin = 1 ORDER BY id LIMIT 1');
-        $adminStmt->execute();
-        $adminRow = $adminStmt->fetch();
-        if ($adminRow) {
-            $displayAvatarInitial = mb_substr((string) $adminRow['username'], 0, 1, 'UTF-8');
-            if (!empty($adminRow['avatar'])) {
-                $displayAvatar = $functions->getLogoDisplayUrl((string) $adminRow['avatar']);
-            }
-        }
-    } catch (Throwable $error) {
-        // users 表不存在时忽略
     }
 }
 
@@ -638,11 +623,6 @@ if ($bgImage !== '') {
                     </details>
                 <?php else: ?>
                     <div class="auth-links">
-                        <?php if ($displayAvatar !== ''): ?>
-                            <img class="user-avatar-img" src="<?php echo $functions->escape($displayAvatar); ?>" alt="管理员头像">
-                        <?php else: ?>
-                            <span class="user-avatar" aria-hidden="true"><?php echo $functions->escape($displayAvatarInitial); ?></span>
-                        <?php endif; ?>
                         <a class="tool-btn tool-text" href="login.php">登录</a>
                         <a class="tool-btn tool-text is-primary" href="register.php">注册</a>
                     </div>
@@ -652,14 +632,21 @@ if ($bgImage !== '') {
 
         <?php if ($announcementEnabled && $announcementContent !== ''): ?>
             <?php
-            // 内容较长（超过约 40 个字符）时启用滚动动画，较短时静态居中显示
+            // 内容较长（超过约 40 个字符）时启用滚动动画，较短时直接静态完整显示
             $announceLen = function_exists('mb_strlen') ? mb_strlen($announcementContent, 'UTF-8') : strlen($announcementContent);
             $announceScroll = $announceLen > 40;
             ?>
             <div class="announce-bar" role="status" aria-label="站点公告">
+                <span class="announce-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 10v3a1 1 0 0 0 1 1h1.6L11 17.5v-11L6.6 10H5a1 1 0 0 0-1 0Z"></path>
+                        <path d="M14 8.2a4.6 4.6 0 0 1 0 7.6"></path>
+                        <path d="M17.4 5.6a8.4 8.4 0 0 1 0 12.8"></path>
+                    </svg>
+                </span>
                 <span class="announce-tag">公告</span>
                 <span class="announce-viewport">
-                    <span class="announce-text<?php echo $announceScroll ? ' is-scrolling' : ''; ?>"<?php echo $announceScroll ? '' : ' style="display:block;text-align:center;"'; ?>><?php echo $functions->escape($announcementContent); ?></span>
+                    <span class="announce-text<?php echo $announceScroll ? ' is-scrolling' : ''; ?>"><?php echo $functions->escape($announcementContent); ?></span>
                 </span>
             </div>
         <?php endif; ?>
