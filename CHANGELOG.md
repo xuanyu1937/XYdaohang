@@ -1,5 +1,15 @@
 # 轩宇-导航 · 版本记录
 
+## v2.2.2（2026-10-20）
+
+**新增**
+- **上传更新包在线更新**：后台「系统工具 → 版本检测」新增「上传更新包更新」卡片。从 GitHub Releases 下载 Source code (zip) 后上传，服务器自动完成：① 校验 zip 可读、版本号（VERSION 或 config/version.php）不低于当前版本；② 自动剥掉 GitHub zip 的顶层目录；③ 安全检查——拒绝目录穿越（`../`、绝对路径）条目，`config/database.php`、`config/smtp.php`、`config/config.php`、`install/install.lock`、`.env` 及 `.git/`、`backups/`、`cache/`、`uploads/`、`node_modules/`、`vendor/` 目录永不覆盖；④ 被覆盖的原文件自动备份到 `backups/update-v{版本}-{时间}/`；⑤ 解压覆盖后清除版本检测缓存并重置 OPcache。更新结果（覆盖/备份/跳过/失败数）明确展示，失败文件逐个列出。
+
+**修复**
+- **修复版本检测提示「暂时无法连接版本服务器」**：`api/check_update.php` 在原 Releases API 链路（官方 + ghfast.top / gh-proxy.com / ghproxy.net，**逻辑保持不变**）之外，新增 raw VERSION 文件兜底链路——Releases API 全部不可达时，依序尝试 `raw.githubusercontent.com`、`fastly.jsdelivr.net`、`gcore.jsdelivr.net` 及三个镜像读取仓库 `VERSION` 文件，校验内容为 `x.y.z` 格式后构造结果返回，任一链路可用即可正常检测。
+- **版本检测请求超时延长 + 完善异常捕获**：cURL 连接超时 5s → 8s、总超时 10s → 15s；整个抓取流程包在 try-catch 中，任何异常静默返回 null 进入下一端点，不再因单个端点故障直接报错。
+- **兼容后端请求环境 + 跨域处理**：cURL 不可用且 `allow_url_fopen` 开启时自动回退 `file_get_contents`（stream）；接口补充 `Access-Control-Allow-Origin / Allow-Credentials / Allow-Methods / Allow-Headers` 头并应答 OPTIONS 预检，前后端分离部署时管理后台跨域调用不再被浏览器拦截（同源部署行为不变）。
+
 ## v2.2.1（2026-10-20）
 
 **修复**

@@ -1,10 +1,10 @@
-# 轩宇-导航 v2.2.1 部署清单
+# 轩宇-导航 v2.2.2 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1 + MySQL 5.7
-当前版本：v2.2.1
+当前版本：v2.2.2
 
-> 升级顺序：**先备份数据库 → 上传文件 → （仅 v2.1.x 及更早）执行 upgrade_v2.2.0.sql → 清缓存刷新**；v2.2.0 → v2.2.1 为纯代码修复，**无数据库结构变更**，不需要再跑升级脚本。
+> 升级顺序：**先备份数据库 → 上传文件 → （仅 v2.1.x 及更早）执行 upgrade_v2.2.0.sql → 清缓存刷新**；v2.2.x 之间升级为纯代码修复/增强，**无数据库结构变更**，不需要跑升级脚本。v2.2.2 起也可以直接在后台「系统工具 → 版本检测 → 上传更新包更新」上传新版 zip 完成在线更新。
 
 ## 一、必须覆盖上传
 
@@ -30,7 +30,8 @@
 
 ### admin/
 - index.php、login.php、logout.php、sidebar.php
-- users.php、stats.php、tools.php（v2 新增；v2.2.0 版本检测改为服务器端代理）
+- users.php、stats.php、tools.php（v2 新增；v2.2.0 版本检测改为服务器端代理；
+  v2.2.2 新增上传更新包在线更新，版本检测 tab 已纳入 $allowedTabs）
 - categories.php、nav_links.php（v2 增强）
 - settings.php（v2 新增「前台体验」与「AI 分类推荐」分区）
 - applications.php、profile.php
@@ -44,11 +45,12 @@
 - ai_suggest.php、health_check.php、stats.php（v2 新增：后台抓取推荐、健康检测、统计）
 - sites.php（v2 新增：开放 REST API）
 - user_categories.php（v2.2.0 新增：用户自主分组管理）
-- check_update.php（v2.2.0 新增：服务器端版本检测代理，替代浏览器直连 GitHub）
+- check_update.php（v2.2.0 新增：服务器端版本检测代理，替代浏览器直连 GitHub；
+  v2.2.2 增强：新增 raw VERSION 兜底链路 + jsdelivr 镜像、超时延长、cURL 缺失时 stream 回退、CORS 兼容头）
 - clear_cache.php、get_cache_status.php（已改为 410，可直接删除）
 
 ### includes/
-- bootstrap.php（v2.2.1 兜底版本号更新）
+- bootstrap.php（v2.2.2 兜底版本号更新）
 - asset_fallbacks.php
 - functions.php（新增 textCut 兜底）
 - Services.php（v2 新增：UserService / SiteInfoService / AiService / CategoryEngine /
@@ -56,13 +58,13 @@
   v2.2.0 增强：SiteInfoService 重定向安全跟随、og:image 兜底；UserService 新增密码重置三方法；
   v2.2.1 增强：SiteInfoService 下载超时放宽（连接 5s/总 10s）+ 失败宽松重试一次（连接 8s/总 15s/跳过证书校验），
   补全 Accept / Accept-Language / Cache-Control 请求头）
-- ConfigManager.php（v2.2.1 版本号更新）
+- ConfigManager.php（v2.2.2 版本号更新）
 - TemplateParser.php
 - UpdateManager.php（已改为 410，可直接删除）
 - .htaccess
 
 ### config/
-- config.php、database.php、smtp.php、version.php（版本号已改为 2.2.1）
+- config.php、database.php、smtp.php、version.php（版本号已改为 2.2.2）
 - .htaccess
 
 ### install/
