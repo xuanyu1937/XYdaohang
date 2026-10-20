@@ -802,7 +802,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
                         <input type="url" 
                                name="site_url" 
                                id="site_url"
-                               value="<?php echo htmlspecialchars($_POST['site_url'] ?? ''); ?>" 
+                               value="<?php echo htmlspecialchars($_POST['site_url'] ?? ($_GET['url'] ?? ''), ENT_QUOTES); ?>"
                                required 
                                placeholder="https://example.com"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">

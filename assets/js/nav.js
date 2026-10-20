@@ -375,6 +375,48 @@
         return !!(group && group.getAttribute('data-category') === category);
     }
 
+    // 分类名映射：搜索时命中「分类/分组名称」（rail 侧栏自带 data-category / data-name）
+    var categoryNameById = {};
+
+    qsa('.rail-item').forEach(function (item) {
+        var id = item.getAttribute('data-category');
+
+        if (id && id !== 'all') {
+            categoryNameById[id] = item.getAttribute('data-name') || '';
+        }
+    });
+
+    function cardHaystack(card) {
+        var catId = card.getAttribute('data-category') || '';
+
+        return [
+            card.getAttribute('data-name') || '',
+            card.getAttribute('data-title') || '',
+            card.getAttribute('data-domain') || '',
+            card.getAttribute('data-host') || '',
+            card.getAttribute('data-description') || '',
+            card.getAttribute('data-url') || '',
+            card.getAttribute('data-tags') || '',
+            card.getAttribute('data-alias') || '',
+            categoryNameById[catId] || ''
+        ].join(' ').toLowerCase();
+    }
+
+    /* 自然语言语义扩展：search.js 加载后提供意图词典（单关键词时生效） */
+    function semanticTermsOf() {
+        if (!window.XYSearchSemantic || !state.query || state.query.indexOf(' ') !== -1) {
+            return null;
+        }
+
+        try {
+            var terms = window.XYSearchSemantic(state.query);
+
+            return (terms && terms.length) ? terms : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
     function cardMatches(card) {
         if (!state.query) {
             return true;
@@ -388,20 +430,29 @@
             return true;
         }
 
-        var haystack = [
-            card.getAttribute('data-name') || '',
-            card.getAttribute('data-title') || '',
-            card.getAttribute('data-domain') || '',
-            card.getAttribute('data-host') || '',
-            card.getAttribute('data-description') || ''
-        ].join(' ').toLowerCase();
+        var haystack = cardHaystack(card);
 
-        return terms.every(function (term) {
+        var direct = terms.every(function (term) {
             if (haystack.indexOf(term) !== -1) {
                 return true;
             }
 
             return cardPinyin(card).indexOf(term) !== -1;
+        });
+
+        if (direct) {
+            return true;
+        }
+
+        // 语义扩展：如「看视频的网站」→ 命中 视频/影视/电影 等扩展关键词
+        var semanticTerms = semanticTermsOf();
+
+        if (!semanticTerms) {
+            return false;
+        }
+
+        return semanticTerms.some(function (term) {
+            return haystack.indexOf(term) !== -1 || cardPinyin(card).indexOf(term) !== -1;
         });
     }
 
@@ -1484,4 +1535,82 @@
               .then(function () { authRegisterSubmit.disabled = false; });
         });
     }
+
+    /* ----------------------------------------------------------------------
+       全局搜索组件桥接（v2.5.0）
+       - search.js（联想 / 历史 / 语义词典）通过此接口驱动页内过滤与分类切换
+       - 支持 index.php?s=关键词 与 index.php?cat=分类ID 直达
+       ---------------------------------------------------------------------- */
+
+    window.XYNavSearch = {
+        apply: function (query) {
+            var q = String(query || '').trim();
+
+            if (!searchInput) {
+                return;
+            }
+
+            searchInput.value = q;
+
+            if (searchClear) {
+                searchClear.hidden = q.length === 0;
+            }
+
+            state.query = q.toLowerCase();
+            applyFilters();
+        },
+        setCategory: function (id) {
+            var target = null;
+
+            qsa('.rail-item').forEach(function (item) {
+                if (item.getAttribute('data-category') === String(id)) {
+                    target = item;
+                }
+            });
+
+            if (target) {
+                target.click();
+            }
+        },
+        query: function () {
+            return searchInput ? searchInput.value.trim() : '';
+        }
+    };
+
+    (function applyUrlParams() {
+        if (typeof window.URLSearchParams === 'undefined') {
+            return;
+        }
+
+        var params = new URLSearchParams(window.location.search);
+        var cat = params.get('cat');
+        var keyword = params.get('s');
+
+        if (cat && /^[0-9]+$/.test(cat)) {
+            var target = null;
+
+            qsa('.rail-item').forEach(function (item) {
+                if (item.getAttribute('data-category') === cat) {
+                    target = item;
+                }
+            });
+
+            if (target) {
+                target.click();
+            }
+        }
+
+        if (keyword) {
+            if (searchInput) {
+                searchInput.value = keyword;
+            }
+
+            if (searchClear) {
+                searchClear.hidden = false;
+            }
+
+            state.query = keyword.trim().toLowerCase();
+            applyFilters();
+        }
+    })();
 })();

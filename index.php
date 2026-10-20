@@ -440,9 +440,10 @@ if ($bgImage !== '') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.5.0">
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-    <script src="assets/js/nav.js" defer></script>
+    <script src="assets/js/nav.js?v=2.5.0" defer></script>
+    <script src="assets/js/search.js?v=2.5.0" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -811,7 +812,9 @@ if ($bgImage !== '') {
                                            data-host="<?php echo $functions->escape($link['host']); ?>"
                                            data-url="<?php echo $functions->escape($link['safe_url']); ?>"
                                            data-clicks="<?php echo $clicks; ?>"
-                                           data-description="<?php echo $functions->escape((string) ($link['description'] ?? '')); ?>">
+                                           data-description="<?php echo $functions->escape((string) ($link['description'] ?? '')); ?>"
+                                           data-tags="<?php echo $functions->escape((string) ($link['tags'] ?? '')); ?>"
+                                           data-alias="<?php echo $functions->escape((string) ($link['alias'] ?? '')); ?>">
                                             <span class="site-status"
                                                   data-state="<?php echo $functions->escape($status['state']); ?>"
                                                   data-label="<?php echo $functions->escape($status['label']); ?>"
@@ -890,7 +893,9 @@ if ($bgImage !== '') {
                                            data-host="<?php echo $functions->escape($link['host']); ?>"
                                            data-url="<?php echo $functions->escape($link['safe_url']); ?>"
                                            data-clicks="<?php echo $clicks; ?>"
-                                           data-description="<?php echo $functions->escape((string) ($link['description'] ?? '')); ?>">
+                                           data-description="<?php echo $functions->escape((string) ($link['description'] ?? '')); ?>"
+                                           data-tags="<?php echo $functions->escape((string) ($link['tags'] ?? '')); ?>"
+                                           data-alias="<?php echo $functions->escape((string) ($link['alias'] ?? '')); ?>">
                                             <span class="site-status"
                                                   data-state="<?php echo $functions->escape($status['state']); ?>"
                                                   data-label="<?php echo $functions->escape($status['label']); ?>"

@@ -1,10 +1,28 @@
-# 轩宇-导航 v2.3.0 部署清单
+# 轩宇-导航 v2.5.0 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1 + MySQL 5.7
-当前版本：v2.3.0
+当前版本：v2.5.0
 
-> 升级顺序：**先备份数据库 → 上传文件 → 执行 upgrade_v2.3.0.sql → 清缓存刷新**；本版本含数据库结构变更（`users.footer_copyright` 列），**必须执行升级脚本**。也可直接在后台「系统工具 → 版本检测 → 上传更新包更新」上传新版 zip 完成在线更新，但升级 SQL 仍需手动执行一次。
+> 升级顺序：**先备份数据库 → 上传文件 → 执行 upgrade_v2.5.0.sql → 清缓存刷新**；本版本含数据库结构变更（`nav_links` 表新增 `alias`、`tags` 两列），**必须执行升级脚本**。也可直接在后台「系统工具 → 版本检测 → 上传更新包更新」上传新版 zip 完成在线更新，但升级 SQL 仍需手动执行一次。
+
+## 本次 v2.5.0 变动文件
+
+| 文件 | 说明 |
+| --- | --- |
+| `index.php` | 卡片新增 `data-tags` / `data-alias` 属性；引入 `search.js` |
+| `my.php` | 支持 `?add_url=` / `?add_url_name=` 预填打开添加网址弹窗；引入 `search.js` |
+| `share.php`、`about.php`、`contact.php` | header 注入全局搜索按钮（search.js 自动完成）；引入 `search.js` |
+| `apply(1).php` | 收录申请网址输入框支持 `?url=` 预填 |
+| `admin/nav_links.php` | 编辑/新增表单新增「网站别名」「网站标签」字段（老库缺列自动隐藏） |
+| `api/search_index.php` | 新增：按当前视图可见性输出搜索索引 JSON（访客排除私密分组） |
+| `assets/js/search.js` | 新增：全局搜索组件（联想 / 最近搜索 / 隐私模式 / 意图词典 / 无匹配引导 / 页内高亮） |
+| `assets/js/nav.js` | 页内过滤扩展（网址/标签/别名/分类名 + 语义扩展）；暴露 `XYNavSearch` 桥接；支持 `?s=` / `?cat=` 直达 |
+| `assets/css/nav.css` | 联想面板 / 历史面板 / 紧凑搜索按钮与弹出面板样式（含移动端断点） |
+| `upgrade_v2.5.0.sql` | 新增：`nav_links` 表新增 `alias`、`tags` 列（幂等） |
+| `install/install.sql` | nav_links 表同步 `alias`、`tags` 列 |
+| `config/version.php`、`VERSION`、`includes/bootstrap.php`、`includes/ConfigManager.php` | 版本号升至 2.5.0 |
+| `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档更新 |
 
 ## 本次 v2.3.0 变动文件
 

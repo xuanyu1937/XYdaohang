@@ -255,7 +255,7 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.5.0">
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -1757,6 +1757,38 @@ $hasLinks = $totalLinks > 0;
             qs('#linkDialogClose') && qs('#linkDialogClose').addEventListener('click', closeLinkDialog);
             qs('#linkCancel') && qs('#linkCancel').addEventListener('click', closeLinkDialog);
 
+            // v2.5.0：全局搜索「添加为网址」入口 —— ?add_url=网址 / ?add_url_name=名称 预填打开弹窗
+            (function () {
+                if (typeof URLSearchParams === 'undefined') {
+                    return;
+                }
+
+                var params = new URLSearchParams(window.location.search);
+                var addUrl = params.get('add_url');
+                var addName = params.get('add_url_name');
+
+                if (!addUrl && !addName) {
+                    return;
+                }
+
+                try {
+                    window.history.replaceState({}, '', window.location.pathname);
+                } catch (error) {
+                    /* 旧浏览器忽略 */
+
+                }
+
+                openLinkDialog(null);
+
+                if (addUrl) {
+                    linkUrl.value = addUrl;
+                }
+
+                if (addName) {
+                    linkName.value = addName;
+                }
+            })();
+
             // 头像设置弹窗
             var avatarDialog = qs('#avatarDialog');
             var avatarEditBtn = qs('#avatarEditBtn');
@@ -2644,5 +2676,6 @@ $hasLinks = $totalLinks > 0;
             updatePickCount();
         })();
     </script>
+<script src="assets/js/search.js?v=2.5.0" defer></script>
 </body>
 </html>

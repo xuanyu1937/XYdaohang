@@ -63,6 +63,8 @@ $hasCheckStatus = nav_links_has_column($db, 'check_status');
 $hasLatency     = nav_links_has_column($db, 'latency_ms');
 $hasRemark      = nav_links_has_column($db, 'remark');
 $hasClicks      = nav_links_has_column($db, 'clicks');
+$hasAlias       = nav_links_has_column($db, 'alias');
+$hasTags        = nav_links_has_column($db, 'tags');
 $hasUsersTable  = $hasUserId && nav_links_has_table($db, 'users');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['delete']) || isset($_GET['toggle'])) {
@@ -78,6 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_nav_link'])) {
     $name = trim((string) ($_POST['name'] ?? ''));
     $url = trim((string) ($_POST['url'] ?? ''));
     $description = trim((string) ($_POST['description'] ?? ''));
+    $alias = $hasAlias ? trim((string) ($_POST['alias'] ?? '')) : '';
+    $tags = $hasTags ? trim((string) ($_POST['tags'] ?? '')) : '';
     $categoryId = intval($_POST['category_id'] ?? 0);
     $sortOrder = intval($_POST['sort_order'] ?? 0);
     
@@ -105,12 +109,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_nav_link'])) {
         if ($uploadError !== '') {
             $error = $uploadError;
         } else {
+            $insertFields = 'name, url, logo, description, category_id, sort_order';
+            $insertPlaceholders = '?, ?, ?, ?, ?, ?';
+            $insertValues = [$name, $url, $logo, $description, $categoryId, $sortOrder];
+
+            if ($hasAlias) {
+                $insertFields .= ', alias';
+                $insertPlaceholders .= ', ?';
+                $insertValues[] = $alias;
+            }
+
+            if ($hasTags) {
+                $insertFields .= ', tags';
+                $insertPlaceholders .= ', ?';
+                $insertValues[] = $tags;
+            }
+
             $stmt = $db->prepare("
-                INSERT INTO nav_links (name, url, logo, description, category_id, sort_order) 
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO nav_links ($insertFields)
+                VALUES ($insertPlaceholders)
             ");
-            
-            if ($stmt->execute([$name, $url, $logo, $description, $categoryId, $sortOrder])) {
+
+            if ($stmt->execute($insertValues)) {
                 $message = '导航链接添加成功';
                 $_POST = [];
             } else {
@@ -128,6 +148,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_nav_link'])) {
     $name = trim((string) ($_POST['name'] ?? ''));
     $url = trim((string) ($_POST['url'] ?? ''));
     $description = trim((string) ($_POST['description'] ?? ''));
+    $alias = $hasAlias ? trim((string) ($_POST['alias'] ?? '')) : '';
+    $tags = $hasTags ? trim((string) ($_POST['tags'] ?? '')) : '';
     $categoryId = intval($_POST['category_id'] ?? 0);
     $sortOrder = intval($_POST['sort_order'] ?? 0);
     $isActive = isset($_POST['is_active']) ? 1 : 0;
@@ -166,13 +188,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_nav_link'])) {
         if ($uploadError !== '') {
             $error = $uploadError;
         } else {
+            $updateSet = 'name = ?, url = ?, logo = ?, description = ?, category_id = ?, sort_order = ?, is_active = ?';
+            $updateValues = [$name, $url, $logo, $description, $categoryId, $sortOrder, $isActive];
+
+            if ($hasAlias) {
+                $updateSet .= ', alias = ?';
+                $updateValues[] = $alias;
+            }
+
+            if ($hasTags) {
+                $updateSet .= ', tags = ?';
+                $updateValues[] = $tags;
+            }
+
             $stmt = $db->prepare("
-                UPDATE nav_links 
-                SET name = ?, url = ?, logo = ?, description = ?, category_id = ?, sort_order = ?, is_active = ?
+                UPDATE nav_links
+                SET $updateSet
                 WHERE id = ?
             ");
-            
-            if ($stmt->execute([$name, $url, $logo, $description, $categoryId, $sortOrder, $isActive, $id])) {
+
+            $updateValues[] = $id;
+
+            if ($stmt->execute($updateValues)) {
                 $message = '导航链接更新成功';
             } else {
                 $error = '更新失败，请稍后重试';
@@ -777,11 +814,37 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                         
                                         <div class="mb-3">
                                             <label class="form-label">网站描述</label>
-                                            <textarea name="description" 
+                                            <textarea name="description"
                                                       id="navDescInput"
-                                                      class="form-control" 
+                                                      class="form-control"
                                                       rows="3"><?php echo $editNavLink ? $functions->escape($editNavLink['description']) : $functions->escape($_POST['description'] ?? ''); ?></textarea>
                                         </div>
+
+                                        <?php if ($hasAlias): ?>
+                                        <div class="mb-3">
+                                            <label class="form-label">网站别名</label>
+                                            <input type="text"
+                                                   name="alias"
+                                                   class="form-control"
+                                                   value="<?php echo $editNavLink ? $functions->escape($editNavLink['alias'] ?? '') : $functions->escape($_POST['alias'] ?? ''); ?>"
+                                                   placeholder="多个别名用空格分隔，如：视频网站 追剧"
+                                                   maxlength="255">
+                                            <small class="text-muted d-block mt-1">用于站内搜索与搜索联想，可留空</small>
+                                        </div>
+                                        <?php endif; ?>
+
+                                        <?php if ($hasTags): ?>
+                                        <div class="mb-3">
+                                            <label class="form-label">网站标签</label>
+                                            <input type="text"
+                                                   name="tags"
+                                                   class="form-control"
+                                                   value="<?php echo $editNavLink ? $functions->escape($editNavLink['tags'] ?? '') : $functions->escape($_POST['tags'] ?? ''); ?>"
+                                                   placeholder="多个标签用空格分隔，如：AI 工具 办公"
+                                                   maxlength="255">
+                                            <small class="text-muted d-block mt-1">用于站内搜索与搜索联想，可留空</small>
+                                        </div>
+                                        <?php endif; ?>
                                         
                                         <div class="mb-3">
                                             <label class="form-label">所属分类 *</label>

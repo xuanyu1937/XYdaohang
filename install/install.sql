@@ -79,6 +79,8 @@ CREATE TABLE IF NOT EXISTS `nav_links` (
   `category_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL DEFAULT '0',
   `remark` varchar(255) DEFAULT NULL,
+  `alias` varchar(255) DEFAULT NULL,
+  `tags` varchar(255) DEFAULT NULL,
   `sort_order` int(11) DEFAULT '0',
   `clicks` int(11) DEFAULT '0',
   `is_active` tinyint(1) DEFAULT '1',
