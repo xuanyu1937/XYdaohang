@@ -90,17 +90,64 @@ if (is_file($cacheFile) && (time() - filemtime($cacheFile)) < $cacheTtl) {
     }
 }
 
+/** 失败原因优先级：SSL 证书问题最具体，其次 DNS、超时，最后兜底。 */
+$navUpdateErrorPriority = ['ssl_error' => 4, 'dns_error' => 3, 'timeout' => 2, 'fetch_failed' => 1];
+$GLOBALS['navUpdateError'] = '';
+$GLOBALS['navUpdateErrno'] = 0;
+// 整体抓取预算：端点较多且逐个串行，超预算直接停止并返回 timeout，
+// 避免接口执行时间超过 PHP max_execution_time 后返回空白页
+$GLOBALS['navUpdateDeadline'] = microtime(true) + 25;
+
+/** 记录最近一次抓取失败原因，保留优先级最高（最具体）的那个。 */
+function navUpdateMarkError($error, $errno = 0)
+{
+    global $navUpdateErrorPriority;
+
+    if ($error === '') {
+        return;
+    }
+
+    $current = (string) ($GLOBALS['navUpdateError'] ?? '');
+
+    if ($current === '' || ($navUpdateErrorPriority[$error] ?? 0) > ($navUpdateErrorPriority[$current] ?? 0)) {
+        $GLOBALS['navUpdateError'] = $error;
+    }
+
+    $GLOBALS['navUpdateErrno'] = (int) $errno;
+}
+
+/** 把 cURL errno 映射为可直接返回给前端的错误码。 */
+function navUpdateMapCurlError($errno)
+{
+    // 35/51/58/60/77/83 均与 SSL 证书校验有关，Windows 下未配置 curl.cainfo 时最常见
+    if (in_array($errno, [35, 51, 58, 60, 77, 83], true)) {
+        return 'ssl_error';
+    }
+
+    if (in_array($errno, [6, 7], true)) {
+        return 'dns_error';
+    }
+
+    if ($errno === 28) {
+        return 'timeout';
+    }
+
+    return 'fetch_failed';
+}
+
 /**
- * 抓取一个地址，返回 [HTTP 状态码, 响应体]，失败返回 null。
+ * 抓取一个地址，返回 [HTTP 状态码, 响应体]，失败返回 null 并记录失败原因。
  * 优先 cURL，不可用时回退 file_get_contents；全程异常捕获，绝不抛出。
+ * $insecure 为 true 时跳过 SSL 证书校验，仅用于对固定仓库地址的降级重试。
  */
-function navUpdateFetchRaw($endpoint)
+function navUpdateFetchRaw($endpoint, $insecure = false)
 {
     try {
         if (function_exists('curl_init')) {
             $ch = @curl_init($endpoint);
 
             if ($ch === false) {
+                navUpdateMarkError('fetch_failed');
                 return null;
             }
 
@@ -112,14 +159,16 @@ function navUpdateFetchRaw($endpoint)
                 CURLOPT_TIMEOUT => 15,
                 CURLOPT_USERAGENT => 'XYdaohang-Update-Check',
                 CURLOPT_HTTPHEADER => ['Accept: application/vnd.github+json, text/plain, */*'],
-                CURLOPT_SSL_VERIFYPEER => true,
-                CURLOPT_SSL_VERIFYHOST => 2,
+                CURLOPT_SSL_VERIFYPEER => !$insecure,
+                CURLOPT_SSL_VERIFYHOST => $insecure ? 0 : 2,
             ]);
             $body = @curl_exec($ch);
             $status = (int) @curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+            $errno = (int) @curl_errno($ch);
             @curl_close($ch);
 
             if (!is_string($body) || $body === '' || $status < 200 || $status >= 300) {
+                navUpdateMarkError(navUpdateMapCurlError($errno), $errno);
                 return null;
             }
 
@@ -138,29 +187,69 @@ function navUpdateFetchRaw($endpoint)
                     'max_redirects' => 3,
                 ],
                 'ssl' => [
-                    'verify_peer' => true,
-                    'verify_peer_name' => true,
+                    'verify_peer' => !$insecure,
+                    'verify_peer_name' => !$insecure,
                 ],
             ]);
             $body = @file_get_contents($endpoint, false, $context);
 
             if (!is_string($body) || $body === '') {
+                navUpdateMarkError('fetch_failed');
                 return null;
             }
 
             return [200, $body];
         }
     } catch (Throwable $e) {
+        navUpdateMarkError('fetch_failed');
         return null;
+    }
+
+    navUpdateMarkError('fetch_failed');
+    return null;
+}
+
+/**
+ * 抓取一个地址：先按正常 SSL 校验请求，若失败原因是证书问题，
+ * 则对同一地址放宽证书校验重试一次。目标地址固定为本仓库，不构成开放代理。
+ * 服务器未配置 curl.cainfo 时，这一层降级是版本检测能否成功的关键。
+ */
+function navUpdateFetchWithRetry($endpoint)
+{
+    if (navUpdateBudgetExceeded()) {
+        return null;
+    }
+
+    $result = navUpdateFetchRaw($endpoint, false);
+
+    if ($result !== null) {
+        return $result;
+    }
+
+    if ((string) ($GLOBALS['navUpdateError'] ?? '') === 'ssl_error' && !navUpdateBudgetExceeded()) {
+        return navUpdateFetchRaw($endpoint, true);
     }
 
     return null;
 }
 
+/** 是否已超出整体抓取预算。 */
+function navUpdateBudgetExceeded()
+{
+    $deadline = (float) ($GLOBALS['navUpdateDeadline'] ?? 0);
+
+    if ($deadline > 0 && microtime(true) > $deadline) {
+        navUpdateMarkError('timeout');
+        return true;
+    }
+
+    return false;
+}
+
 /** 抓取 Releases API，要求返回 JSON 对象。 */
 function navUpdateFetchApi($endpoint)
 {
-    $result = navUpdateFetchRaw($endpoint);
+    $result = navUpdateFetchWithRetry($endpoint);
 
     if ($result === null) {
         return null;
@@ -188,7 +277,7 @@ foreach ($apiEndpoints as $endpoint) {
 // 第二链路：raw VERSION 文件（Releases API 全失败时兜底）
 if (!$release) {
     foreach ($rawEndpoints as $endpoint) {
-        $result = navUpdateFetchRaw($endpoint);
+        $result = navUpdateFetchWithRetry($endpoint);
 
         if ($result === null) {
             continue;
@@ -214,7 +303,8 @@ if (!$release) {
 }
 
 if (!$release) {
-    navUpdateResponse(['ok' => false, 'error' => 'fetch_failed']);
+    // 返回最具体的失败原因（ssl_error / dns_error / timeout / fetch_failed），前端据此给出可操作提示
+    navUpdateResponse(['ok' => false, 'error' => (string) ($GLOBALS['navUpdateError'] ?: 'fetch_failed')]);
 }
 
 $payload = [

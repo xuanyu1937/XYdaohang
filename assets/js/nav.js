@@ -34,6 +34,9 @@
     var emptyTitle = document.getElementById('emptyTitle');
     var emptyText = document.getElementById('emptyText');
     var emptyReset = document.getElementById('emptyReset');
+    // 记录初始空状态文案：登录用户与访客的引导语不同，由服务端渲染后在这里缓存
+    var emptyDefaultTitle = emptyTitle ? emptyTitle.textContent : '';
+    var emptyDefaultText = emptyText ? emptyText.textContent : '';
     var toTop = document.getElementById('toTop');
     var modeCycle = document.getElementById('modeCycle');
     var hotStrip = document.querySelector('.hot-strip');
@@ -521,8 +524,9 @@
                 if (emptyTitle) emptyTitle.textContent = '该分类下暂无网站';
                 if (emptyText) emptyText.textContent = '切换其他分类看看，或查看全部网站。';
             } else {
-                if (emptyTitle) emptyTitle.textContent = '暂无网站';
-                if (emptyText) emptyText.textContent = '请先在后台添加并启用网站。';
+                // 用页面初始文案（区分登录用户/访客）作为兜底，不再写死后台提示
+                if (emptyTitle) emptyTitle.textContent = emptyDefaultTitle;
+                if (emptyText) emptyText.textContent = emptyDefaultText;
             }
         }
 
@@ -893,6 +897,25 @@
             return probeWithImage(card);
         }
 
+        return probeOnce(url).then(function (ms) {
+            if (ms !== null) {
+                setStatus(card, 'online', ms);
+                return;
+            }
+
+            // 首次探测失败（超时或被中断）时再试一次，避免网络抖动导致误报「无法访问」
+            return probeOnce(url).then(function (retryMs) {
+                if (retryMs !== null) {
+                    setStatus(card, 'online', retryMs);
+                } else {
+                    setStatus(card, 'offline');
+                }
+            });
+        });
+    }
+
+    /** 单次探测：成功返回耗时毫秒，失败（超时 / 被中断）返回 null。 */
+    function probeOnce(url) {
         var controller = new AbortController();
         var timer = setTimeout(function () {
             controller.abort();
@@ -909,11 +932,12 @@
             signal: controller.signal
         }).then(function () {
             var ended = window.performance && performance.now ? performance.now() : Date.now();
-            setStatus(card, 'online', Math.max(1, Math.round(ended - started)));
+            return Math.max(1, Math.round(ended - started));
         }).catch(function () {
-            setStatus(card, 'offline');
-        }).then(function () {
+            return null;
+        }).then(function (ms) {
             clearTimeout(timer);
+            return ms;
         });
     }
 

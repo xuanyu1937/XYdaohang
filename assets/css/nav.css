@@ -1055,6 +1055,14 @@ body[data-monitor="0"] .site-clicks {
     font-size: 12.5px;
 }
 
+/* 空状态里的操作链接（如登录用户前往「我的导航」添加网址） */
+.empty-link {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
 .empty-reset {
     height: 34px;
     margin-top: 18px;
@@ -1991,6 +1999,12 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
 .footer-sep {
     margin: 0 3px;
     color: var(--border-strong);
+}
+
+/* 页脚版本号：便于用户与运维直接确认线上版本 */
+.footer-version {
+    color: var(--muted-2);
+    font-variant-numeric: tabular-nums;
 }
 
 .site-footer .copyright a:hover {

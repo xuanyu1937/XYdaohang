@@ -381,8 +381,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'send_test_mail') {
         $to = trim((string) ($_POST['test_email'] ?? ''));
 
+        // 收件人留空时先取「管理员收件邮箱」，仍未配置则回落到「发件地址」，
+        // 避免因未填收件人导致测试邮件直接失败。
         if ($to === '') {
             $to = $mailService->adminEmail();
+        }
+
+        if ($to === '') {
+            $mailConfig = $mailService->config();
+            $to = trim((string) ($mailConfig['from']['address'] ?? ''));
         }
 
         if ($to === '') {
@@ -403,7 +410,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $map = [
                 'mail_disabled'     => '邮件功能未启用：请先在左侧填写 SMTP 配置并勾选「启用邮件功能」后保存',
                 'phpmailer_missing' => 'PHPMailer 未安装：缺少 vendor/PHPMailer/src 目录',
-                'invalid_recipient' => '收件邮箱为空或格式不正确，且未配置 admin_email',
+                'invalid_recipient' => '收件邮箱为空或格式不正确：请先在左侧填写「管理员收件邮箱」或「发件地址」并保存，再发送测试邮件',
                 'send_failed'       => '发送失败：SMTP 连接或认证出错，请检查主机、端口、加密方式与账号密码',
             ];
             $code = (string) ($mailResult['error'] ?? 'send_failed');
@@ -1365,7 +1372,7 @@ $tableLabels = [
                                             <label class="form-label">管理员收件邮箱</label>
                                             <input type="email" name="mail_admin_email" class="form-control" maxlength="150"
                                                    value="<?php echo $functions->escape($mailAdminEmail); ?>" placeholder="接收申请通知与告警邮件">
-                                            <small class="text-muted">留空则测试邮件无法使用默认收件人；发件人名称沿用站点标题。</small>
+                                            <small class="text-muted">留空时测试邮件会改用「发件地址」作为收件人；发件人名称沿用站点标题。</small>
                                         </div>
 
                                         <div class="d-grid">
@@ -1395,9 +1402,13 @@ $tableLabels = [
                                             <label class="form-label">收件邮箱</label>
                                             <input type="email" name="test_email" class="form-control" placeholder="留空则使用管理员收件邮箱">
                                             <small class="text-muted">
-                                                管理员收件邮箱：<?php echo $mailAdminEmail !== '' ? $functions->escape($mailAdminEmail) : '未配置'; ?>
+                                                管理员收件邮箱：<?php echo $mailAdminEmail !== '' ? $functions->escape($mailAdminEmail) : '未配置（将改用发件地址）'; ?>
                                             </small>
                                         </div>
+
+                                        <p class="text-muted small mb-3">
+                                            <i class="fas fa-circle-info me-1"></i>请先保存左侧 SMTP 配置后再发送测试邮件，否则测试仍使用保存前的旧配置。
+                                        </p>
 
                                         <div class="d-grid">
                                             <button type="submit" class="btn btn-primary">
@@ -1674,7 +1685,15 @@ $tableLabels = [
             result.style.display = 'block';
 
             if (!data.ok || !data.tag_name) {
-                var reason = data.error === 'unauthorized' ? '登录状态已失效，请刷新页面后重试' : '暂时无法连接版本服务器，请稍后重试';
+                // 按接口返回的具体错误码给出可操作提示，便于区分 SSL / DNS / 超时 / 网络问题
+                var reasonMap = {
+                    unauthorized: '登录状态已失效，请刷新页面后重试',
+                    ssl_error: '当前服务器 SSL 证书校验失败：请在服务器 php.ini 中配置 curl.cainfo 指向 cacert.pem，或确认服务器 CA 证书库完整',
+                    dns_error: '当前服务器无法解析版本服务器域名：请检查服务器 DNS 与出网策略',
+                    timeout: '连接版本服务器超时：服务器出网较慢或被防火墙拦截',
+                    fetch_failed: '暂时无法连接版本服务器，请稍后重试'
+                };
+                var reason = reasonMap[data.error] || reasonMap.fetch_failed;
                 result.innerHTML = '<div class="alert alert-warning"><div><i class="fas fa-exclamation-triangle me-1"></i>' + reason + '</div></div>';
                 return;
             }

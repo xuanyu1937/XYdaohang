@@ -942,7 +942,15 @@ if ($bgImage !== '') {
                         </svg>
                     </span>
                     <h3 id="emptyTitle"><?php echo $totalSites > 0 ? '没有找到匹配的网站' : '暂无网站'; ?></h3>
-                    <p id="emptyText"><?php echo $totalSites > 0 ? '试试其他关键词或分类。' : '请先在后台添加并启用网站。'; ?></p>
+                    <p id="emptyText">
+                        <?php if ($totalSites > 0): ?>
+                            试试其他关键词或分类。
+                        <?php elseif ($currentUser): ?>
+                            你还没有添加网址，去<a class="empty-link" href="my.php">「我的导航」</a>添加第一个网站。
+                        <?php else: ?>
+                            请先在后台添加并启用网站。
+                        <?php endif; ?>
+                    </p>
                     <?php if ($totalSites > 0): ?>
                         <button type="button" class="empty-reset" id="emptyReset">清除筛选</button>
                     <?php endif; ?>
@@ -970,6 +978,8 @@ if ($bgImage !== '') {
                 <a href="contact.php">联系管理员</a>
                 <span class="footer-sep">·</span>
                 <a href="apply.php">申请收录</a>
+                <span class="footer-sep">·</span>
+                <span class="footer-version">v<?php echo $functions->escape(defined('APP_VERSION') ? APP_VERSION : '0.0.0'); ?></span>
             </p>
         </footer>
     </div>
