@@ -588,22 +588,59 @@
        动作
        ---------------------------------------------------------------------- */
 
+    // 搜索引擎列表缓存（用户自定义优先，否则全局默认）
+    var engineCache = {
+        engines: {
+            site:   { label: '站内', url: '' },
+            baidu:  { label: '百度', url: 'https://www.baidu.com/s?wd={q}' },
+            bing:   { label: '必应', url: 'https://www.bing.com/search?q={q}' },
+            google: { label: '谷歌', url: 'https://www.google.com/search?q={q}' }
+        },
+        loaded: false
+    };
+
+    function loadEngines() {
+        if (engineCache.loaded) {
+            return;
+        }
+        engineCache.loaded = true;
+
+        fetch('api/user_search_engines.php', {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+        })
+            .then(function (resp) { return resp.ok ? resp.json() : null; })
+            .then(function (data) {
+                if (!data || !data.ok || !data.engines || !data.engines.length) {
+                    return;
+                }
+                var newEngines = {};
+                data.engines.forEach(function (e) {
+                    newEngines[e.id] = { label: e.name, url: e.url_template };
+                });
+                engineCache.engines = newEngines;
+            })
+            .catch(function () { /* 保持默认 */ });
+    }
+
+    loadEngines();
+
     function currentEngine() {
         var engine = readStore('xy-nav-engine');
-        var allowed = ['site', 'baidu', 'bing', 'google'];
-
-        return allowed.indexOf(engine) !== -1 ? engine : 'site';
+        return engineCache.engines[engine] ? engine : 'site';
     }
 
     function externalSearchUrl(query, engine) {
-        var engines = {
-            baidu: 'https://www.baidu.com/s?wd=',
-            bing: 'https://www.bing.com/search?q=',
-            google: 'https://www.google.com/search?q='
-        };
-        var base = engines[engine] || engines.baidu;
+        var e = engineCache.engines[engine] || engineCache.engines.baidu;
+        if (!e || !e.url) {
+            e = engineCache.engines.baidu;
+        }
 
-        return base + encodeURIComponent(query);
+        var url = e.url;
+        if (url.indexOf('{q}') !== -1) {
+            return url.replace('{q}', encodeURIComponent(query));
+        }
+        return url + encodeURIComponent(query);
     }
 
     function trackSiteClick(id) {
