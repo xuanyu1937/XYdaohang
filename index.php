@@ -704,7 +704,7 @@ if ($bgImage !== '') {
                         <button type="button" id="seAddBtn">添加</button>
                     </div>
                     <ul class="se-list" id="seList"></ul>
-                    <p class="se-hint">未登录或未自定义时，使用站点全局默认搜索引擎。</p>
+                    <p class="se-hint">可编辑或删除默认搜索引擎，修改仅对自己生效，不影响其他用户。</p>
                 </div>
             </div>
         </div>
