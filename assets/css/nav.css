@@ -3837,6 +3837,121 @@ dialog.my-dialog::backdrop {
     text-align: center;
 }
 
+/* 编辑表单（行内编辑） */
+.se-edit-form {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr auto auto;
+    gap: 6px;
+    padding: 10px 12px;
+    border: 1px solid var(--primary, #3b82f6);
+    border-radius: 8px;
+    background: var(--bg-card, #fff);
+}
+
+.se-edit-form input {
+    padding: 6px 8px;
+    border: 1px solid var(--border, #d1d5db);
+    border-radius: 6px;
+    font-size: 12px;
+    min-width: 0;
+    background: var(--bg-input, #fff);
+    color: var(--text, #111);
+}
+
+.se-edit-form .se-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+.se-item-global-tag {
+    display: inline-block;
+    font-size: 10px;
+    color: var(--muted, #9ca3af);
+    margin-left: 6px;
+    font-weight: normal;
+}
+
+/* ===== 移动端适配 ===== */
+@media (max-width: 600px) {
+    .se-modal-dialog {
+        width: 94vw;
+        max-height: 90vh;
+    }
+
+    .se-modal-header {
+        padding: 14px 16px;
+    }
+
+    .se-modal-body {
+        padding: 14px 16px 16px;
+    }
+
+    /* 添加表单：纵向排列 */
+    .se-add-form {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .se-add-form input {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+    .se-add-form button {
+        width: 100%;
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    /* 列表项：紧凑布局 */
+    .se-item {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .se-item-info {
+        flex-basis: 100%;
+        order: 2;
+    }
+
+    .se-item-actions {
+        order: 3;
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .se-item-icon {
+        order: 1;
+    }
+
+    /* 编辑表单：纵向排列 */
+    .se-edit-form {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .se-edit-form input {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+    .se-edit-form .se-btn {
+        width: 100%;
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .se-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+}
+
 .search-engine-manage {
     border-top: 1px solid var(--border, #e5e7eb);
     margin-top: 4px;
