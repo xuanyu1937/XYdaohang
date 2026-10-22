@@ -125,6 +125,7 @@ function getMergedEngines($db, $userId)
     }
 
     // 处理全局默认：被覆盖则用用户版本，被隐藏则跳过
+    $merged = [];
     foreach ($globalEngines as $g) {
         $gid = (int) $g['id'];
         if (isset($overrideMap[$gid])) {
@@ -133,7 +134,7 @@ function getMergedEngines($db, $userId)
                 // 用户隐藏了这个全局默认
                 continue;
             }
-            $engines[] = [
+            $merged[] = [
                 'id' => 'user_' . $ov['id'],
                 'ref_id' => $ov['id'],
                 'type' => 'user',
@@ -145,7 +146,7 @@ function getMergedEngines($db, $userId)
                 'sort_order' => (int) $ov['sort_order'],
             ];
         } else {
-            $engines[] = [
+            $merged[] = [
                 'id' => 'global_' . $g['id'],
                 'ref_id' => $g['id'],
                 'type' => 'global',
@@ -161,7 +162,7 @@ function getMergedEngines($db, $userId)
 
     // 追加用户新增的搜索引擎
     foreach ($userAdded as $e) {
-        $engines[] = [
+        $merged[] = [
             'id' => 'user_' . $e['id'],
             'ref_id' => $e['id'],
             'type' => 'user',
@@ -171,6 +172,18 @@ function getMergedEngines($db, $userId)
             'icon' => $e['icon'] ?: '🔍',
             'sort_order' => (int) $e['sort_order'],
         ];
+    }
+
+    // 按 sort_order 排序
+    usort($merged, function ($a, $b) {
+        if ($a['sort_order'] === $b['sort_order']) {
+            return strcmp($a['id'], $b['id']);
+        }
+        return $a['sort_order'] - $b['sort_order'];
+    });
+
+    foreach ($merged as $m) {
+        $engines[] = $m;
     }
 
     return $engines;
@@ -340,17 +353,27 @@ if ($action === 'delete') {
 }
 
 if ($action === 'sort') {
-    $ids = $_POST['ids'] ?? '';
+    // 接收格式：type1:id1,type2:id2,...  type 为 global 或 user
+    $raw = $_POST['ids'] ?? '';
+    $items = [];
 
-    if (is_string($ids)) {
-        $ids = array_filter(explode(',', $ids), 'ctype_digit');
-    } elseif (is_array($ids)) {
-        $ids = array_filter($ids, 'ctype_digit');
-    } else {
-        $ids = [];
+    if (is_string($raw) && $raw !== '') {
+        foreach (explode(',', $raw) as $part) {
+            $part = trim($part);
+            if (preg_match('/^(global|user):(\d+)$/', $part, $m)) {
+                $items[] = ['type' => $m[1], 'id' => (int) $m[2]];
+            }
+        }
+    } elseif (is_array($raw)) {
+        foreach ($raw as $part) {
+            $part = trim((string) $part);
+            if (preg_match('/^(global|user):(\d+)$/', $part, $m)) {
+                $items[] = ['type' => $m[1], 'id' => (int) $m[2]];
+            }
+        }
     }
 
-    if (empty($ids)) {
+    if (empty($items)) {
         $functions->jsonResponse(['ok' => false, 'error' => '请提供排序ID列表'], 400);
     }
 
@@ -358,12 +381,36 @@ if ($action === 'sort') {
 
     try {
         $order = 1;
-        $stmt = $db->prepare(
+        $updateUser = $db->prepare(
+            'UPDATE user_search_engines SET sort_order = ? WHERE id = ? AND user_id = ?'
+        );
+        $findOverride = $db->prepare(
+            'SELECT id FROM user_search_engines WHERE user_id = ? AND override_global_id = ?'
+        );
+        $createOverride = $db->prepare(
+            'INSERT INTO user_search_engines (user_id, name, url_template, icon, sort_order, override_global_id, is_hidden)
+             SELECT ?, name, url_template, icon, ?, id, 0
+             FROM search_engines WHERE id = ?'
+        );
+        $updateOverrideOrder = $db->prepare(
             'UPDATE user_search_engines SET sort_order = ? WHERE id = ? AND user_id = ?'
         );
 
-        foreach ($ids as $id) {
-            $stmt->execute([$order, (int) $id, $userId]);
+        foreach ($items as $item) {
+            if ($item['type'] === 'user') {
+                // 用户自定义 → 直接更新排序
+                $updateUser->execute([$order, $item['id'], $userId]);
+            } else {
+                // 全局默认 → 查找或创建用户覆盖记录，再更新排序
+                $findOverride->execute([$userId, $item['id']]);
+                $existing = $findOverride->fetch(PDO::FETCH_ASSOC);
+
+                if ($existing) {
+                    $updateOverrideOrder->execute([$order, $existing['id'], $userId]);
+                } else {
+                    $createOverride->execute([$userId, $order, $item['id']]);
+                }
+            }
             $order++;
         }
 
@@ -371,7 +418,7 @@ if ($action === 'sort') {
         $functions->jsonResponse(['ok' => true]);
     } catch (Exception $e) {
         $db->rollBack();
-        $functions->jsonResponse(['ok' => false, 'error' => '排序失败'], 500);
+        $functions->jsonResponse(['ok' => false, 'error' => '排序失败：' . $e->getMessage()], 500);
     }
 }
 
