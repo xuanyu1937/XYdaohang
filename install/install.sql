@@ -194,10 +194,13 @@ CREATE TABLE IF NOT EXISTS `user_search_engines` (
   `url_template` varchar(500) NOT NULL COMMENT '搜索URL模板，用 {q} 占位搜索词',
   `icon` varchar(500) DEFAULT NULL COMMENT '图标URL或emoji',
   `sort_order` int(11) NOT NULL DEFAULT 0 COMMENT '排序序号',
+  `override_global_id` int(11) DEFAULT NULL COMMENT '覆盖的全局搜索引擎ID（NULL=用户新增）',
+  `is_hidden` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否隐藏（用于删除全局默认，仅对自己生效）',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `idx_user_sort` (`user_id`, `sort_order`)
+  KEY `idx_user_sort` (`user_id`, `sort_order`),
+  KEY `idx_override` (`user_id`, `override_global_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 插入默认搜索引擎（仅在表为空时）
