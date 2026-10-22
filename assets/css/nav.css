@@ -3645,3 +3645,200 @@ dialog.my-dialog::backdrop {
     background: var(--success-soft);
     color: var(--success);
 }
+
+/* ===== 搜索引擎管理模态框 ===== */
+.se-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.se-modal[hidden] {
+    display: none;
+}
+
+.se-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.se-modal-dialog {
+    position: relative;
+    width: min(560px, 92vw);
+    max-height: 86vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-card, #fff);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.se-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border, #e5e7eb);
+}
+
+.se-modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.se-modal-close {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--muted, #9ca3af);
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.se-modal-close:hover {
+    color: var(--text, #111);
+}
+
+.se-modal-body {
+    padding: 16px 20px 20px;
+    overflow-y: auto;
+}
+
+.se-add-form {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr auto;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.se-add-form input {
+    padding: 8px 10px;
+    border: 1px solid var(--border, #d1d5db);
+    border-radius: 6px;
+    font-size: 13px;
+    background: var(--bg-input, #fff);
+    color: var(--text, #111);
+    min-width: 0;
+}
+
+.se-add-form button {
+    padding: 8px 16px;
+    background: var(--primary, #3b82f6);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.se-add-form button:hover {
+    opacity: 0.9;
+}
+
+.se-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.se-empty {
+    text-align: center;
+    color: var(--muted, #9ca3af);
+    font-size: 13px;
+    padding: 24px 0;
+}
+
+.se-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 8px;
+    background: var(--bg-soft, #f9fafb);
+    cursor: move;
+    transition: border-color 0.15s;
+}
+
+.se-item:hover {
+    border-color: var(--primary, #3b82f6);
+}
+
+.se-item-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.se-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.se-item-info strong {
+    font-size: 14px;
+}
+
+.se-item-info small {
+    color: var(--muted, #9ca3af);
+    font-size: 11px;
+    word-break: break-all;
+}
+
+.se-item-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.se-btn {
+    padding: 4px 10px;
+    border: 1px solid var(--border, #d1d5db);
+    border-radius: 4px;
+    background: var(--bg-card, #fff);
+    color: var(--text, #111);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.se-btn:hover:not(:disabled) {
+    background: var(--bg-soft, #f3f4f6);
+}
+
+.se-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.se-btn-danger {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.se-btn-danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.se-hint {
+    margin: 16px 0 0;
+    font-size: 12px;
+    color: var(--muted, #9ca3af);
+    text-align: center;
+}
+
+.search-engine-manage {
+    border-top: 1px solid var(--border, #e5e7eb);
+    margin-top: 4px;
+    padding-top: 8px;
+}
