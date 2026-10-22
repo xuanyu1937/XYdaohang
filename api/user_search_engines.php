@@ -70,8 +70,11 @@ function trimField($value, $limit)
 }
 
 /**
- * 获取合并后的搜索引擎列表：用户自定义优先，否则用全局默认
- * 站内搜索始终在最前
+ * 获取合并后的搜索引擎列表：
+ * - 全局默认搜索引擎始终显示（除非用户隐藏）
+ * - 用户编辑过的全局默认 → 用用户版本覆盖
+ * - 用户新增的搜索引擎追加在后面
+ * - 站内搜索始终在最前
  */
 function getMergedEngines($db, $userId)
 {
@@ -87,11 +90,20 @@ function getMergedEngines($db, $userId)
         ]
     ];
 
-    // 用户是否有自定义搜索引擎
+    // 获取全局默认搜索引擎
+    $stmt = $db->query(
+        'SELECT id, name, url_template, icon, sort_order
+         FROM search_engines
+         WHERE is_active = 1
+         ORDER BY sort_order ASC, id ASC'
+    );
+    $globalEngines = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 获取用户自定义搜索引擎
     $userEngines = [];
     if ($userId > 0) {
         $stmt = $db->prepare(
-            'SELECT id, name, url_template, icon, sort_order
+            'SELECT id, name, url_template, icon, sort_order, override_global_id, is_hidden
              FROM user_search_engines
              WHERE user_id = ?
              ORDER BY sort_order ASC, id ASC'
@@ -100,38 +112,65 @@ function getMergedEngines($db, $userId)
         $userEngines = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    if (!empty($userEngines)) {
-        // 有自定义，用用户的
-        foreach ($userEngines as $e) {
-            $engines[] = [
-                'id' => 'user_' . $e['id'],
-                'type' => 'user',
-                'name' => $e['name'],
-                'url_template' => $e['url_template'],
-                'icon' => $e['icon'] ?: '🔍',
-                'sort_order' => (int) $e['sort_order'],
-            ];
+    // 建立用户覆盖映射：override_global_id => 用户记录
+    $overrideMap = [];
+    // 用户新增的（override_global_id 为 NULL 且未隐藏）
+    $userAdded = [];
+    foreach ($userEngines as $e) {
+        if (!empty($e['override_global_id'])) {
+            $overrideMap[(int) $e['override_global_id']] = $e;
+        } elseif (empty($e['is_hidden'])) {
+            $userAdded[] = $e;
         }
-    } else {
-        // 无自定义，用全局默认
-        $stmt = $db->query(
-            'SELECT id, name, url_template, icon, sort_order
-             FROM search_engines
-             WHERE is_active = 1
-             ORDER BY sort_order ASC, id ASC'
-        );
-        $globalEngines = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
-        foreach ($globalEngines as $e) {
+    // 处理全局默认：被覆盖则用用户版本，被隐藏则跳过
+    foreach ($globalEngines as $g) {
+        $gid = (int) $g['id'];
+        if (isset($overrideMap[$gid])) {
+            $ov = $overrideMap[$gid];
+            if (!empty($ov['is_hidden'])) {
+                // 用户隐藏了这个全局默认
+                continue;
+            }
             $engines[] = [
-                'id' => 'global_' . $e['id'],
+                'id' => 'user_' . $ov['id'],
+                'ref_id' => $ov['id'],
+                'type' => 'user',
+                'source' => 'global',
+                'global_id' => $gid,
+                'name' => $ov['name'],
+                'url_template' => $ov['url_template'],
+                'icon' => $ov['icon'] ?: '🔍',
+                'sort_order' => (int) $ov['sort_order'],
+            ];
+        } else {
+            $engines[] = [
+                'id' => 'global_' . $g['id'],
+                'ref_id' => $g['id'],
                 'type' => 'global',
-                'name' => $e['name'],
-                'url_template' => $e['url_template'],
-                'icon' => $e['icon'] ?: '🔍',
-                'sort_order' => (int) $e['sort_order'],
+                'source' => 'global',
+                'global_id' => $gid,
+                'name' => $g['name'],
+                'url_template' => $g['url_template'],
+                'icon' => $g['icon'] ?: '🔍',
+                'sort_order' => (int) $g['sort_order'],
             ];
         }
+    }
+
+    // 追加用户新增的搜索引擎
+    foreach ($userAdded as $e) {
+        $engines[] = [
+            'id' => 'user_' . $e['id'],
+            'ref_id' => $e['id'],
+            'type' => 'user',
+            'source' => 'user',
+            'name' => $e['name'],
+            'url_template' => $e['url_template'],
+            'icon' => $e['icon'] ?: '🔍',
+            'sort_order' => (int) $e['sort_order'],
+        ];
     }
 
     return $engines;
@@ -142,7 +181,7 @@ if ($method === 'GET') {
     $functions->jsonResponse([
         'ok' => true,
         'engines' => $engines,
-        'has_custom' => $userId > 0 && !empty($userEngines ?? null),
+        'has_custom' => $userId > 0 && !empty($userEngines),
     ]);
 }
 
@@ -168,18 +207,61 @@ if ($action === 'add') {
         $functions->jsonResponse(['ok' => false, 'error' => '搜索URL模板必须以 http(s):// 开头且包含 {q} 占位符'], 400);
     }
 
-    // 获取当前最大排序号
     $stmt = $db->prepare('SELECT COALESCE(MAX(sort_order), 0) FROM user_search_engines WHERE user_id = ?');
     $stmt->execute([$userId]);
     $maxSort = (int) $stmt->fetchColumn();
 
     $stmt = $db->prepare(
-        'INSERT INTO user_search_engines (user_id, name, url_template, icon, sort_order)
-         VALUES (?, ?, ?, ?, ?)'
+        'INSERT INTO user_search_engines (user_id, name, url_template, icon, sort_order, override_global_id)
+         VALUES (?, ?, ?, ?, ?, NULL)'
     );
     $stmt->execute([$userId, $name, $urlTemplate, $icon, $maxSort + 1]);
 
     $functions->jsonResponse(['ok' => true, 'id' => (int) $db->lastInsertId()]);
+}
+
+// 编辑全局默认搜索引擎 → 创建/更新用户覆盖记录（仅对自己生效）
+if ($action === 'edit_global') {
+    $globalId = (int) ($_POST['global_id'] ?? 0);
+    $name = trimField($_POST['name'] ?? '', 50);
+    $urlTemplate = normalizeUrlTemplate($_POST['url_template'] ?? '');
+    $icon = trimField($_POST['icon'] ?? '', 500);
+
+    if ($globalId <= 0) {
+        $functions->jsonResponse(['ok' => false, 'error' => '参数错误'], 400);
+    }
+
+    if ($name === '') {
+        $functions->jsonResponse(['ok' => false, 'error' => '请输入搜索引擎名称'], 400);
+    }
+
+    if ($urlTemplate === '') {
+        $functions->jsonResponse(['ok' => false, 'error' => '搜索URL模板必须以 http(s):// 开头且包含 {q} 占位符'], 400);
+    }
+
+    // 检查是否已有覆盖记录
+    $stmt = $db->prepare(
+        'SELECT id FROM user_search_engines WHERE user_id = ? AND override_global_id = ?'
+    );
+    $stmt->execute([$userId, $globalId]);
+    $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($existing) {
+        $stmt = $db->prepare(
+            'UPDATE user_search_engines
+             SET name = ?, url_template = ?, icon = ?, is_hidden = 0
+             WHERE id = ? AND user_id = ?'
+        );
+        $stmt->execute([$name, $urlTemplate, $icon, $existing['id'], $userId]);
+    } else {
+        $stmt = $db->prepare(
+            'INSERT INTO user_search_engines (user_id, name, url_template, icon, sort_order, override_global_id, is_hidden)
+             VALUES (?, ?, ?, ?, 0, ?, 0)'
+        );
+        $stmt->execute([$userId, $name, $urlTemplate, $icon, $globalId]);
+    }
+
+    $functions->jsonResponse(['ok' => true]);
 }
 
 if ($action === 'update') {
@@ -216,16 +298,42 @@ if ($action === 'update') {
 
 if ($action === 'delete') {
     $id = (int) ($_POST['id'] ?? 0);
+    $globalId = (int) ($_POST['global_id'] ?? 0);
 
-    if ($id <= 0) {
+    if ($id > 0) {
+        // 删除用户自定义记录（包括覆盖记录 → 恢复全局默认）
+        $stmt = $db->prepare('DELETE FROM user_search_engines WHERE id = ? AND user_id = ?');
+        $stmt->execute([$id, $userId]);
+
+        if ($stmt->rowCount() === 0) {
+            $functions->jsonResponse(['ok' => false, 'error' => '搜索引擎不存在或无权操作'], 404);
+        }
+    } elseif ($globalId > 0) {
+        // 隐藏全局默认搜索引擎（仅对自己生效）
+        // 检查是否已有覆盖记录
+        $stmt = $db->prepare(
+            'SELECT id FROM user_search_engines WHERE user_id = ? AND override_global_id = ?'
+        );
+        $stmt->execute([$userId, $globalId]);
+        $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($existing) {
+            // 已有覆盖记录，标记为隐藏
+            $stmt = $db->prepare(
+                'UPDATE user_search_engines SET is_hidden = 1 WHERE id = ? AND user_id = ?'
+            );
+            $stmt->execute([$existing['id'], $userId]);
+        } else {
+            // 创建隐藏记录
+            $stmt = $db->prepare(
+                'INSERT INTO user_search_engines (user_id, name, url_template, icon, sort_order, override_global_id, is_hidden)
+                 SELECT ?, name, url_template, icon, sort_order, ?, 1
+                 FROM search_engines WHERE id = ?'
+            );
+            $stmt->execute([$userId, $globalId, $globalId]);
+        }
+    } else {
         $functions->jsonResponse(['ok' => false, 'error' => '参数错误'], 400);
-    }
-
-    $stmt = $db->prepare('DELETE FROM user_search_engines WHERE id = ? AND user_id = ?');
-    $stmt->execute([$id, $userId]);
-
-    if ($stmt->rowCount() === 0) {
-        $functions->jsonResponse(['ok' => false, 'error' => '搜索引擎不存在或无权操作'], 404);
     }
 
     $functions->jsonResponse(['ok' => true]);
