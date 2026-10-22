@@ -2616,8 +2616,9 @@
         userEnginesCache.forEach(function (e, idx) {
             var li = document.createElement('li');
             li.className = 'se-item';
-            li.draggable = e.type === 'user' && e.source === 'user'; // 仅用户新增的可拖拽
+            li.draggable = true;
             li.dataset.id = e.id;
+            li.dataset.type = e.type; // global 或 user
 
             var icon = document.createElement('span');
             icon.className = 'se-item-icon';
@@ -2642,6 +2643,24 @@
             var actions = document.createElement('div');
             actions.className = 'se-item-actions';
 
+            // 上移按钮（所有引擎都支持）
+            var upBtn = document.createElement('button');
+            upBtn.type = 'button';
+            upBtn.className = 'se-btn se-btn-sm';
+            upBtn.textContent = '↑';
+            upBtn.title = '上移';
+            upBtn.disabled = idx === 0;
+            upBtn.addEventListener('click', function () { moveSeItem(idx, -1); });
+
+            // 下移按钮
+            var downBtn = document.createElement('button');
+            downBtn.type = 'button';
+            downBtn.className = 'se-btn se-btn-sm';
+            downBtn.textContent = '↓';
+            downBtn.title = '下移';
+            downBtn.disabled = idx === userEnginesCache.length - 1;
+            downBtn.addEventListener('click', function () { moveSeItem(idx, 1); });
+
             // 编辑按钮
             var editBtn = document.createElement('button');
             editBtn.type = 'button';
@@ -2656,30 +2675,10 @@
             delBtn.textContent = '删除';
             delBtn.addEventListener('click', function () { deleteSeItem(e); });
 
+            actions.appendChild(upBtn);
+            actions.appendChild(downBtn);
             actions.appendChild(editBtn);
             actions.appendChild(delBtn);
-
-            // 用户新增的支持上下移动
-            if (e.type === 'user' && e.source === 'user') {
-                var upBtn = document.createElement('button');
-                upBtn.type = 'button';
-                upBtn.className = 'se-btn se-btn-sm';
-                upBtn.textContent = '↑';
-                upBtn.title = '上移';
-                upBtn.disabled = idx === 0;
-                upBtn.addEventListener('click', function () { moveSeItem(idx, -1); });
-
-                var downBtn = document.createElement('button');
-                downBtn.type = 'button';
-                downBtn.className = 'se-btn se-btn-sm';
-                downBtn.textContent = '↓';
-                downBtn.title = '下移';
-                downBtn.disabled = idx === userEnginesCache.length - 1;
-                downBtn.addEventListener('click', function () { moveSeItem(idx, 1); });
-
-                actions.insertBefore(upBtn, editBtn);
-                actions.insertBefore(downBtn, editBtn);
-            }
 
             li.appendChild(icon);
             li.appendChild(info);
@@ -2687,20 +2686,54 @@
             seList.appendChild(li);
         });
 
-        // 拖拽排序（仅用户新增的）
+        // 拖拽排序（桌面端 HTML5 拖拽）
         var dragSrc = null;
-        seList.querySelectorAll('.se-item[draggable="true"]').forEach(function (li) {
+        seList.querySelectorAll('.se-item').forEach(function (li) {
             li.addEventListener('dragstart', function () { dragSrc = this; });
             li.addEventListener('dragover', function (e) { e.preventDefault(); });
             li.addEventListener('drop', function (e) {
                 e.preventDefault();
                 if (!dragSrc || dragSrc === this) return;
-                var items = Array.from(seList.querySelectorAll('.se-item[draggable="true"]'));
+                var items = Array.from(seList.querySelectorAll('.se-item'));
                 var srcIdx = items.indexOf(dragSrc);
                 var dstIdx = items.indexOf(this);
                 var moved = userEnginesCache.splice(srcIdx, 1)[0];
                 userEnginesCache.splice(dstIdx, 0, moved);
                 saveSeSort();
+            });
+        });
+
+        // 移动端触摸拖拽排序
+        var touchSrc = null;
+        var touchSrcIdx = -1;
+        seList.querySelectorAll('.se-item').forEach(function (li, idx) {
+            li.addEventListener('touchstart', function (e) {
+                touchSrc = this;
+                touchSrcIdx = idx;
+                this.style.opacity = '0.5';
+            }, { passive: true });
+
+            li.addEventListener('touchmove', function (e) {
+                e.preventDefault();
+            }, { passive: false });
+
+            li.addEventListener('touchend', function (e) {
+                if (!touchSrc) return;
+                this.style.opacity = '';
+                var touch = e.changedTouches[0];
+                var el = document.elementFromPoint(touch.clientX, touch.clientY);
+                var targetLi = el ? el.closest('.se-item') : null;
+                if (targetLi && targetLi !== touchSrc) {
+                    var items = Array.from(seList.querySelectorAll('.se-item'));
+                    var dstIdx = items.indexOf(targetLi);
+                    if (dstIdx !== -1 && touchSrcIdx !== -1) {
+                        var moved = userEnginesCache.splice(touchSrcIdx, 1)[0];
+                        userEnginesCache.splice(dstIdx, 0, moved);
+                        saveSeSort();
+                    }
+                }
+                touchSrc = null;
+                touchSrcIdx = -1;
             });
         });
     }
@@ -2802,12 +2835,22 @@
     }
 
     function saveSeSort() {
-        // 只排序用户新增的（source=user）
-        var ids = userEnginesCache
-            .filter(function (e) { return e.type === 'user' && e.source === 'user'; })
-            .map(function (e) { return e.ref_id || e.id.replace('user_', ''); });
+        // 发送所有引擎的 type:id 格式
+        var ids = userEnginesCache.map(function (e) {
+            var type = e.type; // global 或 user
+            var id = e.type === 'global' ? (e.global_id || e.ref_id) : (e.ref_id || e.id.replace('user_', ''));
+            return type + ':' + id;
+        });
         postSeForm('sort', { ids: ids.join(',') })
-            .then(function () { renderSeList(); loadSearchEngines(); });
+            .then(function (data) {
+                if (data.ok) {
+                    renderSeList();
+                    loadSearchEngines();
+                } else {
+                    alert(data.error || '排序失败');
+                    loadSeList(); // 重新加载恢复正确顺序
+                }
+            });
     }
 
     function deleteSeItem(e) {
