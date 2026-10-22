@@ -489,7 +489,7 @@ svg {
     border-radius: 11px;
     background: var(--surface);
     box-shadow: var(--shadow-md);
-    z-index: 20;
+    z-index: 70;
 }
 
 .search-engine-option {
@@ -1618,9 +1618,15 @@ body[data-monitor="0"] .site-clicks {
 
 .user-menu {
     position: relative;
+    flex: 0 0 auto;
+    min-width: 0;
 }
 
 .user-summary {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
     cursor: pointer;
     list-style: none;
     user-select: none;
@@ -1657,6 +1663,8 @@ body[data-monitor="0"] .site-clicks {
 
 .user-name {
     max-width: 90px;
+    min-width: 0;
+    flex-shrink: 1;
     overflow: hidden;
     color: var(--text);
     font-weight: 600;
@@ -3768,7 +3776,7 @@ dialog.my-dialog::backdrop {
     border: 1px solid var(--border, #e5e7eb);
     border-radius: 8px;
     background: var(--bg-soft, #f9fafb);
-    cursor: move;
+    cursor: default;
     transition: border-color 0.15s;
 }
 
