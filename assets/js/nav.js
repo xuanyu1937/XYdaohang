@@ -2547,198 +2547,198 @@
             event.preventDefault();
             saveEditLink();
         });
+    })();
 
-        /* ------------------------------------------------------------------
-           搜索引擎管理模态框
-           ------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------
+       搜索引擎管理模态框（移至 initCardV260 外部，使 openSeModal 可被 renderEngineMenu 访问）
+       ------------------------------------------------------------------ */
 
-        var seModal = document.getElementById('seModal');
-        var seList = document.getElementById('seList');
-        var seAddName = document.getElementById('seAddName');
-        var seAddUrl = document.getElementById('seAddUrl');
-        var seAddIcon = document.getElementById('seAddIcon');
-        var seAddBtn = document.getElementById('seAddBtn');
-        var userEnginesCache = [];
+    var seModal = document.getElementById('seModal');
+    var seList = document.getElementById('seList');
+    var seAddName = document.getElementById('seAddName');
+    var seAddUrl = document.getElementById('seAddUrl');
+    var seAddIcon = document.getElementById('seAddIcon');
+    var seAddBtn = document.getElementById('seAddBtn');
+    var userEnginesCache = [];
 
-        function openSeModal() {
-            if (!seModal) return;
-            seModal.hidden = false;
-            document.body.style.overflow = 'hidden';
-            loadSeList();
-        }
+    function openSeModal() {
+        if (!seModal) return;
+        seModal.hidden = false;
+        document.body.style.overflow = 'hidden';
+        loadSeList();
+    }
 
-        function closeSeModal() {
-            if (!seModal) return;
-            seModal.hidden = true;
-            document.body.style.overflow = '';
-        }
+    function closeSeModal() {
+        if (!seModal) return;
+        seModal.hidden = true;
+        document.body.style.overflow = '';
+    }
 
-        function postSeForm(action, data) {
-            var fd = new FormData();
-            fd.append('action', action);
-            Object.keys(data).forEach(function (k) { fd.append(k, data[k]); });
-            return fetch('api/user_search_engines.php', {
-                method: 'POST',
-                credentials: 'same-origin',
-                body: fd,
-                headers: { 'Accept': 'application/json' }
-            }).then(function (r) { return r.json(); });
-        }
+    function postSeForm(action, data) {
+        var fd = new FormData();
+        fd.append('action', action);
+        Object.keys(data).forEach(function (k) { fd.append(k, data[k]); });
+        return fetch('api/user_search_engines.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: fd,
+            headers: { 'Accept': 'application/json' }
+        }).then(function (r) { return r.json(); });
+    }
 
-        function loadSeList() {
-            fetch('api/user_search_engines.php', {
-                credentials: 'same-origin',
-                headers: { 'Accept': 'application/json' }
+    function loadSeList() {
+        fetch('api/user_search_engines.php', {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.ok) return;
+                userEnginesCache = data.engines.filter(function (e) { return e.type === 'user'; });
+                renderSeList();
             })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (!data.ok) return;
-                    userEnginesCache = data.engines.filter(function (e) { return e.type === 'user'; });
-                    renderSeList();
-                })
-                .catch(function () { renderSeList(); });
+            .catch(function () { renderSeList(); });
+    }
+
+    function renderSeList() {
+        if (!seList) return;
+        seList.innerHTML = '';
+
+        if (!userEnginesCache.length) {
+            var empty = document.createElement('li');
+            empty.className = 'se-empty';
+            empty.textContent = '暂无自定义搜索引擎，将使用站点默认。添加后将替换默认列表。';
+            seList.appendChild(empty);
+            return;
         }
 
-        function renderSeList() {
-            if (!seList) return;
-            seList.innerHTML = '';
+        userEnginesCache.forEach(function (e, idx) {
+            var li = document.createElement('li');
+            li.className = 'se-item';
+            li.draggable = true;
+            li.dataset.id = e.id.replace('user_', '');
 
-            if (!userEnginesCache.length) {
-                var empty = document.createElement('li');
-                empty.className = 'se-empty';
-                empty.textContent = '暂无自定义搜索引擎，将使用站点默认。添加后将替换默认列表。';
-                seList.appendChild(empty);
+            var icon = document.createElement('span');
+            icon.className = 'se-item-icon';
+            icon.textContent = e.icon || '🔍';
+
+            var info = document.createElement('div');
+            info.className = 'se-item-info';
+            var nameEl = document.createElement('strong');
+            nameEl.textContent = e.name;
+            var urlEl = document.createElement('small');
+            urlEl.textContent = e.url_template;
+            info.appendChild(nameEl);
+            info.appendChild(document.createElement('br'));
+            info.appendChild(urlEl);
+
+            var actions = document.createElement('div');
+            actions.className = 'se-item-actions';
+
+            var upBtn = document.createElement('button');
+            upBtn.type = 'button';
+            upBtn.className = 'se-btn se-btn-sm';
+            upBtn.textContent = '↑';
+            upBtn.title = '上移';
+            upBtn.disabled = idx === 0;
+            upBtn.addEventListener('click', function () { moveSeItem(idx, -1); });
+
+            var downBtn = document.createElement('button');
+            downBtn.type = 'button';
+            downBtn.className = 'se-btn se-btn-sm';
+            downBtn.textContent = '↓';
+            downBtn.title = '下移';
+            downBtn.disabled = idx === userEnginesCache.length - 1;
+            downBtn.addEventListener('click', function () { moveSeItem(idx, 1); });
+
+            var delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'se-btn se-btn-sm se-btn-danger';
+            delBtn.textContent = '删除';
+            delBtn.addEventListener('click', function () { deleteSeItem(e.id.replace('user_', '')); });
+
+            actions.appendChild(upBtn);
+            actions.appendChild(downBtn);
+            actions.appendChild(delBtn);
+
+            li.appendChild(icon);
+            li.appendChild(info);
+            li.appendChild(actions);
+            seList.appendChild(li);
+        });
+
+        // 拖拽排序
+        var dragSrc = null;
+        seList.querySelectorAll('.se-item').forEach(function (li) {
+            li.addEventListener('dragstart', function () { dragSrc = this; });
+            li.addEventListener('dragover', function (e) { e.preventDefault(); });
+            li.addEventListener('drop', function (e) {
+                e.preventDefault();
+                if (!dragSrc || dragSrc === this) return;
+                var items = Array.from(seList.querySelectorAll('.se-item'));
+                var srcIdx = items.indexOf(dragSrc);
+                var dstIdx = items.indexOf(this);
+                var moved = userEnginesCache.splice(srcIdx, 1)[0];
+                userEnginesCache.splice(dstIdx, 0, moved);
+                saveSeSort();
+            });
+        });
+    }
+
+    function moveSeItem(idx, dir) {
+        var newIdx = idx + dir;
+        if (newIdx < 0 || newIdx >= userEnginesCache.length) return;
+        var tmp = userEnginesCache[idx];
+        userEnginesCache[idx] = userEnginesCache[newIdx];
+        userEnginesCache[newIdx] = tmp;
+        saveSeSort();
+    }
+
+    function saveSeSort() {
+        var ids = userEnginesCache.map(function (e) { return e.id.replace('user_', ''); });
+        postSeForm('sort', { ids: ids.join(',') })
+            .then(function () { renderSeList(); loadSearchEngines(); });
+    }
+
+    function deleteSeItem(id) {
+        if (!confirm('确定删除此搜索引擎？')) return;
+        postSeForm('delete', { id: id })
+            .then(function () { loadSeList(); loadSearchEngines(); });
+    }
+
+    if (seAddBtn) {
+        seAddBtn.addEventListener('click', function () {
+            var name = seAddName.value.trim();
+            var url = seAddUrl.value.trim();
+            var icon = seAddIcon.value.trim();
+
+            if (!name) { alert('请输入名称'); return; }
+            if (!url || !/^https?:\/\//i.test(url) || (url.indexOf('{q}') === -1 && url.indexOf('{query}') === -1)) {
+                alert('URL 必须以 http(s):// 开头且包含 {q} 占位符');
                 return;
             }
 
-            userEnginesCache.forEach(function (e, idx) {
-                var li = document.createElement('li');
-                li.className = 'se-item';
-                li.draggable = true;
-                li.dataset.id = e.id.replace('user_', '');
-
-                var icon = document.createElement('span');
-                icon.className = 'se-item-icon';
-                icon.textContent = e.icon || '🔍';
-
-                var info = document.createElement('div');
-                info.className = 'se-item-info';
-                var nameEl = document.createElement('strong');
-                nameEl.textContent = e.name;
-                var urlEl = document.createElement('small');
-                urlEl.textContent = e.url_template;
-                info.appendChild(nameEl);
-                info.appendChild(document.createElement('br'));
-                info.appendChild(urlEl);
-
-                var actions = document.createElement('div');
-                actions.className = 'se-item-actions';
-
-                var upBtn = document.createElement('button');
-                upBtn.type = 'button';
-                upBtn.className = 'se-btn se-btn-sm';
-                upBtn.textContent = '↑';
-                upBtn.title = '上移';
-                upBtn.disabled = idx === 0;
-                upBtn.addEventListener('click', function () { moveSeItem(idx, -1); });
-
-                var downBtn = document.createElement('button');
-                downBtn.type = 'button';
-                downBtn.className = 'se-btn se-btn-sm';
-                downBtn.textContent = '↓';
-                downBtn.title = '下移';
-                downBtn.disabled = idx === userEnginesCache.length - 1;
-                downBtn.addEventListener('click', function () { moveSeItem(idx, 1); });
-
-                var delBtn = document.createElement('button');
-                delBtn.type = 'button';
-                delBtn.className = 'se-btn se-btn-sm se-btn-danger';
-                delBtn.textContent = '删除';
-                delBtn.addEventListener('click', function () { deleteSeItem(e.id.replace('user_', '')); });
-
-                actions.appendChild(upBtn);
-                actions.appendChild(downBtn);
-                actions.appendChild(delBtn);
-
-                li.appendChild(icon);
-                li.appendChild(info);
-                li.appendChild(actions);
-                seList.appendChild(li);
-            });
-
-            // 拖拽排序
-            var dragSrc = null;
-            seList.querySelectorAll('.se-item').forEach(function (li) {
-                li.addEventListener('dragstart', function () { dragSrc = this; });
-                li.addEventListener('dragover', function (e) { e.preventDefault(); });
-                li.addEventListener('drop', function (e) {
-                    e.preventDefault();
-                    if (!dragSrc || dragSrc === this) return;
-                    var items = Array.from(seList.querySelectorAll('.se-item'));
-                    var srcIdx = items.indexOf(dragSrc);
-                    var dstIdx = items.indexOf(this);
-                    var moved = userEnginesCache.splice(srcIdx, 1)[0];
-                    userEnginesCache.splice(dstIdx, 0, moved);
-                    saveSeSort();
+            postSeForm('add', { name: name, url_template: url, icon: icon })
+                .then(function (data) {
+                    if (data.ok) {
+                        seAddName.value = '';
+                        seAddUrl.value = '';
+                        seAddIcon.value = '';
+                        loadSeList();
+                        loadSearchEngines();
+                    } else {
+                        alert(data.error || '添加失败');
+                    }
                 });
-            });
-        }
+        });
+    }
 
-        function moveSeItem(idx, dir) {
-            var newIdx = idx + dir;
-            if (newIdx < 0 || newIdx >= userEnginesCache.length) return;
-            var tmp = userEnginesCache[idx];
-            userEnginesCache[idx] = userEnginesCache[newIdx];
-            userEnginesCache[newIdx] = tmp;
-            saveSeSort();
-        }
-
-        function saveSeSort() {
-            var ids = userEnginesCache.map(function (e) { return e.id.replace('user_', ''); });
-            postSeForm('sort', { ids: ids.join(',') })
-                .then(function () { renderSeList(); loadSearchEngines(); });
-        }
-
-        function deleteSeItem(id) {
-            if (!confirm('确定删除此搜索引擎？')) return;
-            postSeForm('delete', { id: id })
-                .then(function () { loadSeList(); loadSearchEngines(); });
-        }
-
-        if (seAddBtn) {
-            seAddBtn.addEventListener('click', function () {
-                var name = seAddName.value.trim();
-                var url = seAddUrl.value.trim();
-                var icon = seAddIcon.value.trim();
-
-                if (!name) { alert('请输入名称'); return; }
-                if (!url || !/^https?:\/\//i.test(url) || (url.indexOf('{q}') === -1 && url.indexOf('{query}') === -1)) {
-                    alert('URL 必须以 http(s):// 开头且包含 {q} 占位符');
-                    return;
-                }
-
-                postSeForm('add', { name: name, url_template: url, icon: icon })
-                    .then(function (data) {
-                        if (data.ok) {
-                            seAddName.value = '';
-                            seAddUrl.value = '';
-                            seAddIcon.value = '';
-                            loadSeList();
-                            loadSearchEngines();
-                        } else {
-                            alert(data.error || '添加失败');
-                        }
-                    });
-            });
-        }
-
-        if (seModal) {
-            seModal.querySelectorAll('[data-se-close]').forEach(function (el) {
-                el.addEventListener('click', closeSeModal);
-            });
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && !seModal.hidden) closeSeModal();
-            });
-        }
-    })();
+    if (seModal) {
+        seModal.querySelectorAll('[data-se-close]').forEach(function (el) {
+            el.addEventListener('click', closeSeModal);
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !seModal.hidden) closeSeModal();
+        });
+    }
 })();
