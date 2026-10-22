@@ -2616,7 +2616,6 @@
         userEnginesCache.forEach(function (e, idx) {
             var li = document.createElement('li');
             li.className = 'se-item';
-            li.draggable = true;
             li.dataset.id = e.id;
             li.dataset.type = e.type; // global 或 user
 
@@ -2643,7 +2642,7 @@
             var actions = document.createElement('div');
             actions.className = 'se-item-actions';
 
-            // 上移按钮（所有引擎都支持）
+            // 上移按钮
             var upBtn = document.createElement('button');
             upBtn.type = 'button';
             upBtn.className = 'se-btn se-btn-sm';
@@ -2684,57 +2683,6 @@
             li.appendChild(info);
             li.appendChild(actions);
             seList.appendChild(li);
-        });
-
-        // 拖拽排序（桌面端 HTML5 拖拽）
-        var dragSrc = null;
-        seList.querySelectorAll('.se-item').forEach(function (li) {
-            li.addEventListener('dragstart', function () { dragSrc = this; });
-            li.addEventListener('dragover', function (e) { e.preventDefault(); });
-            li.addEventListener('drop', function (e) {
-                e.preventDefault();
-                if (!dragSrc || dragSrc === this) return;
-                var items = Array.from(seList.querySelectorAll('.se-item'));
-                var srcIdx = items.indexOf(dragSrc);
-                var dstIdx = items.indexOf(this);
-                var moved = userEnginesCache.splice(srcIdx, 1)[0];
-                userEnginesCache.splice(dstIdx, 0, moved);
-                saveSeSort();
-            });
-        });
-
-        // 移动端触摸拖拽排序
-        var touchSrc = null;
-        var touchSrcIdx = -1;
-        seList.querySelectorAll('.se-item').forEach(function (li, idx) {
-            li.addEventListener('touchstart', function (e) {
-                touchSrc = this;
-                touchSrcIdx = idx;
-                this.style.opacity = '0.5';
-            }, { passive: true });
-
-            li.addEventListener('touchmove', function (e) {
-                e.preventDefault();
-            }, { passive: false });
-
-            li.addEventListener('touchend', function (e) {
-                if (!touchSrc) return;
-                this.style.opacity = '';
-                var touch = e.changedTouches[0];
-                var el = document.elementFromPoint(touch.clientX, touch.clientY);
-                var targetLi = el ? el.closest('.se-item') : null;
-                if (targetLi && targetLi !== touchSrc) {
-                    var items = Array.from(seList.querySelectorAll('.se-item'));
-                    var dstIdx = items.indexOf(targetLi);
-                    if (dstIdx !== -1 && touchSrcIdx !== -1) {
-                        var moved = userEnginesCache.splice(touchSrcIdx, 1)[0];
-                        userEnginesCache.splice(dstIdx, 0, moved);
-                        saveSeSort();
-                    }
-                }
-                touchSrc = null;
-                touchSrcIdx = -1;
-            });
         });
     }
 
