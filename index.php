@@ -442,6 +442,7 @@ if ($bgImage !== '') {
 
     <link rel="stylesheet" href="assets/css/nav.css?v=2.7.0">
     <script src="assets/js/pinyin-pro.min.js" defer></script>
+    <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
     <script src="assets/js/nav.js?v=2.7.0" defer></script>
     <script src="assets/js/search.js?v=2.7.0" defer></script>
     <noscript>
@@ -686,6 +687,27 @@ if ($bgImage !== '') {
                 </button>
             </div>
         </section>
+
+        <!-- 搜索引擎管理模态框 -->
+        <div class="se-modal" id="seModal" hidden>
+            <div class="se-modal-overlay" data-se-close></div>
+            <div class="se-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="seModalTitle">
+                <div class="se-modal-header">
+                    <h3 id="seModalTitle">管理我的搜索引擎</h3>
+                    <button type="button" class="se-modal-close" data-se-close aria-label="关闭">×</button>
+                </div>
+                <div class="se-modal-body">
+                    <div class="se-add-form">
+                        <input type="text" id="seAddName" placeholder="名称（如：百度）" maxlength="50">
+                        <input type="text" id="seAddUrl" placeholder="URL模板，含 {q}，如 https://www.baidu.com/s?wd={q}" maxlength="500">
+                        <input type="text" id="seAddIcon" placeholder="图标（emoji 或 URL）" maxlength="500">
+                        <button type="button" id="seAddBtn">添加</button>
+                    </div>
+                    <ul class="se-list" id="seList"></ul>
+                    <p class="se-hint">未登录或未自定义时，使用站点全局默认搜索引擎。</p>
+                </div>
+            </div>
+        </div>
 
         <div class="site-body">
             <aside class="category-rail" id="categoryRail" aria-label="网站分类">
