@@ -49,6 +49,11 @@
 
 > 所有升级操作前请**先备份数据库**（导出 SQL 或整库快照）。
 
+### 从 v2.7.0 升级到 v2.8.0
+1. 在 phpMyAdmin 左侧先点选站点数据库，再执行 `upgrade_v2.8.0.sql`（幂等，可重复执行，新建 `search_engines` 和 `user_search_engines` 两张表）。
+2. 上传 v2.8.0 文件覆盖旧版本。
+3. 清理 `cache/` 目录，前台强制刷新（Ctrl+F5）。
+
 ### 从 v2.6.x 升级到 v2.7.0
 1. 上传 v2.7.0 文件覆盖旧版本。
 2. **无需执行升级脚本**（`tags`、`alias` 字段已在 v2.5.0 存在，v2.7.0 无数据库结构变更）。
@@ -147,4 +152,5 @@
 
 完整变更记录见 [CHANGELOG.md](CHANGELOG.md)。
 
-当前版本：`VERSION` / `config/version.php` = **2.7.0**
+当前版本：`VERSION` / `config/version.php` = **2.8.0**
+
