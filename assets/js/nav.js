@@ -2594,7 +2594,8 @@
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (!data.ok) return;
-                userEnginesCache = data.engines.filter(function (e) { return e.type === 'user'; });
+                // 保留所有引擎（全局默认 + 用户自定义），跳过站内搜索
+                userEnginesCache = data.engines.filter(function (e) { return e.type !== 'site'; });
                 renderSeList();
             })
             .catch(function () { renderSeList(); });
@@ -2607,7 +2608,7 @@
         if (!userEnginesCache.length) {
             var empty = document.createElement('li');
             empty.className = 'se-empty';
-            empty.textContent = '暂无自定义搜索引擎，将使用站点默认。添加后将替换默认列表。';
+            empty.textContent = '暂无搜索引擎。';
             seList.appendChild(empty);
             return;
         }
@@ -2615,8 +2616,8 @@
         userEnginesCache.forEach(function (e, idx) {
             var li = document.createElement('li');
             li.className = 'se-item';
-            li.draggable = true;
-            li.dataset.id = e.id.replace('user_', '');
+            li.draggable = e.type === 'user' && e.source === 'user'; // 仅用户新增的可拖拽
+            li.dataset.id = e.id;
 
             var icon = document.createElement('span');
             icon.className = 'se-item-icon';
@@ -2626,6 +2627,12 @@
             info.className = 'se-item-info';
             var nameEl = document.createElement('strong');
             nameEl.textContent = e.name;
+            if (e.type === 'global') {
+                var tag = document.createElement('span');
+                tag.className = 'se-item-global-tag';
+                tag.textContent = '默认';
+                nameEl.appendChild(tag);
+            }
             var urlEl = document.createElement('small');
             urlEl.textContent = e.url_template;
             info.appendChild(nameEl);
@@ -2635,31 +2642,44 @@
             var actions = document.createElement('div');
             actions.className = 'se-item-actions';
 
-            var upBtn = document.createElement('button');
-            upBtn.type = 'button';
-            upBtn.className = 'se-btn se-btn-sm';
-            upBtn.textContent = '↑';
-            upBtn.title = '上移';
-            upBtn.disabled = idx === 0;
-            upBtn.addEventListener('click', function () { moveSeItem(idx, -1); });
+            // 编辑按钮
+            var editBtn = document.createElement('button');
+            editBtn.type = 'button';
+            editBtn.className = 'se-btn se-btn-sm';
+            editBtn.textContent = '编辑';
+            editBtn.addEventListener('click', function () { editSeItem(e); });
 
-            var downBtn = document.createElement('button');
-            downBtn.type = 'button';
-            downBtn.className = 'se-btn se-btn-sm';
-            downBtn.textContent = '↓';
-            downBtn.title = '下移';
-            downBtn.disabled = idx === userEnginesCache.length - 1;
-            downBtn.addEventListener('click', function () { moveSeItem(idx, 1); });
-
+            // 删除按钮
             var delBtn = document.createElement('button');
             delBtn.type = 'button';
             delBtn.className = 'se-btn se-btn-sm se-btn-danger';
             delBtn.textContent = '删除';
-            delBtn.addEventListener('click', function () { deleteSeItem(e.id.replace('user_', '')); });
+            delBtn.addEventListener('click', function () { deleteSeItem(e); });
 
-            actions.appendChild(upBtn);
-            actions.appendChild(downBtn);
+            actions.appendChild(editBtn);
             actions.appendChild(delBtn);
+
+            // 用户新增的支持上下移动
+            if (e.type === 'user' && e.source === 'user') {
+                var upBtn = document.createElement('button');
+                upBtn.type = 'button';
+                upBtn.className = 'se-btn se-btn-sm';
+                upBtn.textContent = '↑';
+                upBtn.title = '上移';
+                upBtn.disabled = idx === 0;
+                upBtn.addEventListener('click', function () { moveSeItem(idx, -1); });
+
+                var downBtn = document.createElement('button');
+                downBtn.type = 'button';
+                downBtn.className = 'se-btn se-btn-sm';
+                downBtn.textContent = '↓';
+                downBtn.title = '下移';
+                downBtn.disabled = idx === userEnginesCache.length - 1;
+                downBtn.addEventListener('click', function () { moveSeItem(idx, 1); });
+
+                actions.insertBefore(upBtn, editBtn);
+                actions.insertBefore(downBtn, editBtn);
+            }
 
             li.appendChild(icon);
             li.appendChild(info);
@@ -2667,21 +2687,108 @@
             seList.appendChild(li);
         });
 
-        // 拖拽排序
+        // 拖拽排序（仅用户新增的）
         var dragSrc = null;
-        seList.querySelectorAll('.se-item').forEach(function (li) {
+        seList.querySelectorAll('.se-item[draggable="true"]').forEach(function (li) {
             li.addEventListener('dragstart', function () { dragSrc = this; });
             li.addEventListener('dragover', function (e) { e.preventDefault(); });
             li.addEventListener('drop', function (e) {
                 e.preventDefault();
                 if (!dragSrc || dragSrc === this) return;
-                var items = Array.from(seList.querySelectorAll('.se-item'));
+                var items = Array.from(seList.querySelectorAll('.se-item[draggable="true"]'));
                 var srcIdx = items.indexOf(dragSrc);
                 var dstIdx = items.indexOf(this);
                 var moved = userEnginesCache.splice(srcIdx, 1)[0];
                 userEnginesCache.splice(dstIdx, 0, moved);
                 saveSeSort();
             });
+        });
+    }
+
+    function editSeItem(e) {
+        // 移除已有的编辑表单
+        var existing = document.querySelector('.se-edit-form');
+        if (existing) existing.remove();
+
+        var li = seList.querySelector('[data-id="' + e.id + '"]');
+        if (!li) return;
+
+        var form = document.createElement('li');
+        form.className = 'se-edit-form';
+
+        var nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.placeholder = '名称';
+        nameInput.value = e.name || '';
+        nameInput.maxLength = 50;
+
+        var urlInput = document.createElement('input');
+        urlInput.type = 'text';
+        urlInput.placeholder = 'URL模板，含 {q}';
+        urlInput.value = e.url_template || '';
+
+        var iconInput = document.createElement('input');
+        iconInput.type = 'text';
+        iconInput.placeholder = '图标 emoji 或 URL';
+        iconInput.value = e.icon || '';
+
+        var saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'se-btn';
+        saveBtn.textContent = '保存';
+
+        var cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'se-btn';
+        cancelBtn.textContent = '取消';
+
+        form.appendChild(nameInput);
+        form.appendChild(urlInput);
+        form.appendChild(iconInput);
+        form.appendChild(saveBtn);
+        form.appendChild(cancelBtn);
+
+        li.parentNode.insertBefore(form, li.nextSibling);
+        nameInput.focus();
+
+        function closeForm() { form.remove(); }
+
+        cancelBtn.addEventListener('click', closeForm);
+
+        saveBtn.addEventListener('click', function () {
+            var name = nameInput.value.trim();
+            var url = urlInput.value.trim();
+            var icon = iconInput.value.trim();
+
+            if (!name) { alert('请输入名称'); return; }
+            if (!url || !/^https?:\/\//i.test(url) || (url.indexOf('{q}') === -1 && url.indexOf('{query}') === -1)) {
+                alert('URL 必须以 http(s):// 开头且包含 {q} 占位符');
+                return;
+            }
+
+            var params = { name: name, url_template: url, icon: icon };
+            var action;
+
+            if (e.type === 'global') {
+                // 编辑全局默认 → 创建用户覆盖记录
+                action = 'edit_global';
+                params.global_id = e.global_id || e.ref_id;
+            } else {
+                // 编辑用户自定义
+                action = 'update';
+                params.id = e.ref_id || e.id.replace('user_', '');
+            }
+
+            postSeForm(action, params)
+                .then(function (data) {
+                    if (data.ok) {
+                        closeForm();
+                        loadSeList();
+                        loadSearchEngines();
+                    } else {
+                        alert(data.error || '保存失败');
+                    }
+                });
         });
     }
 
@@ -2695,15 +2802,36 @@
     }
 
     function saveSeSort() {
-        var ids = userEnginesCache.map(function (e) { return e.id.replace('user_', ''); });
+        // 只排序用户新增的（source=user）
+        var ids = userEnginesCache
+            .filter(function (e) { return e.type === 'user' && e.source === 'user'; })
+            .map(function (e) { return e.ref_id || e.id.replace('user_', ''); });
         postSeForm('sort', { ids: ids.join(',') })
             .then(function () { renderSeList(); loadSearchEngines(); });
     }
 
-    function deleteSeItem(id) {
-        if (!confirm('确定删除此搜索引擎？')) return;
-        postSeForm('delete', { id: id })
-            .then(function () { loadSeList(); loadSearchEngines(); });
+    function deleteSeItem(e) {
+        var msg = e.type === 'global'
+            ? '确定从我的列表中移除该默认搜索引擎？（不影响其他用户，可在后台重新启用）'
+            : '确定删除此搜索引擎？';
+        if (!confirm(msg)) return;
+
+        var params = {};
+        if (e.type === 'global') {
+            params.global_id = e.global_id || e.ref_id;
+        } else {
+            params.id = e.ref_id || e.id.replace('user_', '');
+        }
+
+        postSeForm('delete', params)
+            .then(function (data) {
+                if (data.ok) {
+                    loadSeList();
+                    loadSearchEngines();
+                } else {
+                    alert(data.error || '删除失败');
+                }
+            });
     }
 
     if (seAddBtn) {
