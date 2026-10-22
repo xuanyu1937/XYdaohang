@@ -8,8 +8,8 @@
  * 所有写操作均要求同源（requireSameOrigin），SQL 一律使用预处理，输出一律经过 escape()。
  */
 require_once __DIR__ . '/../includes/bootstrap.php';
-require_once 'includes/functions.php';
-require_once 'includes/Services.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/Services.php';
 
 $functions = new Functions();
 
@@ -382,6 +382,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'send_test_mail') {
         $to = trim((string) ($_POST['test_email'] ?? ''));
 
+        // 收件人留空时先取「管理员收件邮箱」，仍未配置则回落到「发件地址」，
+        // 避免因未填收件人导致测试邮件直接失败。
         if ($to === '') {
             $to = $mailService->adminEmail();
         }
@@ -426,7 +428,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $port = (int) ($_POST['mail_port'] ?? 0);
         $encryption = strtolower(trim((string) ($_POST['mail_encryption'] ?? '')));
         $username = trim((string) ($_POST['mail_username'] ?? ''));
-        $password = (string) ($_POST['mail_password'] ?? '');
+        $password = (string) ($_POST['mail_password'] ?? '');   // 密码不做 trim，避免改动合法空格
         $fromAddress = trim((string) ($_POST['mail_from_address'] ?? ''));
         $adminEmail = trim((string) ($_POST['mail_admin_email'] ?? ''));
 
@@ -447,6 +449,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $smtpFile = dirname(__DIR__) . '/config/smtp.php';
 
+            // 直接读文件而不是走 MailService::config()，
+            // 避免其静态缓存让下方展示区读到保存前的旧值。
             $existing = [];
             if (is_file($smtpFile)) {
                 $loaded = require $smtpFile;
@@ -466,6 +470,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $newSmtp['username'] = $username;
             $newSmtp['encryption'] = $encryption;
             if ($password !== '') {
+                // 留空表示保持已保存的密码不变
                 $newSmtp['password'] = $password;
             }
 
@@ -491,6 +496,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 . 'return ';
 
             if (@file_put_contents($smtpFile, $fileHeader . var_export($new, true) . ';' . "\n", LOCK_EX) !== false) {
+                // OPcache 默认 2 秒内不重查文件时间戳，主动失效避免本次请求读到旧配置
                 if (function_exists('opcache_invalidate')) {
                     @opcache_invalidate($smtpFile, true);
                 }
@@ -532,6 +538,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $token = md5(uniqid('', true)) . md5(uniqid('', true));
                 }
 
+                // user_id = 0 表示管理级令牌。
                 $stmt = $db->prepare(
                     'INSERT INTO api_tokens (token, name, permissions, user_id, expires_at, created_at)
                      VALUES (?, ?, ?, 0, ?, NOW())'
@@ -613,6 +620,7 @@ if ($hasTokenTable) {
 
 $cronKey = trim((string) $functions->getSetting('cron_key'));
 
+// 站点根地址（与 Functions::getLogoUrl 相同思路：协议 + 主机 + 去掉 admin/api/install 的基础路径）
 $navIsHttps = (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
     || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
     || (int) ($_SERVER['SERVER_PORT'] ?? 0) === 443;
@@ -646,6 +654,7 @@ $msgSize = 15;
 $msgList = $contactService->paginate($msgPage, $msgSize, $msgUnreadOnly);
 $msgPages = max(1, (int) $msgList['pages']);
 
+// 备份表名 → 中文标签
 $tableLabels = [
     'categories'       => '分类',
     'nav_links'        => '导航链接',
@@ -746,7 +755,9 @@ $tableLabels = [
 
             <div class="tab-content" id="toolsTabContent">
 
-                <!-- 1) 数据备份与恢复 -->
+                <!-- ============================================================
+                     1) 数据备份与恢复
+                     ============================================================ -->
                 <div class="tab-pane fade show active" id="tab-backup" role="tabpanel">
                     <div class="row g-4 align-items-start">
                         <div class="col-xl-5 col-lg-6">
@@ -919,7 +930,9 @@ $tableLabels = [
                     </div>
                 </div>
 
-                <!-- 2) API 令牌管理 -->
+                <!-- ============================================================
+                     2) API 令牌管理
+                     ============================================================ -->
                 <div class="tab-pane fade" id="tab-api" role="tabpanel">
                     <?php if ($newTokenPlain !== ''): ?>
                         <div class="card form-card mb-4 border-success">
@@ -1116,7 +1129,9 @@ $tableLabels = [
                     </div>
                 </div>
 
-                <!-- 3) 定时任务 -->
+                <!-- ============================================================
+                     3) 定时任务
+                     ============================================================ -->
                 <div class="tab-pane fade" id="tab-cron" role="tabpanel">
                     <div class="row g-4 align-items-start">
                         <div class="col-xl-6 col-lg-6">
@@ -1287,7 +1302,9 @@ $tableLabels = [
                     </div>
                 </div>
 
-                <!-- 4) 邮件设置与测试 -->
+                <!-- ============================================================
+                     4) 邮件设置与测试
+                     ============================================================ -->
                 <div class="tab-pane fade" id="tab-mail" role="tabpanel">
                     <div class="row g-4 align-items-start">
                         <div class="col-xl-6 col-lg-6">
@@ -1423,7 +1440,9 @@ $tableLabels = [
                     </div>
                 </div>
 
-                <!-- 5) 联系留言 -->
+                <!-- ============================================================
+                     5) 联系留言
+                     ============================================================ -->
                 <div class="tab-pane fade" id="tab-messages" role="tabpanel">
                     <div class="card table-card">
                         <div class="card-header">
@@ -1569,7 +1588,9 @@ $tableLabels = [
                     </div>
                 </div>
 
-                <!-- 6) 版本检测（GitHub Release 在线更新） -->
+                <!-- ============================================================
+                     6) 版本检测（GitHub Release 在线更新）
+                     ============================================================ -->
                 <div class="tab-pane fade" id="tab-update" role="tabpanel">
                     <div class="card">
                         <div class="card-header">
@@ -1642,10 +1663,12 @@ $tableLabels = [
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <?php require_once __DIR__ . '/../includes/asset_fallbacks.php'; ?>
     <script>
+    // 通用确认框
     function confirmTools(msg) {
         return window.confirm(msg);
     }
 
+    // 版本检测：通过 GitHub API 获取最新 Release
     function checkForUpdate() {
         var btn = document.getElementById('checkUpdateBtn');
         var spinner = document.getElementById('updateSpinner');
@@ -1657,6 +1680,7 @@ $tableLabels = [
 
         var currentVersion = '<?php echo $functions->escape(defined('APP_VERSION') ? APP_VERSION : '0.0.0'); ?>';
 
+        // 通过本站接口检测（服务器端抓取 GitHub，避免浏览器直连 api.github.com 被阻断）
         fetch('../api/check_update.php', {
             headers: { 'Accept': 'application/json' },
             credentials: 'same-origin'
@@ -1668,6 +1692,7 @@ $tableLabels = [
             result.style.display = 'block';
 
             if (!data.ok || !data.tag_name) {
+                // 按接口返回的具体错误码给出可操作提示，便于区分 SSL / DNS / 超时 / 网络问题
                 var reasonMap = {
                     unauthorized: '登录状态已失效，请刷新页面后重试',
                     ssl_error: '当前服务器 SSL 证书校验失败：请在服务器 php.ini 中配置 curl.cainfo 指向 cacert.pem，或确认服务器 CA 证书库完整',
@@ -1703,6 +1728,7 @@ $tableLabels = [
         });
     }
 
+    // 版本号比较：返回 -1/0/1
     function compareVersions(a, b) {
         var pa = a.split('.').map(Number);
         var pb = b.split('.').map(Number);
@@ -1715,6 +1741,7 @@ $tableLabels = [
         return 0;
     }
 
+    // 复制文本（优先使用 Clipboard API，失败时回退到临时 textarea）
     function fallbackCopyText(text, callback) {
         var area = document.createElement('textarea');
         area.value = text;
@@ -1758,6 +1785,7 @@ $tableLabels = [
         }
     }
 
+    // 记住上次停留的 tab：优先使用服务端指定的 tab（来自表单/链接），否则用 localStorage
     (function () {
         var serverTab = <?php echo json_encode($activeTab !== '' ? $activeTab : null); ?>;
         var storedTab = null;
@@ -1784,6 +1812,7 @@ $tableLabels = [
         try {
             localStorage.setItem('toolsActiveTab', target);
         } catch (err) {
+            // 隐私模式下 localStorage 不可用时忽略
         }
 
         document.querySelectorAll('#toolsTabs button[data-bs-toggle="tab"]').forEach(function (btn) {
@@ -1794,6 +1823,7 @@ $tableLabels = [
                     try {
                         localStorage.setItem('toolsActiveTab', paneId);
                     } catch (err) {
+                        // 忽略
                     }
                 }
             });
