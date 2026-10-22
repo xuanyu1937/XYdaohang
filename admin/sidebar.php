@@ -485,6 +485,10 @@ try {
             <i class="fas fa-toolbox"></i>
             <span>系统工具</span>
         </a>
+        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'search_engines.php' ? 'active' : ''; ?>" href="search_engines.php">
+            <i class="fas fa-search"></i>
+            <span>搜索引擎</span>
+        </a>
         <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'active' : ''; ?>" href="profile.php">
             <i class="fas fa-user"></i>
             <span>管理员信息</span>
