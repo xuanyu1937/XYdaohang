@@ -129,17 +129,38 @@ $engines = $db->query(
 )->fetchAll(PDO::FETCH_ASSOC);
 
 $pageTitle = '搜索引擎管理';
-include __DIR__ . '/header.php';
 ?>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜索引擎管理 - 后台管理</title>
+    <link href="../assets/css/bootstrap.css" rel="stylesheet">
+    <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
+    <link href="../assets/sweetalert2/sweetalert2.min.css" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=1.1.3" rel="stylesheet">
+</head>
+<body>
+    <?php include 'sidebar.php'; ?>
 
-<div class="container-fluid">
-    <div class="row">
-        <?php include __DIR__ . '/sidebar.php'; ?>
-
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2"><i class="fas fa-search"></i> 搜索引擎管理</h1>
+    <div class="main-content-wrapper" id="mainContentWrapper">
+        <header class="page-header">
+            <div class="page-heading">
+                <div class="page-breadcrumb">
+                    <a href="index.php">首页</a>
+                    <i class="fas fa-angle-right"></i>
+                    <span>搜索引擎管理</span>
+                </div>
+                <h1 class="page-title">
+                    <span class="title-icon"><i class="fas fa-search"></i></span>
+                    搜索引擎管理
+                </h1>
+                <p class="page-subtitle">管理站点全局默认搜索引擎，用户未自定义时将使用此列表。</p>
             </div>
+        </header>
+
+        <div class="page-body">
 
             <?php if ($message): ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -265,9 +286,8 @@ include __DIR__ . '/header.php';
                     <?php endif; ?>
                 </div>
             </div>
-        </main>
+        </div>
     </div>
-</div>
 
 <!-- 编辑模态框 -->
 <div class="modal fade" id="editModal" tabindex="-1">
@@ -397,4 +417,9 @@ sortForm.addEventListener('submit', function() {
 });
 </script>
 
-<?php include __DIR__ . '/footer.php'; ?>
+    <script src="../assets/js/jquery3.7.1.js"></script>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/sweetalert2/sweetalert2.min.js"></script>
+    <?php require_once __DIR__ . '/../includes/asset_fallbacks.php'; ?>
+</body>
+</html>
