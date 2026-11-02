@@ -1,23 +1,25 @@
-# 轩宇-导航 v2.10.3 部署清单
+# 轩宇-导航 v2.10.4 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.10.3
+当前版本：v2.10.4
 
-> **本版本无数据库变更**，只修联系留言通知邮件的内容缺失。覆盖代码文件 + 清理 `cache/` + 浏览器强刷即可，不需要执行任何 SQL。
+> **本版本无数据库变更**，卡片信息层级调整：网址移到测速下方独占一行，标题两行、介绍两行。只改 `assets/css/nav.css` 一个文件（其余是版本号）。覆盖后强刷即可。
 
-## 本次 v2.10.3 变动文件
+## 本次 v2.10.4 变动文件
 
 | 文件 | 说明 |
 | --- | --- |
-| `includes/Services.php` | **核心修复**：`ContactService::submit()` 返回落库后的 `id` 与 `data`（规范化后的姓名/邮箱/主题/留言）；新增静态方法 `mailSubject()` / `mailBody()` 统一生成通知邮件标题与正文；新增常量 `DEFAULT_SUBJECT` |
-| `contact.php` | 提交成功后先用 `$result['data']` 发通知邮件，**再**清空 `$form`；旧代码顺序相反，导致邮件正文的留言内容永远是空字符串 |
-| `api/contact.php` | JSON 接口同样改用 `submit()` 回传的数据，空主题不再显示为空白；邮件标题带上用户填写的主题 |
-| 全部 PHP 页面（22 处） | 资源参数 `?v=2.10.3` |
-| `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `VERSION` | 版本号升至 2.10.3 |
+| `assets/css/nav.css` | **唯一实质改动**：末尾新增 v2.10.4 段 —— `.site-meta` 改纵向、`.site-metrics` 提前、域名独占一行；`.site-name` 两行截断；`.site-desc` 从 `display:none` 改为两行截断；`.site-card-main` 顶端对齐；≤620px 收敛规则 |
+| 全部 PHP 页面（22 处） | 资源参数 `?v=2.10.4`，让浏览器重新拉取样式 |
+| `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `VERSION` | 版本号升至 2.10.4 |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
 
-> 升级要点：只改 3 个 PHP 文件即可修复邮件问题；`?v=` 参数变化决定了静态资源需要一起刷新，若只覆盖 PHP 而浏览器仍用旧 CSS/JS，页面功能不受影响但版本号会不一致。
+> 升级要点：CSS 改了而 `?v=` 没换，浏览器会继续用缓存里的旧样式，卡片看起来「没变化」。要么整包覆盖（`?v=` 已一并更新），要么覆盖 `nav.css` 后手动强刷。
+
+## v2.10.3 回顾
+
+联系留言通知邮件修复：`submit()` 返回落库数据，邮件标题带上用户主题，正文补齐「姓名/邮箱/主题/留言」。无数据库变更。
 
 ## v2.10.2 回顾
 

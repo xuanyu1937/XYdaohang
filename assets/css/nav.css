@@ -5838,3 +5838,101 @@ p,
         font-size: 13px;
     }
 }
+
+/* ==========================================================================
+   v2.10.4 · 卡片信息层级
+   --------------------------------------------------------------------------
+   一、网址（.site-domain）从「与测速同行、被挤在左侧」改为「单独一行，位于测速下方」。
+       原来两者共享一行且 domain 是 min-width:0 + ellipsis 的弱项，窄卡片下
+       域名先被压窄，长域名基本读不全。
+   二、标题从单行截断改为最多两行；介绍（.site-desc）原本在网格模式下
+       display:none，完全不可见，现改为两行截断。
+   用 :not(list):not(compact) 而不是 [data-mode="grid"]，这样 JS 尚未写入
+   data-mode 的首屏也能拿到正确样式，不会先按旧样式渲染再跳一下。
+   ========================================================================== */
+
+html:not([data-mode="list"]):not([data-mode="compact"]) .site-card {
+    /* 仅仅是「不低于单行介绍时的自然高度」，不再强制 156px 撑出大片空白 */
+    min-height: 128px;
+}
+
+/* 图标与标题顶端对齐：标题可能两行，垂直居中会让图标悬在中间 */
+html:not([data-mode="list"]):not([data-mode="compact"]) .site-card-main {
+    align-items: flex-start;
+    padding-right: 26px;
+}
+
+html:not([data-mode="list"]):not([data-mode="compact"]) .site-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-top: 1px;
+}
+
+html:not([data-mode="list"]):not([data-mode="compact"]) .site-name {
+    display: -webkit-box;
+    overflow: hidden;
+    white-space: normal;
+    word-break: break-word;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    font-size: 15px;
+    line-height: 1.35;
+}
+
+html:not([data-mode="list"]):not([data-mode="compact"]) .site-desc {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+    word-break: break-word;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+}
+
+/* 没有填介绍的站点不占位，避免标题下方留一条空行 */
+html:not([data-mode="list"]):not([data-mode="compact"]) .site-desc:empty {
+    display: none;
+}
+
+/* 元信息改为纵向两行：测速/点击在上（右对齐），网址在下（左对齐） */
+html:not([data-mode="list"]):not([data-mode="compact"]) .site-meta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    margin-top: 10px;
+}
+
+html:not([data-mode="list"]):not([data-mode="compact"]) .site-metrics {
+    order: -1;
+    min-height: 15px;
+}
+
+@media (max-width: 620px) {
+    html:not([data-mode="list"]):not([data-mode="compact"]) .site-card {
+        min-height: 0;
+    }
+
+    /* 20px：标题可两行后会顶到右上角的状态点，留出它的位置 */
+    html:not([data-mode="list"]):not([data-mode="compact"]) .site-card-main {
+        gap: 9px;
+        padding-right: 20px;
+    }
+
+    html:not([data-mode="list"]):not([data-mode="compact"]) .site-name {
+        font-size: 14px;
+    }
+
+    /* 窄屏只给一行介绍：两行会让一屏可见的卡片数量掉太多 */
+    html:not([data-mode="list"]):not([data-mode="compact"]) .site-desc {
+        -webkit-line-clamp: 1;
+        line-clamp: 1;
+    }
+
+    html:not([data-mode="list"]):not([data-mode="compact"]) .site-domain {
+        font-size: 11px;
+    }
+}
