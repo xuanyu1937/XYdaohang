@@ -685,7 +685,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
             gap: .5rem;
         }
     </style>
-    <link href="../assets/css/admin.css?v=2.10.5" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.10.6" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>

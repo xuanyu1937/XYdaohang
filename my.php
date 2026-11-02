@@ -261,7 +261,7 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.5">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.6">
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -418,13 +418,20 @@ $hasLinks = $totalLinks > 0;
             justify-content: center;
             width: 24px;
             height: 24px;
+            padding: 0;
             border: none;
             border-radius: 50%;
             background: var(--surface-2);
             color: var(--text-2);
             cursor: pointer;
-            font-size: 11px;
             transition: background 0.16s ease, color 0.16s ease;
+        }
+
+        /* 内联 SVG 取代 Font Awesome：前台只需 3 个图标，
+           不值得为它们引入 102KB 的图标库 CSS + 字体文件 */
+        .my-avatar-edit svg {
+            width: 13px;
+            height: 13px;
         }
 
         .my-avatar-edit:hover {
@@ -1286,8 +1293,11 @@ $hasLinks = $totalLinks > 0;
                         <span class="my-avatar" aria-hidden="true"><?php echo $functions->escape($brandInitial); ?></span>
                     <?php endif; ?>
                     <span class="my-username" title="<?php echo $functions->escape($user['username']); ?>" translate="no"><?php echo $functions->escape($user['username']); ?></span>
-                    <button type="button" class="my-avatar-edit" id="avatarEditBtn" title="设置头像">
-                        <i class="fas fa-camera"></i>
+                    <button type="button" class="my-avatar-edit" id="avatarEditBtn" title="设置头像" aria-label="设置头像">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2L8 5h8l1.5 2h2A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"></path>
+                            <circle cx="12" cy="13" r="3.2"></circle>
+                        </svg>
                     </button>
                 </div>
                 <button type="button" class="theme-toggle" id="themeToggle" aria-label="切换深浅色" title="切换深浅色">
@@ -1973,11 +1983,20 @@ $hasLinks = $totalLinks > 0;
 
             <div class="my-dialog-foot">
                 <button type="submit" name="update_avatar" value="1" class="my-btn is-primary">
-                    <i class="fas fa-upload"></i> 上传头像
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 16V4M7 9l5-5 5 5"></path>
+                        <path d="M4 16v2.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16"></path>
+                    </svg>
+                    上传头像
                 </button>
                 <?php if ($avatarUrl !== ''): ?>
                     <button type="submit" name="update_avatar" value="1" formaction="" class="my-btn" onclick="document.getElementById('avatarAction').value='remove';">
-                        <i class="fas fa-trash"></i> 清除头像
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 7h16M9.5 7V5.2A1.2 1.2 0 0 1 10.7 4h2.6a1.2 1.2 0 0 1 1.2 1.2V7"></path>
+                            <path d="M6.5 7 7.4 19a1.4 1.4 0 0 0 1.4 1.3h6.4A1.4 1.4 0 0 0 16.6 19L17.5 7"></path>
+                            <path d="M10 11v5M14 11v5"></path>
+                        </svg>
+                        清除头像
                     </button>
                 <?php endif; ?>
                 <input type="hidden" name="avatar_action" id="avatarAction" value="upload">
@@ -4184,7 +4203,7 @@ $hasLinks = $totalLinks > 0;
         })();
     </script>
 <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.10.5" defer></script>
+<script src="assets/js/search.js?v=2.10.6" defer></script>
 
     <!-- 卡片右键 / 长按菜单 -->
     <div class="card-context-menu" id="cardContextMenu" hidden>

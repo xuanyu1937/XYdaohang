@@ -152,5 +152,5 @@
 
 完整变更记录见 [CHANGELOG.md](CHANGELOG.md)。
 
-当前版本：`VERSION` / `config/version.php` = **2.10.5**
+当前版本：`VERSION` / `config/version.php` = **2.10.6**
 

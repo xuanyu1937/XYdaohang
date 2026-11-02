@@ -1,22 +1,30 @@
-# 轩宇-导航 v2.10.5 部署清单
+# 轩宇-导航 v2.10.6 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.10.5
+当前版本：v2.10.6
 
-> **本版本无数据库变更**，三种显示模式各做一套版式：网格竖排（标题2行+介绍2~3行→测速→网址）、列表单行四列对齐、紧凑模式操作条改为点击展开。改 `assets/css/nav.css` 与 `assets/js/nav.js` 两个文件（其余是版本号）。覆盖后强刷即可。
+> **本版本无数据库变更**，修复 `my.php` 顶栏：窄屏下标题塌成一字一行、相机图标空白。改 `assets/css/nav.css` 与 `my.php` 两个文件（其余是版本号）。覆盖后强刷即可。
 
-## 本次 v2.10.5 变动文件
+## 本次 v2.10.6 变动文件
 
 | 文件 | 说明 |
 | --- | --- |
-| `assets/css/nav.css` | **主要改动**：末尾新增 v2.10.5 段，三模式各一套版式 —— 网格 `container-type` + 介绍 2~3 行（`@container`）+ 测速/网址分行；列表 `display: grid` + 具名区 `"icon info domain metrics"`，`.site-card-main`/`.site-meta` 改 `display: contents` 实现跨行对齐；紧凑 42px + 操作条仅 `.is-actions-open` 时显示；≤620px 三模式收敛规则 |
-| `assets/js/nav.js` | **新增交互**：紧凑模式点击卡片先展开操作条（`preventDefault`）、再点才跳转；空白点击 / Esc / 切换模式自动收起；新增 `isCompactMode()`、`closeCompactActions()`；`applyMode()` 派发 `nav:modechange` 事件 |
-| 全部 PHP 页面（22 处） | 资源参数 `?v=2.10.5`，让浏览器重新拉取样式与脚本 |
-| `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `VERSION` | 版本号升至 2.10.5 |
+| `assets/css/nav.css` | 末尾新增 v2.10.6 段：品牌区 `flex-shrink: 0` + 标题 `nowrap`、`.header-brand` 取消 `flex:1 1 auto`、≤640/430/360 三级收敛规则、相机按钮 40px 触控热区 |
+| `my.php` | **3 处 Font Awesome 图标改内联 SVG**（相机 / 上传 / 清除）—— 此前整页从未引入 `font-awesome.min.css`，图标渲染宽 **0px**；相机按钮补 `aria-label`，`.my-avatar-edit` 用 `padding:0` 替代 `font-size:11px` |
+| 全部 PHP 页面（22 处） | 资源参数 `?v=2.10.6` |
+| `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `VERSION` | 版本号升至 2.10.6 |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
 
-> 升级要点：CSS **和** JS 都改了，只覆盖其中一个会出现「点了没反应」或「样式不生效」。`?v=` 已一并更新，整包覆盖即可；单独覆盖的话记得强刷（Ctrl+F5）。
+> 升级要点：本次 CSS **和** PHP 都要覆盖。只换 CSS 的话相机图标仍是空白 —— 那是 HTML 层面缺图标库的问题。`?v=` 已一并更新，整包覆盖后强刷（Ctrl+F5）。
+
+## v2.10.5 回顾
+
+三种显示模式各做一套卡片版式：网格竖排（标题2行+介绍2~3行→测速→网址）、列表单行四列对齐（`display: contents` 拆掉包装层实现跨行右边缘齐平）、紧凑模式 42px 且操作条改为点击展开（`.is-actions-open`，二次点击才跳转）。无数据库变更。
+
+## v2.10.4 回顾
+
+卡片网址移到测速下方独占一行，标题两行、介绍两行。无数据库变更。
 
 ## v2.10.3 回顾
 

@@ -6331,3 +6331,226 @@ html[data-theme="dark"]:not([data-mode="list"]):not([data-mode="compact"]) .site
 html[data-theme="dark"][data-mode="grid"] .site-meta {
     border-top-color: rgba(255, 255, 255, 0.09);
 }
+
+/* ==========================================================================
+   v2.10.6 · 我的导航顶栏修复（header.site-header）
+   --------------------------------------------------------------------------
+   实测出的四个缺陷（登录后 my.php 实测，非推测）：
+     ① 390px：品牌标题宽 16px —— 只够一个汉字，被迫折成竖排 4 字，
+        卡片总高从 52px 涨到 82px，整个 header 撑到 114px；
+        同时 .brand 内容需 64px 却只分到 8px，溢出压住 logo。
+     ② 360px：header scrollWidth 346 > clientWidth 324，横向滚动 4px。
+     ③ 480~820px：「轩宇导航」被压成两行（标题仅 50px / 66px），
+        用户条 116px 卡死，设置头像的相机按钮被挤到边缘外、视觉上消失。
+     ④ 820px：header-tools 396px 与品牌区争抢，用户条紧贴主题按钮。
+   根因：≤920px 时 .header-brand 改为 flex:1 1 auto 主动让位，
+   但 .brand / .brand-title 既没 flex-shrink:0 也没 white-space:nowrap，
+   于是被一路压缩到中文单字折行。
+   修法：品牌区设为不可压缩、标题强制单行；操作区按优先级分级收纳。
+   ========================================================================== */
+
+/* ---------- 一、品牌区：任何宽度都不许折行、不许被压缩 ---------- */
+
+.site-header .brand {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.site-header .brand-info {
+    min-width: 0;
+}
+
+/* 标题必须单行：中文没有断词规则，一旦允许折行就会变成一字一行 */
+.site-header .brand-title {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* 图标是品牌锚点，绝不参与压缩 */
+.site-header .brand-mark {
+    flex-shrink: 0;
+}
+
+/* 用户条：头像与相机是固定尺寸，只有用户名允许收缩 */
+.site-header .my-userbar {
+    flex: 0 0 auto;
+    min-width: 0;
+}
+
+.site-header .my-avatar-img,
+.site-header .my-avatar {
+    flex: 0 0 34px;
+}
+
+.site-header .my-avatar-edit {
+    flex: 0 0 24px;
+}
+
+.site-header .my-username {
+    flex: 0 1 auto;
+    max-width: 12ch;
+}
+
+/* ---------- 二、工具区：先保证不被挤压，再按宽度分级收纳 ---------- */
+
+.site-header .header-tools {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    min-width: 0;
+}
+
+/* 两枚文字按钮是主要出口，禁止它们被压成残字 */
+.site-header .header-tools .my-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+
+/* ---------- 三、≤920px：品牌区禁止让位 ---------- */
+
+@media (max-width: 920px) {
+    /* 原规则是 flex:1 1 auto —— 品牌区会把宽度全让给工具区，自己塌到 0。
+       改为「按内容宽度占位，只在真的不够时才缩」，并保留一个下限。 */
+    .site-header .header-brand {
+        flex: 0 1 auto;
+        min-width: 0;
+    }
+
+    .site-header .brand {
+        gap: 9px;
+    }
+
+    /* 标题字号随视口收缩，但底线是不能小于 15px（再小就影响可读性） */
+    .site-header .brand-title {
+        font-size: clamp(15px, 4.2vw, 17px);
+    }
+}
+
+
+/* ---------- 四、≤640px：操作项分级收纳 ---------- */
+
+@media (max-width: 640px) {
+    /* 相机按钮：它是低频次要操作（设头像），且 24px 的圆形图标在触屏上
+       既难点也看不出是什么。让位给标题，改由头部下方的工具栏承担 —— 
+       它原本就有入口，不必在 44px 宽的角落再塞一个。 */
+    .site-header .my-avatar-edit {
+        display: none;
+    }
+
+    /* 「返回首页」与品牌 logo 是同一个去处，小屏只留 logo 这一个入口 */
+    .site-header .header-tools .my-btn[href="index.php"] {
+        display: none;
+    }
+
+    /* 剩下的唯一文字按钮补足触控热区 */
+    .site-header .header-tools .my-btn {
+        min-height: 38px;
+    }
+}
+
+
+/* ---------- 五、≤430px：极致收敛 ---------- */
+
+@media (max-width: 430px) {
+    .site-header {
+        gap: 8px;
+    }
+
+    .site-header .brand {
+        gap: 8px;
+    }
+
+    /* 390px 下 logo 38 + 间距 8 + 标题 64 = 110px，
+       工具区需 44(搜索) + 34(头像) + 44(主题) + 76(退出) + 4×6(间距) = 222px
+       合计 332px，落在 354px 可用宽度内，留 22px 余量 */
+    .site-header .brand-mark,
+    .site-header .brand-mark img {
+        width: 34px !important;
+        height: 34px !important;
+        flex-basis: 34px !important;
+        border-radius: 11px !important;
+    }
+
+    .site-header .header-tools {
+        gap: 6px;
+    }
+
+    .site-header .header-tools .my-btn {
+        padding: 0 10px;
+        font-size: 12.5px;
+    }
+
+    /* 主题按钮与搜索框统一 38px，避免一高一矮 */
+    .site-header .theme-toggle,
+    .site-header .header-search-btn {
+        width: 38px;
+        height: 38px;
+    }
+
+    .site-header .my-avatar-img,
+    .site-header .my-avatar {
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px !important;
+    }
+}
+
+
+/* ---------- 六、≤360px：再让一步，保住标题完整 ---------- */
+/* 标题文字宽实测：12px=48 / 13px=52 / 14px=56 / 15px=60 / 16px=64。
+   360px 视口下标题可用宽度只有约 54px，14px 需要 56px —— 差 2px 就会被
+   ellipsis 截成「轩宇导…」。降到 13px（52px）才能完整放下四个字。 */
+@media (max-width: 360px) {
+    .site-header .brand-title {
+        font-size: 13px !important;
+    }
+
+    .site-header .brand {
+        gap: 7px;
+    }
+
+    .site-header .header-tools .my-btn {
+        padding: 0 8px;
+        font-size: 12px;
+    }
+
+    .site-header .header-tools {
+        gap: 5px;
+    }
+
+    .site-header .brand-mark,
+    .site-header .brand-mark img {
+        width: 32px !important;
+        height: 32px !important;
+        flex-basis: 32px !important;
+        border-radius: 10px !important;
+    }
+}
+
+
+/* ---------- 七、暗色下品牌副标题对比度 ---------- */
+
+html[data-theme="dark"] .site-header .brand-subtitle {
+    color: var(--muted);
+}
+
+/* --------------------------------------------------------------------------
+   相机按钮：视觉 24px，但触控热区扩到 40px
+   24px 是 WCAG 2.1 AA（2.5.8）的下限，而项目自己的 --hit-min 是 40px。
+   用绝对定位的伪元素向外扩，不改视觉尺寸、不影响用户条布局。
+   -------------------------------------------------------------------------- */
+
+.site-header .my-avatar-edit {
+    position: relative;
+}
+
+.site-header .my-avatar-edit::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--hit-min, 40px);
+    height: var(--hit-min, 40px);
+    content: "";
+    transform: translate(-50%, -50%);
+}

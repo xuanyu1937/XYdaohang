@@ -488,11 +488,11 @@ if ($bgImage !== '') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.5">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.6">
     <script src="assets/js/pinyin-pro.min.js" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.10.5" defer></script>
-    <script src="assets/js/search.js?v=2.10.5" defer></script>
+    <script src="assets/js/nav.js?v=2.10.6" defer></script>
+    <script src="assets/js/search.js?v=2.10.6" defer></script>
     <noscript>
         <style>
             .site-status,
