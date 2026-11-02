@@ -1,21 +1,22 @@
-# 轩宇-导航 v2.10.4 部署清单
+# 轩宇-导航 v2.10.5 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.10.4
+当前版本：v2.10.5
 
-> **本版本无数据库变更**，卡片信息层级调整：网址移到测速下方独占一行，标题两行、介绍两行。只改 `assets/css/nav.css` 一个文件（其余是版本号）。覆盖后强刷即可。
+> **本版本无数据库变更**，三种显示模式各做一套版式：网格竖排（标题2行+介绍2~3行→测速→网址）、列表单行四列对齐、紧凑模式操作条改为点击展开。改 `assets/css/nav.css` 与 `assets/js/nav.js` 两个文件（其余是版本号）。覆盖后强刷即可。
 
-## 本次 v2.10.4 变动文件
+## 本次 v2.10.5 变动文件
 
 | 文件 | 说明 |
 | --- | --- |
-| `assets/css/nav.css` | **唯一实质改动**：末尾新增 v2.10.4 段 —— `.site-meta` 改纵向、`.site-metrics` 提前、域名独占一行；`.site-name` 两行截断；`.site-desc` 从 `display:none` 改为两行截断；`.site-card-main` 顶端对齐；≤620px 收敛规则 |
-| 全部 PHP 页面（22 处） | 资源参数 `?v=2.10.4`，让浏览器重新拉取样式 |
-| `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `VERSION` | 版本号升至 2.10.4 |
+| `assets/css/nav.css` | **主要改动**：末尾新增 v2.10.5 段，三模式各一套版式 —— 网格 `container-type` + 介绍 2~3 行（`@container`）+ 测速/网址分行；列表 `display: grid` + 具名区 `"icon info domain metrics"`，`.site-card-main`/`.site-meta` 改 `display: contents` 实现跨行对齐；紧凑 42px + 操作条仅 `.is-actions-open` 时显示；≤620px 三模式收敛规则 |
+| `assets/js/nav.js` | **新增交互**：紧凑模式点击卡片先展开操作条（`preventDefault`）、再点才跳转；空白点击 / Esc / 切换模式自动收起；新增 `isCompactMode()`、`closeCompactActions()`；`applyMode()` 派发 `nav:modechange` 事件 |
+| 全部 PHP 页面（22 处） | 资源参数 `?v=2.10.5`，让浏览器重新拉取样式与脚本 |
+| `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `VERSION` | 版本号升至 2.10.5 |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
 
-> 升级要点：CSS 改了而 `?v=` 没换，浏览器会继续用缓存里的旧样式，卡片看起来「没变化」。要么整包覆盖（`?v=` 已一并更新），要么覆盖 `nav.css` 后手动强刷。
+> 升级要点：CSS **和** JS 都改了，只覆盖其中一个会出现「点了没反应」或「样式不生效」。`?v=` 已一并更新，整包覆盖即可；单独覆盖的话记得强刷（Ctrl+F5）。
 
 ## v2.10.3 回顾
 

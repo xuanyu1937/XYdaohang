@@ -223,6 +223,9 @@
         if (modeCycle) {
             modeCycle.setAttribute('title', '当前：' + modeLabel(next) + '（点击切换）');
         }
+
+        /* 通知卡片交互：切换模式后收起紧凑模式里已展开的操作条 */
+        document.dispatchEvent(new CustomEvent('nav:modechange', { detail: { mode: next } }));
     }
 
     function modeLabel(mode) {
@@ -3154,6 +3157,38 @@
             ctxCard = null;
         }
 
+        /* v2.10.5：紧凑模式下操作条改为「点击展开」 */
+        function isCompactMode() {
+            return document.documentElement.getAttribute('data-mode') === 'compact';
+        }
+
+        function closeCompactActions(except) {
+            var opened = document.querySelectorAll('.site-card.is-actions-open');
+
+            for (var i = 0; i < opened.length; i++) {
+                if (opened[i] !== except) {
+                    opened[i].classList.remove('is-actions-open');
+                }
+            }
+        }
+
+        /* 点空白处 / 切换显示模式 / 按 Esc 时收起 */
+        document.addEventListener('click', function (event) {
+            if (!event.target.closest || !event.target.closest('.site-card')) {
+                closeCompactActions();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeCompactActions();
+            }
+        });
+
+        document.addEventListener('nav:modechange', function () {
+            closeCompactActions();
+        });
+
         /* 单击委托：角标操作 + 打开方式 + Shift 后台打开 */
         document.addEventListener('click', function (event) {
             var closest = function (selector) {
@@ -3194,6 +3229,20 @@
 
             if (!card || closest('.card-corner')) {
                 return;
+            }
+
+            /* 紧凑模式（v2.10.5）：卡片只有 42px 高，操作条比卡片还宽，
+               悬停浮出会直接盖住标题。改为「第一次点击先展开操作条，
+               第二次点击才跳转」，触屏与鼠标行为一致。 */
+            if (isCompactMode()) {
+                if (card.classList.contains('is-actions-open')) {
+                    card.classList.remove('is-actions-open');
+                } else {
+                    closeCompactActions();
+                    card.classList.add('is-actions-open');
+                    event.preventDefault();
+                    return;
+                }
             }
 
             if (suppressClick) {

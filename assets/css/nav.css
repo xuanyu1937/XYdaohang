@@ -5840,36 +5840,59 @@ p,
 }
 
 /* ==========================================================================
-   v2.10.4 · 卡片信息层级
+   v2.10.5 · 三种显示模式三套版式
    --------------------------------------------------------------------------
-   一、网址（.site-domain）从「与测速同行、被挤在左侧」改为「单独一行，位于测速下方」。
-       原来两者共享一行且 domain 是 min-width:0 + ellipsis 的弱项，窄卡片下
-       域名先被压窄，长域名基本读不全。
-   二、标题从单行截断改为最多两行；介绍（.site-desc）原本在网格模式下
-       display:none，完全不可见，现改为两行截断。
-   用 :not(list):not(compact) 而不是 [data-mode="grid"]，这样 JS 尚未写入
-   data-mode 的首屏也能拿到正确样式，不会先按旧样式渲染再跳一下。
+   v2.10.5 只调了网格模式，列表与紧凑模式仍沿用旧规则，导致：
+     · 列表模式每张卡 70px 高，图标 44px、介绍单行、网址与测速挤在一行右侧；
+     · 紧凑模式卡片 52px 高却塞了图标 30px + 标题 + 状态点 + 操作条，
+       悬停浮出的操作条（40px 宽 × 4 个）比卡片本身还大，直接盖住标题。
+   本次按三种模式各自的「阅读任务」重做：
+     网格 —— 浏览发现，纵向信息：图标+标题+介绍 → 测速 → 网址；
+     列表 —— 扫描比对，横向信息：图标+标题+介绍 | 网址 | 测速；
+     紧凑 —— 快速跳转，只留图标+标题，操作条改为「主动展开」。
+   统一用 [data-mode="格网"] 精确指向，避免互相污染。
    ========================================================================== */
 
-html:not([data-mode="list"]):not([data-mode="compact"]) .site-card {
-    /* 仅仅是「不低于单行介绍时的自然高度」，不再强制 156px 撑出大片空白 */
-    min-height: 128px;
+/* 卡片作为容器：同一套卡片在不同宽度下自动降级信息密度 */
+.site-card {
+    container-type: inline-size;
 }
 
-/* 图标与标题顶端对齐：标题可能两行，垂直居中会让图标悬在中间 */
-html:not([data-mode="list"]):not([data-mode="compact"]) .site-card-main {
+
+/* --------------------------------------------------------------------------
+   ① 网格 GRID —— 竖排信息层级
+   -------------------------------------------------------------------------- */
+
+html[data-mode="grid"] .site-grid {
+    grid-template-columns: repeat(auto-fill, minmax(258px, 1fr));
+    justify-content: initial;
+    gap: 12px;
+}
+
+html[data-mode="grid"] .site-card {
+    gap: 0;
+    min-height: 0;
+    padding: 14px 15px 12px;
+    /* 悬停时让出顶部一整行给操作条，靠 padding 过渡，不靠叠加遮罩 */
+    transition: padding-top 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+html[data-mode="grid"] .site-card-main {
     align-items: flex-start;
-    padding-right: 26px;
+    gap: 11px;
+    padding-right: 18px;
 }
 
-html:not([data-mode="list"]):not([data-mode="compact"]) .site-info {
+html[data-mode="grid"] .site-info {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
+    min-width: 0;
     padding-top: 1px;
 }
 
-html:not([data-mode="list"]):not([data-mode="compact"]) .site-name {
+html[data-mode="grid"] .site-name {
     display: -webkit-box;
     overflow: hidden;
     white-space: normal;
@@ -5877,62 +5900,434 @@ html:not([data-mode="list"]):not([data-mode="compact"]) .site-name {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
-    font-size: 15px;
+    font-size: 14.5px;
+    font-weight: 650;
     line-height: 1.35;
 }
 
-html:not([data-mode="list"]):not([data-mode="compact"]) .site-desc {
+html[data-mode="grid"] .site-desc {
     display: -webkit-box;
     overflow: hidden;
     color: var(--muted);
     font-size: 12px;
-    line-height: 1.5;
+    line-height: 1.55;
     word-break: break-word;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
 }
 
-/* 没有填介绍的站点不占位，避免标题下方留一条空行 */
-html:not([data-mode="list"]):not([data-mode="compact"]) .site-desc:empty {
+html[data-mode="grid"] .site-desc:empty {
     display: none;
 }
 
-/* 元信息改为纵向两行：测速/点击在上（右对齐），网址在下（左对齐） */
-html:not([data-mode="list"]):not([data-mode="compact"]) .site-meta {
+/* 卡片足够宽时介绍给到三行：宽屏下两行会留下大片空底 */
+@container (min-width: 330px) {
+    html[data-mode="grid"] .site-desc {
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+    }
+}
+
+/* 元信息纵向两行：测速在上、网址在下，网址独占整宽不再被压成省略号。
+   .site-metrics 内部本来就是「点击量 | 测速」横排一行（悬停时测速替换点击量），
+   这里不要再把它拆成两行，否则该块会撑到 47px，卡片凭空高出一大截。 */
+html:not([data-mode="list"]):not([data-mode="compact"]) .site-card .site-meta,
+html[data-mode="grid"] .site-meta {
     flex-direction: column;
     align-items: stretch;
+    /* 基础规则里的 justify-content: space-between 是为横排写的，
+       纵排时会两项各贴一端，把 meta 撑出 16px 空档，必须归位 */
+    justify-content: flex-start;
+    flex: 0 0 auto;      /* 卡片是纵向 flex，不加这条 meta 会被 stretch 拉高 */
     gap: 2px;
-    margin-top: 10px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--hairline);
 }
 
-html:not([data-mode="list"]):not([data-mode="compact"]) .site-metrics {
+html[data-mode="grid"] .site-metrics {
     order: -1;
-    min-height: 15px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    min-height: 0;
+    text-align: left;
 }
+
+/* 卡片被同行更高者拉伸时，多出的高度留在底部，不要挤进信息层级中间 */
+html[data-mode="grid"] .site-card-main {
+    align-content: start;
+}
+
+html[data-mode="grid"] .site-info {
+    align-self: start;
+}
+
+html[data-mode="grid"] .site-metrics {
+    order: -1;
+    min-height: 0;
+}
+
+html[data-mode="grid"] .site-domain {
+    padding-right: 2px;
+}
+
+/* 悬停操作条：横贯卡片顶部一整行，右端是星标，左端是操作按钮组 */
+html[data-mode="grid"] .card-corner {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    height: 28px;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    transform: none;
+}
+
+html[data-mode="grid"] .site-card:hover,
+html[data-mode="grid"] .site-card:focus-within {
+    padding-top: 38px;
+}
+
+html[data-mode="grid"] .site-card:hover .card-corner,
+html[data-mode="grid"] .site-card:focus-within .card-corner {
+    transform: none;
+}
+
+
+/* --------------------------------------------------------------------------
+   ② 列表 LIST —— 单行扫描，四列对齐
+   --------------------------------------------------------------------------
+   用 display:contents 把 .site-card-main / .site-meta 这层包装「拆掉」，
+   让图标、信息、网址、测速四项直接参与卡片自身的网格，从而做到跨卡片对齐：
+   所有行的网址右边缘、测速右边缘都落在同一条竖线上。
+   -------------------------------------------------------------------------- */
+
+html[data-mode="list"] .site-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+html[data-mode="list"] .site-card {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) auto auto;
+    grid-template-areas: "icon info domain metrics";
+    align-items: center;
+    column-gap: 12px;
+    min-height: 56px;
+    padding: 8px 12px;
+}
+
+html[data-mode="list"] .site-card-main,
+html[data-mode="list"] .site-meta {
+    display: contents;
+}
+
+html[data-mode="list"] .site-icon {
+    grid-area: icon;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border-radius: 10px;
+}
+
+html[data-mode="list"] .site-icon-letter {
+    font-size: 15px;
+}
+
+/* 标题与介绍并排成一行：标题固定不被压缩，介绍吃掉剩余宽度 */
+html[data-mode="list"] .site-info {
+    grid-area: info;
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+}
+
+html[data-mode="list"] .site-name {
+    flex: 0 1 auto;
+    max-width: 40%;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+html[data-mode="list"] .site-desc {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+html[data-mode="list"] .site-domain {
+    grid-area: domain;
+    max-width: 240px;
+    padding-right: 4px;
+    text-align: right;
+}
+
+/* 测速列定宽 + 右侧留出状态点的位置，保证跨行右边缘齐平 */
+html[data-mode="list"] .site-metrics {
+    grid-area: metrics;
+    justify-items: end;
+    min-width: 96px;
+    min-height: 0;
+    padding-right: 18px;
+}
+
+/* 状态点居右垂直居中；悬停时让位给操作条 */
+html[data-mode="list"] .site-status {
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    transition: opacity 0.16s ease;
+}
+
+html[data-mode="list"] .site-card:hover .site-status,
+html[data-mode="list"] .site-card:focus-within .site-status {
+    opacity: 0;
+}
+
+html[data-mode="list"] .card-corner {
+    top: 50%;
+    left: auto;
+    right: 5px;
+    transform: translateY(-50%);
+}
+
+html[data-mode="list"] .site-card:hover .card-corner,
+html[data-mode="list"] .site-card:focus-within .card-corner {
+    transform: translateY(-50%);
+}
+
+
+/* --------------------------------------------------------------------------
+   ③ 紧凑 COMPACT —— 只留图标与标题
+   --------------------------------------------------------------------------
+   卡片只有 42px 高，操作条（星标 28px + 操作组）横向铺开有 40×4 = 160px+，
+   比卡片本身还宽。这里不再「悬停自动浮出」，改为：普通悬停无操作条，
+   单击卡片时先展开操作条（.is-actions-open），再点一次才跳转。
+   这样默认状态下卡片 100% 留给内容，操作入口也仍然可达（含触屏）。
+   -------------------------------------------------------------------------- */
+
+html[data-mode="compact"] .site-grid {
+    grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
+    justify-content: initial;
+    gap: 7px;
+}
+
+html[data-mode="compact"] .site-card {
+    gap: 0;
+    min-height: 42px;
+    padding: 6px 26px 6px 7px;
+}
+
+/* 站长视角右上角还要放「编辑/删除」，多留 4px */
+body[data-owner="1"] html[data-mode="compact"] .site-card {
+    padding-right: 30px;
+}
+
+html[data-mode="compact"] .site-card-main {
+    align-items: center;
+    gap: 8px;
+    padding-right: 0;
+}
+
+html[data-mode="compact"] .site-icon {
+    width: 26px;
+    height: 26px;
+    flex: 0 0 26px;
+    border-radius: 7px;
+}
+
+html[data-mode="compact"] .site-icon-letter {
+    font-size: 12px;
+}
+
+html[data-mode="compact"] .site-info {
+    min-width: 0;
+}
+
+html[data-mode="compact"] .site-name {
+    font-size: 13px;
+    font-weight: 550;
+    line-height: 1.4;
+}
+
+html[data-mode="compact"] .site-meta {
+    display: none;
+}
+
+html[data-mode="compact"] .site-status {
+    top: 50%;
+    right: 9px;
+    transform: translateY(-50%);
+    transition: opacity 0.16s ease;
+}
+
+html[data-mode="compact"] .status-dot {
+    width: 5px;
+    height: 5px;
+    box-shadow: none;
+}
+
+/* 紧凑模式默认不响应悬停，避免操作条压住标题 */
+html[data-mode="compact"] .site-card:hover .card-actions,
+html[data-mode="compact"] .site-card:focus-within .card-actions {
+    display: none;
+}
+
+html[data-mode="compact"] .site-card.is-actions-open .card-actions,
+html[data-mode="compact"] .site-card.is-actions-open .card-star {
+    display: inline-flex;
+}
+
+html[data-mode="compact"] .site-card.is-actions-open .site-status {
+    opacity: 0;
+}
+
+html[data-mode="compact"] .card-corner {
+    top: 50%;
+    left: auto;
+    right: 4px;
+    transform: translateY(-50%);
+}
+
+html[data-mode="compact"] .site-card.is-actions-open .card-corner {
+    opacity: 1;
+    transform: translateY(-50%);
+}
+
+html[data-mode="compact"] .card-action {
+    width: 24px;
+    height: 24px;
+}
+
+
+/* --------------------------------------------------------------------------
+   ④ 窄屏：只调整网格，列表与紧凑本身已是低密度版式
+   -------------------------------------------------------------------------- */
 
 @media (max-width: 620px) {
-    html:not([data-mode="list"]):not([data-mode="compact"]) .site-card {
-        min-height: 0;
-    }
-
-    /* 20px：标题可两行后会顶到右上角的状态点，留出它的位置 */
-    html:not([data-mode="list"]):not([data-mode="compact"]) .site-card-main {
+    html[data-mode="grid"] .site-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 9px;
-        padding-right: 20px;
     }
 
-    html:not([data-mode="list"]):not([data-mode="compact"]) .site-name {
+    html[data-mode="grid"] .site-card {
+        padding: 11px 12px 10px;
+    }
+
+    html[data-mode="grid"] .site-card:hover,
+    html[data-mode="grid"] .site-card:focus-within {
+        padding-top: 34px;
+    }
+
+    html[data-mode="grid"] .site-icon {
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        border-radius: 9px;
+    }
+
+    html[data-mode="grid"] .site-icon-letter {
         font-size: 14px;
     }
 
-    /* 窄屏只给一行介绍：两行会让一屏可见的卡片数量掉太多 */
-    html:not([data-mode="list"]):not([data-mode="compact"]) .site-desc {
-        -webkit-line-clamp: 1;
-        line-clamp: 1;
+    html[data-mode="grid"] .site-name {
+        font-size: 13.5px;
     }
 
-    html:not([data-mode="list"]):not([data-mode="compact"]) .site-domain {
+    /* 窄屏只给一行介绍：两行会让一屏可见的卡片数量掉太多 */
+    html[data-mode="grid"] .site-desc {
+        -webkit-line-clamp: 1;
+        line-clamp: 1;
+        font-size: 11.5px;
+    }
+
+    html[data-mode="grid"] .site-card-main {
+        gap: 9px;
+        padding-right: 14px;
+    }
+
+    html[data-mode="grid"] .site-meta {
+        padding-top: 7px;
+    }
+
+    /* 窄屏测速与点击量横排会互相挤压，只保留其一，靠右对齐 */
+    html[data-mode="grid"] .site-metrics {
+        gap: 6px;
+    }
+
+    html[data-mode="grid"] .site-domain {
         font-size: 11px;
     }
+
+    /* 手机列表不放网址：横向空间不够，被截断的网址没有信息量 */
+    html[data-mode="list"] .site-card {
+        grid-template-columns: 32px minmax(0, 1fr) auto;
+        grid-template-areas: "icon info metrics";
+        column-gap: 10px;
+        min-height: 52px;
+        padding: 8px 10px;
+    }
+
+    html[data-mode="list"] .site-icon {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+    }
+
+    html[data-mode="list"] .site-domain {
+        display: none;
+    }
+
+    /* 手机列表标题与介绍纵向排：并排时两边都只剩几个字 */
+    html[data-mode="list"] .site-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1px;
+    }
+
+    html[data-mode="list"] .site-name {
+        max-width: 100%;
+        font-size: 13.5px;
+    }
+
+    html[data-mode="list"] .site-metrics {
+        min-width: 0;
+        /* 22px = 状态点 7px + 定位 12px + 3px 呼吸位，防止测速文字贴到圆点上 */
+        padding-right: 22px;
+    }
+
+    html[data-mode="compact"] .site-grid {
+        grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+        gap: 6px;
+    }
+}
+
+/* 减动效偏好：去掉高度过渡，避免悬停时卡片跳动 */
+@media (prefers-reduced-motion: reduce) {
+    html[data-mode="grid"] .site-card {
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+}
+
+/* 暗色下 --hairline 只有 6% 白，用作分隔线会完全消失，单独提到 9% */
+html[data-theme="dark"]:not([data-mode="list"]):not([data-mode="compact"]) .site-meta {
+    border-top-color: rgba(255, 255, 255, 0.09);
+}
+
+html[data-theme="dark"][data-mode="grid"] .site-meta {
+    border-top-color: rgba(255, 255, 255, 0.09);
 }

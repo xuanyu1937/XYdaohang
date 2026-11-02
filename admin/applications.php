@@ -565,7 +565,7 @@ function sendRejectionEmail($data) {
             color: #721c24;
         }
     </style>
-    <link href="../assets/css/admin.css?v=2.10.4" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.10.5" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
