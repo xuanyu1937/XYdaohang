@@ -260,6 +260,22 @@ class UserService extends BaseService
         $stmt->execute([$account, $account]);
         $user = $stmt->fetch();
 
+        // 老版本安装程序只写了 admins 表，users 表里没有对应记录。
+        // 这里做一次自动补建：管理员用同一套账号密码即可在前台登录，并接管默认导航视图。
+        if (!$user) {
+            $user = $this->adoptAdminAccount($account, $password);
+        }
+
+        // 兜底：users 里存在同名记录但密码为空或非哈希（历史升级脚本的遗留脏数据），
+        // 用 admins 的密码验证通过后回填，避免「账号明明存在却永远登录不上」。
+        if (!$user || !password_verify($password, (string) $user['password_hash'])) {
+            $adopted = $this->adoptAdminAccount($account, $password);
+
+            if ($adopted) {
+                $user = $adopted;
+            }
+        }
+
         if (!$user || !password_verify($password, (string) $user['password_hash'])) {
             return ['ok' => false, 'error' => '账号或密码错误'];
         }
@@ -276,6 +292,103 @@ class UserService extends BaseService
         unset($user['password_hash']);
 
         return ['ok' => true, 'user' => $user];
+    }
+
+    /**
+     * 为「只在 admins 表里存在」的管理员补建前台用户记录。
+     * 仅当账号密码验证通过、且 users 表还没有该用户时才会写入。
+     */
+    protected function adoptAdminAccount($account, $password)
+    {
+        try {
+            $stmt = $this->db->prepare('SELECT id, username, password FROM admins WHERE username = ? LIMIT 1');
+            $stmt->execute([$account]);
+            $admin = $stmt->fetch();
+        } catch (Throwable $error) {
+            return null;
+        }
+
+        if (!$admin) {
+            return null;
+        }
+
+        // 老站 admins.password 可能是明文或 32 位 md5，不能直接 password_verify。
+        $stored = (string) $admin['password'];
+        $info = password_get_info($stored);
+        $isHash = ($info['algo'] ?? 0) !== 0;
+
+        if ($isHash) {
+            $verified = password_verify($password, $stored);
+        } else {
+            $verified = hash_equals($stored, (string) $password)
+                || (strlen($stored) === 32 && hash_equals(strtolower($stored), md5((string) $password)));
+        }
+
+        if (!$verified) {
+            return null;
+        }
+
+        // 无论老密码是什么格式，落到 users.password_hash 的都必须是新哈希。
+        $hash = $isHash && $stored !== '' ? $stored : (string) password_hash((string) $password, PASSWORD_DEFAULT);
+
+        if ($hash === '') {
+            return null;
+        }
+
+        // 同步把 admins 的密码迁移为哈希，避免每次登录都走一遍明文比对。
+        if (!$isHash) {
+            try {
+                $column = $this->db->query("SHOW COLUMNS FROM admins LIKE 'password'")->fetch();
+                $type = strtolower((string) ($column['Type'] ?? ''));
+
+                if ($type !== '' && strpos($type, 'varchar(255)') === false) {
+                    $this->db->exec('ALTER TABLE admins MODIFY password VARCHAR(255) NOT NULL');
+                }
+
+                $update = $this->db->prepare('UPDATE admins SET password = ? WHERE id = ?');
+                $update->execute([$hash, (int) $admin['id']]);
+            } catch (Throwable $error) {
+                $this->log('管理员密码迁移失败: ' . $error->getMessage(), 'ERROR');
+            }
+        }
+
+        $username = (string) $admin['username'];
+
+        try {
+            $stmt = $this->db->prepare('SELECT * FROM users WHERE username = ? OR email = ? LIMIT 1');
+            $stmt->execute([$username, $username . '@local.invalid']);
+            $user = $stmt->fetch();
+
+            if ($user) {
+                // 记录存在但密码为空/非哈希：回填新哈希并补上管理员标记
+                $existing = (string) ($user['password_hash'] ?? '');
+
+                if ($existing === '' || (password_get_info($existing)['algo'] ?? 0) === 0) {
+                    $fix = $this->db->prepare('UPDATE users SET password_hash = ?, is_admin = 1 WHERE id = ?');
+                    $fix->execute([$hash, (int) $user['id']]);
+
+                    $user['password_hash'] = $hash;
+                    $user['is_admin'] = 1;
+                }
+
+                return $user;
+            }
+
+            $email = $username . '@local.invalid';
+            $stmt = $this->db->prepare(
+                'INSERT INTO users (email, username, password_hash, is_admin, status, created_at) VALUES (?, ?, ?, 1, ?, NOW())'
+            );
+            $stmt->execute([$email, $username, $hash, self::STATUS_ACTIVE]);
+
+            $stmt = $this->db->prepare('SELECT * FROM users WHERE id = ? LIMIT 1');
+            $stmt->execute([(int) $this->db->lastInsertId()]);
+
+            return $stmt->fetch() ?: null;
+        } catch (Throwable $error) {
+            $this->log('补建管理员前台账号失败: ' . $error->getMessage(), 'ERROR');
+
+            return null;
+        }
     }
 
     /**
@@ -1674,6 +1787,153 @@ class CategoryEngine extends BaseService
         }
 
         return null;
+    }
+
+    /**
+     * 模糊匹配：返回最可能属于的候选分类名，找不到返回 null。
+     *
+     * 与 matchName 的差别在于「不要求规则键与分类名精确相等」。
+     * 站内实际分类名常带后缀或空格差异（开发编程 / AI 工具 / 学习成长），
+     * 而规则表里写的是 开发 / AI工具 / 学习，精确相等会全部落空，
+     * 于是推荐永远返回 null。这里改成双向包含判定：
+     *   规则键「包含于」分类名，或分类名「包含于」规则键，都算同一类。
+     *
+     * 优先级：
+     *   1. 分类名本身就出现在待匹配文本里（最可靠）
+     *   2. 规则键与分类名同源，且该类的关键词命中文本
+     *
+     * @param string $text       待匹配文本（标题 + 描述 + 域名）
+     * @param array  $candidates 候选分类名列表
+     * @return string|null
+     */
+    public function smartMatch($text, array $candidates = [])
+    {
+        $names = $candidates ?: array_values($this->nameToId());
+        $names = array_values(array_filter($names, static function ($name) {
+            return trim((string) $name) !== '';
+        }));
+
+        if (!$names) {
+            return null;
+        }
+
+        $haystack = $this->textLower($text);
+
+        if ($haystack === '') {
+            return null;
+        }
+
+        // 域名里的 . - _ / 换成空格，让 this-domain-example.com 变成
+        // this domain example com 这样的词序列，便于按「词」判断短关键词。
+        $haystack = (string) preg_replace('/[.\-_\/:@]+/u', ' ', $haystack);
+        $haystack = (string) preg_replace('/\s{2,}/u', ' ', $haystack);
+
+        // 归一化：去空白 + 转小写，让「AI 工具」与「AI工具」视为同一个词
+        $normalize = static function ($value) {
+            $value = (string) $value;
+            $value = preg_replace('/\s+/u', '', $value);
+
+            return function_exists('mb_strtolower') ? mb_strtolower((string) $value, 'UTF-8') : strtolower((string) $value);
+        };
+
+        /**
+         * 关键词是否命中。
+         *
+         * 短英文词（≤4 个字符）必须按「词」而非裸子串判断：
+         * 裸子串会让 ai 命中 dom-ai-n、ui 命中 b-ui-ld、ide 命中 ide-a，
+         * 于是随便一个域名都能被塞进「AI 工具」。
+         * 规则是：前后不能紧邻字母数字，或者这个词正好是某个 token 的开头
+         * （域名 npmjs.com 拆出的 npmjs 以 npm 开头，应当算命中）。
+         */
+        $keywordHit = function ($haystack, $keyword) {
+            $keyword = (string) $keyword;
+
+            if ($keyword === '') {
+                return false;
+            }
+
+            if (!preg_match('/^[a-z0-9]{1,4}$/', $keyword)) {
+                return $this->textHas($haystack, $keyword);
+            }
+
+            if (preg_match('/(?<![a-z0-9])' . preg_quote($keyword, '/') . '(?![a-z0-9])/', $haystack)) {
+                return true;
+            }
+
+            // 允许作为 token 前缀（npm → npmjs）
+            foreach (explode(' ', $haystack) as $token) {
+                if ($token !== '' && strpos($token, $keyword) === 0) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        $haystackKey = $normalize($haystack);
+
+        // 第 1 轮：分类名原样出现在文本里
+        foreach ($names as $name) {
+            $key = $normalize($name);
+
+            // 单字分类名太容易误命中（如「设计」只占 2 字尚可，「图」就过宽），
+            // 这里要求有效长度 >= 2 才参与直接匹配
+            if ($key !== '' && mb_strlen($key, 'UTF-8') >= 2 && mb_strpos($haystackKey, $key, 0, 'UTF-8') !== false) {
+                return (string) $name;
+            }
+        }
+
+        // 第 2 轮：规则键与分类名同源，再看关键词
+        //
+        // 这里用「命中计数」而不是「首个命中即返回」：
+        // 规则表是按顺序遍历的，先到的类别会把后到的全压掉。
+        // 比如 Figma 的描述里既有 code 也有 design，按顺序「开发」在前，
+        // 结果被归进开发编程；按命中次数算，design 更多，就能正确落到设计素材。
+        $bestName = null;
+        $bestScore = 0;
+
+        foreach ($this->rules as $ruleKey => $keywords) {
+            $ruleNorm = $normalize($ruleKey);
+
+            $matchedName = null;
+
+            foreach ($names as $name) {
+                $nameNorm = $normalize($name);
+
+                if ($nameNorm === '') {
+                    continue;
+                }
+
+                $sameFamily = $nameNorm === $ruleNorm
+                    || mb_strpos($nameNorm, $ruleNorm, 0, 'UTF-8') !== false
+                    || mb_strpos($ruleNorm, $nameNorm, 0, 'UTF-8') !== false;
+
+                if ($sameFamily) {
+                    $matchedName = (string) $name;
+                    break;
+                }
+            }
+
+            if ($matchedName === null) {
+                continue;
+            }
+
+            $score = 0;
+
+            foreach ($keywords as $keyword) {
+                if ($keywordHit($haystack, $keyword)) {
+                    $score++;
+                }
+            }
+
+            // 严格大于：分数相同时保留规则表里靠前的类别，结果稳定可预期
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $bestName = $matchedName;
+            }
+        }
+
+        return $bestName;
     }
 }
 

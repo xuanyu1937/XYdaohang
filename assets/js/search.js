@@ -547,6 +547,12 @@
             return;
         }
 
+        /* v2.9.2：网址不是「搜索词」，不写进最近搜索历史。
+           否则收藏一个站点后，历史里会躺一条 https://... 的噪声。 */
+        if (/^(?:https?:\/\/)?(?:[\w-]+\.)+[a-z]{2,}(?::\d{2,5})?(?:[/?#]\S*)?$/i.test(q) && !/\s/.test(q)) {
+            return;
+        }
+
         var list = loadHistory().filter(function (item) {
             return item !== q;
         });
@@ -605,25 +611,39 @@
         }
         engineCache.loaded = true;
 
-        fetch('api/user_search_engines.php', {
+        /* 与 nav.js 共享同一次请求，避免首屏重复拉取 */
+        var request = window.__xyEnginesPromise || fetch('api/user_search_engines.php', {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         })
-            .then(function (resp) { return resp.ok ? resp.json() : null; })
-            .then(function (data) {
-                if (!data || !data.ok || !data.engines || !data.engines.length) {
-                    return;
-                }
-                var newEngines = {};
-                data.engines.forEach(function (e) {
-                    newEngines[e.id] = { label: e.name, url: e.url_template };
-                });
-                engineCache.engines = newEngines;
-            })
+            .then(function (resp) { return resp.ok ? resp.json() : null; });
+
+        if (!window.__xyEnginesPromise) {
+            window.__xyEnginesPromise = request;
+        }
+
+        request
+            .then(applyEngines)
             .catch(function () { /* 保持默认 */ });
     }
 
+    function applyEngines(data) {
+        if (!data || !data.ok || !data.engines || !data.engines.length) {
+            return;
+        }
+        var newEngines = {};
+        data.engines.forEach(function (e) {
+            newEngines[e.id] = { label: e.name, url: e.url_template };
+        });
+        engineCache.engines = newEngines;
+    }
+
     loadEngines();
+
+    /* nav.js 在用户增删改搜索引擎后会广播最新列表，这里同步更新外链搜索用的映射 */
+    window.addEventListener('xy:engines', function (event) {
+        applyEngines(event.detail);
+    });
 
     function currentEngine() {
         var engine = readStore('xy-nav-engine');
@@ -1308,6 +1328,14 @@
                 return;
             }
 
+            /* v2.9.2：粘贴完整网址时不再走站内联想。
+               这条输入会被 nav.js 的 initUrlQuickSave 接管为「收藏此网址」，
+               此时再弹一个把网址当关键词的联想面板，既重复又误导。 */
+            if (/^(?:https?:\/\/)?(?:[\w-]+\.)+[a-z]{2,}(?::\d{2,5})?(?:[/?#]\S*)?$/i.test(value) && !/\s/.test(value)) {
+                panel.hide();
+                return;
+            }
+
             panel.renderSuggest(value);
         }, 120);
 
@@ -1325,9 +1353,13 @@
             }
         });
 
-        /* 捕获阶段处理键盘：有激活候选时拦截，避免 nav.js 的默认回车逻辑抢跳 */
+        /* 捕获阶段处理键盘：有激活候选时拦截，避免 nav.js 的默认回车逻辑抢跳
+           注意：panel 是 createSuggestPanel 返回的控制对象，可见性要用 visible / node.hidden，
+           不能用 panel.hidden（恒为 undefined，会导致 Esc 被无条件拦截）。 */
         input.addEventListener('keydown', function (event) {
-            if (panel.hidden) {
+            var panelOpen = !panel.node.hidden;
+
+            if (!panelOpen) {
                 /* 面板收起时仅记录回车提交的搜索词 */
                 if (event.key === 'Enter') {
                     var value = input.value.trim();
@@ -1361,7 +1393,13 @@
                     recordQuery(keyword);
                 }
             } else if (event.key === 'Escape') {
-                panel.hide();
+                // 两段式：面板打开时只收起面板，保留输入框与筛选结果；
+                // 面板已收起时放行给 nav.js，由它清空关键词（避免误清空）。
+                if (panelOpen) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    panel.hide();
+                }
             }
         }, true);
 

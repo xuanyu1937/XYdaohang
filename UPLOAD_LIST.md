@@ -1,10 +1,46 @@
-# 轩宇-导航 v2.5.0 部署清单
+# 轩宇-导航 v2.10.2 部署清单
 
 线上地址：http://dh.pxyblog.top/
-运行环境：IIS/Apache + PHP 8.1 + MySQL 5.7
-当前版本：v2.5.0
+运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
+当前版本：v2.10.2
 
-> 升级顺序：**先备份数据库 → 上传文件 → 执行 upgrade_v2.5.0.sql → 清缓存刷新**；本版本含数据库结构变更（`nav_links` 表新增 `alias`、`tags` 两列），**必须执行升级脚本**。也可直接在后台「系统工具 → 版本检测 → 上传更新包更新」上传新版 zip 完成在线更新，但升级 SQL 仍需手动执行一次。
+> **本版本无数据库变更**，收录流程重做（识别 → 复核 → 确认）。覆盖代码文件 + 清理 `cache/` + 浏览器强刷即可，不需要执行任何 SQL。
+
+## 本次 v2.10.2 变动文件
+
+| 文件 | 说明 |
+| --- | --- |
+| `api/user_sites.php` | **主要改动**：新增 `quick_preview` 只读识别分支（只抓取不入库，回标题/描述/图标/分组推荐/重复标记）；`quick_add` 改为接收 `name`/`description`/`logo`/`category_id`，携带确认标记时不再二次抓取；新增 `userSiteNiceName()` 标题净化 |
+| `includes/Services.php` | `CategoryEngine::smartMatch()`：关键词与分类名归一化（去空白 + 转小写）、「首个命中即返回」改为计分取最高、短英文词加词边界 |
+| `index.php` | `quickAddDialog` 重写为收录工具框（站点名片 + 可编辑标题/描述/分组下拉 + 状态提示条）；资源参数 `?v=2.10.2` |
+| `assets/js/nav.js` | 两阶段收录流程（识别 → 确认）、`XYQuickAdd.open()` 支持 `autoStart`、分组切换同步提示文案、favicon `is-loaded` 淡入 |
+| `assets/css/nav.css` | 收录工具框样式、窄屏分组徽标换行修正（`calc(100% - 52px)`）、`my.php` 顶栏窄屏收敛 |
+| `config/version.php` | `APP_VERSION` 升至 2.10.2 |
+| `includes/bootstrap.php` | `APP_VERSION` 兜底常量同步 |
+| `includes/ConfigManager.php` | 配置默认 `version` 同步 |
+| `my.php` / `about.php` / `contact.php` / `share.php` | 资源参数 `?v=2.10.2` |
+| `admin/*.php`（11 页） | 资源参数 `?v=2.10.2` |
+| `VERSION`、`CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 版本号与文档同步 |
+
+> 升级要点：**`assets/`、`api/`、`includes/` 必须一起覆盖**。只换 `nav.js` 不换 `api/user_sites.php`，点「收录」会在识别阶段 404；只换 PHP 不换 CSS，工具框会散架。覆盖后清 `cache/` 并强刷。
+
+## v2.10.1 回顾
+
+搜索框重做：胶囊式输入条、引擎选择器改文字触发器、清空按钮定位修正。无数据库变更。
+
+## v2.10.0 回顾
+
+全站视觉规范梳理：设计令牌去死代码、半像素字号清零、圆角归并 5 档、触控热区统一 40px、移动端卡片标题截断修复。无数据库变更、无功能逻辑改动。
+
+## v2.9.3 回顾
+
+顶部右上角控件重做 + `header-tools` 显示优化：圆形头像、头像与箭头合并为整体按钮、太阳/月亮主题图标随状态切换、未登录与加载失败走默认头像兜底。无数据库变更。
+
+## v2.9.2 回顾
+
+体验修复 + 后台 UI 升级：修好「自动获取头像过小 / 导航栏头像文字错乱」「主页搜索框快速添加网址」，后台 11 个页面统一视觉规范。无数据库变更。
+
+## 历史版本
 
 ## 本次 v2.5.0 变动文件
 

@@ -214,6 +214,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             $stmt = $pdo->prepare("INSERT INTO admins (username, password) VALUES (?, ?)");
             $stmt->execute([$adminUser, $hash]);
             
+            // 同步创建前台用户记录：管理员同时是一个普通用户，拥有自己的导航空间，
+            // 并默认成为访客看到的「默认导航」。缺少这条记录时前台会显示「0 个站点」。
+            $userExists = $pdo->prepare("SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1");
+            $userExists->execute([$adminUser, $adminUser . '@local.invalid']);
+            $existingUserId = (int) ($userExists->fetchColumn() ?: 0);
+            
+            if ($existingUserId > 0) {
+                $stmt = $pdo->prepare("UPDATE users SET password_hash = ?, is_admin = 1 WHERE id = ?");
+                $stmt->execute([$hash, $existingUserId]);
+                $adminUserId = $existingUserId;
+            } else {
+                $stmt = $pdo->prepare(
+                    "INSERT INTO users (email, username, password_hash, is_admin, is_default_user, status) VALUES (?, ?, ?, 1, 1, 'active')"
+                );
+                $stmt->execute([$adminUser . '@local.invalid', $adminUser, $hash]);
+                $adminUserId = (int) $pdo->lastInsertId();
+            }
+            
+            $stmt = $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('default_user_id', ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+            $stmt->execute([(string) $adminUserId]);
+            
             $stmt = $pdo->prepare("INSERT INTO settings (`key`, `value`) VALUES ('site_title', ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
             $stmt->execute([$siteTitle]);
             

@@ -7,6 +7,8 @@
  * POST action=delete  删除
  * POST action=sort    按 ids 顺序重排
  * POST action=fetch   仅抓取站点信息（预填用）
+ * POST action=quick_preview 收录预览：抓取标题/描述/图标 + 推荐分组，不入库
+ * POST action=quick_add     确认收录：按前端确认后的字段落库
  */
 
 require_once __DIR__ . '/../includes/bootstrap.php';
@@ -100,6 +102,84 @@ function userSiteCategoryId($db, $value, $userId)
 }
 
 /**
+ * 把抓到的页面 title 收拾成「能放进卡片」的名字。
+ *
+ * 站点 title 常见三种形态：
+ *   Figma: The collaborative canvas for design, code, and AI   ← 冒号后是一整段宣传语
+ *   GitHub - 全球最大的代码托管平台                              ← 横线后是副标题
+ *   某某网 | 首页                                              ← 竖线后是频道名
+ * 原样入库会让卡片名称被省略号切断，所以按分隔符取主名；
+ * 但第一段太短或本身就是「首页」这类通用词时不能取，否则反而丢信息。
+ */
+function userSiteNiceName($title, $host = '')
+{
+    $title = trim((string) $title);
+    $title = str_replace(["\r", "\n", "\t"], ' ', $title);
+
+    // 压缩连续空白，避免抓到的 title 里带一堆空格
+    $title = (string) preg_replace('/\s{2,}/u', ' ', $title);
+
+    if ($title === '') {
+        return trim((string) $host);
+    }
+
+    $len = function ($value) {
+        return function_exists('mb_strlen') ? mb_strlen($value, 'UTF-8') : strlen($value);
+    };
+
+    // 通用词：作为分段名没有辨识度，遇到就跳过这一段
+    $generic = ['首页', '主页', '官网', '官方网站', '网站首页', 'home', 'homepage', 'index', 'welcome'];
+
+    $isUsable = static function ($value) use ($generic, $len) {
+        $value = trim((string) $value);
+
+        if ($value === '' || $len($value) < 2) {
+            return false;
+        }
+
+        return !in_array(mb_strtolower($value, 'UTF-8'), $generic, true);
+    };
+
+    // 竖线优先级最高：通常是「站点名 | 频道名」结构。
+    // 逐段找第一个「不是通用词」的片段，这样「首页 | 某某导航站」能取到后者。
+    $candidate = '';
+
+    $parts = preg_split('/\s*[|｜]\s*/u', $title);
+
+    if ($parts && count($parts) > 1) {
+        foreach ($parts as $part) {
+            if ($isUsable($part)) {
+                $candidate = trim((string) $part);
+                break;
+            }
+        }
+    }
+
+    // 没有可用的竖线段落，就用完整 title 继续往下判断
+    if ($candidate === '') {
+        $candidate = $title;
+    }
+
+    // 再看冒号 / 破折号：只在整体确实很长时才截，
+    // 否则「Vue.js: 渐进式框架」这种本身就够短的名字不该被动
+    if ($candidate === $title && $len($candidate) > 24) {
+        $split = preg_split('/\s*[:：]\s*|\s+[-–—]\s+|\s*·\s*/u', $candidate, 2);
+
+        if ($split && count($split) > 1) {
+            $head = trim((string) $split[0]);
+
+            if ($isUsable($head) && $len($head) <= 24) {
+                $candidate = $head;
+            }
+        }
+    }
+
+    $candidate = trim($candidate);
+
+    return $candidate !== '' ? $candidate : trim((string) $host);
+}
+
+/**
  * 确认目标条目属于当前用户。
  */
 function userSiteOwned($db, $id, $userId)
@@ -108,6 +188,28 @@ function userSiteOwned($db, $id, $userId)
     $stmt->execute([(int) $id, (int) $userId]);
 
     return $stmt->fetch() ? true : false;
+}
+
+/**
+ * 取分组名，供前端就地渲染新卡片的分组标签。
+ */
+function userSiteCategoryName($db, $categoryId)
+{
+    $categoryId = (int) $categoryId;
+
+    if ($categoryId <= 0) {
+        return '';
+    }
+
+    try {
+        $stmt = $db->prepare('SELECT name FROM categories WHERE id = ? LIMIT 1');
+        $stmt->execute([$categoryId]);
+        $row = $stmt->fetch();
+
+        return $row ? (string) $row['name'] : '';
+    } catch (Throwable $error) {
+        return '';
+    }
 }
 
 switch ($action) {
@@ -229,6 +331,111 @@ switch ($action) {
         $functions->jsonResponse(['ok' => true, 'id' => $id, 'category_id' => $categoryId]);
         break;
 
+    /* 收录前预览：只抓取、不入库，把结果连同「推荐分组」一起交给前端，
+       等用户在收录框里确认（可改标题/描述/分组）后再调 quick_add 落库。 */
+    case 'quick_preview':
+        $url = userSiteNormalizeUrl($_POST['url'] ?? '');
+
+        if ($url === '') {
+            $functions->jsonResponse(['ok' => false, 'error' => '请输入有效的网址'], 400);
+        }
+
+        // 已在导航里就不必再走收录流程，直接告诉前端去标记收藏
+        $dupStmt = $db->prepare('SELECT id, name FROM nav_links WHERE user_id = ? AND url = ? LIMIT 1');
+        $dupStmt->execute([$userId, $url]);
+        $existing = $dupStmt->fetch();
+
+        if ($existing) {
+            $functions->jsonResponse([
+                'ok' => true,
+                'url' => $url,
+                'duplicate' => true,
+                'id' => (int) $existing['id'],
+                'name' => (string) $existing['name'],
+                'message' => '该网址已在你的导航中',
+            ]);
+        }
+
+        $meta = $siteInfo->fetch($url);
+
+        $host = (string) parse_url($url, PHP_URL_HOST);
+        $hostLabel = $host !== '' ? preg_replace('/^www\./i', '', $host) : $url;
+
+        $name = !empty($meta['ok']) ? userSiteNiceName((string) ($meta['title'] ?? ''), $hostLabel) : '';
+
+        if ($name === '') {
+            $name = $hostLabel;
+        }
+
+        $description = !empty($meta['description']) ? userSiteTrim($meta['description'], 200) : '';
+        $icons = !empty($meta['icons']) && is_array($meta['icons']) ? $meta['icons'] : [];
+        $logo = !empty($icons[0]) ? userSiteTrim($icons[0], 500) : '';
+
+        // 候选分组：当前用户可见的分组（公共 + 自己的）
+        $engine = new CategoryEngine($functions);
+        $engine->setUserId($userId);
+        $rows = $engine->all($userId, true);
+
+        $categories = [];
+
+        foreach ($rows as $row) {
+            $categories[] = [
+                'id' => (int) $row['id'],
+                'name' => (string) $row['name'],
+                'is_private' => (int) ($row['is_private'] ?? 0),
+                'link_count' => (int) ($row['link_count'] ?? 0),
+            ];
+        }
+
+        // 推荐分组：拿标题 + 描述 + 域名去模糊匹配
+        $names = array_column($categories, 'name');
+        $suggestedName = $engine->smartMatch($name . ' ' . $description . ' ' . $hostLabel, $names);
+
+        $suggestedId = 0;
+        $suggestReason = 'none';
+
+        if ($suggestedName !== null) {
+            foreach ($categories as $category) {
+                if ($category['name'] === $suggestedName) {
+                    $suggestedId = $category['id'];
+                    $suggestReason = 'keyword';
+                    break;
+                }
+            }
+        }
+
+        // 没匹配上就退回「未分类」，再退回第一个分组
+        if ($suggestedId === 0) {
+            foreach ($categories as $category) {
+                if ($category['name'] === '未分类') {
+                    $suggestedId = $category['id'];
+                    $suggestReason = 'fallback';
+                    break;
+                }
+            }
+        }
+
+        if ($suggestedId === 0 && $categories) {
+            $suggestedId = $categories[0]['id'];
+            $suggestReason = 'fallback';
+        }
+
+        $functions->jsonResponse([
+            'ok' => true,
+            'url' => $url,
+            'duplicate' => false,
+            'name' => $name,
+            'description' => $description,
+            'logo' => $logo,
+            'icons' => array_slice($icons, 0, 5),
+            'host' => $hostLabel,
+            'fetch_ok' => !empty($meta['ok']),
+            'categories' => $categories,
+            'suggested_category_id' => $suggestedId,
+            'suggest_reason' => $suggestReason,
+        ]);
+        break;
+
     case 'quick_add':
         $url = userSiteNormalizeUrl($_POST['url'] ?? '');
 
@@ -261,11 +468,28 @@ switch ($action) {
             ]);
         }
 
-        // 自动抓取标题、描述、图标
-        $meta = $siteInfo->fetch($url);
-        $name = !empty($meta['ok']) ? trim((string) ($meta['title'] ?? '')) : '';
-        $description = !empty($meta['description']) ? userSiteTrim($meta['description'], 200) : '';
-        $logo = !empty($meta['icons'][0]) ? userSiteTrim($meta['icons'][0], 500) : '';
+        // 用户在收录框里确认过的字段优先；没传（或传空）时才现场抓取，
+        // 这样 my.php 里「只传 url」的老调用仍然可用。
+        $nameGiven = userSiteTrim($_POST['name'] ?? '', 100);
+        $descriptionGiven = userSiteTrim($_POST['description'] ?? '', 200);
+        $logoGiven = userSiteTrim($_POST['logo'] ?? '', 500);
+        $hasConfirmed = $nameGiven !== '';
+
+        $meta = [];
+        $name = $nameGiven;
+        $description = $descriptionGiven;
+        $logo = $logoGiven;
+
+        if (!$hasConfirmed) {
+            $meta = $siteInfo->fetch($url);
+            $metaHost = (string) parse_url($url, PHP_URL_HOST);
+            $metaHost = $metaHost !== '' ? preg_replace('/^www\./i', '', $metaHost) : '';
+            $name = !empty($meta['ok']) ? userSiteNiceName((string) ($meta['title'] ?? ''), $metaHost) : '';
+            $description = $descriptionGiven !== '' ? $descriptionGiven
+                : (!empty($meta['description']) ? userSiteTrim($meta['description'], 200) : '');
+            $logo = $logoGiven !== '' ? $logoGiven
+                : (!empty($meta['icons'][0]) ? userSiteTrim($meta['icons'][0], 500) : '');
+        }
 
         if ($name === '') {
             $host = parse_url($url, PHP_URL_HOST);
@@ -273,6 +497,21 @@ switch ($action) {
         }
 
         $categoryId = userSiteCategoryId($db, $_POST['category_id'] ?? 0, $userId);
+
+        // 前端传的是公共分组（user_id = 0）时上面那条查不到，这里补一次：
+        // 收录框里的候选分组来自 CategoryEngine::all()，包含公共分组。
+        if ($categoryId <= 0) {
+            $requested = (int) ($_POST['category_id'] ?? 0);
+
+            if ($requested > 0) {
+                $pubStmt = $db->prepare('SELECT id FROM categories WHERE id = ? AND (user_id = ? OR (user_id = 0 AND is_private = 0)) LIMIT 1');
+                $pubStmt->execute([$requested, $userId]);
+
+                if ($pubStmt->fetch()) {
+                    $categoryId = $requested;
+                }
+            }
+        }
 
         if ($categoryId <= 0) {
             $engine = new CategoryEngine($functions);
@@ -294,7 +533,10 @@ switch ($action) {
             'id' => (int) $db->lastInsertId(),
             'name' => $name,
             'url' => $url,
+            'logo' => $logo,
+            'description' => $description,
             'category_id' => $categoryId,
+            'category_name' => userSiteCategoryName($db, $categoryId),
             'is_starred' => 1,
             'meta' => $meta,
         ]);

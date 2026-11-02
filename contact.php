@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="robots" content="noindex,follow">
     <title>联系管理员 - <?php echo $functions->escape($brandName); ?></title>
     <meta name="description" content="<?php echo $functions->escape('向 ' . $brandName . ' 提交问题反馈或站点收录建议。'); ?>">
-    <meta name="theme-color" content="#f4f6fa" id="themeColor">
+    <meta name="theme-color" content="#f5f5f3" id="themeColor">
 
     <?php if ($siteLogoUrl !== ''): ?>
         <link rel="icon" href="<?php echo $functions->escape($siteLogoUrl); ?>">
@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 var meta = document.querySelector('meta[name="theme-color"]');
                 if (meta) {
-                    meta.setAttribute('content', theme === 'dark' ? '#0a1120' : '#f4f6fa');
+                    meta.setAttribute('content', theme === 'dark' ? '#0b0b0a' : '#f5f5f3');
                 }
             } catch (e) {
                 document.documentElement.setAttribute('data-theme', 'light');
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.5.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.2">
     <link rel="stylesheet" href="assets/css/page.css">
 </head>
 <body data-monitor="0">
@@ -142,8 +142,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
                     </svg>
                 </button>
-                <a class="tool-btn tool-text" href="about.php">关于本站</a>
-                <a class="tool-btn tool-text" href="index.php">返回首页</a>
+                <a class="tool-btn tool-text" data-icon="about" title="关于本站" aria-label="关于本站" href="about.php">关于本站</a>
+                <a class="tool-btn tool-text" data-icon="home" title="返回首页" aria-label="返回首页" href="index.php">返回首页</a>
             </div>
         </header>
 
@@ -307,6 +307,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.5.0" defer></script>
+<script src="assets/js/search.js?v=2.10.2" defer></script>
 </body>
 </html>

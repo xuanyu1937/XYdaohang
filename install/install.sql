@@ -219,7 +219,7 @@ INSERT IGNORE INTO `settings` (`key`, `value`) VALUES
 ('site_title', '轩宇-导航'),
 ('site_description', '一个简洁实用的导航网站'),
 ('site_keywords', '导航,网址导航,网站导航'),
-('site_logo', 'logo.png'),
+('site_logo', 'assets/img/logo.svg'),
 ('show_icp', '1'),
 ('icp_number', ''),
 ('show_gongan', '1'),

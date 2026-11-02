@@ -82,15 +82,34 @@ try {
     <title>留言管理 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
-    <link href="../assets/css/admin.css?v=2.1.0" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.10.2" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
 
     <div class="main-content-wrapper" id="mainContentWrapper">
         <header class="page-header">
-            <h1 class="page-title"><i class="fas fa-envelope me-2"></i>留言管理</h1>
+            <div class="page-heading">
+                <div class="page-breadcrumb">
+                    <span>后台管理</span>
+                    <i class="fas fa-angle-right"></i>
+                    <span>留言管理</span>
+                </div>
+                <h1 class="page-title">
+                    <span class="title-icon"><i class="fas fa-envelope"></i></span>
+                    留言管理
+                </h1>
+                <p class="page-subtitle">查看访客留言与联系方式，及时处理待回复内容。</p>
+            </div>
+            <div class="page-header-meta">
+                <span class="meta-pill">
+                    <i class="fas fa-inbox"></i>
+                    留言列表
+                </span>
+            </div>
         </header>
+
+        <div class="admin-page-body">
 
         <?php if ($message !== ''): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -177,6 +196,7 @@ try {
                     <?php endif; ?>
                 <?php endif; ?>
             </div>
+        </div>
         </div>
     </div>
 

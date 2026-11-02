@@ -361,7 +361,7 @@ if (isset($_GET['edit'])) {
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
     <link href="../assets/css/dataTables.bootstrap5.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css';">
-    <link href="../assets/css/admin.css?v=1.1.3" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.10.2" rel="stylesheet">
     <style>
         /* 二级分类行的缩进与连接线，让层级关系一眼可见 */
         .cell-tree {
@@ -607,16 +607,16 @@ if (isset($_GET['edit'])) {
                                         <table id="categoriesTable" class="table table-hover admin-table align-middle">
                                             <thead>
                                                 <tr>
-                                                    <th width="60">ID</th>
+                                                    <th width="46">ID</th>
                                                     <th>分类名称</th>
                                                     <?php if ($hasV2Columns): ?>
-                                                        <th width="110">上级分类</th>
-                                                        <th width="100">归属</th>
+                                                        <th width="78">上级分类</th>
+                                                        <th width="66">归属</th>
                                                     <?php endif; ?>
-                                                    <th width="90">排序</th>
-                                                    <th width="90">链接数</th>
-                                                    <th width="120">创建时间</th>
-                                                    <th width="150">操作</th>
+                                                    <th width="54">排序</th>
+                                                    <th width="70">链接数</th>
+                                                    <th width="92">创建时间</th>
+                                                    <th width="96">操作</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -648,7 +648,7 @@ if (isset($_GET['edit'])) {
                                                                             <span class="badge badge-soft-warning"><i class="fas fa-lock"></i> 私密</span>
                                                                         <?php endif; ?>
                                                                         <?php if (!$isChild && $childCount > 0): ?>
-                                                                            <span class="badge badge-soft-info"><?php echo $childCount; ?> 个子分类</span>
+                                                                            <span class="badge badge-soft-info badge-count" title="<?php echo $childCount; ?> 个子分类" aria-label="<?php echo $childCount; ?> 个子分类"><i class="fas fa-layer-group" aria-hidden="true"></i><?php echo $childCount; ?></span>
                                                                         <?php endif; ?>
                                                                     </div>
                                                                     <?php if ($remark !== ''): ?>

@@ -52,7 +52,9 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
             $sections = [];
             $section = '';
 
-            foreach (preg_split('/\R/', $body) as $line) {
+            // 必须带 /u：不带时 \R 会按字节匹配，把中文多字节字符从中间切开，
+            // 后续 mb_substr / escape 拿到的是半个字符，页面上就变成「?」乱码。
+            foreach (preg_split('/\R/u', $body) as $line) {
                 $line = trim($line);
 
                 if ($line === '') {
@@ -63,13 +65,15 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
                     $note = trim((string) preg_replace('/^>\s?/', '', $line));
 
                     if ($note !== '') {
-                        $notes[] = $note;
+                        // 富文本注释去掉行内 Markdown 强调符，避免把 ** 和 ` 直接显示出来
+                        $notes[] = str_replace(['**', '`'], '', $note);
                     }
                     continue;
                 }
 
                 if (preg_match('/^\*\*(.+)\*\*$/u', $line, $m)) {
-                    $section = trim($m[1]);
+                    // 分类标题同样去掉行内 Markdown 标记（历史条目里有 `admin/*.php` 这类写法）
+                    $section = str_replace(['**', '`'], '', trim($m[1]));
                     continue;
                 }
 
@@ -81,6 +85,10 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
                         $title = trim($m[1]);
                         $text = trim(mb_substr($text, mb_strlen($m[0])));
                     }
+
+                    // 列表项里的 **加粗** 与 `代码` 在本页只作纯文本展示，
+                    // 去掉符号标记后阅读更干净（页面不做 Markdown 渲染）。
+                    $text = str_replace(['**', '`'], '', $text);
 
                     if (!isset($sections[$section])) {
                         $sections[$section] = [];
@@ -107,7 +115,7 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>关于本站 - <?php echo $functions->escape($brandName); ?></title>
     <meta name="description" content="<?php echo $functions->escape('关于 ' . $brandName . ' 的介绍与使用说明。'); ?>">
-    <meta name="theme-color" content="#f4f6fa" id="themeColor">
+    <meta name="theme-color" content="#f5f5f3" id="themeColor">
     <meta name="robots" content="index, follow">
 
     <?php if ($siteLogoUrl !== ''): ?>
@@ -129,7 +137,7 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
 
                 var meta = document.querySelector('meta[name="theme-color"]');
                 if (meta) {
-                    meta.setAttribute('content', theme === 'dark' ? '#0a1120' : '#f4f6fa');
+                    meta.setAttribute('content', theme === 'dark' ? '#0b0b0a' : '#f5f5f3');
                 }
             } catch (e) {
                 document.documentElement.setAttribute('data-theme', 'light');
@@ -137,7 +145,7 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.5.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.2">
     <link rel="stylesheet" href="assets/css/page.css">
 </head>
 <body data-monitor="0">
@@ -175,11 +183,11 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
                 </button>
 
                 <?php if ($currentUser): ?>
-                    <a class="tool-btn tool-text" href="my.php">我的导航</a>
+                    <a class="tool-btn tool-text" data-icon="nav" title="我的导航" aria-label="我的导航" href="my.php">我的导航</a>
                 <?php else: ?>
-                    <a class="tool-btn tool-text" href="login.php?redirect=<?php echo rawurlencode('about.php'); ?>">登录</a>
+                    <a class="tool-btn tool-text" data-icon="login" title="登录" aria-label="登录" href="login.php?redirect=<?php echo rawurlencode('about.php'); ?>">登录</a>
                 <?php endif; ?>
-                <a class="tool-btn tool-text" href="index.php">返回首页</a>
+                <a class="tool-btn tool-text" data-icon="home" title="返回首页" aria-label="返回首页" href="index.php">返回首页</a>
             </div>
         </header>
 
@@ -286,6 +294,6 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.5.0" defer></script>
+<script src="assets/js/search.js?v=2.10.2" defer></script>
 </body>
 </html>

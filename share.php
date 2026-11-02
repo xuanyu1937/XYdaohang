@@ -68,7 +68,7 @@ $tokenParam = rawurlencode($token);
     <meta name="robots" content="noindex,follow">
     <title><?php echo $functions->escape($shareTitle); ?> - <?php echo $functions->escape($brandName); ?></title>
     <meta name="description" content="<?php echo $functions->escape('来自 ' . $brandName . ' 的导航分享，共 ' . count($sites) . ' 个网站。'); ?>">
-    <meta name="theme-color" content="#f4f6fa" id="themeColor">
+    <meta name="theme-color" content="#f5f5f3" id="themeColor">
 
     <?php if ($siteLogoUrl !== ''): ?>
         <link rel="icon" href="<?php echo $functions->escape($siteLogoUrl); ?>">
@@ -89,7 +89,7 @@ $tokenParam = rawurlencode($token);
 
                 var meta = document.querySelector('meta[name="theme-color"]');
                 if (meta) {
-                    meta.setAttribute('content', theme === 'dark' ? '#0a1120' : '#f4f6fa');
+                    meta.setAttribute('content', theme === 'dark' ? '#0b0b0a' : '#f5f5f3');
                 }
             } catch (e) {
                 document.documentElement.setAttribute('data-theme', 'light');
@@ -97,7 +97,7 @@ $tokenParam = rawurlencode($token);
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.5.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.2">
     <link rel="stylesheet" href="assets/css/page.css">
 </head>
 <body data-monitor="0">
@@ -135,11 +135,11 @@ $tokenParam = rawurlencode($token);
                 </button>
 
                 <?php if ($currentUser): ?>
-                    <a class="tool-btn tool-text" href="my.php">我的导航</a>
-                    <a class="tool-btn tool-text" href="index.php">返回首页</a>
+                    <a class="tool-btn tool-text" data-icon="nav" title="我的导航" aria-label="我的导航" href="my.php">我的导航</a>
+                    <a class="tool-btn tool-text" data-icon="home" title="返回首页" aria-label="返回首页" href="index.php">返回首页</a>
                 <?php else: ?>
-                    <a class="tool-btn tool-text" href="login.php?redirect=<?php echo rawurlencode('share.php?token=' . $tokenParam); ?>">登录</a>
-                    <a class="tool-btn tool-text is-primary" href="register.php">注册</a>
+                    <a class="tool-btn tool-text" data-icon="login" title="登录" aria-label="登录" href="login.php?redirect=<?php echo rawurlencode('share.php?token=' . $tokenParam); ?>">登录</a>
+                    <a class="tool-btn tool-text is-primary" data-icon="login" title="注册" aria-label="注册" href="register.php">注册</a>
                 <?php endif; ?>
             </div>
         </header>
@@ -311,6 +311,6 @@ $tokenParam = rawurlencode($token);
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.5.0" defer></script>
+<script src="assets/js/search.js?v=2.10.2" defer></script>
 </body>
 </html>

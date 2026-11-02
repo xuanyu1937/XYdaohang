@@ -19,8 +19,11 @@ $isOwner = $currentUser && (int) $currentUser['id'] === $viewUserId;
 $engine->setUserId($viewUserId);
 
 // 头像：仅登录用户在顶部展示自己的头像；访客区域只保留「登录 / 注册」入口，不再渲染占位头像
+// 注意：初始字兜底要用站点名，而 $brandName 在第 71 行才解析，因此这段必须放在其后
+// 默认头像：未登录、以及头像加载失败时的统一兜底（圆形灰底人形）
+$defaultAvatarUrl = 'assets/img/avatar-default.svg';
 $displayAvatar = '';
-$displayAvatarInitial = $brandName !== '' ? mb_substr($brandName, 0, 1, 'UTF-8') : '轩';
+$displayAvatarInitial = '';
 if ($currentUser) {
     $displayAvatarInitial = mb_substr($currentUser['username'], 0, 1, 'UTF-8');
     if (!empty($currentUser['avatar'])) {
@@ -85,6 +88,11 @@ $footerCopyrightText = $functions->footerCopyrightText($footerUserCopyright, $br
 
 $brandInitial = $functions->textCut($brandName, 1);
 
+// 头像首字兜底要等 $brandName 解析完才能定：优先用户名字首字，其次站点名首字
+if ($displayAvatarInitial === '') {
+    $displayAvatarInitial = $brandName !== '' ? mb_substr($brandName, 0, 1, 'UTF-8') : '轩';
+}
+
 $db = Database::getInstance()->getConnection();
 
 /* ------------------------------ 数据准备 ------------------------------ */
@@ -130,6 +138,46 @@ try {
     );
     $stmt->execute();
     $rawLinks = $stmt->fetchAll();
+}
+
+/**
+ * 空站自愈：站点已有导航数据，但「默认访客视图」指向一个没有数据的用户
+ * （常见于 v2 早期安装程序只写了 admins 表、没有 users 记录），
+ * 此时自动切到数据量最多的用户，避免访客打开首页是一片空白。
+ */
+if (!$rawLinks && !$isOwner) {
+    try {
+        $fallbackStmt = $db->prepare(
+            "SELECT nl.user_id, COUNT(*) AS total
+             FROM nav_links nl
+             LEFT JOIN categories c ON c.id = nl.category_id
+             WHERE nl.is_active = 1 AND nl.deleted_at IS NULL AND COALESCE(c.is_private, 0) = 0
+             GROUP BY nl.user_id
+             ORDER BY total DESC
+             LIMIT 1"
+        );
+        $fallbackStmt->execute();
+        $fallbackOwner = $fallbackStmt->fetch();
+
+        if ($fallbackOwner && (int) $fallbackOwner['total'] > 0) {
+            $viewUserId = (int) $fallbackOwner['user_id'];
+            $engine->setUserId($viewUserId);
+            $isOwner = $currentUser && (int) $currentUser['id'] === $viewUserId;
+
+            $stmt = $db->prepare(
+                "SELECT nl.*
+                 FROM nav_links nl
+                 LEFT JOIN categories c ON c.id = nl.category_id
+                 WHERE nl.user_id = ? AND nl.is_active = 1 AND nl.deleted_at IS NULL
+                   AND COALESCE(c.is_private, 0) = 0
+                 ORDER BY COALESCE(nl.clicks, 0) DESC, nl.sort_order ASC, nl.id ASC"
+            );
+            $stmt->execute([$viewUserId]);
+            $rawLinks = $stmt->fetchAll();
+        }
+    } catch (Throwable $error) {
+        // 自愈失败不阻断页面，维持空状态提示。
+    }
 }
 
 /**
@@ -393,7 +441,7 @@ if ($bgImage !== '') {
     <meta name="keywords" content="<?php echo $functions->escape($siteKeywords); ?>">
     <meta name="author" content="<?php echo $functions->escape($brandName); ?>">
     <meta name="robots" content="index, follow">
-    <meta name="theme-color" content="#f4f6fa" id="themeColor">
+    <meta name="theme-color" content="#f5f5f3" id="themeColor">
     <meta property="og:type" content="website">
     <meta property="og:title" content="<?php echo $functions->escape($metaTitle); ?>">
     <meta property="og:description" content="<?php echo $functions->escape($metaDescription); ?>">
@@ -435,16 +483,16 @@ if ($bgImage !== '') {
 
             var meta = document.querySelector('meta[name="theme-color"]');
             if (meta) {
-                meta.setAttribute('content', root.getAttribute('data-theme') === 'dark' ? '#0a1120' : '#f4f6fa');
+                meta.setAttribute('content', root.getAttribute('data-theme') === 'dark' ? '#0b0b0a' : '#f5f5f3');
             }
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.7.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.2">
     <script src="assets/js/pinyin-pro.min.js" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.7.0" defer></script>
-    <script src="assets/js/search.js?v=2.7.0" defer></script>
+    <script src="assets/js/nav.js?v=2.10.2" defer></script>
+    <script src="assets/js/search.js?v=2.10.2" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -460,7 +508,8 @@ if ($bgImage !== '') {
       data-speed-label="<?php echo $showSpeedLabel ? '1' : '0'; ?>"
       data-view="<?php echo (int) $viewUserId; ?>"
       data-owner="<?php echo $isOwner ? '1' : '0'; ?>"
-      data-target="<?php echo $functions->escape($defaultTarget); ?>"<?php echo $bodyStyle; ?>>
+      data-target="<?php echo $functions->escape($defaultTarget); ?>"
+      data-logged-in="<?php echo $currentUser ? '1' : '0'; ?>"<?php echo $bodyStyle; ?>>
     <a class="skip-link" href="#siteMain">跳到网站列表</a>
 
     <div class="page-shell">
@@ -544,30 +593,41 @@ if ($bgImage !== '') {
                         aria-label="切换到深色模式"
                         title="切换到深色模式"
                         aria-pressed="false">
-                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"></path>
+                        <circle cx="16.6" cy="6.4" r="1.05" fill="currentColor" stroke="none"></circle>
+                        <circle cx="19.6" cy="9.2" r="0.8" fill="currentColor" stroke="none"></circle>
                     </svg>
-                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="4"></circle>
-                        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4.2"></circle>
+                        <path d="M12 1.8v2.5M12 19.7v2.5M4.2 4.2l1.8 1.8M18 18l1.8 1.8M1.8 12h2.5M19.7 12h2.5M4.2 19.8 6 18M18 6l1.8-1.8"></path>
                     </svg>
                 </button>
 
                 <?php if ($currentUser): ?>
                     <details class="user-menu" id="userMenu">
-                        <summary class="tool-btn user-summary">
+                        <summary class="tool-btn user-summary" aria-label="账号菜单：<?php echo $functions->escape($currentUser['username']); ?>">
                             <?php if ($displayAvatar !== ''): ?>
-                                <img class="user-avatar-img" src="<?php echo $functions->escape($displayAvatar); ?>" alt="头像" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
+                                <img class="user-avatar-img" src="<?php echo $functions->escape($displayAvatar); ?>" alt="" width="28" height="28" loading="eager" decoding="async" onerror="this.onerror=null;this.src='<?php echo $defaultAvatarUrl; ?>';">
                                 <span class="user-avatar" aria-hidden="true" style="display:none;"><?php echo $functions->escape($displayAvatarInitial); ?></span>
                             <?php else: ?>
                                 <span class="user-avatar" aria-hidden="true"><?php echo $functions->escape($displayAvatarInitial); ?></span>
                             <?php endif; ?>
-                            <span class="user-name"><?php echo $functions->escape($currentUser['username']); ?></span>
+                            <span class="user-name" translate="no"><?php echo $functions->escape($currentUser['username']); ?></span>
                             <svg class="user-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                                 <path d="m6 9 6 6 6-6"></path>
                             </svg>
                         </summary>
                         <div class="user-dropdown">
+                            <div class="user-account">
+                                <?php if ($displayAvatar !== ''): ?>
+                                    <img class="user-avatar-img" src="<?php echo $functions->escape($displayAvatar); ?>" alt="" width="24" height="24" onerror="this.onerror=null;this.src='<?php echo $defaultAvatarUrl; ?>';">
+                                <?php else: ?>
+                                    <span class="user-avatar" aria-hidden="true"><?php echo $functions->escape($displayAvatarInitial); ?></span>
+                                <?php endif; ?>
+                                <span class="user-account-name"><?php echo $functions->escape($currentUser['username']); ?></span>
+                                <?php if ((int) $currentUser['is_admin'] === 1): ?><span class="user-account-tag">管理员</span><?php endif; ?>
+                            </div>
                             <a class="user-item<?php echo $isOwner ? ' is-current' : ''; ?>" href="index.php">全部导航</a>
                             <a class="user-item" href="my.php">我的导航</a>
                             <button type="button" class="user-item user-item-btn" id="quickAddTrigger">
@@ -587,12 +647,13 @@ if ($bgImage !== '') {
                     </details>
                 <?php else: ?>
                     <div class="auth-links">
-                        <button type="button" class="tool-btn auth-trigger" id="authTrigger">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16">
-                                <circle cx="12" cy="8" r="4"></circle>
-                                <path d="M4 21a8 8 0 0 1 16 0"></path>
+                        <button type="button" class="tool-btn user-summary user-summary-guest" id="authTrigger"
+                                aria-label="登录<?php echo $registerEnabled ? ' / 注册' : ''; ?>"
+                                title="登录<?php echo $registerEnabled ? ' / 注册' : ''; ?>">
+                            <img class="user-avatar-img" src="<?php echo $defaultAvatarUrl; ?>" alt="" width="28" height="28">
+                            <svg class="user-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="m6 9 6 6 6-6"></path>
                             </svg>
-                            <span>登录<?php echo $registerEnabled ? ' / 注册' : ''; ?></span>
                         </button>
                     </div>
                 <?php endif; ?>
@@ -660,11 +721,12 @@ if ($bgImage !== '') {
                         <path d="m20 20-3.2-3.2"></path>
                     </svg>
                     <label class="visually-hidden" for="siteSearch">搜索网站</label>
-                    <input type="search"
+                    <input type="text"
                            id="siteSearch"
                            class="search-input"
-                           placeholder="搜索网站，支持拼音（按 / 聚焦）"
+                           placeholder="搜索网站或粘贴网址"
                            autocomplete="off"
+                           enterkeyhint="search"
                            spellcheck="false"
                            aria-label="搜索网站">
                     <button type="button"
@@ -677,15 +739,36 @@ if ($bgImage !== '') {
                             <path d="m6 6 12 12M18 6 6 18"></path>
                         </svg>
                     </button>
+                    <!-- 「搜索 / 收藏」放在输入框内部同一格：切换时只换按钮不换位置，
+                         整条胶囊宽度和右侧留白都不动 -->
+                    <div class="search-actions">
+                        <button type="button" class="search-submit" id="searchSubmit" aria-label="搜索" title="搜索">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                <circle cx="11" cy="11" r="7"></circle>
+                                <path d="m20 20-3.2-3.2"></path>
+                            </svg>
+                            <span>搜索</span>
+                        </button>
+                        <!-- 粘的是网址时，把「搜索」换成「收藏」，一键存进我的导航 -->
+                        <button type="button" class="search-submit search-save" id="searchSave" aria-label="收藏此网址" title="收藏此网址" hidden>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 3v12"></path>
+                                <path d="m7.5 10.5 4.5 4.5 4.5-4.5"></path>
+                                <path d="M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"></path>
+                            </svg>
+                            <span>收藏</span>
+                        </button>
+                    </div>
                 </div>
-                <button type="button" class="search-submit" id="searchSubmit" aria-label="搜索" title="搜索">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                        <circle cx="11" cy="11" r="7"></circle>
-                        <path d="m20 20-3.2-3.2"></path>
-                    </svg>
-                    <span>搜索</span>
-                </button>
             </div>
+            <p class="search-url-hint" id="searchUrlHint" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M10.6 13.4a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7L11.8 6.5"></path>
+                    <path d="M13.4 10.6a4 4 0 0 0-5.7 0l-2.8 2.8a4 4 0 0 0 5.7 5.7l1.6-1.6"></path>
+                </svg>
+                <span id="searchUrlHintText"></span>
+                <button type="button" class="search-url-hint-action" id="searchUrlHintAction">收藏</button>
+            </p>
         </section>
 
         <!-- 搜索引擎管理模态框 -->
@@ -762,6 +845,28 @@ if ($bgImage !== '') {
             <div class="rail-backdrop" id="railBackdrop" hidden></div>
 
             <main class="site-main" id="siteMain">
+                <!-- 移动端：横向可滑动的分类条，一次点击即可切换分类 -->
+                <div class="mobile-cats" id="mobileCats" aria-label="网站分类">
+                    <div class="mobile-cats-track" id="mobileCatsTrack" role="tablist">
+                        <button type="button" class="mcat is-active" role="tab" aria-selected="true"
+                                data-category="all" data-name="全部网站">
+                            <span>全部</span><span class="mcat-count"><?php echo $totalSites; ?></span>
+                        </button>
+                        <?php foreach ($railGroups as $group): ?>
+                            <button type="button" class="mcat" role="tab" aria-selected="false"
+                                    data-category="<?php echo (int) $group['id']; ?>"
+                                    data-name="<?php echo $functions->escape($group['name']); ?>">
+                                <span><?php echo $functions->escape($group['name']); ?></span><span class="mcat-count"><?php echo (int) $group['count']; ?></span>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                    <button type="button" class="mobile-cats-more" id="mobileCatsMore" aria-label="查看全部分类">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+
                 <div class="rail-bar">
                     <button type="button" class="rail-open" id="railOpen" aria-label="打开分类索引">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -798,16 +903,39 @@ if ($bgImage !== '') {
                     </section>
                 <?php endif; ?>
 
+                <div class="filter-bar-wrap" id="filterBarWrap" data-open="0">
+                <div class="filter-bar" id="filterBar">
+                    <div class="filter-chip" id="filterKeyword" hidden>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
+                        <span>关键词：<strong id="filterKeywordText"></strong></span>
+                        <button type="button" class="filter-chip-x" id="filterClearKeyword" aria-label="清除关键词">×</button>
+                    </div>
+                    <div class="filter-chip" id="filterCategory" hidden>
+                        <span>分类：<strong id="filterCategoryText"></strong></span>
+                        <button type="button" class="filter-chip-x" id="filterClearCategory" aria-label="清除分类筛选">×</button>
+                    </div>
+                    <button type="button" class="filter-reset" id="filterResetAll">清除全部筛选</button>
+                </div>
+                </div>
+
                 <div class="section-head">
                     <div class="section-title">
                         <h2 id="sectionTitle">全部网站</h2>
                         <span class="section-count" id="sectionCount" aria-live="polite"><?php echo $totalSites; ?> 个网站</span>
                     </div>
                     <div class="section-aside" id="sectionAside">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M12 5v14M7 14l5 5 5-5"></path>
-                        </svg>
-                        <span>按点击量排序</span>
+                        <button type="button" class="section-tool is-active" data-sort="clicks" aria-pressed="true" title="按点击量排序">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 19V9M10 19V5M16 19v-7M22 19h-20"></path>
+                            </svg>
+                            <span class="section-tool-label">常用优先</span>
+                        </button>
+                        <button type="button" class="section-tool" data-sort="name" aria-pressed="false" title="按名称排序">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 6h9M4 12h7M4 18h9"></path><path d="M17 8l3-3 3 3M20 5v14"></path>
+                            </svg>
+                            <span class="section-tool-label">名称排序</span>
+                        </button>
                     </div>
                 </div>
 
@@ -1052,14 +1180,31 @@ if ($bgImage !== '') {
                     <p id="emptyText">
                         <?php if ($totalSites > 0): ?>
                             试试其他关键词或分类。
+                        <?php elseif ($isOwner): ?>
+                            这是你的导航首页，还没有任何网址。添加第一个就能在这里看到它。
                         <?php elseif ($currentUser): ?>
-                            你还没有添加网址，去<a class="empty-link" href="my.php">「我的导航」</a>添加第一个网站。
+                            站点还没有收录任何公开网址，去<a class="empty-link" href="my.php">「我的导航」</a>搭建自己的专属导航吧。
                         <?php else: ?>
-                            请先在后台添加并启用网站。
+                            站点正在整理内容。你可以先登录或注册，把自己的常用网址收藏到一个专属导航页。
                         <?php endif; ?>
                     </p>
                     <?php if ($totalSites > 0): ?>
                         <button type="button" class="empty-reset" id="emptyReset">清除筛选</button>
+                    <?php elseif ($currentUser): ?>
+                        <div class="empty-actions">
+                            <a class="empty-primary" href="<?php echo $isOwner ? 'my.php' : 'my.php'; ?>">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="15" height="15"><path d="M12 5v14M5 12h14"></path></svg>
+                                <?php echo $isOwner ? '添加第一个网址' : '建立我的导航'; ?>
+                            </a>
+                            <?php if ((int) ($currentUser['is_admin'] ?? 0) === 1): ?>
+                                <a class="empty-secondary" href="admin/nav_links.php">批量导入网址</a>
+                            <?php endif; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="empty-actions">
+                            <button type="button" class="empty-primary" data-empty-auth="register">创建我的导航</button>
+                            <button type="button" class="empty-secondary" data-empty-auth="login">已有账号，登录</button>
+                        </div>
                     <?php endif; ?>
                 </div>
             </main>
@@ -1165,23 +1310,25 @@ if ($bgImage !== '') {
         <?php endif; ?>
     </dialog>
 
-    <!-- 快捷收藏 -->
-    <dialog class="my-dialog" id="quickAddDialog">
+    <!-- 收录工具框：识别到网址后弹出，自动填好标题/描述/图标/分组，用户确认才入库 -->
+    <dialog class="my-dialog qa-dialog" id="quickAddDialog">
         <div class="my-dialog-head">
-            <h3>快捷收藏</h3>
+            <h3>收录到我的导航</h3>
             <button type="button" class="my-iconbtn" id="quickAddClose" aria-label="关闭">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
             </button>
         </div>
         <div class="my-dialog-body">
             <p class="my-msg" id="quickAddMsg" role="alert"></p>
+
             <div class="my-field">
                 <label for="quickAddUrl">网址</label>
-                <input type="url" id="quickAddUrl" placeholder="粘贴网址，回车或点击按钮自动抓取并收藏" autocomplete="off" spellcheck="false">
+                <input type="text" id="quickAddUrl" inputmode="url" enterkeyhint="go" placeholder="https://example.com" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="要收录的网址">
             </div>
-            <div class="my-field" id="quickAddPreview" hidden>
-                <label>抓取预览</label>
-                <div class="quick-add-preview">
+
+            <!-- 抓取结果：图标 + 标题 + 描述，标题与描述可直接改 -->
+            <div class="qa-result" id="quickAddPreview" hidden>
+                <div class="qa-site-head">
                     <span class="qa-icon" aria-hidden="true">
                         <span class="qa-icon-letter"></span>
                         <img class="qa-favicon" alt="" width="40" height="40">
@@ -1190,12 +1337,29 @@ if ($bgImage !== '') {
                         <span class="qa-name"></span>
                         <span class="qa-desc"></span>
                     </span>
+                    <span class="qa-status" id="quickAddStatus"></span>
+                </div>
+
+                <div class="my-field">
+                    <label for="quickAddName">名称</label>
+                    <input type="text" id="quickAddName" maxlength="100" placeholder="网站名称" autocomplete="off" aria-label="网站名称">
+                </div>
+
+                <div class="my-field">
+                    <label for="quickAddDesc">描述</label>
+                    <input type="text" id="quickAddDesc" maxlength="200" placeholder="一句话说明这个网站（可留空）" autocomplete="off" aria-label="网站描述">
+                </div>
+
+                <div class="my-field">
+                    <label for="quickAddCategory">收录到分组</label>
+                    <select id="quickAddCategory" aria-label="收录到分组"></select>
+                    <p class="qa-hint" id="quickAddSuggestHint" hidden></p>
                 </div>
             </div>
         </div>
         <div class="my-dialog-foot">
             <button type="button" class="my-btn" id="quickAddCancel">取消</button>
-            <button type="button" class="my-btn is-primary" id="quickAddSubmit">抓取并收藏</button>
+            <button type="button" class="my-btn is-primary" id="quickAddSubmit">识别网站信息</button>
         </div>
     </dialog>
 

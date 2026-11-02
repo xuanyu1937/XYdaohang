@@ -67,6 +67,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_avatar'])) {
                 $destPath = $uploadDir . '/' . $fileName;
 
                 if (move_uploaded_file($file['tmp_name'], $destPath)) {
+                    // 存盘后立即居中裁成正方形：横幅/竖图都能正确落在 26×26 的头像框里，
+                    // 否则 object-fit: cover 会把主体裁到框外，看起来像"头像位置不对"。
+                    $functions->normalizeAvatarFile($destPath, $mimeType);
+
                     $relativePath = 'uploads/avatars/' . $fileName;
                     if ($users->updateAvatar($userId, $relativePath)) {
                         $avatarMessage = '头像更新成功';
@@ -257,7 +261,7 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.7.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.2">
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -385,7 +389,8 @@ $hasLinks = $totalLinks > 0;
             width: 34px;
             height: 34px;
             flex: 0 0 34px;
-            border-radius: 10px;
+            /* 与顶部头像统一：正圆形 */
+            border-radius: 50%;
             background: linear-gradient(135deg, var(--primary), #7c3aed);
             color: #fff;
             font-size: 14px;
@@ -393,11 +398,18 @@ $hasLinks = $totalLinks > 0;
         }
 
         .my-avatar-img {
+            display: block;
             width: 34px;
             height: 34px;
+            min-width: 34px;
+            max-width: 34px;
             flex: 0 0 34px;
-            border-radius: 10px;
+            /* 与顶部头像统一：正圆形 */
+            border-radius: 50%;
             object-fit: cover;
+            object-position: center;
+            background: var(--surface-2);
+            box-shadow: inset 0 0 0 1px var(--hairline, rgba(26, 26, 23, 0.06));
         }
 
         .my-avatar-edit {
@@ -1268,12 +1280,12 @@ $hasLinks = $totalLinks > 0;
                     $avatarUrl = $userAvatar !== '' ? $functions->getLogoDisplayUrl($userAvatar) : '';
                     ?>
                     <?php if ($avatarUrl !== ''): ?>
-                        <img class="my-avatar-img" src="<?php echo $functions->escape($avatarUrl); ?>" alt="头像" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <img class="my-avatar-img" src="<?php echo $functions->escape($avatarUrl); ?>" alt="头像" width="34" height="34" loading="eager" decoding="async" onerror="this.onerror=null;this.src='assets/img/avatar-default.svg';">
                         <span class="my-avatar" aria-hidden="true" style="display:none;"><?php echo $functions->escape($brandInitial); ?></span>
                     <?php else: ?>
                         <span class="my-avatar" aria-hidden="true"><?php echo $functions->escape($brandInitial); ?></span>
                     <?php endif; ?>
-                    <span class="my-username" title="<?php echo $functions->escape($user['username']); ?>"><?php echo $functions->escape($user['username']); ?></span>
+                    <span class="my-username" title="<?php echo $functions->escape($user['username']); ?>" translate="no"><?php echo $functions->escape($user['username']); ?></span>
                     <button type="button" class="my-avatar-edit" id="avatarEditBtn" title="设置头像">
                         <i class="fas fa-camera"></i>
                     </button>
@@ -4172,7 +4184,7 @@ $hasLinks = $totalLinks > 0;
         })();
     </script>
 <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.7.0" defer></script>
+<script src="assets/js/search.js?v=2.10.2" defer></script>
 
     <!-- 卡片右键 / 长按菜单 -->
     <div class="card-context-menu" id="cardContextMenu" hidden>

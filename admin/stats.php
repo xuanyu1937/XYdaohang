@@ -23,7 +23,7 @@ $statsUserId = 0;
     <title>数据统计 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
-    <link href="../assets/css/admin.css?v=1.1.3" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.10.2" rel="stylesheet">
     <script src="../assets/js/chart.umd.min.js"></script>
     <script>window.Chart || document.write('<script src="https://cdn.staticfile.org/Chart.js/4.3.0/chart.umd.min.js"><\/script>');</script>
     <style>
@@ -321,15 +321,74 @@ $statsUserId = 0;
 
         var userId = page.getAttribute('data-user-id') || '0';
         var chartTheme = {
-            primary: '#3b5bdb',
-            primarySoft: 'rgba(59, 91, 219, 0.12)',
+            primary: '#2f5cf0',
+            primarySoft: 'rgba(47, 92, 240, 0.12)',
+            v2: '#8f7bf0',
+            v2Soft: 'rgba(143, 123, 240, 0.14)',
             success: '#0f9f6e',
             successSoft: 'rgba(15, 159, 110, 0.12)',
             info: '#0ea5e9',
             warning: '#f59e0b',
             danger: '#dc2626',
-            muted: '#94a3b8'
+            muted: '#c4c7ce',
+            grid: 'rgba(28, 28, 26, 0.07)',
+            tick: '#8a8d95',
+            font: '"Inter", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif'
         };
+
+        /* 统一的坐标轴/图例规范：x 轴无网格、y 轴虚线淡网格、图例不再挤占绘图区 */
+        function axisTheme(showLegend) {
+            return {
+                plugins: {
+                    legend: showLegend ? {
+                        display: true,
+                        position: 'top',
+                        align: 'end',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            boxWidth: 7,
+                            boxHeight: 7,
+                            padding: 14,
+                            color: chartTheme.tick,
+                            font: { family: chartTheme.font, size: 11 }
+                        }
+                    } : { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(28, 28, 26, 0.9)',
+                        padding: 10,
+                        cornerRadius: 8,
+                        titleFont: { family: chartTheme.font, size: 11.5 },
+                        bodyFont: { family: chartTheme.font, size: 12 },
+                        displayColors: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        border: { color: chartTheme.grid },
+                        ticks: {
+                            color: chartTheme.tick,
+                            maxRotation: 0,
+                            autoSkipPadding: 14,
+                            font: { family: chartTheme.font, size: 10.5 }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: chartTheme.grid, drawTicks: false },
+                        border: { display: false },
+                        ticks: {
+                            precision: 0,
+                            maxTicksLimit: 5,
+                            padding: 8,
+                            color: chartTheme.tick,
+                            font: { family: chartTheme.font, size: 10.5 }
+                        }
+                    }
+                }
+            };
+        }
         var charts = {};
 
         function setText(id, value) {
@@ -426,17 +485,17 @@ $statsUserId = 0;
                         borderWidth: 2,
                         fill: true,
                         tension: 0.35,
-                        pointRadius: 2
+                        pointRadius: 2,
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: chartTheme.primary,
+                        pointBorderWidth: 2
                     }]
                 },
-                options: {
+                options: Object.assign({
                     responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { precision: 0 } }
-                    }
-                }
+                    maintainAspectRatio: false
+                }, axisTheme(false))
             });
         }
 
@@ -460,13 +519,34 @@ $statsUserId = 0;
                             chartTheme.danger,
                             chartTheme.muted
                         ],
-                        borderWidth: 0
+                        borderWidth: 0,
+                        hoverOffset: 6
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } }
+                    cutout: '62%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                boxWidth: 7,
+                                boxHeight: 7,
+                                padding: 12,
+                                color: chartTheme.tick,
+                                font: { family: chartTheme.font, size: 11 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(28, 28, 26, 0.9)',
+                            padding: 10,
+                            cornerRadius: 8,
+                            bodyFont: { family: chartTheme.font, size: 12 }
+                        }
+                    }
                 }
             });
         }
@@ -488,19 +568,16 @@ $statsUserId = 0;
                         label: '点击数',
                         data: items.map(function (item) { return Number(item.clicks) || 0; }),
                         backgroundColor: chartTheme.primary,
+                        hoverBackgroundColor: chartTheme.v2,
                         borderRadius: 6,
                         maxBarThickness: 22
                     }]
                 },
-                options: {
+                options: Object.assign({
                     indexAxis: 'y',
                     responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { beginAtZero: true, ticks: { precision: 0 } }
-                    }
-                }
+                    maintainAspectRatio: false
+                }, axisTheme(false))
             });
         }
 
@@ -519,17 +596,17 @@ $statsUserId = 0;
                         borderWidth: 2,
                         fill: true,
                         tension: 0.35,
-                        pointRadius: 2
+                        pointRadius: 2,
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: chartTheme.success,
+                        pointBorderWidth: 2
                     }]
                 },
-                options: {
+                options: Object.assign({
                     responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { precision: 0 } }
-                    }
-                }
+                    maintainAspectRatio: false
+                }, axisTheme(false))
             });
         }
 
@@ -550,19 +627,16 @@ $statsUserId = 0;
                         label: '站点数量',
                         data: items.map(function (item) { return Number(item.total) || 0; }),
                         backgroundColor: chartTheme.info,
+                        hoverBackgroundColor: chartTheme.v2,
                         borderRadius: 6,
                         maxBarThickness: 24
                     }]
                 },
-                options: {
+                options: Object.assign({
                     indexAxis: 'y',
                     responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { beginAtZero: true, ticks: { precision: 0 } }
-                    }
-                }
+                    maintainAspectRatio: false
+                }, axisTheme(false))
             });
         }
 

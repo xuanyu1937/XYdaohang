@@ -201,7 +201,7 @@ body::-webkit-scrollbar-thumb:hover {
     flex: 0 0 38px;
     background: var(--admin-primary-soft);
     border: 1px solid var(--admin-primary-border);
-    border-radius: 11px;
+    border-radius: 12px;
     color: var(--admin-primary);
     font-size: 16px;
 }
@@ -231,7 +231,7 @@ body::-webkit-scrollbar-thumb:hover {
     border: 1px solid var(--admin-border);
     border-radius: 999px;
     color: var(--admin-text-secondary);
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
 }
@@ -409,7 +409,7 @@ body::-webkit-scrollbar-thumb:hover {
 
 .card-header-link {
     color: var(--admin-primary);
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
 }
@@ -476,7 +476,7 @@ body::-webkit-scrollbar-thumb:hover {
 .card.border-danger p,
 .card.border-info p {
     color: var(--admin-muted);
-    font-size: 12.5px;
+    font-size: 13px;
 }
 
 @media (max-width: 768px) {
@@ -494,7 +494,7 @@ body::-webkit-scrollbar-thumb:hover {
 .stat-icon {
     width: 52px;
     height: 52px;
-    border-radius: 14px;
+    border-radius: 16px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -550,7 +550,7 @@ body::-webkit-scrollbar-thumb:hover {
 .card-subtitle {
     margin-top: 0 !important;
     color: var(--admin-muted) !important;
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 500;
     letter-spacing: 0.01em;
 }
@@ -627,7 +627,7 @@ body::-webkit-scrollbar-thumb:hover {
     margin-bottom: 0;
     border-color: var(--admin-border-soft);
     color: var(--admin-text-secondary);
-    font-size: 13.5px;
+    font-size: 14px;
     vertical-align: middle;
 }
 
@@ -683,7 +683,7 @@ body::-webkit-scrollbar-thumb:hover {
     min-width: 30px;
     padding: 2px 7px;
     background: #f1f5f9;
-    border-radius: 7px;
+    border-radius: 8px;
     color: #64748b;
     font-size: 12px;
     font-weight: 600;
@@ -695,7 +695,7 @@ body::-webkit-scrollbar-thumb:hover {
     align-items: center;
     gap: 7px;
     color: var(--admin-muted);
-    font-size: 12.5px;
+    font-size: 13px;
     white-space: nowrap;
 }
 
@@ -712,7 +712,7 @@ body::-webkit-scrollbar-thumb:hover {
     padding: 2px 8px;
     background: #f8fafc;
     border: 1px solid var(--admin-border);
-    border-radius: 7px;
+    border-radius: 8px;
     color: var(--admin-text-secondary);
     font-size: 12px;
     font-weight: 600;
@@ -728,7 +728,7 @@ body::-webkit-scrollbar-thumb:hover {
 .table .dataTables_empty {
     padding: 44px 20px !important;
     color: var(--admin-muted);
-    font-size: 13.5px;
+    font-size: 14px;
     text-align: center;
 }
 
@@ -775,7 +775,7 @@ body::-webkit-scrollbar-thumb:hover {
     gap: 8px;
     margin: 0;
     color: var(--admin-muted);
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
 }
@@ -834,7 +834,7 @@ body::-webkit-scrollbar-thumb:hover {
 .dataTables_wrapper .dataTables_info {
     padding-top: 4px;
     color: var(--admin-muted);
-    font-size: 12.5px;
+    font-size: 13px;
     line-height: 36px;
 }
 
@@ -866,9 +866,9 @@ body::-webkit-scrollbar-thumb:hover {
     padding: 0 11px;
     background: transparent;
     border: 1px solid transparent !important;
-    border-radius: 9px !important;
+    border-radius: 8px !important;
     color: #64748b;
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 500;
     line-height: 1;
     box-shadow: none;
@@ -1016,14 +1016,14 @@ table.dataTable thead > tr > th.sorting_desc {
    -------------------------------------------------------------------------- */
 
 .btn {
-    --bs-btn-border-radius: 10px;
+    --bs-btn-border-radius: 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
     padding: 0.55rem 1rem;
-    border-radius: 10px;
-    font-size: 13.5px;
+    border-radius: 12px;
+    font-size: 14px;
     font-weight: 500;
     line-height: 1.5;
     transition: background-color 0.18s ease, border-color 0.18s ease,
@@ -1038,13 +1038,13 @@ table.dataTable thead > tr > th.sorting_desc {
 .btn-sm {
     padding: 0.35rem 0.7rem;
     border-radius: 8px;
-    font-size: 12.5px;
+    font-size: 13px;
 }
 
 .btn-lg {
     padding: 0.7rem 1.25rem;
-    border-radius: 11px;
-    font-size: 14.5px;
+    border-radius: 12px;
+    font-size: 15px;
 }
 
 .btn-block,
@@ -1212,8 +1212,8 @@ table.dataTable thead > tr > th.sorting_desc {
     height: 34px;
     padding: 0;
     border: 1px solid transparent;
-    border-radius: 9px;
-    font-size: 12.5px;
+    border-radius: 8px;
+    font-size: 13px;
     line-height: 1;
 }
 
@@ -1255,7 +1255,7 @@ table.dataTable thead > tr > th.sorting_desc {
 
 .btn-group > .btn {
     margin-left: 0 !important;
-    border-radius: 9px !important;
+    border-radius: 8px !important;
 }
 
 .btn-group-sm > .btn {
@@ -1265,7 +1265,7 @@ table.dataTable thead > tr > th.sorting_desc {
     width: 32px;
     height: 32px;
     padding: 0;
-    font-size: 12.5px;
+    font-size: 13px;
 }
 
 /* 快速操作 */
@@ -1306,7 +1306,7 @@ table.dataTable thead > tr > th.sorting_desc {
 .form-label {
     margin-bottom: 0.45rem;
     color: var(--admin-text-secondary);
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.01em;
 }
@@ -1319,7 +1319,7 @@ table.dataTable thead > tr > th.sorting_desc {
     border: 1px solid var(--admin-border-strong);
     border-radius: var(--admin-radius-sm);
     color: var(--admin-text);
-    font-size: 13.5px;
+    font-size: 14px;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
     transition: border-color 0.18s ease, box-shadow 0.18s ease,
                 background-color 0.18s ease;
@@ -1430,7 +1430,7 @@ small.text-muted,
     border-left-width: 3px;
     border-radius: var(--admin-radius-md);
     color: var(--admin-text-secondary);
-    font-size: 13.5px;
+    font-size: 14px;
     box-shadow: 0 6px 20px -18px rgba(15, 23, 42, 0.35);
 }
 
@@ -1480,7 +1480,7 @@ small.text-muted,
     gap: 4px;
     padding: 0.32em 0.7em;
     border-radius: 999px;
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 500;
     line-height: 1.5;
 }
@@ -1549,7 +1549,7 @@ small.text-muted,
 }
 
 .page-link {
-    border-radius: 9px !important;
+    border-radius: 8px !important;
 }
 
 .dropdown-menu {
@@ -1633,7 +1633,7 @@ small.text-muted,
 .nav-tabs .nav-link {
     padding: 9px 14px;
     border: 1px solid transparent;
-    border-radius: 10px 10px 0 0;
+    border-radius: 12px 10px 0 0;
     color: var(--admin-muted);
     font-size: 13px;
     font-weight: 500;
@@ -1663,7 +1663,7 @@ small.text-muted,
 }
 
 .swal2-popup {
-    border-radius: 18px !important;
+    border-radius: 16px !important;
     font-family: inherit !important;
 }
 
@@ -1678,5 +1678,1450 @@ small.text-muted,
 
     .table > :not(caption) > * > * {
         padding: 12px 14px;
+    }
+}
+
+/* ==========================================================================
+   轩宇-导航 · 后台视觉 v2.9.2
+   --------------------------------------------------------------------------
+   目标：让后台与前台用同一套语言，而不是「前台高定、后台 Bootstrap」。
+   做法：覆盖式增强——前半部分既有规则继续兜底，这里只重定义令牌与关键
+        视觉层，业务结构与 JS 行为一律不动。
+
+   四条原则（与前台一致）：
+   1. 不用边框分割，用背景微明度分层（page < surface < raised）
+   2. 侧边栏从「深蓝渐变」改为同族浅色，靠明度而非色块区分
+   3. 密度优先：一屏看到更多有效信息，而不是靠留白撑体量
+   4. 过渡统一弹簧曲线，不再 linear / ease 混搭
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 令牌：对齐前台 v2.9 的中性灰阶
+   -------------------------------------------------------------------------- */
+
+:root {
+    --admin-primary: #2f5cf0;
+    --admin-primary-hover: #2449c9;
+    --admin-primary-soft: #eef2ff;
+    --admin-primary-border: #dbe3ff;
+
+    --admin-bg: #f4f4f2;
+    --admin-surface: #fcfcfb;
+    --admin-raised: #ffffff;
+
+    --admin-border: #e7e7e4;
+    --admin-border-strong: #dcdcd8;
+    --admin-border-soft: #efefec;
+
+    --admin-text: #1c1c1a;
+    --admin-text-secondary: #4b4b47;
+    --admin-muted: #7c7c76;
+
+    --admin-success: #0f8f63;
+    --admin-success-soft: #e9f8f1;
+    --admin-danger: #d13b34;
+    --admin-danger-soft: #fdefee;
+    --admin-warning: #a86510;
+    --admin-warning-soft: #fdf5e7;
+    --admin-info: #1a6fa8;
+    --admin-info-soft: #ecf6fd;
+
+    --admin-radius: 14px;
+    --admin-radius-md: 10px;
+    --admin-radius-sm: 8px;
+
+    --admin-shadow: 0 1px 2px rgba(28, 28, 26, 0.04);
+    --admin-shadow-hover: 0 2px 6px rgba(28, 28, 26, 0.06),
+                          0 12px 28px -18px rgba(28, 28, 26, 0.22);
+
+    --admin-sidebar-width: 236px;
+    --admin-sidebar-collapsed: 68px;
+
+    --admin-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --admin-transition: background-color 0.2s var(--admin-ease),
+                        color 0.2s var(--admin-ease),
+                        border-color 0.2s var(--admin-ease),
+                        box-shadow 0.2s var(--admin-ease),
+                        transform 0.2s var(--admin-ease);
+}
+
+body {
+    background: var(--admin-bg);
+    color: var(--admin-text-secondary);
+    font-size: 14px;
+    letter-spacing: 0.005em;
+}
+
+/* 数字等宽：表格列宽不随数值跳动 */
+.stat-value,
+.table td,
+.dataTables_info {
+    font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   2. 侧边栏：浅色，靠明度分层
+   -------------------------------------------------------------------------- */
+
+.sidebar {
+    width: var(--admin-sidebar-width);
+    background: var(--admin-surface) !important;
+    border-right: 1px solid var(--admin-border-soft);
+    box-shadow: none !important;
+}
+
+/* 覆盖 sidebar.php 内联的深蓝渐变伪元素 */
+.sidebar::before,
+.sidebar::after {
+    display: none !important;
+}
+
+.sidebar-brand {
+    height: 60px;
+    padding: 0 14px;
+    border-bottom: 1px solid var(--admin-border-soft);
+}
+
+.sidebar-brand h4 {
+    gap: 10px;
+    color: var(--admin-text) !important;
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+}
+
+.sidebar-brand .logo-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: linear-gradient(140deg, #3d6bff, #2f5cf0);
+    color: #fff;
+    font-size: 14px;
+    box-shadow: 0 2px 8px -2px rgba(47, 92, 240, 0.5);
+}
+
+.collapse-toggle {
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--admin-muted);
+    transition: var(--admin-transition);
+}
+
+.collapse-toggle:hover {
+    border-color: var(--admin-border);
+    background: var(--admin-raised);
+    color: var(--admin-text);
+}
+
+.sidebar-nav {
+    padding: 10px 10px 16px;
+    gap: 2px;
+}
+
+.sidebar-nav .nav-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 38px;
+    padding: 0 10px;
+    border-radius: var(--admin-radius-sm);
+    color: var(--admin-text-secondary) !important;
+    font-size: 14px;
+    font-weight: 500;
+    transition: var(--admin-transition);
+}
+
+.sidebar-nav .nav-link i {
+    width: 16px;
+    color: var(--admin-muted);
+    font-size: 13px;
+    text-align: center;
+    transition: var(--admin-transition);
+}
+
+.sidebar-nav .nav-link:hover {
+    background: rgba(28, 28, 26, 0.045);
+    color: var(--admin-text) !important;
+}
+
+.sidebar-nav .nav-link:hover i {
+    color: var(--admin-text-secondary);
+}
+
+.sidebar-nav .nav-link.active {
+    background: var(--admin-primary-soft);
+    color: var(--admin-primary) !important;
+    font-weight: 600;
+}
+
+.sidebar-nav .nav-link.active i {
+    color: var(--admin-primary);
+}
+
+/* 激活态左侧短竖条：比整块高亮克制，也不干扰图标对齐 */
+.sidebar-nav .nav-link.active::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -10px;
+    width: 3px;
+    height: 16px;
+    border-radius: 0 2px 2px 0;
+    background: var(--admin-primary);
+    transform: translateY(-50%);
+}
+
+.sidebar-nav .nav-link .badge {
+    margin-left: auto;
+    padding: 1px 6px;
+    border-radius: 6px;
+    background: var(--admin-danger) !important;
+    color: #fff !important;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+/* 折叠态 */
+.sidebar.collapsed {
+    width: var(--admin-sidebar-collapsed);
+}
+
+.sidebar.collapsed .sidebar-nav .nav-link {
+    justify-content: center;
+    padding: 0;
+}
+
+.sidebar.collapsed .sidebar-nav .nav-link span,
+.sidebar.collapsed .sidebar-nav .nav-link .badge,
+.sidebar.collapsed .sidebar-brand h4 span,
+.sidebar.collapsed .sidebar-footer .user-details {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-footer .user-info {
+    justify-content: center;
+}
+
+.main-content-wrapper {
+    margin-left: var(--admin-sidebar-width);
+    padding: 20px 28px 40px;
+    transition: margin-left 0.28s var(--admin-ease);
+}
+
+.sidebar.collapsed ~ .main-content-wrapper {
+    margin-left: var(--admin-sidebar-collapsed);
+}
+
+/* 底部账号区：原样式为深底写死白色文字，浅底后必须逐个纠正 */
+.sidebar-footer {
+    padding: 12px 12px 14px;
+    background: transparent !important;
+    border-top: 1px solid var(--admin-border-soft);
+}
+
+.sidebar-footer .user-info {
+    padding: 8px;
+    border-radius: var(--admin-radius-md);
+    transition: var(--admin-transition);
+}
+
+.sidebar-footer .user-info:hover {
+    background: rgba(28, 28, 26, 0.045);
+}
+
+.sidebar-footer .user-avatar {
+    flex: 0 0 32px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(140deg, #3d6bff, #2f5cf0);
+    box-shadow: 0 2px 8px -3px rgba(47, 92, 240, 0.55);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.sidebar-footer .user-name {
+    color: var(--admin-text);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-footer .user-time,
+.sidebar-footer .user-time .text,
+.sidebar-footer .user-time i {
+    color: var(--admin-muted);
+    font-size: 11px;
+}
+
+/* --------------------------------------------------------------------------
+   3. 页面标题区：收成一条，不再散落
+   -------------------------------------------------------------------------- */
+
+.page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px;
+    margin-bottom: 16px;
+    padding: 0 0 14px;
+    border: 0;
+    border-bottom: 1px solid var(--admin-border-soft);
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.page-breadcrumb {
+    margin: 0 0 4px;
+    color: var(--admin-muted);
+    font-size: 12px;
+}
+
+.page-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0;
+    color: var(--admin-text);
+    font-size: 19px;
+    font-weight: 680;
+    letter-spacing: -0.015em;
+    line-height: 1.3;
+}
+
+.page-title i,
+.page-title .title-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--admin-primary-soft);
+    color: var(--admin-primary);
+    font-size: 14px;
+}
+
+.page-subtitle {
+    margin: 5px 0 0;
+    color: var(--admin-muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.page-header-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--admin-muted);
+    font-size: 13px;
+}
+
+/* --------------------------------------------------------------------------
+   4. 卡片
+   -------------------------------------------------------------------------- */
+
+.card,
+.card.stat-card {
+    border: 1px solid var(--admin-border-soft);
+    border-radius: var(--admin-radius);
+    background: var(--admin-raised);
+    box-shadow: var(--admin-shadow);
+    transition: border-color 0.2s var(--admin-ease),
+                box-shadow 0.2s var(--admin-ease),
+                transform 0.2s var(--admin-ease);
+}
+
+.card:hover {
+    border-color: var(--admin-border);
+}
+
+.card-header {
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--admin-border-soft);
+    background: transparent;
+    border-radius: var(--admin-radius) var(--admin-radius) 0 0 !important;
+}
+
+.card-header h5,
+.card-header .card-title {
+    margin: 0;
+    color: var(--admin-text);
+    font-size: 14px;
+    font-weight: 640;
+}
+
+.card-header h5 i {
+    margin-right: 6px;
+    color: var(--admin-primary);
+    font-size: 13px;
+}
+
+.card-body {
+    padding: 16px 18px;
+}
+
+/* 统计卡：真实结构是 .card-body > .d-flex > (文字块, .stat-icon)
+   图标固定在右，这里只调尺寸与底色，绝不改 flex 顺序 */
+.card.stat-card {
+    overflow: visible;
+}
+
+.card.stat-card:hover {
+    border-color: var(--admin-border);
+    box-shadow: var(--admin-shadow-hover);
+    transform: translateY(-1px);
+}
+
+.card.stat-card .card-body {
+    padding: 15px 17px;
+}
+
+.card.stat-card .card-subtitle {
+    margin: 0 0 4px !important;
+    color: var(--admin-muted) !important;
+    font-size: 12px;
+    font-weight: 550;
+}
+
+.card.stat-card .card-title {
+    margin: 0 !important;
+    color: var(--admin-text);
+    font-size: 27px;
+    font-weight: 680;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+}
+
+.card.stat-card small {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 550;
+}
+
+.card.stat-card small.text-success {
+    color: var(--admin-success) !important;
+}
+
+/* 图标：38px 圆角方块 + 极淡色底。
+   内联样式写了 display:flex / 60px / 渐变，这里显式覆盖。 */
+.card.stat-card .stat-icon {
+    display: grid !important;
+    place-items: center;
+    flex: 0 0 38px !important;
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 12px !important;
+    background: var(--admin-primary-soft) !important;
+    box-shadow: none !important;
+    font-size: 15px !important;
+}
+
+.card.stat-card .stat-icon i {
+    color: var(--admin-primary) !important;
+    font-size: 15px !important;
+    line-height: 1;
+}
+
+.card.stat-card .stat-icon.stat-success {
+    background: var(--admin-success-soft) !important;
+}
+
+.card.stat-card .stat-icon.stat-success i {
+    color: var(--admin-success) !important;
+}
+
+.card.stat-card .stat-icon.stat-warning {
+    background: var(--admin-warning-soft) !important;
+}
+
+.card.stat-card .stat-icon.stat-warning i {
+    color: var(--admin-warning) !important;
+}
+
+.card.stat-card .stat-icon.stat-info {
+    background: var(--admin-info-soft) !important;
+}
+
+.card.stat-card .stat-icon.stat-info i {
+    color: var(--admin-info) !important;
+}
+
+/* --------------------------------------------------------------------------
+   5. 表格
+   -------------------------------------------------------------------------- */
+
+.table {
+    margin: 0;
+    color: var(--admin-text-secondary);
+    font-size: 13px;
+}
+
+.table > :not(caption) > * > * {
+    padding: 11px 14px;
+    border-bottom-color: var(--admin-border-soft);
+}
+
+.table > thead > tr > th {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--admin-border) !important;
+    background: transparent;
+    color: var(--admin-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+}
+
+.table > tbody > tr {
+    transition: background-color 0.15s var(--admin-ease);
+}
+
+.table > tbody > tr:hover > * {
+    background: rgba(47, 92, 240, 0.035);
+}
+
+.table > tbody > tr:last-child > * {
+    border-bottom: 0;
+}
+
+.table td .fw-bold,
+.table td strong {
+    color: var(--admin-text);
+    font-weight: 600;
+}
+
+.table td small,
+.table td .text-muted {
+    color: var(--admin-muted) !important;
+    font-size: 12px;
+}
+
+.table img {
+    border-radius: 8px;
+    object-fit: cover;
+    background: var(--admin-bg);
+}
+
+/* 描述列限两行，避免把行高撑成三行 */
+.table td .link-desc,
+.table td .site-desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.45;
+}
+
+/* 分类表：名称行内「图标 chip + 名称 + 徽标」保持同一行。
+   名称列在 1440px 下约 105px，内层 flex-wrap 一旦触发就会把图标挤到上一行。
+   这里禁止换行，超长名称以省略号收尾，行高保持稳定。 */
+.table .cell-tree .d-flex {
+    flex-wrap: nowrap !important;
+    min-width: 0;
+}
+
+.table .cell-title {
+    flex: 0 1 auto;
+    /* 名称列上限 104px：这一格还要放图标 chip 与徽标，
+       不给上限时 nowrap 会把整表撑宽，把「操作」列顶出可视区 */
+    max-width: 104px;
+    min-width: 0;
+    color: var(--admin-text);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 名称列本体也限定宽度，保证 8 列时操作列始终可见 */
+.table td:has(.cell-tree),
+.table th:nth-child(2) {
+    max-width: 180px;
+}
+
+.table .category-icon-chip {
+    flex: 0 0 auto;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 6px;
+    background: var(--admin-primary-soft);
+    color: var(--admin-primary);
+    font-size: 11px;
+    font-weight: 550;
+}
+
+.table .cell-tree .badge {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+/* 子分类层级：一根淡竖线，比纯空白更易读 */
+.table .tree-indent {
+    display: block;
+    flex: 0 0 auto;
+    width: 12px;
+    height: 18px;
+    border-left: 1px solid var(--admin-border);
+    background: transparent;
+}
+
+.table .category-remark {
+    margin-top: 2px;
+    color: var(--admin-muted);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   6. 按钮
+   -------------------------------------------------------------------------- */
+
+.btn {
+    border-radius: var(--admin-radius-sm);
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 550;
+    line-height: 1.45;
+    transition: var(--admin-transition);
+}
+
+.btn:focus-visible {
+    outline: 2px solid var(--admin-primary);
+    outline-offset: 2px;
+    box-shadow: none;
+}
+
+.btn-primary {
+    background: var(--admin-primary);
+    border-color: var(--admin-primary);
+    box-shadow: 0 1px 2px rgba(47, 92, 240, 0.24);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: var(--admin-primary-hover);
+    border-color: var(--admin-primary-hover);
+}
+
+.btn-outline-primary {
+    border-color: var(--admin-primary-border);
+    background: var(--admin-raised);
+    color: var(--admin-primary);
+}
+
+.btn-outline-primary:hover {
+    border-color: var(--admin-primary);
+    background: var(--admin-primary-soft);
+    color: var(--admin-primary);
+}
+
+.btn-light,
+.btn-outline-secondary {
+    border-color: var(--admin-border);
+    background: var(--admin-raised);
+    color: var(--admin-text-secondary);
+}
+
+.btn-light:hover,
+.btn-outline-secondary:hover {
+    border-color: var(--admin-border-strong);
+    background: var(--admin-bg);
+    color: var(--admin-text);
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+/* 行内操作按钮：默认收灰，悬浮才亮。
+   原样式默认就带淡蓝/淡红底，一行 5 个按钮排开时整列都是彩色方块。 */
+.btn-action {
+    width: 30px;
+    height: 30px;
+    border: 1px solid transparent;
+    border-radius: var(--admin-radius-sm);
+    background: transparent;
+    color: var(--admin-muted);
+    font-size: 12px;
+    transition: var(--admin-transition);
+}
+
+.btn-action-edit,
+.btn-action-delete,
+.btn-action-view,
+.btn-action-success {
+    border-color: transparent;
+    background: transparent;
+    color: var(--admin-muted);
+}
+
+.btn-action-edit:hover,
+.btn-action-edit:focus-visible {
+    border-color: var(--admin-primary-border);
+    background: var(--admin-primary-soft);
+    color: var(--admin-primary);
+    box-shadow: none;
+}
+
+.btn-action-delete:hover,
+.btn-action-delete:focus-visible {
+    border-color: #f7d7d5;
+    background: var(--admin-danger-soft);
+    color: var(--admin-danger);
+    box-shadow: none;
+}
+
+.btn-action-view:hover,
+.btn-action-view:focus-visible {
+    border-color: var(--admin-border);
+    background: var(--admin-bg);
+    color: var(--admin-text);
+}
+
+.btn-action-success:hover,
+.btn-action-success:focus-visible {
+    border-color: #d5f0e4;
+    background: var(--admin-success-soft);
+    color: var(--admin-success);
+}
+
+.btn-action:disabled,
+.btn-action.disabled {
+    border-color: transparent;
+    background: transparent;
+    color: #cfcfc9;
+    opacity: 1;
+}
+
+td .btn-action + .btn-action {
+    margin-left: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   7. 表单：双环咬合聚焦（前台同款）
+   -------------------------------------------------------------------------- */
+
+.form-label {
+    margin-bottom: 5px;
+    color: var(--admin-text-secondary);
+    font-size: 13px;
+    font-weight: 550;
+}
+
+.form-control,
+.form-select {
+    min-height: 36px;
+    padding: 7px 11px;
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius-sm);
+    background: var(--admin-raised);
+    color: var(--admin-text);
+    font-size: 13px;
+    box-shadow: none;
+    transition: border-color 0.16s var(--admin-ease), box-shadow 0.16s var(--admin-ease);
+}
+
+.form-control::placeholder {
+    color: #a9a9a3;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px rgba(47, 92, 240, 0.13);
+    outline: none;
+}
+
+.form-control:disabled,
+.form-control[readonly] {
+    background: var(--admin-bg);
+    color: var(--admin-muted);
+}
+
+.form-text {
+    color: var(--admin-muted);
+    font-size: 12px;
+}
+
+/* 工具栏里的 select 不应撑满整行（Bootstrap 默认 width:100%） */
+.stats-range-select,
+.card-body > .form-select,
+.d-flex > .form-select {
+    width: auto;
+    min-width: 160px;
+    max-width: 100%;
+    flex: 0 0 auto;
+}
+
+.form-select {
+    padding-right: 30px;
+    background-position: right 10px center;
+}
+
+.form-check-input {
+    border-color: var(--admin-border-strong);
+    transition: var(--admin-transition);
+}
+
+.form-check-input:checked {
+    background-color: var(--admin-primary);
+    border-color: var(--admin-primary);
+}
+
+.form-check-input:focus {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px rgba(47, 92, 240, 0.13);
+}
+
+/* --------------------------------------------------------------------------
+   8. 徽标 / 提示 / 分页
+   -------------------------------------------------------------------------- */
+
+.badge {
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 550;
+}
+
+.badge.bg-success,
+.badge.text-bg-success {
+    background: var(--admin-success-soft) !important;
+    color: var(--admin-success) !important;
+}
+
+.badge.bg-danger,
+.badge.text-bg-danger {
+    background: var(--admin-danger-soft) !important;
+    color: var(--admin-danger) !important;
+}
+
+.badge.bg-warning,
+.badge.text-bg-warning {
+    background: var(--admin-warning-soft) !important;
+    color: var(--admin-warning) !important;
+}
+
+.badge.bg-info,
+.badge.text-bg-info {
+    background: var(--admin-info-soft) !important;
+    color: var(--admin-info) !important;
+}
+
+.badge.bg-light {
+    background: var(--admin-bg) !important;
+    color: var(--admin-text-secondary) !important;
+}
+
+.alert {
+    padding: 11px 14px;
+    border: 1px solid var(--admin-border-soft);
+    border-radius: var(--admin-radius-md);
+    background: var(--admin-raised);
+    color: var(--admin-text-secondary);
+    font-size: 13px;
+}
+
+.alert-success {
+    border-color: #d5f0e4;
+    background: var(--admin-success-soft);
+    color: #0a6b4a;
+}
+
+.alert-danger {
+    border-color: #f7d7d5;
+    background: var(--admin-danger-soft);
+    color: #a32c26;
+}
+
+.alert-warning {
+    border-color: #f6e5c6;
+    background: var(--admin-warning-soft);
+    color: #8a5210;
+}
+
+.alert-info {
+    border-color: #d3e8f6;
+    background: var(--admin-info-soft);
+    color: #155c8a;
+}
+
+.pagination {
+    gap: 3px;
+}
+
+.page-link {
+    min-width: 30px;
+    padding: 5px 9px;
+    border: 0;
+    border-radius: var(--admin-radius-sm) !important;
+    background: transparent;
+    color: var(--admin-text-secondary);
+    font-size: 13px;
+    text-align: center;
+    transition: var(--admin-transition);
+}
+
+.page-link:hover {
+    background: rgba(28, 28, 26, 0.05);
+    color: var(--admin-text);
+}
+
+.page-item.active .page-link {
+    background: var(--admin-primary);
+    color: #fff;
+    box-shadow: 0 1px 2px rgba(47, 92, 240, 0.24);
+}
+
+.page-item.disabled .page-link {
+    background: transparent;
+    color: #c2c2bc;
+}
+
+/* --------------------------------------------------------------------------
+   9. DataTables
+   -------------------------------------------------------------------------- */
+
+.dataTables_wrapper .dataTables_filter input {
+    min-height: 32px;
+    padding: 5px 10px;
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius-sm);
+    background: var(--admin-raised);
+    font-size: 13px;
+}
+
+.dataTables_wrapper .dataTables_filter input:focus {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px rgba(47, 92, 240, 0.13);
+    outline: none;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    min-height: 32px;
+    padding: 3px 26px 3px 9px;
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius-sm);
+    font-size: 13px;
+}
+
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    color: var(--admin-muted);
+    font-size: 13px;
+}
+
+/* --------------------------------------------------------------------------
+   10. 响应式
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 992px) {
+    .main-content-wrapper {
+        margin-left: 0;
+        padding: 16px 16px 32px;
+    }
+
+    .sidebar {
+        box-shadow: 0 24px 60px -24px rgba(28, 28, 26, 0.32);
+    }
+
+    .page-title {
+        font-size: 17px;
+    }
+
+    .card.stat-card .card-title {
+        font-size: 23px;
+    }
+}
+
+@media (max-width: 576px) {
+    .main-content-wrapper {
+        padding: 14px 12px 28px;
+    }
+
+    .page-header {
+        gap: 10px;
+    }
+
+    .page-header-meta {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    /* 触摸设备没有 hover，操作按钮需要可见边界 */
+    .btn-action {
+        width: 34px;
+        height: 34px;
+        border-color: var(--admin-border);
+        background: var(--admin-raised);
+        color: var(--admin-text-secondary);
+    }
+
+    /* 移动端触摸目标不低于 40px */
+    .btn {
+        padding: 8px 14px;
+    }
+
+    .form-control,
+    .form-select {
+        min-height: 40px;
+        font-size: 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card.stat-card:hover,
+    .btn:active {
+        transform: none;
+    }
+
+    .main-content-wrapper,
+    .sidebar {
+        transition: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   v2.9.2 · 分类表列宽：从内容侧收敛（最终有效方案）
+   事实：表格是 table-layout:auto，列宽由内容决定，单格 max-width 不生效。
+   名称格里有三样东西：图标 chip（~28px）、名称、徽标（「2 个子分类」~60px），
+   其中徽标文字是可压缩的最大项。把它收成紧凑形态后，整列回到 ~105px，
+   表格总宽随之落回容器内，「操作」列不再被顶出视口。
+   -------------------------------------------------------------------------- */
+
+/* 子分类徽标：纯数字 + 图层图标，宽度减半且不再被截断 */
+.table .cell-tree .badge-soft-info {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 3px;
+    max-width: none;
+    overflow: visible;
+    padding: 1px 6px !important;
+    font-size: 11px !important;
+    font-variant-numeric: tabular-nums;
+    text-overflow: clip;
+    white-space: nowrap;
+}
+
+.table .cell-tree .badge-count i {
+    font-size: 9px;
+    opacity: 0.72;
+}
+
+/* 图标 chip 也压到最小：保留识别性，不占宽度 */
+.table .category-icon-chip {
+    min-width: 20px;
+    height: 19px;
+    padding: 0 4px;
+    font-size: 10px;
+}
+
+/* 名称本身允许省略 */
+.table .cell-title {
+    max-width: 96px;
+}
+
+/* ID 与创建时间属于辅助信息，宽度可以再收 40px，正好补齐剩余溢出 */
+#categoriesTable th:first-child,
+#categoriesTable td:first-child {
+    width: 44px;
+    padding-left: 12px !important;
+    padding-right: 4px !important;
+    font-size: 12px;
+    color: var(--admin-muted);
+}
+
+#categoriesTable th:nth-child(7),
+#categoriesTable td:nth-child(7) {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+/* 最后 16px：排序与链接数的内边距各收 4px 侧边即可归零 */
+#categoriesTable th:nth-child(5),
+#categoriesTable td:nth-child(5),
+#categoriesTable th:nth-child(6),
+#categoriesTable td:nth-child(6) {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+
+/* --------------------------------------------------------------------------
+   v2.9.2 · 导航管理 / 用户列表等「左表单 + 右宽表」页面：给表格更多呼吸空间
+   事实：Bootstrap 的 col-md-4 / col-md-8 是 4:8，右栏仅 ~719px，而导航表
+   有 10 列（含健康状态 + 操作），必然横向溢出。改为 1:3（3+9），
+   操作按钮从 30px 压到 28px、间距 2px→1px，整表即可落在容器内。
+   -------------------------------------------------------------------------- */
+
+/* 顶部 tab 的换行更紧凑 */
+.nav-legend .badge,
+.tabs-nav .nav-link {
+    white-space: nowrap;
+}
+
+/* 表单左栏收窄（真实路径：.admin-page-body > .row > .col-md-4/8） */
+@media (min-width: 768px) {
+    .admin-page-body > .row > .col-md-4 {
+        flex: 0 0 auto;
+        width: 25%;
+    }
+
+    .admin-page-body > .row > .col-md-8 {
+        flex: 0 0 auto;
+        width: 75%;
+    }
+}
+
+/* 宽表就位：表格撑满容器，窄屏再横向滚动，操作列不再被裁 */
+.admin-page-body .card-body > .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 表格密集区把操作按钮与内边距统一收紧 */
+.admin-page-body .table-responsive .table > thead > tr > th,
+.admin-page-body .table-responsive .table > tbody > tr > td {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.admin-page-body .table-responsive td .btn-action {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+}
+
+.admin-page-body .table-responsive td .btn-action + .btn-action {
+    margin-left: 1px;
+}
+
+/* 操作单元格保持不换行，避免按钮堆叠成两行 */
+.admin-page-body .table-responsive td:last-child,
+.admin-page-body .table-responsive th:last-child {
+    white-space: nowrap;
+}
+
+/* 窄屏下横向滚动出现时，给滚动条一点呼吸 */
+.admin-page-body .table-responsive {
+    scrollbar-width: thin;
+}
+
+/* --------------------------------------------------------------------------
+   v2.9.2 · 导航管理表：收纳「健康状态」列，换回内容侧的呼吸
+   事实：表格内容侧最少也需 1083px，可用容器 817px —— 差 266px。
+   健康状态列（badge「未检测」+ 延迟）独占 ~180px，信息密度低。
+   把它收成「圆点 + 延迟数字」的紧凑形态（完整文案保留在 title/aria），
+   再压缩首两列与徽标内边距，整表即可贴近容器宽度。
+   -------------------------------------------------------------------------- */
+
+/* 健康状态：圆点指示 + 延迟，状态文案移入无障碍层 */
+#navLinksTable .health-cell {
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+#navLinksTable .health-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 9px;
+    height: 9px;
+    min-width: 0;
+    padding: 0 !important;
+    border-radius: 50%;
+    overflow: hidden;
+    font-size: 0 !important;
+    line-height: 0;
+    color: transparent !important;
+    background: var(--admin-muted) !important;
+    vertical-align: middle;
+}
+
+#navLinksTable .health-badge.bg-success,
+#navLinksTable .health-badge.health-ok {
+    background: var(--admin-success) !important;
+}
+
+#navLinksTable .health-badge.bg-warning,
+#navLinksTable .health-badge.health-slow {
+    background: #f0a020 !important;
+}
+
+#navLinksTable .health-badge.bg-danger,
+#navLinksTable .health-badge.health-down {
+    background: var(--admin-danger) !important;
+}
+
+#navLinksTable .health-latency {
+    font-size: 11px !important;
+    font-variant-numeric: tabular-nums;
+    color: var(--admin-muted);
+}
+
+#navLinksTable .health-latency:empty {
+    display: none;
+}
+
+/* 首两列（勾选 + 拖拽）收到图标宽度即可 */
+#navLinksTable thead th:nth-child(1),
+#navLinksTable tbody td:nth-child(1) {
+    width: 30px;
+    padding-left: 8px !important;
+    padding-right: 0 !important;
+}
+
+#navLinksTable thead th:nth-child(2),
+#navLinksTable tbody td:nth-child(2) {
+    width: 24px;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* ID 列也收一点 */
+#navLinksTable thead th:nth-child(3),
+#navLinksTable tbody td:nth-child(3) {
+    width: 40px;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    font-variant-numeric: tabular-nums;
+    color: var(--admin-muted);
+    font-size: 12px;
+}
+
+#navLinksTable tbody td:nth-child(3) {
+    text-align: left;
+}
+
+/* 分类/归属/状态三列的徽标统一收紧 */
+#navLinksTable tbody td .badge {
+    padding: 2px 7px !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    white-space: nowrap;
+}
+
+/* 操作列按钮再让出一点 */
+#navLinksTable td:last-child .btn-action {
+    width: 26px;
+    height: 26px;
+}
+
+/* --------------------------------------------------------------------------
+   v2.9.2 · 导航管理表收口（最终方案）
+   实测：table-layout:auto 下，网站信息列会被撑到 ~1000px（浏览器按内容
+   加权分配剩余宽度，min-width 无法约束它）。改为 table-layout:fixed 后
+   列宽完全由我们指定：网站信息列给最大配额，其余列按内容需要的最小值，
+   合计压在 817px 容器内 —— 无横向滚动，操作列也不再被裁。
+   -------------------------------------------------------------------------- */
+#navLinksTable {
+    width: 100% !important;
+    table-layout: fixed;
+}
+
+/* 表格内边距统一用 8px：fixed 布局下 content-box 的 width 不含 padding，
+   若 padding 保留 24px，每列会被压成负内容宽度，浏览器再把剩余量按权重
+   放大，网站信息列反而被稀释（实测只剩 93px）。先统一 padding 再配额。 */
+#navLinksTable > thead > tr > th,
+#navLinksTable > tbody > tr > td {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+
+#navLinksTable > tbody > tr > td:nth-child(1),
+#navLinksTable > thead > tr > th:nth-child(1) {
+    padding-left: 6px !important;
+    padding-right: 0 !important;
+}
+
+#navLinksTable > tbody > tr > td:nth-child(2),
+#navLinksTable > thead > tr > th:nth-child(2) {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* 列宽配额（px 为含 16px 内边距后的目标总宽，合计 817px） */
+#navLinksTable > thead > tr > th:nth-child(1) { width: 30px; }  /* 勾选 */
+#navLinksTable > thead > tr > th:nth-child(2) { width: 22px; }  /* 拖拽 */
+#navLinksTable > thead > tr > th:nth-child(3) { width: 36px; }  /* ID */
+#navLinksTable > thead > tr > th:nth-child(4) { width: auto; }  /* 网站信息：吃掉剩余 */
+#navLinksTable > thead > tr > th:nth-child(5) { width: 80px; }  /* 分类 */
+#navLinksTable > thead > tr > th:nth-child(6) { width: 66px; }  /* 归属 */
+#navLinksTable > thead > tr > th:nth-child(7) { width: 44px; }  /* 排序 */
+#navLinksTable > thead > tr > th:nth-child(8) { width: 54px; }  /* 状态 */
+#navLinksTable > thead > tr > th:nth-child(9) { width: 66px; }  /* 健康状态 */
+#navLinksTable > thead > tr > th:nth-child(10) { width: 148px; } /* 操作 */
+
+#navLinksTable > tbody > tr > td:nth-child(4) {
+    width: auto;
+    max-width: 0;
+}
+
+/* 网站信息列：logo + 文本两段式，文本可省略但不换行错位 */
+#navLinksTable tbody td:nth-child(4) > div {
+    min-width: 0;
+}
+
+#navLinksTable tbody td:nth-child(4) > div > div:last-child {
+    min-width: 0;
+    overflow: hidden;
+    line-height: 1.45;
+}
+
+#navLinksTable tbody td:nth-child(4) strong {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#navLinksTable tbody td:nth-child(4) small {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#navLinksTable tbody td:nth-child(4) br {
+    display: none;
+}
+
+/* 分类/归属列的文字也要能省略，不能撑破列 */
+#navLinksTable tbody td:nth-child(5) .badge,
+#navLinksTable tbody td:nth-child(6) .badge {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+
+/* 排序 / 状态 / 健康状态三列内容居中，视觉节奏更稳 */
+#navLinksTable thead th:nth-child(7),
+#navLinksTable tbody td:nth-child(7),
+#navLinksTable thead th:nth-child(8),
+#navLinksTable tbody td:nth-child(8),
+#navLinksTable thead th:nth-child(9),
+#navLinksTable tbody td:nth-child(9) {
+    text-align: center;
+}
+
+/* 健康状态列内的检测按钮本身再小一号 */
+#navLinksTable .health-cell .btn {
+    width: 24px;
+    height: 22px;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    border-radius: 6px;
+    vertical-align: middle;
+}
+
+/* 导航表 logo 从 60px 收到 34px，把省下的 26px 全给网站信息列 */
+#navLinksTable tbody td:nth-child(4) .logo-placeholder,
+#navLinksTable tbody td:nth-child(4) img {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+}
+
+#navLinksTable tbody td:nth-child(4) .logo-placeholder.me-3,
+#navLinksTable tbody td:nth-child(4) img.me-3 {
+    margin-right: 8px !important;
+}
+
+/* 操作列：5 个按钮 + 间距压在 148px 内 */
+#navLinksTable > tbody > tr > td:nth-child(10) .btn-action {
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
+}
+
+#navLinksTable > tbody > tr > td:nth-child(10) .btn-action + .btn-action {
+    margin-left: 0;
+}
+
+#navLinksTable > tbody > tr > td:nth-child(10) .btn-group {
+    gap: 3px;
+}
+
+/* 页头右上角的头像胶囊（管理员信息页等使用） */
+.page-header-meta .meta-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--admin-primary), #8f7bf0);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    box-shadow: 0 2px 8px rgba(47, 92, 240, 0.22);
+    user-select: none;
+}
+
+/* 页头里纯文字的时间胶囊不要被挤成一团 */
+.page-header-meta .meta-pill > span:empty {
+    display: none;
+}
+
+/* --------------------------------------------------------------------------
+   v2.9.2 · 移动端页头避让固定定位的菜单按钮
+   事实：.mobile-menu-toggle 是 position:fixed（16,16，44×44），
+   而 .page-header 在 ≤768px 只有 18px 内边距，面包屑被按钮压住。
+   在 ≤768px 给页头左侧留出 68px，保证首行文字不被遮挡。
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+    .page-header {
+        padding-top: 18px;
+    }
+
+    .page-header .page-heading {
+        padding-left: 62px;
+        min-height: 44px;
+    }
+
+    /* 让标题与按钮垂直居中对齐 */
+    .page-header .page-breadcrumb {
+        margin-top: -2px;
+    }
+
+    .page-header-meta {
+        padding-left: 0;
+        width: 100%;
+    }
+
+    /* 无页头页面也要给按钮让位 */
+    .main-content-wrapper > .container-fluid:first-of-type,
+    .main-content-wrapper > .admin-page-body:first-of-type {
+        padding-left: 0;
     }
 }

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="轩宇导航">
+    <defs>
+        <linearGradient id="xy-brand" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#3b82f6"/>
+            <stop offset="1" stop-color="#1d4ed8"/>
+        </linearGradient>
+    </defs>
+    <rect width="64" height="64" rx="16" fill="url(#xy-brand)"/>
+    <path d="M32 13c-6.6 0-12 5.4-12 12 0 8.2 12 26 12 26s12-17.8 12-26c0-6.6-5.4-12-12-12z" fill="#ffffff"/>
+    <circle cx="32" cy="25" r="5" fill="#1d4ed8"/>
+</svg>

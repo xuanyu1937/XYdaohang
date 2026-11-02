@@ -202,7 +202,7 @@ $currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.1.3';
             font-size: 1rem !important;
         }
     </style>
-    <link href="../assets/css/admin.css?v=1.1.3" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.10.2" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -361,7 +361,7 @@ $currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.1.3';
                                     </h5>
                                 </div>
                                 <div class="card-body">
-                                    <canvas id="visitChart" style="max-height: 300px;"></canvas>
+                                    <canvas id="visitChart" style="max-height: 220px;" aria-label="近 7 天访问趋势图" role="img"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -738,17 +738,27 @@ $currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.1.3';
                     datasets: [{
                         label: '访问量',
                         data: visits,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderColor: '#2f5cf0',
+                        backgroundColor: 'rgba(47, 92, 240, 0.10)',
                         borderWidth: 2,
+                        pointRadius: dates.length > 1 ? 3 : 4,
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#2f5cf0',
+                        pointBorderWidth: 2,
                         fill: true,
                         tension: 0.4
                     }, {
                         label: '访客数',
                         data: visitors,
-                        borderColor: '#f093fb',
-                        backgroundColor: 'rgba(240, 147, 251, 0.1)',
+                        borderColor: '#8f7bf0',
+                        backgroundColor: 'rgba(143, 123, 240, 0.10)',
                         borderWidth: 2,
+                        pointRadius: dates.length > 1 ? 3 : 4,
+                        pointHoverRadius: 5,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#8f7bf0',
+                        pointBorderWidth: 2,
                         fill: true,
                         tension: 0.4
                     }]
@@ -756,21 +766,53 @@ $currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.1.3';
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
                     plugins: {
                         legend: {
                             position: 'top',
+                            align: 'end',
+                            labels: {
+                                boxWidth: 8,
+                                boxHeight: 8,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                padding: 16,
+                                color: '#4b4b47',
+                                font: { size: 12 }
+                            }
                         },
                         tooltip: {
                             mode: 'index',
-                            intersect: false
+                            intersect: false,
+                            padding: 10,
+                            cornerRadius: 8,
+                            displayColors: true,
+                            boxWidth: 8,
+                            boxHeight: 8,
+                            usePointStyle: true
                         }
                     },
                     scales: {
+                        x: {
+                            grid: { display: false },
+                            border: { display: false },
+                            ticks: { color: '#7c7c76', font: { size: 11.5 } }
+                        },
                         y: {
                             beginAtZero: true,
+                            // 数据只有 1 个点时，固定 stepSize:1 会出现 0/1 两根突兀刻线，
+                            // 交给 Chart.js 自适应更好
                             ticks: {
-                                stepSize: 1
-                            }
+                                color: '#7c7c76',
+                                font: { size: 11.5 },
+                                precision: 0,
+                                maxTicksLimit: 5
+                            },
+                            grid: { color: 'rgba(28, 28, 26, 0.06)' },
+                            border: { display: false }
                         }
                     }
                 }

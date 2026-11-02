@@ -439,25 +439,37 @@ $recentLogins = $recentStmt->fetchAll();
         .strength-good { width: 75%; background: #3b82f6; }
         .strength-strong { width: 100%; background: #10b981; }
     </style>
-    <link href="../assets/css/admin.css?v=1.1.3" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.10.2" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
     
     <div class="main-content-wrapper" id="mainContentWrapper">
-        <nav class="navbar-top">
-            <div class="container-fluid px-0">
-                <span class="navbar-brand">
-                    <i class="fas fa-user me-2"></i>管理员信息
+        <header class="page-header">
+            <div class="page-heading">
+                <div class="page-breadcrumb">
+                    <span>后台管理</span>
+                    <i class="fas fa-angle-right"></i>
+                    <span>管理员信息</span>
+                </div>
+                <h1 class="page-title">
+                    <span class="title-icon"><i class="fas fa-user-shield"></i></span>
+                    管理员信息
+                </h1>
+                <p class="page-subtitle">维护当前管理员的账号信息与登录密码，修改后立即生效。</p>
+            </div>
+            <div class="page-header-meta">
+                <span class="meta-pill">
+                    <i class="fas fa-clock"></i>
+                    <span id="currentTime"></span>
                 </span>
-                <div class="user-info">
-                    <span class="text-muted me-3" id="currentTime"></span>
-                    <div class="user-avatar" data-bs-toggle="tooltip" title="<?php echo $functions->escape($_SESSION['admin_username'] ?? ''); ?>">
-                        <?php echo $functions->escape(strtoupper(substr((string) ($_SESSION['admin_username'] ?? ''), 0, 1))); ?>
-                    </div>
+                <div class="meta-avatar" data-bs-toggle="tooltip" title="<?php echo $functions->escape($_SESSION['admin_username'] ?? ''); ?>">
+                    <?php echo $functions->escape(strtoupper(substr((string) ($_SESSION['admin_username'] ?? ''), 0, 1))); ?>
                 </div>
             </div>
-        </nav>
+        </header>
+
+        <div class="admin-page-body">
         
         <?php if ($message): ?>
             <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
@@ -801,6 +813,7 @@ $recentLogins = $recentStmt->fetchAll();
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     </div>
     

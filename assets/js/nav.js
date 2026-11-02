@@ -28,6 +28,9 @@
     var railClose = document.getElementById('railClose');
     var railBackdrop = document.getElementById('railBackdrop');
     var railCurrent = document.getElementById('railCurrent');
+    var mobileCats = document.getElementById('mobileCats');
+    var mobileCatsTrack = document.getElementById('mobileCatsTrack');
+    var mobileCatsMore = document.getElementById('mobileCatsMore');
     var sectionTitle = document.getElementById('sectionTitle');
     var sectionCount = document.getElementById('sectionCount');
     var sectionAside = document.getElementById('sectionAside');
@@ -35,6 +38,15 @@
     var emptyTitle = document.getElementById('emptyTitle');
     var emptyText = document.getElementById('emptyText');
     var emptyReset = document.getElementById('emptyReset');
+    var filterBar = document.getElementById('filterBar');
+    var filterBarWrap = document.getElementById('filterBarWrap');
+    var filterKeyword = document.getElementById('filterKeyword');
+    var filterKeywordText = document.getElementById('filterKeywordText');
+    var filterCategory = document.getElementById('filterCategory');
+    var filterCategoryText = document.getElementById('filterCategoryText');
+    var filterClearKeyword = document.getElementById('filterClearKeyword');
+    var filterClearCategory = document.getElementById('filterClearCategory');
+    var filterResetAll = document.getElementById('filterResetAll');
     // 记录初始空状态文案：登录用户与访客的引导语不同，由服务端渲染后在这里缓存
     var emptyDefaultTitle = emptyTitle ? emptyTitle.textContent : '';
     var emptyDefaultText = emptyText ? emptyText.textContent : '';
@@ -49,10 +61,10 @@
 
     // 默认搜索引擎（兜底，API 加载失败时使用）
     var SEARCH_ENGINES = {
-        site:   { label: '站内', placeholder: '搜索网站，支持拼音（按 / 聚焦）', url: '' },
-        baidu:  { label: '百度', placeholder: '百度搜索，回车新标签页打开', url: 'https://www.baidu.com/s?wd=' },
-        bing:   { label: '必应', placeholder: '必应搜索，回车新标签页打开', url: 'https://www.bing.com/search?q=' },
-        google: { label: '谷歌', placeholder: 'Google 搜索，回车新标签页打开', url: 'https://www.google.com/search?q=' }
+        site:   { label: '站内', placeholder: '搜索网站或粘贴网址', url: '' },
+        baidu:  { label: '百度', placeholder: '在百度中搜索', url: 'https://www.baidu.com/s?wd=' },
+        bing:   { label: '必应', placeholder: '在必应中搜索', url: 'https://www.bing.com/search?q=' },
+        google: { label: '谷歌', placeholder: '在 Google 中搜索', url: 'https://www.google.com/search?q=' }
     };
 
     var cards = toArray(document.querySelectorAll('.site-card'));
@@ -108,13 +120,22 @@
 
     applyTheme(root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
 
-    if (themeToggle) {
-        themeToggle.addEventListener('click', function () {
-            var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            applyTheme(next);
-            store('xy-nav-theme', next);
-        });
-    }
+        if (themeToggle) {
+            themeToggle.addEventListener('click', function () {
+                var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                applyTheme(next);
+                store('xy-nav-theme', next);
+
+                // 点击反馈：图标做一次旋转进场，让「已切换」这件事看得见
+                themeToggle.classList.remove('is-switching');
+                // 强制回流，保证连续点击也能重放动画
+                void themeToggle.offsetWidth;
+                themeToggle.classList.add('is-switching');
+                window.setTimeout(function () {
+                    themeToggle.classList.remove('is-switching');
+                }, 520);
+            });
+        }
 
     /* ----------------------------------------------------------------------
        配色皮肤
@@ -325,6 +346,54 @@
         });
     }
 
+    if (mobileCats) {
+        mobileCats.addEventListener('click', function (event) {
+            var chip = event.target.closest ? event.target.closest('.mcat') : null;
+
+            if (!chip) {
+                return;
+            }
+
+            // 再次点击当前分类时返回「全部」，方便单手快速切回。
+            var target = chip.classList.contains('is-active') && chip.getAttribute('data-category') !== 'all'
+                ? 'all'
+                : chip.getAttribute('data-category');
+
+            setCategory(target, true);
+        });
+    }
+
+    if (mobileCatsMore) {
+        mobileCatsMore.addEventListener('click', openRail);
+    }
+
+    function syncMobileChips(category) {
+        if (!mobileCats) {
+            return;
+        }
+
+        qsa('.mcat').forEach(function (chip) {
+            var active = chip.getAttribute('data-category') === category;
+            chip.classList.toggle('is-active', active);
+            chip.setAttribute('aria-selected', active ? 'true' : 'false');
+
+            if (!active || !mobileCatsTrack) {
+                return;
+            }
+
+            var chipLeft = chip.offsetLeft;
+            var chipRight = chipLeft + chip.offsetWidth;
+            var viewLeft = mobileCatsTrack.scrollLeft;
+            var viewRight = viewLeft + mobileCatsTrack.clientWidth;
+
+            if (chipLeft < viewLeft + 8) {
+                mobileCatsTrack.scrollTo({ left: Math.max(0, chipLeft - 12), behavior: 'smooth' });
+            } else if (chipRight > viewRight - 8) {
+                mobileCatsTrack.scrollTo({ left: chipRight - mobileCatsTrack.clientWidth + 12, behavior: 'smooth' });
+            }
+        });
+    }
+
     function markActiveRail(category) {
         var activeItem = null;
 
@@ -336,6 +405,9 @@
                 activeItem = item;
             }
         });
+
+        // 移动端横向分类条同步选中态，并把它滚动到可视区域内。
+        syncMobileChips(category);
 
         // 选中子分类时同步展开其父分组。
         if (activeItem && activeItem.classList.contains('is-sub')) {
@@ -557,9 +629,7 @@
             sectionCount.textContent = visibleTotal + ' 个网站';
         }
 
-        if (sectionAside) {
-            sectionAside.hidden = filtering;
-        }
+        /* 排序切换在筛选状态下仍然可用：用户在筛选结果里也可能想换排序方式 */
 
         if (hotStrip) {
             hotStrip.hidden = filtering;
@@ -586,6 +656,86 @@
         if (emptyReset) {
             emptyReset.hidden = totalCards === 0;
         }
+
+        syncFilterBar();
+    }
+
+    /**
+     * 筛选状态条：把「当前在筛选什么、命中多少条」讲清楚，并提供一键清除入口。
+     */
+    function syncFilterBar() {
+        if (!filterBar) {
+            return;
+        }
+
+        var hasKeyword = !!state.query;
+        var hasCategory = state.category !== 'all';
+        var filtering = hasKeyword || hasCategory;
+
+        /* 折叠用 Grid 0fr → 1fr 过渡（见 nav.css），这里只切 data-open，不碰 hidden，
+           否则 display:none 会让过渡失效 */
+        if (filterBarWrap) {
+            filterBarWrap.setAttribute('data-open', filtering ? '1' : '0');
+            filterBarWrap.setAttribute('aria-hidden', filtering ? 'false' : 'true');
+        }
+
+        /* 选定单一分类时，顶部大标题已经说明分类，再隐藏各分组的小标题避免重复；
+           关键词筛选可能同时命中多个分组，保留分组标题仍有意义 */
+        if (root) {
+            root.classList.toggle('is-single-category', hasCategory);
+        }
+
+        if (filterKeyword) {
+            filterKeyword.hidden = !hasKeyword;
+        }
+
+        if (filterKeywordText && hasKeyword) {
+            filterKeywordText.textContent = searchInput ? searchInput.value.trim() : state.query;
+        }
+
+        var activeItem = qsa('.rail-item.is-active')[0];
+        var catName = activeItem ? (activeItem.getAttribute('data-name') || '') : '';
+
+        if (filterCategory) {
+            filterCategory.hidden = !hasCategory || !catName;
+        }
+
+        if (filterCategoryText && catName) {
+            filterCategoryText.textContent = catName;
+        }
+    }
+
+    function clearAllFilters() {
+        if (searchInput) {
+            searchInput.value = '';
+        }
+
+        state.query = '';
+        updateSearchClear();
+        setCategory('all', true);
+    }
+
+    if (filterClearKeyword) {
+        filterClearKeyword.addEventListener('click', function () {
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.focus();
+            }
+
+            state.query = '';
+            updateSearchClear();
+            applyFilters();
+        });
+    }
+
+    if (filterClearCategory) {
+        filterClearCategory.addEventListener('click', function () {
+            setCategory('all', true);
+        });
+    }
+
+    if (filterResetAll) {
+        filterResetAll.addEventListener('click', clearAllFilters);
     }
 
     function setCategory(category, shouldApply) {
@@ -698,18 +848,32 @@
     }
 
     /**
+     * 共享的搜索引擎请求：nav.js 与 search.js 都会用到同一份数据，
+     * 挂在 window 上复用同一个 Promise，避免首屏重复请求同一接口。
+     */
+    function fetchEngines(force) {
+        if (force || !window.__xyEnginesPromise) {
+            window.__xyEnginesPromise = fetch('api/user_search_engines.php', {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            })
+                .then(function (resp) {
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    return resp.json();
+                });
+        }
+
+        return window.__xyEnginesPromise;
+    }
+
+    /**
      * 从 API 加载搜索引擎列表（用户自定义优先，否则全局默认）
      */
-    function loadSearchEngines() {
-        fetch('api/user_search_engines.php', {
-            credentials: 'same-origin',
-            headers: { 'Accept': 'application/json' }
-        })
-            .then(function (resp) {
-                if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                return resp.json();
-            })
+    function loadSearchEngines(force) {
+        fetchEngines(force === true)
             .then(function (data) {
+                window.__xyEngines = data;
+
                 if (!data.ok || !data.engines || !data.engines.length) {
                     return;
                 }
@@ -721,8 +885,8 @@
                     newEngines[key] = {
                         label: e.name,
                         placeholder: e.url_template
-                            ? e.name + '搜索，回车新标签页打开'
-                            : '搜索网站，支持拼音（按 / 聚焦）',
+                            ? '在 ' + e.name + ' 中搜索'
+                            : '搜索网站或粘贴网址',
                         url: e.url_template
                     };
                 });
@@ -736,9 +900,14 @@
 
                 renderEngineMenu();
                 applyEngine(currentEngine, false);
+
+                if (typeof window.CustomEvent === 'function') {
+                    window.dispatchEvent(new CustomEvent('xy:engines', { detail: data }));
+                }
             })
             .catch(function () {
-                // API 失败时使用硬编码默认值
+                // API 失败时清除缓存，避免后续复用这个失败态；同时回落到硬编码默认值
+                window.__xyEnginesPromise = null;
                 renderEngineMenu();
                 applyEngine(currentEngine, false);
             });
@@ -831,12 +1000,39 @@
     // 异步加载用户自定义 / 全局默认搜索引擎
     loadSearchEngines();
 
+    /* ----------------------------------------------------------------------
+       v2.9.2 · 「这串输入是网址而不是关键词」
+       搜索框里粘贴网址时，交给 initUrlQuickSave 走收藏动线；
+       此时不能再把它当关键词去过滤列表，否则筛选状态条会出现
+       「关键词：https://xxx」，看着像是搜不到结果。
+       ---------------------------------------------------------------------- */
+    function looksLikeUrl(value) {
+        var text = String(value || '').trim();
+
+        if (!text || /\s/.test(text)) {
+            return false;
+        }
+
+        return /^(?:https?:\/\/)?(?:[\w-]+\.)+[a-z]{2,}(?::\d{2,5})?(?:[/?#]\S*)?$/i.test(text);
+    }
+
     if (searchInput) {
         searchInput.addEventListener('input', function () {
             updateSearchClear();
 
             if (searchTimer) {
                 clearTimeout(searchTimer);
+                searchTimer = null;
+            }
+
+            // 网址态不参与站内筛选：清掉上一个关键词，把列表还原
+            if (looksLikeUrl(searchInput.value)) {
+                if (state.query !== '') {
+                    state.query = '';
+                    applyFilters();
+                }
+
+                return;
             }
 
             searchTimer = setTimeout(commitSearch, 110);
@@ -852,6 +1048,11 @@
 
         searchInput.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') {
+                // 网址态由 initUrlQuickSave 在捕获阶段接管收藏，这里不再当关键词提交
+                if (looksLikeUrl(searchInput.value)) {
+                    return;
+                }
+
                 event.preventDefault();
 
                 if (currentEngine !== 'site') {
@@ -860,10 +1061,30 @@
                     commitSearch();
                 }
             } else if (event.key === 'Escape') {
-                searchInput.value = '';
-                state.query = '';
-                updateSearchClear();
-                applyFilters();
+                // 分两段：第一次 Esc 只收起联想并保留筛选结果，再按一次才清空关键词。
+                // 避免用户在联想面板里按 Esc 时，结果区被一起清空而"闪回全部网站"。
+                var suggestPanel = document.querySelector('.search-bar .ss-panel');
+
+                // 联想面板由 search.js 统一渲染，状态以其可见性为准
+                if (suggestPanel && !suggestPanel.hidden) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    suggestPanel.hidden = true;
+                    return;
+                }
+
+                event.preventDefault();
+
+                if (searchInput.value !== '') {
+                    event.preventDefault();
+                    searchInput.value = '';
+                    state.query = '';
+                    updateSearchClear();
+                    applyFilters();
+                    return;
+                }
+
+                // 已经清空：再按一次才退出输入框
                 searchInput.blur();
             }
         });
@@ -899,6 +1120,75 @@
         });
     }
 
+    /* ----------------------------------------------------------------------
+       卡片排序：常用优先（服务端默认）/ 名称排序，仅影响展示顺序，不改动数据
+       ---------------------------------------------------------------------- */
+
+    var sortButtons = qsa('.section-tool[data-sort]');
+    var sortMode = 'clicks';
+
+    function naturalCompare(a, b) {
+        // 名称排序按「自然序」：数字与中英文混排时更符合直觉（如 2 排在 10 前面）
+        return a.localeCompare(b, 'zh-Hans-CN', { numeric: true, sensitivity: 'base' });
+    }
+
+    function applySort(mode) {
+        sortMode = mode === 'name' ? 'name' : 'clicks';
+
+        qsa('.site-grid').forEach(function (grid) {
+            var cardsInGrid = toArray(grid.querySelectorAll('.site-card'));
+
+            cardsInGrid.sort(function (a, b) {
+                if (sortMode === 'name') {
+                    var nameA = (a.getAttribute('data-name') || '').trim();
+                    var nameB = (b.getAttribute('data-name') || '').trim();
+                    var byName = naturalCompare(nameA, nameB);
+
+                    if (byName !== 0) {
+                        return byName;
+                    }
+                }
+
+                var clicksA = parseInt(a.getAttribute('data-clicks') || '0', 10) || 0;
+                var clicksB = parseInt(b.getAttribute('data-clicks') || '0', 10) || 0;
+
+                return clicksB - clicksA;
+            });
+
+            cardsInGrid.forEach(function (card) {
+                grid.appendChild(card);
+            });
+        });
+
+        sortButtons.forEach(function (btn) {
+            var active = btn.getAttribute('data-sort') === sortMode;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+
+        try {
+            localStorage.setItem('xy-nav-sort', sortMode);
+        } catch (error) {
+            // 隐私模式下 localStorage 可能不可写，忽略即可
+        }
+    }
+
+    sortButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            applySort(btn.getAttribute('data-sort'));
+        });
+    });
+
+    try {
+        var savedSort = localStorage.getItem('xy-nav-sort');
+
+        if (savedSort === 'name' || savedSort === 'clicks') {
+            applySort(savedSort);
+        }
+    } catch (error) {
+        // 忽略
+    }
+
     if (emptyReset) {
         emptyReset.addEventListener('click', function () {
             if (searchInput) {
@@ -910,6 +1200,26 @@
             setCategory('all', true);
         });
     }
+
+    // 空状态里的「创建我的导航 / 登录」入口，直接拉起同一个登录注册弹窗
+    qsa('[data-empty-auth]').forEach(function (trigger) {
+        trigger.addEventListener('click', function () {
+            var triggerBtn = document.getElementById('authTrigger');
+
+            if (!triggerBtn) {
+                return;
+            }
+
+            var tab = trigger.getAttribute('data-empty-auth');
+            var modal = document.getElementById('authModal');
+
+            if (modal && (tab === 'register' || tab === 'login')) {
+                modal.setAttribute('data-open-tab', tab);
+            }
+
+            triggerBtn.click();
+        });
+    });
 
     document.addEventListener('keydown', function (event) {
         if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) {
@@ -1180,6 +1490,7 @@
     var titleRunning = 0;
     var TITLE_LIMIT = 3;
     var titleCache = new Map();
+    var failedTitleCache = new Map();
 
     function queueTitle(card) {
         if (!card || card.getAttribute('data-title-requested')) {
@@ -1211,6 +1522,10 @@
             return Promise.resolve();
         }
 
+        if (failedTitleCache.has(url) && Date.now() - failedTitleCache.get(url) < 10 * 60 * 1000) {
+            return Promise.resolve();
+        }
+
         var promise = titleCache.get(url);
 
         if (!promise) {
@@ -1221,6 +1536,11 @@
             }).then(function (response) {
                 return response.ok ? response.json() : null;
             }).then(function (data) {
+                if (data && data.ok === false) {
+                    // 服务端判定该地址被拦截或不可达时，短期记住失败结果，避免每次滚动都重复请求
+                    failedTitleCache.set(url, Date.now());
+                }
+
                 return data && data.ok && typeof data.title === 'string' ? data.title.trim() : '';
             }).catch(function () {
                 return '';
@@ -1243,15 +1563,23 @@
             return;
         }
 
-        if (/^(403|404|500|502|503|forbidden|access denied|just a moment|attention required|cloudflare|website|home|index|网站首页|首页)$/i.test(clean)) {
-            return;
-        }
+        // 抓取到的标题常是「WEB 应用防火墙」「Just a moment...」这类拦截页或营销语，
+        // 直接覆盖用户自己起的名字会造成困扰。这里只把它作为「别名」参与搜索与提示，
+        // 卡片主标题始终以用户填写的名称为准。
+        var nameEl = card.querySelector('.site-name');
+        var currentName = nameEl ? nameEl.textContent.trim() : '';
 
         card.setAttribute('data-title', clean);
 
-        var nameEl = card.querySelector('.site-name');
+        if (nameEl && currentName && currentName !== clean) {
+            var existingAlias = card.getAttribute('data-alias') || '';
+            var merged = existingAlias.toLowerCase().indexOf(clean.toLowerCase()) === -1
+                ? (existingAlias ? existingAlias + ' ' + clean : clean)
+                : existingAlias;
 
-        if (nameEl && nameEl.textContent.trim() !== clean) {
+            card.setAttribute('data-alias', merged);
+            nameEl.setAttribute('title', currentName + ' · ' + clean);
+        } else if (nameEl && !currentName) {
             nameEl.textContent = clean;
             nameEl.setAttribute('title', clean);
         }
@@ -1259,7 +1587,7 @@
         var domain = card.getAttribute('data-domain') || '';
 
         if (domain) {
-            card.setAttribute('aria-label', '访问 ' + clean + '（' + domain + '）');
+            card.setAttribute('aria-label', '访问 ' + (currentName || clean) + '（' + domain + '）');
         }
 
         if (state.query) {
@@ -1538,6 +1866,13 @@
         authTrigger.addEventListener('click', function () {
             // 切换登录/注册 tab 默认值：URL 参数 ?mode=register 可直开注册
             var hashMode = ((window.location.search || '').match(/[?&]mode=(login|register)/) || [])[1];
+            var preferred = authModal.getAttribute('data-open-tab');
+            authModal.removeAttribute('data-open-tab');
+
+            if (preferred === 'register' || preferred === 'login') {
+                hashMode = preferred;
+            }
+
             switchAuthTab(hashMode === 'register' && authTabs.some(function (t) { return t.getAttribute('data-tab') === 'register'; }) ? 'register' : 'login');
             authModal.showModal();
         });
@@ -1851,6 +2186,15 @@
             var label = starred ? '取消收藏' : '收藏';
             star.setAttribute('aria-label', label);
             star.setAttribute('title', label);
+
+            /* 欠阻尼微弹：先摘类再强制重排，保证连续点按也能重启动画 */
+            star.classList.remove('is-pop');
+            void star.offsetWidth;
+            star.classList.add('is-pop');
+
+            window.setTimeout(function () {
+                star.classList.remove('is-pop');
+            }, 420);
         }
 
         function isGuest() {
@@ -2067,14 +2411,259 @@
             });
         }
 
-        function openQuickAdd() {
+        /* ------------------------------------------------------------------
+           v2.9.2 · 快捷收藏后的就地收尾
+           旧版靠 window.location.reload() 让新卡片出现，代价是弹窗瞬间消失、
+           筛选/滚动位置全丢。这里改为手动把卡片插进第一个可见列表。
+           ------------------------------------------------------------------ */
+        function clearSearchAfterSave() {
+            if (!searchInput) {
+                return;
+            }
+
+            if (searchInput.value !== '') {
+                searchInput.value = '';
+            }
+
+            state.query = '';
+
+            if (typeof updateSearchClear === 'function') {
+                updateSearchClear();
+            }
+
+            // 派发 input 事件，让 search.js 的联想面板、清空按钮等监听器一起复位
+            try {
+                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            } catch (error) { /* 忽略 */ }
+
+            var hint = document.getElementById('searchUrlHint');
+            var saveBtn = document.getElementById('searchSave');
+            var submitBtn = document.getElementById('searchSubmit');
+
+            if (hint) {
+                hint.hidden = true;
+                hint.setAttribute('data-open', '0');
+            }
+
+            if (saveBtn) { saveBtn.hidden = true; }
+            if (submitBtn) { submitBtn.hidden = false; }
+        }
+
+        // 关掉弹窗后会经历「焦点回搜索框 → focus 监听弹出最近搜索」，
+        // 所以收面板必须放到关窗之后的下一个任务里，否则会被重新打开。
+        function dismissSearchChrome() {
+            var panels = document.querySelectorAll('.search-bar .ss-panel');
+
+            for (var i = 0; i < panels.length; i += 1) {
+                panels[i].hidden = true;
+            }
+
+            if (searchInput && typeof searchInput.blur === 'function') {
+                searchInput.blur();
+            }
+        }
+
+        function buildNewCard(payload) {
+            var url = String(payload.url || '').trim();
+
+            if (!url) {
+                return null;
+            }
+
+            var meta = payload.meta || {};
+            var name = String(payload.name || '').trim();
+            var host = '';
+            var domain = '';
+
+            try {
+                var u = new URL(url);
+                host = u.hostname;
+                domain = host.replace(/^www\./i, '');
+            } catch (error) {
+                domain = url.replace(/^https?:\/\//i, '').split('/')[0];
+                host = domain;
+            }
+
+            if (name === '') {
+                name = domain;
+            }
+
+            var letter = (name || domain).charAt(0).toUpperCase();
+            var icon = (meta.icons && meta.icons[0]) || '';
+            var desc = String(meta.description || '').trim();
+
+            // 结构与 index.php 渲染的 .site-card 保持一致：卡片级交互与筛选逻辑才认得出它
+            var card = document.createElement('a');
+            card.className = 'site-card is-new';
+            card.href = url;
+            card.target = '_blank';
+            card.rel = 'noopener noreferrer';
+            card.style.setProperty('--enter-index', '0');
+            card.setAttribute('aria-label', '访问 ' + name + '（' + domain + '）');
+            card.setAttribute('data-id', String(payload.id || ''));
+            card.setAttribute('data-category', String(payload.category_id || 0));
+            card.setAttribute('data-name', name);
+            card.setAttribute('data-domain', domain);
+            card.setAttribute('data-host', host);
+            card.setAttribute('data-url', url);
+            card.setAttribute('data-clicks', '0');
+            card.setAttribute('data-description', desc);
+            card.setAttribute('data-tags', '');
+            card.setAttribute('data-alias', '');
+            card.setAttribute('data-starred', '0');
+            card.setAttribute('data-owner', '1');
+
+            var frag = document.createElement('span');
+            frag.className = 'site-card-main';
+
+            var iconBox = document.createElement('span');
+            iconBox.className = 'site-icon';
+            iconBox.setAttribute('aria-hidden', 'true');
+            iconBox.innerHTML = '<span class="site-icon-letter"></span>';
+            iconBox.querySelector('.site-icon-letter').textContent = letter;
+
+            if (icon !== '') {
+                var img = document.createElement('img');
+                img.className = 'site-favicon';
+                img.alt = '';
+                img.width = 44;
+                img.height = 44;
+                img.loading = 'lazy';
+                img.decoding = 'async';
+                img.referrerPolicy = 'no-referrer';
+                img.onerror = function () { img.remove(); };
+                img.src = icon;
+                iconBox.appendChild(img);
+            }
+
+            var info = document.createElement('span');
+            info.className = 'site-info';
+            info.innerHTML = '<span class="site-name"></span><span class="site-desc"></span>';
+            info.querySelector('.site-name').textContent = name;
+            info.querySelector('.site-desc').textContent = desc;
+
+            frag.appendChild(iconBox);
+            frag.appendChild(info);
+
+            var metaBox = document.createElement('span');
+            metaBox.className = 'site-meta';
+            metaBox.innerHTML = '<span class="site-domain"></span><span class="site-metrics"><span class="site-clicks">新收录</span></span>';
+            metaBox.querySelector('.site-domain').textContent = domain;
+
+            card.appendChild(frag);
+            card.appendChild(metaBox);
+
+            return card;
+        }
+
+        function refreshAfterQuickAdd(payload) {
+            var card = buildNewCard(payload);
+
+            if (!card) {
+                return;
+            }
+
+            // 优先插进「最近添加/未分组」这类第一个可见网格，退化为任意可见网格
+            var grids = toArray(document.querySelectorAll('.site-grid'));
+            var grid = null;
+
+            for (var i = 0; i < grids.length; i += 1) {
+                if (grids[i].offsetParent !== null) {
+                    grid = grids[i];
+                    break;
+                }
+            }
+
+            if (!grid) {
+                grid = grid || grids[0];
+            }
+
+            if (!grid) {
+                return;
+            }
+
+            grid.insertBefore(card, grid.firstChild);
+
+            // 让新卡片进到 cards 集合里，后续筛选/排序/右键菜单都能认出它
+            cards = toArray(document.querySelectorAll('.site-card'));
+
+            var empty = document.getElementById('emptyState');
+            if (empty) { empty.hidden = true; }
+
+            window.setTimeout(function () {
+                card.classList.remove('is-new');
+            }, 1600);
+        }
+
+        /* ------------------------------------------------------------------
+           收录流程（v2.10.2 重做）
+
+           旧流程是「点收藏 → 抓取 → 直接入库」，用户没有确认机会，
+           也选不了分组，抓错了只能事后去「我的导航」里改。
+
+           新流程拆成两步：
+             1. quick_preview  只抓取（标题/描述/图标/推荐分组），不入库
+             2. quick_add      用户确认后，按确认过的字段落库
+
+           对外出口 open(url, {autoStart:true}) 供搜索框「收录」按钮调用，
+           绕开 <details> 里那颗触发按钮，避免菜单收起把弹窗一起带走。
+           ------------------------------------------------------------------ */
+
+        // 收录框的当前状态：preview 成功后才有 logo / categories
+        var quickAddState = { logo: '', previewed: false, busy: false };
+
+        window.XYQuickAdd = {
+            open: function (url, options) {
+                var opts = options || {};
+                openQuickAdd(url);
+
+                if (opts.autoStart) {
+                    // 等弹窗完成 showModal 的入场动画再开抓，按钮文案才不会闪
+                    window.setTimeout(function () {
+                        runQuickPreview();
+                    }, 140);
+                }
+            }
+        };
+
+        function quickAddEl(id) {
+            return document.getElementById(id);
+        }
+
+        function setQuickAddBusy(busy, label) {
+            var btn = quickAddEl('quickAddSubmit');
+            var input = quickAddEl('quickAddUrl');
+
+            quickAddState.busy = !!busy;
+
+            if (btn) {
+                btn.disabled = !!busy;
+                btn.textContent = label;
+            }
+
+            if (input) {
+                input.readOnly = !!busy;
+            }
+        }
+
+        function openQuickAdd(presetUrl) {
             if (!quickAddDialog) {
                 return;
             }
 
-            var input = document.getElementById('quickAddUrl');
-            var msg = document.getElementById('quickAddMsg');
-            var preview = document.getElementById('quickAddPreview');
+            var input = quickAddEl('quickAddUrl');
+            var msg = quickAddEl('quickAddMsg');
+            var preview = quickAddEl('quickAddPreview');
+            var submit = quickAddEl('quickAddSubmit');
+            var nameInput = quickAddEl('quickAddName');
+            var descInput = quickAddEl('quickAddDesc');
+            var category = quickAddEl('quickAddCategory');
+            var hint = quickAddEl('quickAddSuggestHint');
+            var status = quickAddEl('quickAddStatus');
+
+            quickAddState.logo = '';
+            quickAddState.previewed = false;
+            quickAddState.busy = false;
 
             if (msg) {
                 msg.textContent = '';
@@ -2084,22 +2673,312 @@
                 preview.hidden = true;
             }
 
+            if (hint) {
+                hint.hidden = true;
+                hint.textContent = '';
+            }
+
+            if (status) {
+                status.textContent = '';
+            }
+
+            if (nameInput) {
+                nameInput.value = '';
+            }
+
+            if (descInput) {
+                descInput.value = '';
+            }
+
+            if (category) {
+                category.innerHTML = '';
+            }
+
+            // 搜索框带过来的网址不能被清空：有预设值就沿用，没有才重置
             if (input) {
-                input.value = '';
+                input.value = typeof presetUrl === 'string' && presetUrl !== ''
+                    ? presetUrl
+                    : '';
+            }
+
+            if (submit) {
+                submit.disabled = false;
+                submit.textContent = '识别网站信息';
             }
 
             openDlg(quickAddDialog);
 
             if (input) {
                 input.focus();
+                input.select();
             }
         }
 
-        function doQuickAdd() {
-            var input = document.getElementById('quickAddUrl');
-            var btn = document.getElementById('quickAddSubmit');
-            var msg = document.getElementById('quickAddMsg');
+        /**
+         * 第一步：抓取站点信息 + 推荐分组，填入收录框。
+         * 只读，不写库。
+         */
+        function runQuickPreview() {
+            var input = quickAddEl('quickAddUrl');
+            var msg = quickAddEl('quickAddMsg');
             var url = input ? input.value.trim() : '';
+
+            if (!url) {
+                if (msg) {
+                    msg.textContent = '请输入网址';
+                }
+
+                if (input) {
+                    input.focus();
+                }
+
+                return;
+            }
+
+            setQuickAddBusy(true, '识别中…');
+
+            if (msg) {
+                msg.textContent = '';
+            }
+
+            postForm({ action: 'quick_preview', url: url }).then(function (res) {
+                if (!res || !res.ok) {
+                    setQuickAddBusy(false, '重新识别');
+
+                    if (msg) {
+                        msg.textContent = (res && res.error) || '识别失败，可直接填写信息后收录';
+                    }
+
+                    if (input) {
+                        input.focus();
+                        input.select();
+                    }
+
+                    return;
+                }
+
+                // 已在导航里：不必再收录，直接标星并收尾
+                if (res.duplicate) {
+                    setQuickAddBusy(false, '已在导航中');
+                    finishQuickAdd(res, true);
+
+                    return;
+                }
+
+                fillQuickAddForm(res);
+                setQuickAddBusy(false, '确认收录');
+            }).catch(function () {
+                setQuickAddBusy(false, '重新识别');
+
+                if (msg) {
+                    msg.textContent = '网络错误，请稍后重试';
+                }
+            });
+        }
+
+        /**
+         * 把 preview 结果灌进表单：预览卡片 + 可编辑字段 + 分组下拉。
+         */
+        function fillQuickAddForm(data) {
+            var preview = quickAddEl('quickAddPreview');
+            var nameInput = quickAddEl('quickAddName');
+            var descInput = quickAddEl('quickAddDesc');
+            var category = quickAddEl('quickAddCategory');
+            var hint = quickAddEl('quickAddSuggestHint');
+            var status = quickAddEl('quickAddStatus');
+            var msg = quickAddEl('quickAddMsg');
+
+            var host = data.host || '';
+
+            if (!host) {
+                try {
+                    host = new URL(data.url).hostname.replace(/^www\./i, '');
+                } catch (error) { /* 忽略 */ }
+            }
+
+            var displayName = data.name || host || data.url || '';
+            var displayDesc = data.description || '';
+
+            quickAddState.logo = data.logo || '';
+            quickAddState.previewed = true;
+
+            if (msg) {
+                msg.textContent = '';
+            }
+
+            if (preview) {
+                var letter = preview.querySelector('.qa-icon-letter');
+                var fav = preview.querySelector('.qa-favicon');
+                var nameEl = preview.querySelector('.qa-name');
+                var descEl = preview.querySelector('.qa-desc');
+
+                if (letter) {
+                    letter.textContent = (host || displayName || '?').charAt(0).toUpperCase();
+                    letter.style.display = '';
+                }
+
+                if (fav) {
+                    if (data.logo) {
+                        fav.style.display = '';
+                        // 加载完成前先不显示：否则跨域图标慢/被拦时会先露出一块白底，
+                        // 下面那层首字母渐变块反而更好看
+                        fav.classList.remove('is-loaded');
+
+                        fav.onload = function () {
+                            fav.classList.add('is-loaded');
+                        };
+
+                        fav.onerror = function () {
+                            fav.classList.remove('is-loaded');
+                            fav.style.display = 'none';
+                        };
+
+                        fav.src = data.logo;
+                    } else {
+                        fav.removeAttribute('src');
+                        fav.classList.remove('is-loaded');
+                        fav.style.display = 'none';
+                    }
+                }
+
+                if (nameEl) {
+                    nameEl.textContent = displayName;
+                }
+
+                if (descEl) {
+                    descEl.textContent = displayDesc;
+                }
+
+                preview.hidden = false;
+            }
+
+            if (nameInput) {
+                nameInput.value = displayName;
+            }
+
+            if (descInput) {
+                descInput.value = displayDesc;
+            }
+
+            // 分组下拉：preview 带回当前用户可见的全部分组
+            if (category) {
+                category.innerHTML = '';
+
+                var list = Array.isArray(data.categories) ? data.categories : [];
+
+                list.forEach(function (item) {
+                    var option = document.createElement('option');
+                    option.value = String(item.id);
+                    option.textContent = (item.is_private ? '🔒 ' : '') + item.name;
+                    category.appendChild(option);
+                });
+
+                if (data.suggested_category_id) {
+                    category.value = String(data.suggested_category_id);
+                }
+            }
+
+            // 记下推荐值，供分组变化时判断「还是推荐的那个吗」
+            quickAddState.suggestedId = data.suggested_category_id ? String(data.suggested_category_id) : '';
+            quickAddState.suggestReason = data.suggest_reason || 'none';
+            quickAddState.fetchOk = data.fetch_ok !== false;
+
+            if (status) {
+                var matched = data.suggest_reason === 'keyword';
+                status.textContent = matched ? '已自动匹配分组' : '';
+                status.className = 'qa-status' + (matched ? ' is-ok' : '');
+            }
+
+            syncQuickAddHint();
+
+            if (category) {
+                category.focus();
+            }
+        }
+
+        /**
+         * 同步分组的说明小字。
+         *
+         * 用户手动改过分组后，原先那句「自动归入「XX」」就自相矛盾了
+         * （下拉显示的是新分组，提示还写着旧分组名），所以这里按当前选中值重算。
+         */
+        function syncQuickAddHint() {
+            var hint = quickAddEl('quickAddSuggestHint');
+            var category = quickAddEl('quickAddCategory');
+            var status = quickAddEl('quickAddStatus');
+
+            if (!hint) {
+                return;
+            }
+
+            var pickedName = '';
+
+            if (category && category.selectedIndex >= 0) {
+                pickedName = category.options[category.selectedIndex].textContent.replace(/^🔒\s*/, '').trim();
+            }
+
+            // 抓取失败时优先说清原因 —— 用户看到的名称是域名，
+            // 需要知道这是兜底结果而不是网站真名
+            if (quickAddState.fetchOk === false) {
+                hint.textContent = pickedName
+                    ? '未能读取网站信息，将按域名收录到「' + pickedName + '」'
+                    : '未能读取网站信息，已按域名填写，可手动修改';
+                hint.hidden = false;
+
+                if (status) {
+                    status.textContent = '';
+                    status.className = 'qa-status';
+                }
+
+                return;
+            }
+
+            // 是否仍是自动推荐的那个分组
+            var stillSuggested = !!quickAddState.suggestedId
+                && category
+                && category.value === quickAddState.suggestedId
+                && quickAddState.suggestReason === 'keyword';
+
+            if (stillSuggested && pickedName) {
+                hint.textContent = '按网站信息自动归入「' + pickedName + '」，可手动改';
+                hint.hidden = false;
+
+                if (status) {
+                    status.textContent = '已自动匹配分组';
+                    status.className = 'qa-status is-ok';
+                }
+
+                return;
+            }
+
+            // 用户改过：只说明结果，不再提「自动」
+            if (pickedName) {
+                hint.textContent = '将收录到「' + pickedName + '」';
+                hint.hidden = false;
+
+                if (status) {
+                    status.textContent = '';
+                    status.className = 'qa-status';
+                }
+
+                return;
+            }
+
+            hint.hidden = true;
+        }
+
+        /**
+         * 第二步：按用户确认后的字段入库。
+         */
+        function confirmQuickAdd() {
+            var input = quickAddEl('quickAddUrl');
+            var nameInput = quickAddEl('quickAddName');
+            var descInput = quickAddEl('quickAddDesc');
+            var category = quickAddEl('quickAddCategory');
+            var msg = quickAddEl('quickAddMsg');
+
+            var url = input ? input.value.trim() : '';
+            var name = nameInput ? nameInput.value.trim() : '';
 
             if (!url) {
                 if (msg) {
@@ -2109,87 +2988,89 @@
                 return;
             }
 
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = '抓取中…';
+            if (!name) {
+                if (msg) {
+                    msg.textContent = '请填写网站名称';
+                }
+
+                if (nameInput) {
+                    nameInput.focus();
+                }
+
+                return;
             }
+
+            setQuickAddBusy(true, '收录中…');
 
             if (msg) {
                 msg.textContent = '';
             }
 
-            postForm({ action: 'quick_add', url: url }).then(function (res) {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = '抓取并收藏';
-                }
-
+            postForm({
+                action: 'quick_add',
+                url: url,
+                name: name,
+                description: descInput ? descInput.value.trim() : '',
+                logo: quickAddState.logo,
+                category_id: category ? category.value : 0
+            }).then(function (res) {
                 if (!res || !res.ok) {
+                    setQuickAddBusy(false, '确认收录');
+
                     if (msg) {
-                        msg.textContent = (res && res.error) || '收藏失败';
+                        msg.textContent = (res && res.error) || '收录失败，可稍后重试';
                     }
 
                     return;
                 }
 
-                var preview = document.getElementById('quickAddPreview');
-
-                if (preview && !res.duplicate) {
-                    var meta = res.meta || {};
-                    var letter = preview.querySelector('.qa-icon-letter');
-                    var fav = preview.querySelector('.qa-favicon');
-                    var name = preview.querySelector('.qa-name');
-                    var desc = preview.querySelector('.qa-desc');
-                    var host = '';
-
-                    try {
-                        host = new URL(res.url).hostname.replace(/^www\./i, '');
-                    } catch (error) { /* 忽略 */ }
-
-                    if (letter) {
-                        letter.textContent = (host || res.name || '?').charAt(0).toUpperCase();
-                    }
-
-                    if (fav) {
-                        var icon = meta.icons && meta.icons[0];
-
-                        if (icon) {
-                            fav.style.display = '';
-                            fav.onerror = function () {
-                                fav.style.display = 'none';
-                            };
-                            fav.src = icon;
-                        } else {
-                            fav.removeAttribute('src');
-                            fav.style.display = 'none';
-                        }
-                    }
-
-                    if (name) {
-                        name.textContent = res.name || host || res.url;
-                    }
-
-                    if (desc) {
-                        desc.textContent = meta.description || '';
-                    }
-
-                    preview.hidden = false;
-                }
-
-                showToast(res.duplicate ? '该网址已存在，已标记收藏' : '收藏成功');
-                setTimeout(function () {
-                    window.location.reload();
-                }, 1200);
+                finishQuickAdd(res, !!res.duplicate);
             }).catch(function () {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = '抓取并收藏';
-                }
+                setQuickAddBusy(false, '确认收录');
 
                 if (msg) {
                     msg.textContent = '网络错误，请稍后重试';
                 }
             });
+        }
+
+        /**
+         * 统一收尾：提示 → 关窗 → 清搜索框 → 新卡片置顶。
+         * 不做整页刷新，否则「弹窗自动消失」会被误当成 bug。
+         */
+        function finishQuickAdd(res, duplicate) {
+            showToast(duplicate
+                ? '该网址已在你的导航中，已标记收藏'
+                : '已收录到「' + (res.category_name || '未分类') + '」');
+
+            setTimeout(function () {
+                clearSearchAfterSave();
+                closeDlg(quickAddDialog);
+
+                if (!duplicate) {
+                    refreshAfterQuickAdd(res);
+                }
+
+                // 关窗会把焦点还给搜索框，等焦点落定后再收面板
+                window.setTimeout(dismissSearchChrome, 60);
+            }, duplicate ? 700 : 900);
+        }
+
+        /**
+         * 主按钮：未识别时先识别，识别完再确认收录。
+         */
+        function doQuickAdd() {
+            if (quickAddState.busy) {
+                return;
+            }
+
+            if (!quickAddState.previewed) {
+                runQuickPreview();
+
+                return;
+            }
+
+            confirmQuickAdd();
         }
 
         function handleAction(action, card) {
@@ -2201,6 +3082,7 @@
                     break;
                 case 'copy':
                     copyText(data.url, function () {
+                        flashCopied(card.querySelector('[data-action="copy"]'));
                         showToast('链接已复制');
                     });
                     break;
@@ -2488,16 +3370,47 @@
             });
         }
 
-        /* 快捷收藏弹窗 */
-        bind('quickAddTrigger', 'click', openQuickAdd);
+        /* 收录弹窗 */
+        bind('quickAddTrigger', 'click', function () {
+            var searchInput = document.getElementById('siteSearch');
+            var raw = searchInput ? searchInput.value.trim() : '';
+            var preset = /^(?:https?:\/\/)?(?:[\w-]+\.)+[a-z]{2,}/i.test(raw) && !/\s/.test(raw) ? raw : '';
+
+            openQuickAdd(preset);
+
+            // 带着网址打开就直接开始识别，省掉一次点击
+            if (preset) {
+                window.setTimeout(runQuickPreview, 140);
+            }
+        });
         bind('quickAddClose', 'click', function () { closeDlg(quickAddDialog); });
         bind('quickAddCancel', 'click', function () { closeDlg(quickAddDialog); });
         bind('quickAddSubmit', 'click', doQuickAdd);
+        bind('quickAddCategory', 'change', syncQuickAddHint);
         bind('quickAddUrl', 'keydown', function (event) {
             if (event.key === 'Enter') {
                 event.preventDefault();
+                // 网址改过就先重新识别，识别过再按确认
                 doQuickAdd();
             }
+        });
+
+        // 用户改了网址，之前识别出的标题/图标/分组就不再对应了，
+        // 必须退回「未识别」状态，否则会把旧站点的信息存到新网址上。
+        bind('quickAddUrl', 'input', function () {
+            if (!quickAddState.previewed) {
+                return;
+            }
+
+            quickAddState.previewed = false;
+
+            var preview = quickAddEl('quickAddPreview');
+
+            if (preview) {
+                preview.hidden = true;
+            }
+
+            setQuickAddBusy(false, '识别网站信息');
         });
 
         /* 二维码弹窗 */
@@ -2507,6 +3420,7 @@
             var text = document.getElementById('qrUrl');
 
             copyText(text ? text.textContent : '', function () {
+                flashCopied(document.getElementById('qrCopyBtn'));
                 showToast('链接已复制');
             });
         });
@@ -2547,6 +3461,210 @@
             event.preventDefault();
             saveEditLink();
         });
+    })();
+
+    /* ----------------------------------------------------------------------
+       v2.9.2 · 搜索框直接收藏网址
+       ----------------------------------------------------------------------
+       在搜索框里粘贴完整网址（协议可省略）时，把「搜索」按钮切换为「收藏」，
+       并把输入框下方的联想区换成「收藏此网址」的提示条。
+       这样「看到好站 → 复制链接 → 粘贴 → 回车」就是一条完整动线，
+       不需要先打开菜单再点「快捷收藏」。
+       ---------------------------------------------------------------------- */
+    (function initUrlQuickSave() {
+        var input = document.getElementById('siteSearch');
+        var saveBtn = document.getElementById('searchSave');
+        var submitBtn = document.getElementById('searchSubmit');
+        var hint = document.getElementById('searchUrlHint');
+        var hintText = document.getElementById('searchUrlHintText');
+        var hintAction = document.getElementById('searchUrlHintAction');
+
+        if (!input || !saveBtn || !hint) {
+            return;
+        }
+
+        var body = document.body;
+        var loggedIn = body.getAttribute('data-logged-in') === '1';
+        var state = { url: '' };
+
+        // 只认「看起来就是网址」的输入：带协议，或 主机名 + 常见域名后缀 + 可选路径
+        var PATTERN = /^(?:https?:\/\/)?(?:[\w-]+\.)+[a-z]{2,}(?::\d{2,5})?(?:[/?#]\S*)?$/i;
+
+        function normalize(raw) {
+            var value = String(raw || '').trim();
+
+            if (!value || /\s/.test(value)) {
+                return '';
+            }
+
+            // 带协议的优先，避免 "a.b" 这类误判
+            if (/^https?:\/\//i.test(value)) {
+                return PATTERN.test(value) ? value : '';
+            }
+
+            if (PATTERN.test(value) && /\.(com|cn|net|org|io|dev|app|ai|me|co|top|xyz|info|tv|cc|gg|so|vip|site|wiki|gov|edu|la|to|fm|ly|sh|us|uk|jp|de)(?:[:/?#]|$)/i.test(value)) {
+                return 'https://' + value;
+            }
+
+            return '';
+        }
+
+        function setMode(mode) {
+            var isUrl = mode === 'url';
+            saveBtn.hidden = !isUrl;
+            submitBtn.hidden = isUrl;
+            input.setAttribute('aria-label', isUrl ? '输入网址，回车收藏' : '搜索网站');
+
+            if (!isUrl) {
+                hint.hidden = true;
+                hint.setAttribute('data-open', '0');
+                state.url = '';
+            }
+        }
+
+        function showHint(url) {
+            if (!url) {
+                hint.hidden = true;
+                hint.setAttribute('data-open', '0');
+                return;
+            }
+
+            state.url = url;
+            hint.hidden = false;
+
+            var host = url.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+
+            if (hintText) {
+                hintText.innerHTML = loggedIn
+                    ? '识别到网址 <strong></strong>，回车即可收藏到「我的导航」'
+                    : '识别到网址 <strong></strong>，登录后即可收藏';
+                var strong = hintText.querySelector('strong');
+                if (strong) {
+                    strong.textContent = host;
+                }
+            }
+
+            if (hintAction) {
+                hintAction.textContent = loggedIn ? '收藏' : '登录';
+            }
+
+            // 等一帧再展开，保证 grid 0fr → 1fr 的过渡能触发
+            requestAnimationFrame(function () {
+                hint.setAttribute('data-open', '1');
+            });
+        }
+
+        function evaluate() {
+            var url = normalize(input.value);
+            setMode(url ? 'url' : 'search');
+
+            if (url) {
+                showHint(url);
+            } else {
+                hint.hidden = true;
+                hint.setAttribute('data-open', '0');
+            }
+
+            return url;
+        }
+
+        function doSave(url) {
+            if (!url) {
+                url = evaluate();
+            }
+
+            if (!url) {
+                return;
+            }
+
+            if (!loggedIn) {
+                var modal = document.getElementById('authModal');
+                var trigger = document.getElementById('authTrigger');
+
+                if (modal) {
+                    modal.setAttribute('data-open-tab', 'login');
+                }
+
+                if (trigger) {
+                    trigger.click();
+                }
+
+                return;
+            }
+
+            // 交给快捷收藏弹窗完成抓取 + 收藏，保持单一逻辑出口。
+            // 注意：不能走 quickAddTrigger.click()——那个按钮在 <details> 里，
+            // 点击会先收起菜单，弹窗刚 showModal 就被折叠的容器带走了。
+            var api = window.XYQuickAdd;
+
+            if (api && typeof api.open === 'function') {
+                api.open(url, { autoStart: true });
+                return;
+            }
+
+            var dlg = document.getElementById('quickAddDialog');
+            var trigger = document.getElementById('quickAddTrigger');
+
+            if (trigger) {
+                trigger.click();
+            }
+
+            var field = document.getElementById('quickAddUrl');
+            var submit = document.getElementById('quickAddSubmit');
+
+            if (field) {
+                field.value = url;
+            }
+
+            if (dlg) {
+                dlg.setAttribute('data-autostart', '1');
+            }
+
+            if (submit) {
+                setTimeout(function () {
+                    submit.click();
+                }, 120);
+            }
+        }
+
+        input.addEventListener('input', evaluate);
+        input.addEventListener('paste', function () {
+            setTimeout(evaluate, 0);
+        });
+        input.addEventListener('blur', function () {
+            // 失焦后收起提示，但网址本身保留给按钮使用
+            if (normalize(input.value)) {
+                hint.setAttribute('data-open', '0');
+            }
+        });
+
+        input.addEventListener('keydown', function (event) {
+            if (event.key !== 'Enter') {
+                return;
+            }
+
+            var url = normalize(input.value);
+
+            if (!url) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            doSave(url);
+        }, true);
+
+        saveBtn.addEventListener('click', function () {
+            doSave(evaluate());
+        });
+
+        if (hintAction) {
+            hintAction.addEventListener('click', function () {
+                doSave(state.url || evaluate());
+            });
+        }
+
+        setMode('search');
     })();
 
     /* ------------------------------------------------------------------
@@ -2765,7 +3883,7 @@
                     if (data.ok) {
                         closeForm();
                         loadSeList();
-                        loadSearchEngines();
+                        loadSearchEngines(true);
                     } else {
                         alert(data.error || '保存失败');
                     }
@@ -2793,7 +3911,7 @@
             .then(function (data) {
                 if (data.ok) {
                     renderSeList();
-                    loadSearchEngines();
+                    loadSearchEngines(true);
                 } else {
                     alert(data.error || '排序失败');
                     loadSeList(); // 重新加载恢复正确顺序
@@ -2818,7 +3936,7 @@
             .then(function (data) {
                 if (data.ok) {
                     loadSeList();
-                    loadSearchEngines();
+                    loadSearchEngines(true);
                 } else {
                     alert(data.error || '删除失败');
                 }
@@ -2844,7 +3962,7 @@
                         seAddUrl.value = '';
                         seAddIcon.value = '';
                         loadSeList();
-                        loadSearchEngines();
+                        loadSearchEngines(true);
                     } else {
                         alert(data.error || '添加失败');
                     }
@@ -2859,5 +3977,113 @@
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && !seModal.hidden) closeSeModal();
         });
+    }
+
+    /* ----------------------------------------------------------------------
+       复制成功反馈（铁律 10）：图标即时换成对勾并微弹，2.5s 后淡出恢复原样
+       具名函数声明会被提升，卡片操作与二维码弹窗两处都能直接调用
+       ---------------------------------------------------------------------- */
+
+    var COPY_CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+        + 'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        + '<path d="M20 6 9 17l-5-5"></path></svg>';
+
+    function flashCopied(trigger) {
+        if (!trigger) {
+            return;
+        }
+
+        var HOLD = 2500;
+        var FADE = 300;
+
+        // 首次点击时记住原图标与无障碍标签，供恢复使用
+        if (typeof trigger.__copyOriginal !== 'string') {
+            trigger.__copyOriginal = trigger.innerHTML;
+            trigger.__copyLabel = trigger.getAttribute('aria-label') || '复制链接';
+        }
+
+        if (trigger.__copyTimer) {
+            window.clearTimeout(trigger.__copyTimer);
+            window.clearTimeout(trigger.__copyFadeTimer);
+        }
+
+        trigger.classList.remove('is-fading');
+        trigger.classList.add('is-copied');
+        trigger.setAttribute('aria-label', '已复制');
+        trigger.innerHTML = COPY_CHECK_SVG;
+
+        // 到点先淡出，再换回原图标，避免对勾「啪」地变回复制
+        trigger.__copyTimer = window.setTimeout(function () {
+            trigger.classList.add('is-fading');
+
+            trigger.__copyFadeTimer = window.setTimeout(function () {
+                trigger.classList.remove('is-copied', 'is-fading');
+                trigger.innerHTML = trigger.__copyOriginal;
+                trigger.setAttribute('aria-label', trigger.__copyLabel);
+                trigger.__copyTimer = null;
+            }, FADE);
+        }, HOLD - FADE);
+    }
+
+    /* ----------------------------------------------------------------------
+       流式打字（铁律 4）：品牌名首次进站时逐字从 blur(6px) 晕开
+       单字 90ms 去模糊由 CSS 关键帧控制，相邻字错开 30ms
+       ---------------------------------------------------------------------- */
+
+    function streamText(el) {
+        if (!el || el.getAttribute('data-streamed') === '1') {
+            return;
+        }
+
+        var text = (el.textContent || '').trim();
+
+        // 太短没效果，太长会拖慢首屏感知
+        if (text.length < 2 || text.length > 16) {
+            return;
+        }
+
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            return;
+        }
+
+        el.setAttribute('data-streamed', '1');
+
+        var frag = document.createDocumentFragment();
+
+        for (var i = 0; i < text.length; i++) {
+            var span = document.createElement('span');
+            span.className = 'stream-char';
+            span.textContent = text.charAt(i);
+            span.style.animationDelay = (i * 30) + 'ms';
+            span.setAttribute('aria-hidden', 'true');
+            frag.appendChild(span);
+        }
+
+        el.textContent = '';
+        el.appendChild(frag);
+
+        // 动画放完还原为纯文本，避免逐字节点影响朗读、复制与文本选中
+        window.setTimeout(function () {
+            el.textContent = text;
+        }, text.length * 30 + 470);
+    }
+
+    var brandTitle = document.querySelector('.brand-title');
+    var alreadyStreamed = false;
+
+    try {
+        alreadyStreamed = window.sessionStorage.getItem('xy-streamed') === '1';
+    } catch (err) {
+        alreadyStreamed = false;
+    }
+
+    if (brandTitle && !alreadyStreamed) {
+        streamText(brandTitle);
+
+        try {
+            window.sessionStorage.setItem('xy-streamed', '1');
+        } catch (err) {
+            /* 隐私模式下无法写入，忽略即可，最多重复播放一次 */
+        }
     }
 })();

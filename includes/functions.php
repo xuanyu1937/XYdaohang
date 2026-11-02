@@ -604,6 +604,97 @@ class Functions {
     public function getLogoDisplayUrl($logoPath) {
         return $this->getLogoUrl($logoPath);
     }
+
+    /**
+     * 把上传的头像居中裁成正方形。
+     *
+     * 前端头像框是 26×26 的圆角方块，配合 object-fit: cover 使用。
+     * 如果原图是 600×150 这类横幅，cover 只保留正中间一小块，
+     * 主体（人脸 / 字母 / logo）很容易被裁到框外，看起来就像"头像位置不对"。
+     * 这里在存盘前先按短边居中裁成正方形，任何比例的图都能正确落到框里。
+     *
+     * 返回 true 表示已处理，false 表示跳过（GD 不可用 / 动图 / 处理失败），
+     * 调用方无需因返回值中断上传流程。
+     *
+     * @param string $path     已落盘的图片绝对路径（会被原地覆盖）
+     * @param string $mimeType 图片 MIME
+     * @param int    $maxSide  正方形边长上限
+     * @return bool
+     */
+    public function normalizeAvatarFile($path, $mimeType, $maxSide = 640)
+    {
+        if (!extension_loaded('gd') || !function_exists('imagecreatefromstring')) {
+            return false;
+        }
+
+        // 动图不处理，避免丢掉动画帧
+        if ($mimeType === 'image/gif') {
+            return false;
+        }
+
+        $raw = @file_get_contents($path);
+        if ($raw === false || $raw === '') {
+            return false;
+        }
+
+        $image = @imagecreatefromstring($raw);
+        if (!$image) {
+            return false;
+        }
+
+        $width = imagesx($image);
+        $height = imagesy($image);
+
+        if ($width < 1 || $height < 1) {
+            imagedestroy($image);
+            return false;
+        }
+
+        // 已经是够小的正方形，不用动
+        if ($width === $height && $width <= $maxSide) {
+            imagedestroy($image);
+            return true;
+        }
+
+        $side = min(min($width, $height), $maxSide);
+        $srcX = (int) floor(($width - $side) / 2);
+        $srcY = (int) floor(($height - $side) / 2);
+
+        $canvas = imagecreatetruecolor($side, $side);
+        if (!$canvas) {
+            imagedestroy($image);
+            return false;
+        }
+
+        // PNG / WebP 保留透明通道
+        if ($mimeType === 'image/png' || $mimeType === 'image/webp') {
+            imagealphablending($canvas, false);
+            imagesavealpha($canvas, true);
+            $transparent = imagecolorallocatealpha($canvas, 0, 0, 0, 127);
+            imagefill($canvas, 0, 0, $transparent);
+            imagealphablending($canvas, true);
+        }
+
+        imagecopyresampled($canvas, $image, 0, 0, $srcX, $srcY, $side, $side, $side, $side);
+
+        $ok = false;
+        switch ($mimeType) {
+            case 'image/jpeg':
+                $ok = @imagejpeg($canvas, $path, 92);
+                break;
+            case 'image/png':
+                $ok = @imagepng($canvas, $path, 6);
+                break;
+            case 'image/webp':
+                $ok = function_exists('imagewebp') ? @imagewebp($canvas, $path, 92) : false;
+                break;
+        }
+
+        imagedestroy($canvas);
+        imagedestroy($image);
+
+        return (bool) $ok;
+    }
     
     // ==================== 工具方法 ====================
     
