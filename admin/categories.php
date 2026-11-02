@@ -361,7 +361,7 @@ if (isset($_GET['edit'])) {
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
     <link href="../assets/css/dataTables.bootstrap5.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css';">
-    <link href="../assets/css/admin.css?v=2.10.2" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.10.3" rel="stylesheet">
     <style>
         /* 二级分类行的缩进与连接线，让层级关系一眼可见 */
         .cell-tree {

@@ -3102,6 +3102,9 @@ class ContactService extends BaseService
     /** 同一 IP 每日最多提交的条数 */
     const DAILY_LIMIT_PER_IP = 5;
 
+    /** 未填主题时使用的兜底主题（调用方据此判断是否需要在通知标题里带上主题） */
+    const DEFAULT_SUBJECT = '来自导航站的留言';
+
     /**
      * 提交留言。
      *
@@ -3124,7 +3127,7 @@ class ContactService extends BaseService
         }
 
         if ($subject === '') {
-            $subject = '来自导航站的留言';
+            $subject = self::DEFAULT_SUBJECT;
         }
 
         $length = function_exists('mb_strlen') ? mb_strlen($message, 'UTF-8') : strlen($message);
@@ -3158,7 +3161,49 @@ class ContactService extends BaseService
             $_SESSION['contact_last_at'] = time();
         }
 
-        return ['ok' => true];
+        // 回传落库后的规范化内容：空主题已兜底、超长已截断。
+        // 调用方用它拼通知邮件，避免拿被清空或未净化的原始表单值。
+        return [
+            'ok' => true,
+            'id' => (int) $this->db->lastInsertId(),
+            'data' => [
+                'name' => $name,
+                'email' => $email,
+                'subject' => $subject,
+                'message' => $message,
+            ],
+        ];
+    }
+
+    /**
+     * 通知邮件标题：用户填了主题就带上，方便收件箱里直接分辨；
+     * 兜底主题（未填）不再重复，避免出现「收到新的联系留言：来自导航站的留言」。
+     */
+    public static function mailSubject(array $data)
+    {
+        $subject = trim((string) ($data['subject'] ?? ''));
+
+        if ($subject === '' || $subject === self::DEFAULT_SUBJECT) {
+            return '收到新的联系留言';
+        }
+
+        // 换行会破坏邮件头，先压平再截断
+        $flat = str_replace(["\r\n", "\r", "\n"], ' ', $subject);
+        $length = function_exists('mb_strlen') ? mb_strlen($flat, 'UTF-8') : strlen($flat);
+        $short = function_exists('mb_substr') ? mb_substr($flat, 0, 40, 'UTF-8') : substr($flat, 0, 40);
+
+        return '收到新的联系留言：' . $short . ($length > 40 ? '…' : '');
+    }
+
+    /**
+     * 通知邮件正文（纯文本，MailService 会转成 HTML）。
+     */
+    public static function mailBody(array $data)
+    {
+        return '姓名：' . (string) ($data['name'] ?? '访客') . "\n"
+            . '邮箱：' . (string) ($data['email'] ?? '') . "\n"
+            . '主题：' . (string) ($data['subject'] ?? '') . "\n"
+            . "留言：\n" . (string) ($data['message'] ?? '');
     }
 
     protected function dailyCountByIp($ip)

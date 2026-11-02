@@ -59,12 +59,17 @@ if (!$result['ok']) {
 
 $functions->logMessage('[contact] 收到新留言，来自 ' . $functions->getClientIp());
 
+// 用 submit() 回传的规范化内容发通知：空主题已兜底、超长已截断。
+$submitted = isset($result['data']) ? $result['data'] : [
+    'name' => (string) ($payload['name'] ?? '访客'),
+    'email' => (string) ($payload['email'] ?? ''),
+    'subject' => (string) ($payload['subject'] ?? ''),
+    'message' => (string) ($payload['message'] ?? ''),
+];
+
 $mailer->notifyAdmin(
-    '收到新的联系留言',
-    "姓名：" . trim((string) ($payload['name'] ?? '访客'))
-        . "\n邮箱：" . trim((string) ($payload['email'] ?? ''))
-        . "\n主题：" . trim((string) ($payload['subject'] ?? ''))
-        . "\n内容：" . trim((string) ($payload['message'] ?? ''))
+    ContactService::mailSubject($submitted),
+    ContactService::mailBody($submitted)
 );
 
 $functions->jsonResponse(['ok' => true, 'message' => '留言已提交，我们会尽快回复你。']);

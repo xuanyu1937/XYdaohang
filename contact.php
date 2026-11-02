@@ -55,14 +55,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
 
         if ($result['ok']) {
+            // 先发通知、再清空表单。
+            // 旧顺序是先清空 $form['subject'] / $form['message'] 再拼邮件正文，
+            // 管理员收到的邮件里「留言：」后面永远是空的。
+            $submitted = isset($result['data']) ? $result['data'] : $form;
+
+            $mailer->notifyAdmin(
+                ContactService::mailSubject($submitted),
+                ContactService::mailBody($submitted)
+            );
+
             $success = '留言已提交，我们会尽快回复你。';
             $form['subject'] = '';
             $form['message'] = '';
-
-            $mailer->notifyAdmin(
-                '收到新的联系留言',
-                "姓名：{$form['name']}\n邮箱：{$form['email']}\n留言：" . $form['message']
-            );
         } else {
             $error = $result['error'];
         }
@@ -106,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.2">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.3">
     <link rel="stylesheet" href="assets/css/page.css">
 </head>
 <body data-monitor="0">
@@ -307,6 +312,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.10.2" defer></script>
+<script src="assets/js/search.js?v=2.10.3" defer></script>
 </body>
 </html>

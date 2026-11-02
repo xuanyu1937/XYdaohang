@@ -1,28 +1,27 @@
-# 轩宇-导航 v2.10.2 部署清单
+# 轩宇-导航 v2.10.3 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.10.2
+当前版本：v2.10.3
 
-> **本版本无数据库变更**，收录流程重做（识别 → 复核 → 确认）。覆盖代码文件 + 清理 `cache/` + 浏览器强刷即可，不需要执行任何 SQL。
+> **本版本无数据库变更**，只修联系留言通知邮件的内容缺失。覆盖代码文件 + 清理 `cache/` + 浏览器强刷即可，不需要执行任何 SQL。
 
-## 本次 v2.10.2 变动文件
+## 本次 v2.10.3 变动文件
 
 | 文件 | 说明 |
 | --- | --- |
-| `api/user_sites.php` | **主要改动**：新增 `quick_preview` 只读识别分支（只抓取不入库，回标题/描述/图标/分组推荐/重复标记）；`quick_add` 改为接收 `name`/`description`/`logo`/`category_id`，携带确认标记时不再二次抓取；新增 `userSiteNiceName()` 标题净化 |
-| `includes/Services.php` | `CategoryEngine::smartMatch()`：关键词与分类名归一化（去空白 + 转小写）、「首个命中即返回」改为计分取最高、短英文词加词边界 |
-| `index.php` | `quickAddDialog` 重写为收录工具框（站点名片 + 可编辑标题/描述/分组下拉 + 状态提示条）；资源参数 `?v=2.10.2` |
-| `assets/js/nav.js` | 两阶段收录流程（识别 → 确认）、`XYQuickAdd.open()` 支持 `autoStart`、分组切换同步提示文案、favicon `is-loaded` 淡入 |
-| `assets/css/nav.css` | 收录工具框样式、窄屏分组徽标换行修正（`calc(100% - 52px)`）、`my.php` 顶栏窄屏收敛 |
-| `config/version.php` | `APP_VERSION` 升至 2.10.2 |
-| `includes/bootstrap.php` | `APP_VERSION` 兜底常量同步 |
-| `includes/ConfigManager.php` | 配置默认 `version` 同步 |
-| `my.php` / `about.php` / `contact.php` / `share.php` | 资源参数 `?v=2.10.2` |
-| `admin/*.php`（11 页） | 资源参数 `?v=2.10.2` |
-| `VERSION`、`CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 版本号与文档同步 |
+| `includes/Services.php` | **核心修复**：`ContactService::submit()` 返回落库后的 `id` 与 `data`（规范化后的姓名/邮箱/主题/留言）；新增静态方法 `mailSubject()` / `mailBody()` 统一生成通知邮件标题与正文；新增常量 `DEFAULT_SUBJECT` |
+| `contact.php` | 提交成功后先用 `$result['data']` 发通知邮件，**再**清空 `$form`；旧代码顺序相反，导致邮件正文的留言内容永远是空字符串 |
+| `api/contact.php` | JSON 接口同样改用 `submit()` 回传的数据，空主题不再显示为空白；邮件标题带上用户填写的主题 |
+| 全部 PHP 页面（22 处） | 资源参数 `?v=2.10.3` |
+| `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `VERSION` | 版本号升至 2.10.3 |
+| `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
 
-> 升级要点：**`assets/`、`api/`、`includes/` 必须一起覆盖**。只换 `nav.js` 不换 `api/user_sites.php`，点「收录」会在识别阶段 404；只换 PHP 不换 CSS，工具框会散架。覆盖后清 `cache/` 并强刷。
+> 升级要点：只改 3 个 PHP 文件即可修复邮件问题；`?v=` 参数变化决定了静态资源需要一起刷新，若只覆盖 PHP 而浏览器仍用旧 CSS/JS，页面功能不受影响但版本号会不一致。
+
+## v2.10.2 回顾
+
+收录流程重做（识别 → 复核 → 确认）：新增 `quick_preview` 只读识别接口、标题净化、分组智能推荐计分与词边界、两阶段收录工具框。无数据库变更。
 
 ## v2.10.1 回顾
 
