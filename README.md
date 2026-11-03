@@ -72,9 +72,9 @@
 - `upgrade_*.sql` 全部幂等，重复执行不报错
 - v2.9.0 之后（含全部 v2.10.x）**无数据库变更**，无需执行任何 SQL
 
-### 从 v2.9.x 升级到 v2.10.6
+### 从 v2.9.x 升级到 v2.10.7
 
-覆盖代码文件，清理 `cache/`，前台强制刷新即可。v2.10.0 ~ v2.10.6 均无数据库结构变更。
+覆盖代码文件，清理 `cache/`，前台强制刷新即可。v2.10.0 ~ v2.10.7 均无数据库结构变更。
 
 ### 从 v2.8.x 升级到 v2.9.0
 
@@ -186,7 +186,7 @@
 - 完整变更记录见 [CHANGELOG.md](CHANGELOG.md)
 - 版本发布与安装包下载见 [Releases](https://github.com/xuanyu1937/XYdaohang/releases)
 
-当前版本：`VERSION` / `config/version.php` = **2.10.6**（2026-11-02）
+当前版本：`VERSION` / `config/version.php` = **2.10.7**（2026-11-03）
 
 ## 📄 许可证
 

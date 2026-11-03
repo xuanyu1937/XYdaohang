@@ -935,26 +935,31 @@ class SiteInfoService extends BaseService
     protected $lastRedirectUrl = '';
 
     /**
-     * 抓取站点信息。
+     * 抓取前的公共校验：URL 合法性、协议白名单、SSRF 防护，以及缓存读取。
      *
-     * @return array{ok:bool,error?:string,title?:string,description?:string,host?:string,icons?:array}
+     * 单条 fetch() 与批量 fetchMany() 共用这一段 —— 安全规则只写一份，
+     * 将来补 SSRF 规则时不会出现「改了一处漏了另一处」的情况。
+     *
+     * @return array{ok:bool, error:string, host:string, url:string, cacheFile:string, cached:?array}
      */
-    public function fetch($url, $useCache = true)
+    protected function prepareFetch($url, $useCache = true)
     {
+        $blank = ['ok' => false, 'error' => 'invalid_url', 'host' => '', 'url' => $url, 'cacheFile' => '', 'cached' => null];
+
         $url = trim((string) $url);
 
         if ($url === '' || strlen($url) > 2048) {
-            return ['ok' => false, 'error' => 'invalid_url'];
+            return $blank;
         }
 
         $parts = parse_url($url);
 
         if (!$parts || empty($parts['scheme']) || empty($parts['host']) || !empty($parts['user']) || !empty($parts['pass'])) {
-            return ['ok' => false, 'error' => 'invalid_url'];
+            return $blank;
         }
 
         if (!in_array(strtolower($parts['scheme']), ['http', 'https'], true)) {
-            return ['ok' => false, 'error' => 'invalid_scheme'];
+            return array_merge($blank, ['error' => 'invalid_scheme']);
         }
 
         $host = strtolower(trim($parts['host'], '[]'));
@@ -964,21 +969,51 @@ class SiteInfoService extends BaseService
             || substr($host, -9) === '.internal'
             || substr($host, -4) === '.lan'
         ) {
-            return ['ok' => false, 'error' => 'blocked_host'];
+            return array_merge($blank, ['host' => $host, 'error' => 'blocked_host']);
         }
 
         foreach ($this->resolveIps($host) as $ip) {
             if (!$this->isPublicIp($ip)) {
-                return ['ok' => false, 'error' => 'blocked_ip'];
+                return array_merge($blank, ['host' => $host, 'error' => 'blocked_ip']);
             }
         }
 
         $cacheFile = $this->cachePath($url);
-        $cached = $useCache ? $this->readCache($cacheFile) : null;
 
-        if ($cached) {
-            return $cached;
+        return [
+            'ok' => true,
+            'error' => '',
+            'host' => $host,
+            'url' => $url,
+            'cacheFile' => $cacheFile,
+            'cached' => $useCache ? $this->readCache($cacheFile) : null,
+        ];
+    }
+
+    /**
+     * 抓取单个站点的标题 / 描述 / 图标候选。
+     *
+     * @return array{ok:bool,error?:string,title?:string,description?:string,host?:string,icons?:array}
+     */
+    public function fetch($url, $useCache = true)
+    {
+        $prepared = $this->prepareFetch($url, $useCache);
+
+        if (!$prepared['ok']) {
+            return [
+                'ok' => false,
+                'error' => $prepared['error'],
+                'host' => $prepared['host'],
+            ];
         }
+
+        if ($prepared['cached']) {
+            return $prepared['cached'];
+        }
+
+        $url = $prepared['url'];
+        $host = $prepared['host'];
+        $cacheFile = $prepared['cacheFile'];
 
         $html = $this->download($url);
 
@@ -1032,6 +1067,22 @@ class SiteInfoService extends BaseService
             $html = $this->download($url);
         }
 
+        return $this->finishFetch($prepared, $html, $url, $host);
+    }
+
+    /**
+     * 抓取收尾：解析 HTML、构造结果、写缓存。单条与批量共用。
+     *
+     * @param array $prepared prepareFetch() 的返回值
+     * @param string $html 正文（空串表示下载失败或命中重定向）
+     * @param string $finalUrl 最终实际抓取的地址（跟随重定向后会变）
+     * @param string $finalHost 最终主机名
+     */
+    protected function finishFetch(array $prepared, $html, $finalUrl = null, $finalHost = null)
+    {
+        $url = $finalUrl !== null ? $finalUrl : $prepared['url'];
+        $host = $finalHost !== null ? $finalHost : $prepared['host'];
+
         $payload = [
             'ok' => false,
             'error' => 'fetch_failed',
@@ -1039,7 +1090,12 @@ class SiteInfoService extends BaseService
         ];
 
         if (is_string($html) && $html !== '') {
+            if (strlen($html) > self::MAX_BYTES) {
+                $html = substr($html, 0, self::MAX_BYTES);
+            }
+
             $info = $this->parseHtml($html, $url, $host);
+
             $payload = [
                 'ok' => $info['title'] !== '',
                 'title' => $info['title'],
@@ -1053,9 +1109,216 @@ class SiteInfoService extends BaseService
             }
         }
 
-        $this->writeCache($cacheFile, $payload);
+        if (!empty($prepared['cacheFile'])) {
+            $this->writeCache($prepared['cacheFile'], $payload);
+        }
 
         return $payload;
+    }
+
+    /**
+     * 批量抓取：缓存命中直接返回，未命中的用 curl_multi 并发下载。
+     *
+     * 与 fetch() 的差异只在「下载」这一步并发化，校验、解析、缓存全部复用，
+     * 因此单条收录与批量导入拿到的标题 / 图标 / 描述结果完全一致。
+     *
+     * 批量场景不跟随重定向：控制台类站点 302 多半跳到登录页，抓回来也是错的，
+     * 直接标记 fetch_ok=false，让前端降级为「手动填写名称」。
+     *
+     * @param array $urls 网址列表
+     * @param int $perRequest 单条总超时（秒）
+     * @param int $budget 总时间预算（秒），超出后剩余条目直接判为失败
+     * @return array url => payload
+     */
+    public function fetchMany(array $urls, $perRequest = 8, $budget = 18)
+    {
+        $result = [];
+        $pending = [];
+        $start = microtime(true);
+
+        foreach ($urls as $raw) {
+            $key = trim((string) $raw);
+            $prepared = $this->prepareFetch($key);
+
+            if (!$prepared['ok']) {
+                $result[$key] = ['ok' => false, 'error' => $prepared['error'], 'host' => $prepared['host']];
+                continue;
+            }
+
+            if ($prepared['cached']) {
+                $result[$key] = $prepared['cached'];
+                continue;
+            }
+
+            $result[$key] = ['ok' => false, 'error' => 'pending', 'host' => $prepared['host']];
+            $pending[$key] = $prepared;
+        }
+
+        if (!$pending) {
+            return $result;
+        }
+
+        // 没有 curl_multi 就退回串行，行为与单条抓取一致（只是慢）
+        if (!function_exists('curl_multi_init')) {
+            foreach ($pending as $key => $prepared) {
+                if (microtime(true) - $start > $budget) {
+                    break;
+                }
+
+                $result[$key] = $this->finishFetch($prepared, $this->download($prepared['url']));
+            }
+
+            return $result;
+        }
+
+        $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+            . '(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+
+        $deadline = $start + $budget;
+        $responses = $this->multiDownload($pending, $userAgent, $perRequest, $deadline);
+
+        // 第一轮：拿到正文的直接落地；3xx 的收集起来再跟一轮
+        $follow = [];
+
+        foreach ($pending as $key => $prepared) {
+            $resp = $responses[$key] ?? ['html' => '', 'location' => ''];
+
+            if ($resp['html'] !== '') {
+                $result[$key] = $this->finishFetch($prepared, $resp['html']);
+                continue;
+            }
+
+            if ($resp['location'] === '') {
+                $result[$key] = ['ok' => false, 'error' => 'fetch_failed', 'host' => $prepared['host']];
+                continue;
+            }
+
+            // 重定向目标同样要过 SSRF 校验（顺带可能命中缓存）
+            $target = $this->absoluteUrl($resp['location'], $prepared['url']);
+            $nextPrepared = $target !== '' ? $this->prepareFetch($target) : null;
+
+            if ($nextPrepared === null || !$nextPrepared['ok']) {
+                $result[$key] = ['ok' => false, 'error' => 'fetch_failed', 'host' => $prepared['host']];
+                continue;
+            }
+
+            if ($nextPrepared['cached']) {
+                $result[$key] = $nextPrepared['cached'];
+                continue;
+            }
+
+            $follow[$key] = $nextPrepared;
+        }
+
+        if (!$follow || microtime(true) > $deadline) {
+            return $result;
+        }
+
+        // 第二轮：只抓重定向目标，仍拿不到正文就判失败（不再继续跟随）
+        $responses2 = $this->multiDownload($follow, $userAgent, $perRequest, $deadline);
+
+        foreach ($follow as $key => $prepared) {
+            $resp = $responses2[$key] ?? ['html' => '', 'location' => ''];
+
+            $result[$key] = $resp['html'] !== ''
+                ? $this->finishFetch($prepared, $resp['html'])
+                : ['ok' => false, 'error' => 'fetch_failed', 'host' => $prepared['host']];
+        }
+
+        return $result;
+    }
+
+    /**
+     * 用 curl_multi 并发下载一批地址。
+     *
+     * 只负责「把字节取回来」，不解析、不写缓存 —— 解析与落地交给 finishFetch()，
+     * 保证单条与批量两条路径的结果结构一致。
+     *
+     * @param array $queue key => prepareFetch() 结果
+     * @param float $deadline 绝对截止时间戳，超时后未完成的判为失败
+     * @return array key => array{html:string, location:string}
+     */
+    protected function multiDownload(array $queue, $userAgent, $perRequest, $deadline)
+    {
+        $out = [];
+
+        foreach ($queue as $key => $prepared) {
+            $out[$key] = ['html' => '', 'location' => ''];
+        }
+
+        // 没有 curl_multi 就串行降级，语义与并发版一致（只是慢）
+        if (!function_exists('curl_multi_init')) {
+            foreach ($queue as $key => $prepared) {
+                if (microtime(true) > $deadline) {
+                    break;
+                }
+
+                $html = $this->download($prepared['url']);
+                $out[$key] = ['html' => $html, 'location' => $html === '' ? $this->lastRedirectUrl : ''];
+            }
+
+            return $out;
+        }
+
+        foreach (array_chunk($queue, 8, true) as $chunk) {
+            if (microtime(true) > $deadline) {
+                break;
+            }
+
+            $mh = curl_multi_init();
+            $handles = [];
+
+            foreach ($chunk as $key => $prepared) {
+                $ch = curl_init($prepared['url']);
+                $options = [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_FOLLOWLOCATION => false,
+                    CURLOPT_MAXREDIRS => 0,
+                    CURLOPT_MAXFILESIZE => self::MAX_BYTES,
+                    CURLOPT_CONNECTTIMEOUT => 4,
+                    CURLOPT_TIMEOUT => (int) $perRequest,
+                    CURLOPT_USERAGENT => $userAgent,
+                    CURLOPT_ENCODING => '',
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => 0,
+                    CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                    CURLOPT_HEADER => true,
+                    CURLOPT_HTTPHEADER => [
+                        'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Accept-Language: zh-CN,zh;q=0.9,en;q=0.8',
+                        'Cache-Control: no-cache',
+                    ],
+                ];
+
+                if (defined('CURLOPT_REDIR_PROTOCOLS')) {
+                    $options[CURLOPT_REDIR_PROTOCOLS] = CURLPROTO_HTTP | CURLPROTO_HTTPS;
+                }
+
+                curl_setopt_array($ch, $options);
+                curl_multi_add_handle($mh, $ch);
+                $handles[$key] = $ch;
+            }
+
+            do {
+                $status = curl_multi_exec($mh, $running);
+
+                if ($running > 0) {
+                    curl_multi_select($mh, 0.3);
+                }
+            } while ($running > 0 && $status === CURLM_OK && microtime(true) < $deadline);
+
+            foreach ($handles as $key => $ch) {
+                $raw = curl_multi_getcontent($ch);
+                curl_multi_remove_handle($mh, $ch);
+                curl_close($ch);
+
+                $out[$key] = $this->parseResponse(is_string($raw) ? $raw : '');
+            }
+
+            curl_multi_close($mh);
+        }
+
+        return $out;
     }
 
     /**
@@ -1205,6 +1468,68 @@ class SiteInfoService extends BaseService
         return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
     }
 
+    /**
+     * 拆开带 header 的响应，返回正文与 3xx 的 Location。
+     *
+     * 无副作用：不写 $lastRedirectUrl，因此并发抓取时多条结果互不干扰。
+     *
+     * @return array{html:string, location:string}
+     */
+    protected function parseResponse($raw)
+    {
+        if (!is_string($raw) || $raw === '') {
+            return ['html' => '', 'location' => ''];
+        }
+
+        $html = $raw;
+        $lastHeader = '';
+
+        while (preg_match("/\r?\n\r?\n/", $html, $m, PREG_OFFSET_CAPTURE)) {
+            $split = $m[0][1];
+            $lastHeader = substr($html, 0, $split);
+            $rest = substr($html, $split + strlen($m[0][0]));
+
+            // 若 body 仍以 HTTP/ 开头，说明还有 header 段（如 100-continue）
+            if (preg_match('#^HTTP/\d#i', ltrim($rest))) {
+                $html = $rest;
+                continue;
+            }
+
+            $html = $rest;
+            break;
+        }
+
+        if (preg_match('/^Location:\s*(\S+)/im', $lastHeader, $m)) {
+            $status = 0;
+
+            if (preg_match('#^HTTP/\S+\s+(\d{3})#', $lastHeader, $sm)) {
+                $status = (int) $sm[1];
+            }
+
+            if ($status >= 300 && $status < 400) {
+                return ['html' => '', 'location' => trim($m[1])];
+            }
+        }
+
+        return ['html' => $html, 'location' => ''];
+    }
+
+    /**
+     * 拆出正文；命中 3xx 时返回空串并把 Location 记到 lastRedirectUrl。
+     * 单条 download() 使用，批量路径请用 parseResponse()。
+     */
+    protected function splitResponse($raw)
+    {
+        $parsed = $this->parseResponse($raw);
+
+        if ($parsed['location'] !== '') {
+            $this->lastRedirectUrl = $parsed['location'];
+            return '';
+        }
+
+        return $parsed['html'];
+    }
+
     protected function download($url)
     {
         $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
@@ -1252,37 +1577,7 @@ class SiteInfoService extends BaseService
                 curl_close($ch);
 
                 if (is_string($raw) && $raw !== '') {
-                    // 分离 header / body（可能有多段 header）
-                    $html = $raw;
-                    $lastHeader = '';
-
-                    while (preg_match("/\r?\n\r?\n/", $html, $m, PREG_OFFSET_CAPTURE)) {
-                        $split = $m[0][1];
-                        $lastHeader = substr($html, 0, $split);
-                        $rest = substr($html, $split + strlen($m[0][0]));
-
-                        // 若 body 仍以 HTTP/ 开头，说明还有 header 段（如 100-continue）
-                        if (preg_match('#^HTTP/\d#i', ltrim($rest))) {
-                            $html = $rest;
-                            continue;
-                        }
-
-                        $html = $rest;
-                        break;
-                    }
-
-                    if (preg_match('/^Location:\s*(\S+)/im', $lastHeader, $m)) {
-                        $status = 0;
-
-                        if (preg_match('#^HTTP/\S+\s+(\d{3})#', $lastHeader, $sm)) {
-                            $status = (int) $sm[1];
-                        }
-
-                        if ($status >= 300 && $status < 400) {
-                            $this->lastRedirectUrl = trim($m[1]);
-                            return '';
-                        }
-                    }
+                    $html = $this->splitResponse($raw);
 
                     // 拿到内容就停止重试
                     if ($html !== '') {

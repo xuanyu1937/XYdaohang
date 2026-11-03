@@ -261,7 +261,7 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.6">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.7">
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -969,6 +969,175 @@ $hasLinks = $totalLinks > 0;
             box-shadow: 0 0 0 3px var(--primary-soft);
         }
 
+        /* 批量导入 · 校对列表 */
+        .bp-hint {
+            margin: 6px 0 0;
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--muted);
+        }
+
+        .bp-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .bp-check {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 24px;
+            font-size: 13px;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .bp-check input {
+            width: 15px;
+            height: 15px;
+            margin: 0;
+            accent-color: var(--primary);
+        }
+
+        .bp-count {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .bp-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: min(52vh, 420px);
+            overflow-y: auto;
+            padding: 2px 2px 8px;
+            scrollbar-gutter: stable;
+            /* inset 阴影固定在滚动容器视口（不随内容滚动），
+               底部渐隐提示下面还有内容，不需要额外的包裹层 */
+            box-shadow: inset 0 -14px 12px -12px rgba(0, 0, 0, 0.16);
+        }
+
+        .bp-item {
+            display: grid;
+            grid-template-columns: auto 34px minmax(0, 1fr) 132px;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface-2);
+        }
+
+        .bp-item.is-off {
+            opacity: 0.55;
+        }
+
+        .bp-item.is-dup {
+            border-style: dashed;
+        }
+
+        .bp-item input[type="checkbox"] {
+            width: 15px;
+            height: 15px;
+            margin: 0;
+            accent-color: var(--primary);
+        }
+
+        .bp-logo {
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .bp-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .bp-main {
+            min-width: 0;
+        }
+
+        .bp-main input {
+            width: 100%;
+            padding: 6px 9px;
+            border: 1px solid var(--border-strong);
+            border-radius: 8px;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .bp-main input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-soft);
+        }
+
+        .bp-main input.is-weak {
+            border-color: var(--warning, #d9a03a);
+        }
+
+        .bp-url {
+            display: block;
+            margin-top: 3px;
+            font-size: 12px;
+            line-height: 1.4;
+            color: var(--muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .bp-note {
+            display: block;
+            margin-top: 3px;
+            font-size: 11.5px;
+            color: var(--warning, #b5811f);
+        }
+
+        .bp-item select {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid var(--border-strong);
+            border-radius: 8px;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 12.5px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        @media (max-width: 560px) {
+            .bp-item {
+                grid-template-columns: auto 30px minmax(0, 1fr);
+                row-gap: 8px;
+            }
+
+            .bp-item select {
+                grid-column: 2 / -1;
+            }
+
+            .bp-logo {
+                width: 30px;
+                height: 30px;
+            }
+        }
+
         .my-field-row {
             display: flex;
             gap: 8px;
@@ -1344,6 +1513,13 @@ $hasLinks = $totalLinks > 0;
                         </svg>
                         <span class="my-btn-label">导入书签</span>
                     </button>
+                    <button type="button" class="my-btn" id="batchImportBtn" title="一次粘贴多个网址，自动抓取标题图标并推荐分组">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M9 6h12M9 12h12M9 18h12"></path>
+                            <path d="M4 6h.01M4 12h.01M4 18h.01"></path>
+                        </svg>
+                        <span class="my-btn-label">批量导入</span>
+                    </button>
                     <button type="button" class="my-btn" id="organizeBtn" <?php echo $hasLinks ? '' : 'aria-disabled="true"'; ?>>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 6h18M3 12h18M3 18h18"></path>
@@ -1715,33 +1891,51 @@ $hasLinks = $totalLinks > 0;
         </div>
     </dialog>
 
-    <!-- 批量粘贴导入 -->
+    <!-- 批量粘贴导入：先识别、再校对、最后落库 -->
     <dialog class="my-dialog" id="batchPasteDialog">
         <div class="my-dialog-head">
-            <h3>批量粘贴导入</h3>
+            <h3>批量导入网址</h3>
             <button type="button" class="my-iconbtn" id="batchPasteClose" aria-label="关闭">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
             </button>
         </div>
         <div class="my-dialog-body">
             <p class="my-msg" id="batchPasteMsg" role="alert"></p>
-            <div class="my-field">
-                <label for="batchPasteText">粘贴网址（每行一个，支持「名称,网址」格式）</label>
-                <textarea id="batchPasteText" rows="8" placeholder="https://example.com&#10;GitHub,https://github.com&#10;..."></textarea>
+
+            <!-- 阶段一：粘贴 -->
+            <div id="batchPasteStep1">
+                <div class="my-field">
+                    <label for="batchPasteText">粘贴网址（每行一个，支持「名称,网址」格式）</label>
+                    <textarea id="batchPasteText" rows="8" placeholder="https://example.com&#10;GitHub,https://github.com&#10;..."></textarea>
+                </div>
+                <div class="my-field">
+                    <label for="batchPasteCategory">默认分组</label>
+                    <select id="batchPasteCategory">
+                        <option value="0">未分类</option>
+                        <?php foreach ($ownGroups as $group): ?>
+                            <option value="<?php echo (int) $group['id']; ?>"><?php echo $functions->escape(($group['is_private'] ? '🔒 ' : '') . $group['name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="bp-hint">识别不出分类的网址会落到这里，其余按网站信息自动归类，下面还能逐条改。</p>
+                </div>
             </div>
-            <div class="my-field">
-                <label for="batchPasteCategory">保存到分组</label>
-                <select id="batchPasteCategory">
-                    <option value="0">未分类</option>
-                    <?php foreach ($ownGroups as $group): ?>
-                        <option value="<?php echo (int) $group['id']; ?>"><?php echo $functions->escape(($group['is_private'] ? '🔒 ' : '') . $group['name']); ?></option>
-                    <?php endforeach; ?>
-                </select>
+
+            <!-- 阶段二：逐条校对 -->
+            <div id="batchPasteStep2" hidden>
+                <div class="bp-toolbar">
+                    <label class="bp-check">
+                        <input type="checkbox" id="bpToggleAll" checked>
+                        <span>全选</span>
+                    </label>
+                    <span class="bp-count" id="bpCount"></span>
+                </div>
+                <div class="bp-list" id="bpList"></div>
             </div>
         </div>
         <div class="my-dialog-foot">
             <button type="button" class="my-btn" id="batchPasteCancel">取消</button>
-            <button type="button" class="my-btn is-primary" id="batchPasteSubmit">开始导入</button>
+            <button type="button" class="my-btn" id="batchPasteBack" hidden>返回修改</button>
+            <button type="button" class="my-btn is-primary" id="batchPasteSubmit">识别网址</button>
         </div>
     </dialog>
 
@@ -4100,48 +4294,331 @@ $hasLinks = $totalLinks > 0;
                     });
                 }
 
-                // 批量粘贴导入
-                var batchPasteDialog = qs('#batchPasteDialog');
-                if (qaBatchBtn && batchPasteDialog) {
-                    qaBatchBtn.addEventListener('click', function () {
-                        closeDialog2(quickAddDialog);
-                        var bpText = qs('#batchPasteText');
-                        var bpMsg = qs('#batchPasteMsg');
-                        if (bpText) { bpText.value = ''; }
-                        if (bpMsg) { showMsg(bpMsg, ''); }
-                        openDialog2(batchPasteDialog);
-                        setTimeout(function () { if (bpText) { bpText.focus(); } }, 50);
-                    });
-                }
+            }
+
+            // 批量导入的入口：工具栏按钮与收藏弹窗里的「批量粘贴」共用。
+            // 放在块外定义，下面的弹窗逻辑才能调用（严格模式下块级函数不跨块可见）。
+            var batchPasteDialog = qs('#batchPasteDialog');
+
+            function bpResetStage() {
+                var step1 = qs('#batchPasteStep1');
+                var step2 = qs('#batchPasteStep2');
+                var list = qs('#bpList');
+                var back = qs('#batchPasteBack');
+                var submit = qs('#batchPasteSubmit');
+
+                // bpStage / bpItems 在下面的弹窗逻辑里声明（var 提升到本函数作用域）
+                bpStage = 1;
+                bpItems = [];
+
+                if (step1) { step1.hidden = false; }
+                if (step2) { step2.hidden = true; }
+                if (list) { list.textContent = ''; }
+                if (back) { back.hidden = true; }
+                if (submit) { submit.textContent = '识别网址'; submit.disabled = false; }
+            }
+
+            function bpOpenDialog() {
+                var text = qs('#batchPasteText');
+                var msg = qs('#batchPasteMsg');
+
+                if (text) { text.value = ''; }
+                if (msg) { showMsg(msg, ''); }
+                bpResetStage();
+                openDialog2(batchPasteDialog);
+                setTimeout(function () { if (text) { text.focus(); } }, 50);
+            }
+
+            if (qaBatchBtn && batchPasteDialog) {
+                qaBatchBtn.addEventListener('click', function () {
+                    closeDialog2(quickAddDialog);
+                    bpOpenDialog();
+                });
+            }
+
+            var toolbarBatchBtn = qs('#batchImportBtn');
+
+            if (toolbarBatchBtn && batchPasteDialog) {
+                toolbarBatchBtn.addEventListener('click', function () {
+                    bpOpenDialog();
+                });
             }
 
             // 批量粘贴导入弹窗
-            var batchPasteDialog = qs('#batchPasteDialog');
             if (batchPasteDialog) {
                 var bpClose = qs('#batchPasteClose');
                 var bpCancel = qs('#batchPasteCancel');
+                var bpBack = qs('#batchPasteBack');
                 var bpSubmit = qs('#batchPasteSubmit');
                 var bpText = qs('#batchPasteText');
                 var bpMsg = qs('#batchPasteMsg');
                 var bpCategory = qs('#batchPasteCategory');
+                var bpStep1 = qs('#batchPasteStep1');
+                var bpStep2 = qs('#batchPasteStep2');
+                var bpList = qs('#bpList');
+                var bpCount = qs('#bpCount');
+                var bpToggleAll = qs('#bpToggleAll');
 
-                if (bpClose) { bpClose.addEventListener('click', function () { closeDialog2(batchPasteDialog); }); }
-                if (bpCancel) { bpCancel.addEventListener('click', function () { closeDialog2(batchPasteDialog); }); }
+                var bpItems = [];        // 识别结果，用户校对的就是这份数据
+                var bpCategories = [];   // 候选分组
+                var bpStage = 1;         // 1=粘贴  2=校对
+
+                function bpDefaultCategory() {
+                    return bpCategory ? (parseInt(bpCategory.value, 10) || 0) : 0;
+                }
+
+                function bpSelected() {
+                    return bpItems.filter(function (item) { return item.selected; });
+                }
+
+                function bpUpdateCount() {
+                    if (!bpCount) { return; }
+
+                    var picked = bpSelected().length;
+                    var dup = bpItems.filter(function (item) { return item.duplicate; }).length;
+                    var parts = ['已选 ' + picked + ' / ' + bpItems.length + ' 条'];
+
+                    if (dup) { parts.push(dup + ' 条已在导航中'); }
+
+                    bpCount.textContent = parts.join('，');
+
+                    if (bpSubmit) {
+                        bpSubmit.textContent = picked ? ('导入 ' + picked + ' 条') : '请选择要导入的网址';
+                        bpSubmit.disabled = picked === 0;
+                    }
+
+                    if (bpToggleAll) {
+                        var selectable = bpItems.filter(function (item) { return !item.duplicate; });
+                        bpToggleAll.checked = selectable.length > 0
+                            && selectable.every(function (item) { return item.selected; });
+                        bpToggleAll.disabled = selectable.length === 0;
+                    }
+                }
+
+                function bpRender() {
+                    if (!bpList) { return; }
+
+                    bpList.textContent = '';
+                    var allowed = {};
+                    bpCategories.forEach(function (cat) { allowed[cat.id] = true; });
+                    var defaultId = bpDefaultCategory();
+
+                    bpItems.forEach(function (item) {
+                        var row = document.createElement('div');
+                        row.className = 'bp-item'
+                            + (item.duplicate ? ' is-dup' : '')
+                            + (item.selected ? '' : ' is-off');
+
+                        // 勾选
+                        var check = document.createElement('input');
+                        check.type = 'checkbox';
+                        check.checked = item.selected;
+                        check.disabled = item.duplicate;
+                        check.setAttribute('aria-label', '是否导入 ' + item.url);
+                        check.addEventListener('change', function () {
+                            item.selected = check.checked;
+                            row.classList.toggle('is-off', !check.checked);
+                            bpUpdateCount();
+                        });
+                        row.appendChild(check);
+
+                        // 图标：抓不到就用域名首字母占位
+                        var logo = document.createElement('div');
+                        logo.className = 'bp-logo';
+                        var initial = (item.host || '?').charAt(0).toUpperCase();
+
+                        if (item.logo) {
+                            var img = document.createElement('img');
+                            img.src = item.logo;
+                            img.alt = '';
+                            img.loading = 'lazy';
+                            img.addEventListener('error', function () {
+                                if (img.parentNode) { img.parentNode.removeChild(img); }
+                                logo.textContent = initial;
+                            });
+                            logo.appendChild(img);
+                        } else {
+                            logo.textContent = initial;
+                        }
+
+                        row.appendChild(logo);
+
+                        // 名称 + 网址 + 状态提示
+                        var main = document.createElement('div');
+                        main.className = 'bp-main';
+
+                        var nameInput = document.createElement('input');
+                        nameInput.type = 'text';
+                        nameInput.value = item.name || '';
+                        nameInput.disabled = item.duplicate;
+                        nameInput.setAttribute('aria-label', '网站名称');
+
+                        if (!item.fetch_ok && !item.duplicate) {
+                            nameInput.classList.add('is-weak');
+                        }
+
+                        nameInput.addEventListener('input', function () {
+                            item.name = nameInput.value;
+                        });
+                        main.appendChild(nameInput);
+
+                        var urlSpan = document.createElement('span');
+                        urlSpan.className = 'bp-url';
+                        urlSpan.textContent = item.url;
+                        urlSpan.title = item.url;
+                        main.appendChild(urlSpan);
+
+                        if (item.note) {
+                            var note = document.createElement('span');
+                            note.className = 'bp-note';
+                            note.textContent = item.note;
+                            main.appendChild(note);
+                        }
+
+                        row.appendChild(main);
+
+                        // 分组：推荐命中就用推荐值，没命中就退回阶段一选的默认分组
+                        var select = document.createElement('select');
+                        select.disabled = item.duplicate;
+                        select.setAttribute('aria-label', '保存到分组');
+
+                        bpCategories.forEach(function (cat) {
+                            var option = document.createElement('option');
+                            option.value = String(cat.id);
+                            option.textContent = (cat.is_private ? '🔒 ' : '') + cat.name;
+                            select.appendChild(option);
+                        });
+
+                        var wantId = item.suggest_reason === 'keyword'
+                            ? item.suggested_category_id
+                            : (defaultId || item.suggested_category_id);
+
+                        if (wantId && !allowed[wantId]) { wantId = 0; }
+                        if (!wantId && bpCategories.length) { wantId = bpCategories[0].id; }
+
+                        select.value = String(wantId || 0);
+                        item.category_id = parseInt(select.value, 10) || 0;
+
+                        select.addEventListener('change', function () {
+                            item.category_id = parseInt(select.value, 10) || 0;
+                        });
+
+                        row.appendChild(select);
+                        bpList.appendChild(row);
+                    });
+                }
+
+                if (bpClose) { bpClose.addEventListener('click', function () { bpResetStage(); closeDialog2(batchPasteDialog); }); }
+                if (bpCancel) { bpCancel.addEventListener('click', function () { bpResetStage(); closeDialog2(batchPasteDialog); }); }
+
+                if (bpBack) {
+                    bpBack.addEventListener('click', function () {
+                        bpResetStage();
+                        showMsg(bpMsg, '');
+                    });
+                }
+
+                if (bpToggleAll) {
+                    bpToggleAll.addEventListener('change', function () {
+                        bpItems.forEach(function (item) {
+                            if (!item.duplicate) { item.selected = bpToggleAll.checked; }
+                        });
+                        bpRender();
+                        bpUpdateCount();
+                    });
+                }
 
                 if (bpSubmit) {
                     bpSubmit.addEventListener('click', function () {
-                        var text = bpText ? bpText.value.trim() : '';
-                        if (!text) { showMsg(bpMsg, '请粘贴网址'); return; }
+                        // 阶段一：识别
+                        if (bpStage === 1) {
+                            var text = bpText ? bpText.value.trim() : '';
+
+                            if (!text) { showMsg(bpMsg, '请粘贴网址'); return; }
+
+                            setBusy(bpSubmit, true, '识别中…');
+                            showMsg(bpMsg, '');
+
+                            postForm(API_SITES, { action: 'batch_preview', urls: text })
+                                .then(function (res) {
+                                    setBusy(bpSubmit, false);
+
+                                    if (!res || !res.ok) {
+                                        showMsg(bpMsg, (res && res.error) || '识别失败');
+                                        return;
+                                    }
+
+                                    bpItems = (res.items || []).map(function (it) {
+                                        return {
+                                            url: it.url,
+                                            host: it.host || '',
+                                            name: it.name || '',
+                                            description: it.description || '',
+                                            logo: it.logo || '',
+                                            duplicate: !!it.duplicate,
+                                            fetch_ok: !!it.fetch_ok,
+                                            note: it.note || '',
+                                            suggest_reason: it.suggest_reason || '',
+                                            suggested_category_id: it.suggested_category_id || 0,
+                                            selected: !it.duplicate,
+                                            category_id: 0,
+                                        };
+                                    });
+
+                                    bpCategories = res.categories || [];
+
+                                    if (!bpItems.length) {
+                                        showMsg(bpMsg, '没识别出可导入的网址');
+                                        return;
+                                    }
+
+                                    bpStage = 2;
+                                    if (bpStep1) { bpStep1.hidden = true; }
+                                    if (bpStep2) { bpStep2.hidden = false; }
+                                    if (bpBack) { bpBack.hidden = false; }
+
+                                    bpRender();
+                                    bpUpdateCount();
+
+                                    if (res.truncated) {
+                                        showMsg(bpMsg, '网址超过 ' + res.limit + ' 条，本次只识别前 ' + res.limit + ' 条。', 'warn');
+                                    }
+                                })
+                                .catch(function () {
+                                    setBusy(bpSubmit, false);
+                                    showMsg(bpMsg, '网络错误，请稍后重试');
+                                });
+
+                            return;
+                        }
+
+                        // 阶段二：按校对结果落库
+                        var picked = bpSelected();
+
+                        if (!picked.length) { showMsg(bpMsg, '请至少选择一条'); return; }
+
+                        var payload = picked.map(function (item) {
+                            return {
+                                url: item.url,
+                                name: item.name,
+                                description: item.description,
+                                logo: item.logo,
+                                category_id: item.category_id,
+                            };
+                        });
+
                         setBusy(bpSubmit, true, '导入中…');
+
                         postForm(API_SITES, {
                             action: 'batch_add',
-                            urls: text,
-                            category_id: bpCategory ? bpCategory.value : '0'
+                            items: JSON.stringify(payload),
+                            category_id: String(bpDefaultCategory())
                         }).then(function (res) {
                             setBusy(bpSubmit, false);
+
                             if (res && res.ok) {
                                 showMsg(bpMsg, '导入完成：新增 ' + res.imported + ' 条，跳过重复 ' + res.skipped + ' 条。', 'success');
-                                setTimeout(function () { closeDialog2(batchPasteDialog); window.location.reload(); }, 1200);
+                                setTimeout(function () { bpResetStage(); closeDialog2(batchPasteDialog); window.location.reload(); }, 1200);
                             } else {
                                 showMsg(bpMsg, (res && res.error) || '导入失败');
                             }
@@ -4203,7 +4680,7 @@ $hasLinks = $totalLinks > 0;
         })();
     </script>
 <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.10.6" defer></script>
+<script src="assets/js/search.js?v=2.10.7" defer></script>
 
     <!-- 卡片右键 / 长按菜单 -->
     <div class="card-context-menu" id="cardContextMenu" hidden>

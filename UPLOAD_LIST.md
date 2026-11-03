@@ -1,22 +1,27 @@
-# 轩宇-导航 v2.10.6 部署清单
+# 轩宇-导航 v2.10.7 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.10.6
+当前版本：v2.10.7
 
-> **本版本无数据库变更**，修复 `my.php` 顶栏：窄屏下标题塌成一字一行、相机图标空白。改 `assets/css/nav.css` 与 `my.php` 两个文件（其余是版本号）。覆盖后强刷即可。
+> **本版本无数据库变更**，新增批量导入网址：一次粘贴最多 50 条，并发抓取标题/图标/描述并推荐分组，**落库前给出可校对清单**。改 `includes/Services.php`、`api/user_sites.php`、`my.php` 三个文件（其余是版本号）。覆盖后强刷即可。
 
-## 本次 v2.10.6 变动文件
+## 本次 v2.10.7 变动文件
 
 | 文件 | 说明 |
 | --- | --- |
-| `assets/css/nav.css` | 末尾新增 v2.10.6 段：品牌区 `flex-shrink: 0` + 标题 `nowrap`、`.header-brand` 取消 `flex:1 1 auto`、≤640/430/360 三级收敛规则、相机按钮 40px 触控热区 |
-| `my.php` | **3 处 Font Awesome 图标改内联 SVG**（相机 / 上传 / 清除）—— 此前整页从未引入 `font-awesome.min.css`，图标渲染宽 **0px**；相机按钮补 `aria-label`，`.my-avatar-edit` 用 `padding:0` 替代 `font-size:11px` |
-| 全部 PHP 页面（22 处） | 资源参数 `?v=2.10.6` |
-| `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `VERSION` | 版本号升至 2.10.6 |
+| `includes/Services.php` | `SiteInfoService` 新增 `fetchMany()`（`curl_multi` 并发，每批 8 条 / 总预算 18s）；抽出 `prepareFetch()`（URL 校验 + SSRF 拦截 + 缓存读取）与 `finishFetch()`（解析 + 写缓存）供单条与批量共用；新增无副作用的 `parseResponse()` 避免并发下 `$lastRedirectUrl` 互相覆盖；批量场景对 3xx 再跟一轮重定向（同样过 SSRF 校验） |
+| `api/user_sites.php` | 新增 `batch_preview`（解析 → 标重复 → 只对未重复项抓取 → 推荐分组，**不写库**）；重写 `batch_add`（支持确认过的 `items`，补写原先漏掉的 `logo` / `description`，校验分组归属）；新增 `BATCH_IMPORT_LIMIT = 50`；接口层增加 `application/json` 请求体兼容；新增公共函数 `userSiteParseLines()` / `userSiteSuggestCategory()` / `userSiteCategories()` 与单条收录共用 |
+| `my.php` | 工具栏新增「批量导入」入口；批量粘贴对话框升级为两阶段（粘贴 → 逐条复核）；复核页每行可勾选 / 改名称 / 换分组，重复项虚线框禁用并注明「已在你的导航中」；新增「返回修改」与全选联动；新增 `.bp-*` 样式段（含 `inset` 底部渐隐提示与 ≤560px 换列布局） |
+| 全部 PHP 页面（22 处） | 资源参数 `?v=2.10.7` |
+| `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `VERSION` | 版本号升至 2.10.7 |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
 
-> 升级要点：本次 CSS **和** PHP 都要覆盖。只换 CSS 的话相机图标仍是空白 —— 那是 HTML 层面缺图标库的问题。`?v=` 已一并更新，整包覆盖后强刷（Ctrl+F5）。
+> 升级要点：三个文件都要覆盖 —— `Services.php` 提供并发抓取，`api/user_sites.php` 提供接口，`my.php` 提供入口与界面，缺任何一个功能都不会出现。`?v=` 已一并更新，整包覆盖后强刷（Ctrl+F5）。
+
+## v2.10.6 回顾
+
+`my.php` 顶栏修复：窄屏下「轩宇导航」塌成一字一行（标题只剩 16px 宽）、相机图标因整页未引入 `font-awesome.min.css` 而渲染 0px 宽。品牌区加 `flex-shrink: 0` + `nowrap`，3 处图标改内联 SVG，≤640/430/360 三级收敛。无数据库变更。
 
 ## v2.10.5 回顾
 

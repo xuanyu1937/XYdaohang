@@ -439,7 +439,7 @@ $recentLogins = $recentStmt->fetchAll();
         .strength-good { width: 75%; background: #3b82f6; }
         .strength-strong { width: 100%; background: #10b981; }
     </style>
-    <link href="../assets/css/admin.css?v=2.10.6" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.10.7" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>

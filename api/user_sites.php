@@ -39,10 +39,34 @@ if (!$user) {
 
 $userId = (int) $user['id'];
 $db = Database::getInstance()->getConnection();
+// 前端既可以用表单编码，也可以直接发 application/json 的整个请求体。
+// PHP 不会自动把 JSON body 填进 $_POST，这里合并一次，
+// 免得将来前端改成 JSON 时接口静默收不到参数。
+$contentType = strtolower((string) ($_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? ''));
+
+if (strpos($contentType, 'application/json') !== false) {
+    $rawBody = @file_get_contents('php://input');
+
+    if (is_string($rawBody) && $rawBody !== '') {
+        $decodedBody = json_decode($rawBody, true);
+
+        if (is_array($decodedBody)) {
+            foreach ($decodedBody as $bodyKey => $bodyValue) {
+                if (!array_key_exists($bodyKey, $_POST)) {
+                    $_POST[$bodyKey] = $bodyValue;
+                }
+            }
+        }
+    }
+}
+
 $action = strtolower(trim((string) ($_POST['action'] ?? '')));
 
 /** 每个用户最多保存的导航条数 */
 const USER_LINK_LIMIT = 1000;
+
+/** 单次批量导入最多处理多少条（并发抓取有成本，不做无上限的批量） */
+const BATCH_IMPORT_LIMIT = 50;
 
 /**
  * 规范化 URL：补全协议并校验。
@@ -177,6 +201,131 @@ function userSiteNiceName($title, $host = '')
     $candidate = trim($candidate);
 
     return $candidate !== '' ? $candidate : trim((string) $host);
+}
+
+/**
+ * 解析多行输入为待导入条目。
+ *
+ * 支持三种写法，与「批量粘贴」对话框的提示文案一致：
+ *   https://example.com              纯网址
+ *   GitHub,https://github.com        名称,网址
+ *   GitHub<Tab>https://github.com    名称\t网址（从表格里复制出来时的格式）
+ *
+ * 单条收录与批量导入共用同一套解析规则，避免「粘贴进来和手输进去结果不一样」。
+ *
+ * @param string $raw 原始文本
+ * @param int $limit 最多解析多少条
+ * @return array{items:array, total:int, truncated:bool}
+ */
+function userSiteParseLines($raw, $limit = 50)
+{
+    $lines = preg_split('/\r\n|\r|\n/', (string) $raw);
+    $items = [];
+    $seen = [];
+    $total = 0;
+
+    foreach ($lines as $line) {
+        $line = trim((string) $line);
+
+        if ($line === '' || strpos($line, '#') === 0) {
+            continue;
+        }
+
+        $name = '';
+        $url = '';
+
+        if (strpos($line, "\t") !== false) {
+            $parts = explode("\t", $line, 2);
+            $name = trim((string) $parts[0]);
+            $url = userSiteNormalizeUrl($parts[1] ?? '');
+        } elseif (strpos($line, ',') !== false && strpos($line, 'http') !== 0) {
+            $parts = explode(',', $line, 2);
+            $name = trim((string) $parts[0]);
+            $url = userSiteNormalizeUrl($parts[1] ?? '');
+        } else {
+            $url = userSiteNormalizeUrl($line);
+        }
+
+        if ($url === '') {
+            continue;
+        }
+
+        $total++;
+
+        // 同一批次内去重：重复的只保留第一次出现的位置
+        if (isset($seen[$url])) {
+            continue;
+        }
+
+        $seen[$url] = true;
+
+        if (count($items) >= $limit) {
+            continue;
+        }
+
+        $items[] = ['name' => $name, 'url' => $url];
+    }
+
+    return [
+        'items' => $items,
+        'total' => $total,
+        'truncated' => $total > count($items),
+    ];
+}
+
+/**
+ * 按「标题 + 描述 + 域名」推荐分组。
+ *
+ * 单条收录与批量导入共用：两者看到的候选分组和匹配规则必须一致，
+ * 否则会出现「一条条加是 AI 工具、批量导入却全落到未分类」。
+ *
+ * @return array{id:int, name:string, reason:string}
+ */
+function userSiteSuggestCategory(CategoryEngine $engine, array $categories, $text)
+{
+    $names = array_column($categories, 'name');
+    $matched = $engine->smartMatch($text, $names);
+
+    if ($matched !== null) {
+        foreach ($categories as $category) {
+            if ($category['name'] === $matched) {
+                return ['id' => (int) $category['id'], 'name' => $matched, 'reason' => 'keyword'];
+            }
+        }
+    }
+
+    // 没匹配上就退回「未分类」，再退回第一个分组
+    foreach ($categories as $category) {
+        if ($category['name'] === '未分类') {
+            return ['id' => (int) $category['id'], 'name' => '未分类', 'reason' => 'fallback'];
+        }
+    }
+
+    if ($categories) {
+        return ['id' => (int) $categories[0]['id'], 'name' => (string) $categories[0]['name'], 'reason' => 'fallback'];
+    }
+
+    return ['id' => 0, 'name' => '', 'reason' => 'none'];
+}
+
+/**
+ * 当前用户可见的候选分组（公共 + 自己的），供收录 / 批量导入下拉使用。
+ */
+function userSiteCategories(CategoryEngine $engine, $userId)
+{
+    $rows = $engine->all($userId, true);
+    $categories = [];
+
+    foreach ($rows as $row) {
+        $categories[] = [
+            'id' => (int) $row['id'],
+            'name' => (string) $row['name'],
+            'is_private' => (int) ($row['is_private'] ?? 0),
+            'link_count' => (int) ($row['link_count'] ?? 0),
+        ];
+    }
+
+    return $categories;
 }
 
 /**
@@ -542,6 +691,114 @@ switch ($action) {
         ]);
         break;
 
+    case 'batch_preview':
+        // 批量识别：只抓取、不入库，把每条的标题 / 图标 / 描述 / 推荐分组
+        // 一次性返回给前端做成可校对的列表，确认后再调 batch_add 落库。
+        $raw = (string) ($_POST['urls'] ?? '');
+
+        if ($raw === '') {
+            $functions->jsonResponse(['ok' => false, 'error' => '请粘贴至少一个网址'], 400);
+        }
+
+        $parsed = userSiteParseLines($raw, BATCH_IMPORT_LIMIT);
+        $items = $parsed['items'];
+
+        if (!$items) {
+            $functions->jsonResponse(['ok' => false, 'error' => '未解析到有效网址'], 400);
+        }
+
+        $engine = new CategoryEngine($functions);
+        $engine->setUserId($userId);
+        $categories = userSiteCategories($engine, $userId);
+
+        // 查重：已在库里的直接标出来，不再重复抓取
+        $dupStmt = $db->prepare('SELECT id, name FROM nav_links WHERE user_id = ? AND url = ? LIMIT 1');
+        $urls = [];
+
+        foreach ($items as $index => $item) {
+            $dupStmt->execute([$userId, $item['url']]);
+            $existing = $dupStmt->fetch();
+
+            $items[$index]['duplicate'] = $existing ? true : false;
+            $items[$index]['existing_id'] = $existing ? (int) $existing['id'] : 0;
+            $items[$index]['existing_name'] = $existing ? (string) $existing['name'] : '';
+
+            // 已存在的就不用抓了，省一次请求
+            if (!$existing) {
+                $urls[] = $item['url'];
+            }
+        }
+
+        $metas = $urls ? $siteInfo->fetchMany($urls) : [];
+        $result = [];
+
+        foreach ($items as $item) {
+            $url = $item['url'];
+            $host = (string) parse_url($url, PHP_URL_HOST);
+            $hostLabel = $host !== '' ? preg_replace('/^www\./i', '', $host) : $url;
+
+            if ($item['duplicate']) {
+                $result[] = [
+                    'url' => $url,
+                    'host' => $hostLabel,
+                    'duplicate' => true,
+                    'existing_id' => $item['existing_id'],
+                    'name' => $item['existing_name'],
+                    'fetch_ok' => false,
+                    'selected' => false,
+                    'note' => '已在你的导航中',
+                ];
+                continue;
+            }
+
+            $meta = $metas[$url] ?? ['ok' => false];
+            $title = !empty($meta['ok']) ? (string) ($meta['title'] ?? '') : '';
+
+            // 用户手写的名称优先级最高，其次是净化后的标题，最后才是域名
+            $name = $item['name'] !== '' ? $item['name']
+                : ($title !== '' ? userSiteNiceName($title, $hostLabel) : $hostLabel);
+
+            $description = !empty($meta['description']) ? userSiteTrim($meta['description'], 200) : '';
+            $icons = !empty($meta['icons']) && is_array($meta['icons']) ? $meta['icons'] : [];
+            $logo = !empty($icons[0]) ? userSiteTrim($icons[0], 500) : '';
+
+            $suggest = userSiteSuggestCategory($engine, $categories, $name . ' ' . $description . ' ' . $hostLabel);
+
+            $result[] = [
+                'url' => $url,
+                'host' => $hostLabel,
+                'duplicate' => false,
+                'name' => $name,
+                'description' => $description,
+                'logo' => $logo,
+                'icons' => array_slice($icons, 0, 5),
+                'fetch_ok' => !empty($meta['ok']),
+                'fetch_error' => empty($meta['ok']) ? (string) ($meta['error'] ?? 'fetch_failed') : '',
+                'suggested_category_id' => $suggest['id'],
+                'suggested_category_name' => $suggest['name'],
+                'suggest_reason' => $suggest['reason'],
+                'selected' => true,
+                'note' => empty($meta['ok']) ? '抓不到标题，请手动补充' : '',
+            ];
+        }
+
+        // 剩余容量：批量导入也要受总条数上限约束
+        $countStmt = $db->prepare('SELECT COUNT(*) AS total FROM nav_links WHERE user_id = ?');
+        $countStmt->execute([$userId]);
+        $remaining = max(0, USER_LINK_LIMIT - (int) ($countStmt->fetch()['total'] ?? 0));
+
+        $functions->jsonResponse([
+            'ok' => true,
+            'items' => $result,
+            'categories' => $categories,
+            'total' => $parsed['total'],
+            'truncated' => $parsed['truncated'],
+            'limit' => BATCH_IMPORT_LIMIT,
+            'remaining' => $remaining,
+            'fetched' => count($urls),
+        ]);
+        break;
+
     case 'update':
         $id = (int) ($_POST['id'] ?? 0);
 
@@ -743,40 +1000,54 @@ switch ($action) {
         break;
 
     case 'batch_add':
-        $raw = (string) ($_POST['urls'] ?? '');
+        // 两条入参路径：
+        //   items（JSON）— 前端在批量预览里校对过的结果，按用户确认的字段直接落库，不再抓取
+        //   urls（纯文本）— 老调用，仍然走「解析 + 用域名兜底名称」的行为，不抓取
+        $rawItems = $_POST['items'] ?? null;
 
-        if ($raw === '') {
-            $functions->jsonResponse(['ok' => false, 'error' => '请输入网址'], 400);
+        if (is_string($rawItems)) {
+            $rawItems = json_decode($rawItems, true);
         }
 
-        $lines = preg_split('/\r\n|\r|\n/', $raw);
         $items = [];
 
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '') { continue; }
+        if (is_array($rawItems) && $rawItems) {
+            foreach ($rawItems as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
 
-            $name = '';
-            $url = '';
+                $url = userSiteNormalizeUrl($row['url'] ?? '');
 
-            // 支持「名称,网址」「名称\t网址」或纯网址
-            if (strpos($line, "\t") !== false) {
-                $parts = explode("\t", $line, 2);
-                $name = trim($parts[0]);
-                $url = userSiteNormalizeUrl($parts[1] ?? '');
-            } elseif (strpos($line, ',') !== false && strpos($line, 'http') !== 0) {
-                $parts = explode(',', $line, 2);
-                $name = trim($parts[0]);
-                $url = userSiteNormalizeUrl($parts[1] ?? '');
-            } else {
-                $url = userSiteNormalizeUrl($line);
+                if ($url === '') {
+                    continue;
+                }
+
+                $items[] = [
+                    'url' => $url,
+                    'name' => userSiteTrim($row['name'] ?? '', 100),
+                    'description' => userSiteTrim($row['description'] ?? '', 200),
+                    'logo' => userSiteTrim($row['logo'] ?? '', 500),
+                    'category_id' => (int) ($row['category_id'] ?? 0),
+                ];
             }
+        } else {
+            // 老调用：只有 urls 文本，分组统一取 POST 里的 category_id
+            $parsed = userSiteParseLines((string) ($_POST['urls'] ?? ''), BATCH_IMPORT_LIMIT);
+            $fallbackCategory = (int) ($_POST['category_id'] ?? 0);
 
-            if ($url === '') { continue; }
-            $items[] = ['name' => $name, 'url' => $url];
+            foreach ($parsed['items'] as $row) {
+                $items[] = [
+                    'url' => $row['url'],
+                    'name' => $row['name'],
+                    'description' => '',
+                    'logo' => '',
+                    'category_id' => $fallbackCategory,
+                ];
+            }
         }
 
-        if (empty($items)) {
+        if (!$items) {
             $functions->jsonResponse(['ok' => false, 'error' => '未解析到有效网址'], 400);
         }
 
@@ -785,10 +1056,27 @@ switch ($action) {
         $countStmt->execute([$userId]);
         $current = (int) ($countStmt->fetch()['total'] ?? 0);
 
-        $categoryId = userSiteCategoryId($db, $_POST['category_id'] ?? 0, $userId);
-        if ($categoryId <= 0) {
-            $engine = new CategoryEngine($functions);
-            $categoryId = $engine->ensure('未分类', 'bi-collection');
+        // 分组兜底：单条没指定就用 POST 的，再没有就落到「未分类」
+        $defaultCategoryId = userSiteCategoryId($db, $_POST['category_id'] ?? 0, $userId);
+
+        if ($defaultCategoryId <= 0) {
+            $requested = (int) ($_POST['category_id'] ?? 0);
+
+            if ($requested > 0) {
+                // 公共分组（user_id = 0）在上面的查询里取不到，这里补一次
+                $pubStmt = $db->prepare('SELECT id FROM categories WHERE id = ? AND (user_id = ? OR (user_id = 0 AND is_private = 0)) LIMIT 1');
+                $pubStmt->execute([$requested, $userId]);
+
+                if ($pubStmt->fetch()) {
+                    $defaultCategoryId = $requested;
+                }
+            }
+        }
+
+        $engine = new CategoryEngine($functions);
+
+        if ($defaultCategoryId <= 0) {
+            $defaultCategoryId = $engine->ensure('未分类', 'bi-collection');
         }
 
         $sortStmt = $db->prepare('SELECT COALESCE(MAX(sort_order), 0) AS max_sort FROM nav_links WHERE user_id = ?');
@@ -797,10 +1085,13 @@ switch ($action) {
 
         $imported = 0;
         $skipped = 0;
+        $added = [];
         $dupStmt = $db->prepare('SELECT id FROM nav_links WHERE user_id = ? AND url = ? LIMIT 1');
+        $ownCategoryStmt = $db->prepare('SELECT id FROM categories WHERE id = ? AND user_id = ? LIMIT 1');
+        $pubCategoryStmt = $db->prepare('SELECT id FROM categories WHERE id = ? AND (user_id = ? OR (user_id = 0 AND is_private = 0)) LIMIT 1');
         $insertStmt = $db->prepare(
-            'INSERT INTO nav_links (name, url, category_id, user_id, sort_order, is_active, is_starred, created_at)
-             VALUES (?, ?, ?, ?, ?, 1, 0, NOW())'
+            'INSERT INTO nav_links (name, url, logo, description, category_id, user_id, sort_order, is_active, is_starred, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 1, 0, NOW())'
         );
 
         $seen = [];
@@ -814,22 +1105,66 @@ switch ($action) {
 
             if ($current + $imported >= USER_LINK_LIMIT) { break; }
 
+            // 分组归属校验：确认项里的分组必须是自己的或公共的，否则回退到默认分组
+            $categoryId = $item['category_id'];
+
+            if ($categoryId > 0) {
+                $ownCategoryStmt->execute([$categoryId, $userId]);
+                $owned = $ownCategoryStmt->fetch() ? true : false;
+
+                if (!$owned) {
+                    $pubCategoryStmt->execute([$categoryId, $userId]);
+                    $owned = $pubCategoryStmt->fetch() ? true : false;
+                }
+
+                if (!$owned) {
+                    $categoryId = 0;
+                }
+            }
+
+            if ($categoryId <= 0) {
+                $categoryId = $defaultCategoryId;
+            }
+
             $name = $item['name'];
+
             if ($name === '') {
                 $host = parse_url($item['url'], PHP_URL_HOST);
                 $name = $host ? preg_replace('/^www\./i', '', $host) : $item['url'];
             }
 
             $sort++;
-            $insertStmt->execute([$name, $item['url'], $categoryId, $userId, $sort]);
+            $insertStmt->execute([
+                $name,
+                $item['url'],
+                $item['logo'],
+                $item['description'],
+                $categoryId,
+                $userId,
+                $sort,
+            ]);
+
+            $newId = (int) $db->lastInsertId();
             $imported++;
+
+            $added[] = [
+                'id' => $newId,
+                'name' => $name,
+                'url' => $item['url'],
+                'logo' => $item['logo'],
+                'description' => $item['description'],
+                'category_id' => $categoryId,
+                'category_name' => userSiteCategoryName($db, $categoryId),
+            ];
         }
 
         $functions->jsonResponse([
             'ok' => true,
             'imported' => $imported,
             'skipped' => $skipped,
-            'category_id' => $categoryId,
+            'items' => $added,
+            'category_id' => $defaultCategoryId,
+            'limit' => USER_LINK_LIMIT,
         ]);
         break;
 
