@@ -9,7 +9,7 @@
  * 本页只输出静态说明，不读取也不展示任何令牌。
  */
 
-$version = '2.10.8';
+$version = '2.10.9';
 $versionFile = __DIR__ . '/../VERSION';
 
 if (is_readable($versionFile)) {
@@ -505,7 +505,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
                 <li><strong>DELETE 是软删除</strong>，条目进回收站且停用，可在后台「导航管理 → 回收站」恢复。</li>
                 <li><strong>写入会自动归一化网址</strong>：缺协议补 <code>https://</code>，非法地址直接拒绝。</li>
                 <li>响应带 <code>Cache-Control: no-store</code> 与 <code>noindex</code>，不会被搜索引擎收录。</li>
-                <li>若 <code>/api/</code> 仍显示 403：IIS 需启用默认文档 <code>index.php</code>（见 <code>web.config</code> 的 <code>defaultDocument</code>）；Apache 的 <code>.htaccess</code> 已配置 <code>DirectoryIndex</code>。<strong>直接访问 <code>/api/index.php</code> 永远可用。</strong></li>
+                <li>若 <code>/api/</code> 仍显示 403，说明主机默认文档里缺少 <code>index.php</code>，请到<strong>主机面板</strong>添加。不要在 <code>web.config</code> 里重复 <code>&lt;add value="index.php" /&gt;</code> —— 多数 PHP 主机全局已配置，重复声明会触发 500.19 导致全站不可用。Apache 的 <code>.htaccess</code> 已配置 <code>DirectoryIndex</code>。<strong>直接访问 <code>/api/index.php</code> 永远可用。</strong></li>
             </ul>
         </section>
 

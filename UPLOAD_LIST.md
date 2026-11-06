@@ -1,26 +1,33 @@
-# 轩宇-导航 v2.10.8 部署清单
+# 轩宇-导航 v2.10.9 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.10.8
+当前版本：v2.10.9
 
-> **本版本无数据库变更、无 API 行为变更**，修复「API 页面进不去」：`/api/` 原本返回 403（IIS 禁止列目录 + 没有默认文档），现补一个开放 API 文档页。新增 `api/index.php`、改 `web.config`（其余是版本号）。覆盖后强刷即可。
+> **紧急修复版 · 无数据库变更、无 API 行为变更**。v2.10.8 在 `web.config` 里加的 `<defaultDocument><add value="index.php" /></defaultDocument>`，在主机全局默认文档**本来就有 `index.php`** 的环境里触发 `500.19 / 0x800700b7`（重复集合项），**首页 `/` 与 `/api/` 全部 500**。本次移除该节点。
 
-## 本次 v2.10.8 变动文件
+## 本次 v2.10.9 变动文件
 
 | 文件 | 说明 |
 | --- | --- |
-| **`api/index.php`（新增）** | 开放 API 文档页。零依赖（不连数据库、不开会话、不读站点设置），内容按 `api/sites.php` 真实实现逐条核对：鉴权三方式 / read-write 权限 / 管理级与用户级数据范围 / 五个端点 / 查询与写入字段 / curl 示例 / 响应结构 / 六个错误码；明确区分对外开放接口（只有 `sites.php`）与站内会话接口。带一键复制、示例 tab、深浅色切换、目录高亮、内联 SVG favicon |
-| `web.config` | 新增 `defaultDocument` 节点，把 `index.php` 追加到 IIS 默认文档列表，让 `/api/` 落到文档页。Apache 的 `.htaccess` 已有 `DirectoryIndex index.php`，无需改动 |
-| 全部 PHP 页面（22 处） | 资源参数 `?v=2.10.8` |
-| `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `VERSION` | 版本号升至 2.10.8 |
+| **`web.config`** | **移除整个 `<defaultDocument>` 节点**，保留说明注释，明确不要重复 `<add value="index.php" />` |
+| `api/index.php` | 注意事项改为「若 `/api/` 仍 403 请到主机面板添加默认文档」，并写明重复声明会触发 500.19 |
+| 全部 PHP 页面（22 处） | 资源参数 `?v=2.10.9` |
+| `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `VERSION` / `api/index.php` | 版本号升至 2.10.9 |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
 
+> **⚠️ 已部署 v2.10.8 且首页 500 时，立即恢复办法**：编辑线上根目录 `web.config`，删掉 `<defaultDocument enabled="true">…</defaultDocument>` 整段（含中间 `<files>`），保存即恢复。不用回滚其它文件、不用动数据库、不用重传整包。
+
 > 升级要点：
-> 1. **IIS 主机**：需一并覆盖 `web.config`。若主机锁定 `defaultDocument` 节点导致 **500.19**，删除新加的 `<defaultDocument>` 节点即可 —— 文档仍可通过 `/api/index.php` 直接访问，API 本身完全不受影响。
-> 2. **Apache 主机**：`.htaccess` 已有 `DirectoryIndex index.php index.html`，只传 `api/index.php` 即生效。
-> 3. 只想最快看到效果：直接访问 `http://你的域名/api/index.php`，不用改任何配置。
-> 4. 带令牌的请求仍发到 `api/sites.php`，**不是**文档页；`/api/sites.php` 返回 401 是正确行为（缺令牌）。
+> 1. **IIS 主机**：用本版 `web.config` 覆盖线上，或直接删掉线上那段 `<defaultDocument>`。主机全局默认文档通常已含 `index.php`，`api/index.php` 传上去后 `/api/` 会自动命中，项目侧不需要声明。
+> 2. 若个别主机默认文档确实没有 `index.php` 导致 `/api/` 仍 403，请到**主机面板**添加，不要改 `web.config`。
+> 3. **Apache 主机**：`.htaccess` 已有 `DirectoryIndex index.php index.html`，只传 `api/index.php` 即生效。
+> 4. 最快验证：直接访问 `http://你的域名/api/index.php`，永远可用，不依赖任何配置。
+> 5. 带令牌的请求仍发到 `api/sites.php`，**不是**文档页；`/api/sites.php` 返回 401 是正确行为（缺令牌）。
+
+## v2.10.8 回顾
+
+新增 `api/index.php` 开放 API 文档页，解决 `/api/` 403（原本目录里没有默认文档、也没有任何说明）。零依赖，内容按 `api/sites.php` 真实实现核对，契约联调 18/18 通过。**但该版在 `web.config` 加了 defaultDocument 节点，部分主机触发 500.19，已由 v2.10.9 移除。**
 
 ## v2.10.7 回顾
 
