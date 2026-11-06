@@ -70,6 +70,13 @@ class Functions {
             $template = '© {year} {site}';
         }
 
+        /* 兼容早期保存的紧凑模板「{year}{site}」：它会渲染成「2026轩宇-导航」，
+           年份和站名黏在一起，容易被误认为代码里写死了版权。
+           这里统一补上版权符号与空格，用户仍可在账号设置里完全自定义。 */
+        if (preg_replace('/\s+/', '', $template) === '{year}{site}') {
+            $template = '© {year} {site}';
+        }
+
         return str_replace(
             ['{year}', '{site}'],
             [date('Y'), trim((string) $brandName)],

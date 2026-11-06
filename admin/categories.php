@@ -71,6 +71,157 @@ function navCategoryTrim($value, $limit)
     return substr($value, 0, (int) $limit);
 }
 
+/**
+ * 把分类图标字段渲染成真正的图标，而不是把 class 名当文字显示出来。
+ *
+ * 历史数据里图标字段存的是 Bootstrap Icons class（bi-folder / bi-collection），
+ * 但后台只引入 Font Awesome 6，没有 Bootstrap Icons 字体，直接输出就会变成
+ * "bi-folder 小智" 这样的纯文本。这里做一次 class 映射；已经是 Font Awesome
+ * class、emoji 或短文本时，按各自方式安全输出。
+ */
+function navCategoryIconHtml($icon)
+{
+    $icon = trim((string) $icon);
+
+    if ($icon === '') {
+        return '';
+    }
+
+    $biToFa = [
+        'bi-folder' => 'fa-folder',
+        'bi-folder-fill' => 'fa-folder',
+        'bi-folder-open' => 'fa-folder-open',
+        'bi-folder2' => 'fa-folder',
+        'bi-collection' => 'fa-layer-group',
+        'bi-collection-fill' => 'fa-layer-group',
+        'bi-layers' => 'fa-layer-group',
+        'bi-diagram-3' => 'fa-sitemap',
+        'bi-grid' => 'fa-table-cells',
+        'bi-grid-fill' => 'fa-table-cells',
+        'bi-grid-3x3' => 'fa-table-cells',
+        'bi-app' => 'fa-border-all',
+        'bi-list' => 'fa-list',
+        'bi-list-ul' => 'fa-list-ul',
+        'bi-star' => 'fa-star',
+        'bi-star-fill' => 'fa-star',
+        'bi-heart' => 'fa-heart',
+        'bi-heart-fill' => 'fa-heart',
+        'bi-bookmark' => 'fa-bookmark',
+        'bi-bookmark-fill' => 'fa-bookmark',
+        'bi-tag' => 'fa-tag',
+        'bi-tags' => 'fa-tags',
+        'bi-house' => 'fa-house',
+        'bi-house-door' => 'fa-house',
+        'bi-home' => 'fa-house',
+        'bi-globe' => 'fa-globe',
+        'bi-globe2' => 'fa-globe',
+        'bi-link' => 'fa-link',
+        'bi-link-45deg' => 'fa-link',
+        'bi-code' => 'fa-code',
+        'bi-code-slash' => 'fa-code',
+        'bi-terminal' => 'fa-terminal',
+        'bi-laptop' => 'fa-laptop',
+        'bi-pc-display' => 'fa-desktop',
+        'bi-phone' => 'fa-mobile-screen',
+        'bi-server' => 'fa-server',
+        'bi-cloud' => 'fa-cloud',
+        'bi-hdd' => 'fa-hard-drive',
+        'bi-database' => 'fa-database',
+        'bi-cpu' => 'fa-microchip',
+        'bi-wifi' => 'fa-wifi',
+        'bi-gear' => 'fa-gear',
+        'bi-gear-fill' => 'fa-gear',
+        'bi-tools' => 'fa-screwdriver-wrench',
+        'bi-wrench' => 'fa-wrench',
+        'bi-shield' => 'fa-shield-halved',
+        'bi-shield-lock' => 'fa-shield-halved',
+        'bi-lock' => 'fa-lock',
+        'bi-unlock' => 'fa-lock-open',
+        'bi-briefcase' => 'fa-briefcase',
+        'bi-book' => 'fa-book',
+        'bi-journal' => 'fa-book',
+        'bi-people' => 'fa-users',
+        'bi-person' => 'fa-user',
+        'bi-person-circle' => 'fa-circle-user',
+        'bi-chat' => 'fa-comment',
+        'bi-chat-dots' => 'fa-comment-dots',
+        'bi-envelope' => 'fa-envelope',
+        'bi-bell' => 'fa-bell',
+        'bi-calendar' => 'fa-calendar',
+        'bi-clock' => 'fa-clock',
+        'bi-compass' => 'fa-compass',
+        'bi-map' => 'fa-map',
+        'bi-flag' => 'fa-flag',
+        'bi-fire' => 'fa-fire',
+        'bi-rocket' => 'fa-rocket',
+        'bi-lightbulb' => 'fa-lightbulb',
+        'bi-palette' => 'fa-palette',
+        'bi-music-note' => 'fa-music',
+        'bi-camera' => 'fa-camera',
+        'bi-image' => 'fa-image',
+        'bi-images' => 'fa-images',
+        'bi-film' => 'fa-film',
+        'bi-controller' => 'fa-gamepad',
+        'bi-cart' => 'fa-cart-shopping',
+        'bi-shop' => 'fa-shop',
+        'bi-bank' => 'fa-building-columns',
+        'bi-credit-card' => 'fa-credit-card',
+        'bi-box' => 'fa-box',
+        'bi-archive' => 'fa-box-archive',
+        'bi-puzzle' => 'fa-puzzle-piece',
+        'bi-search' => 'fa-magnifying-glass',
+        'bi-info-circle' => 'fa-circle-info',
+        'bi-question-circle' => 'fa-circle-question',
+        'bi-exclamation-triangle' => 'fa-triangle-exclamation',
+        'bi-check-circle' => 'fa-circle-check',
+        'bi-emoji-smile' => 'fa-face-smile',
+        'bi-sun' => 'fa-sun',
+        'bi-moon' => 'fa-moon',
+        'bi-brightness-high' => 'fa-sun',
+    ];
+
+    $tokens = preg_split('/\s+/', $icon);
+    $faClass = null;
+
+    // Bootstrap Icons class -> Font Awesome 6 class
+    foreach ($tokens as $token) {
+        if (strpos($token, 'bi-') === 0) {
+            $faClass = isset($biToFa[$token]) ? $biToFa[$token] : 'fa-icons';
+            break;
+        }
+    }
+
+    // 已经是 Font Awesome class（fas fa-star / fa-star / bi-folder fa-star ...）
+    if ($faClass === null) {
+        foreach ($tokens as $token) {
+            if (strpos($token, 'fa-') === 0) {
+                $faClass = $token;
+                break;
+            }
+        }
+    }
+
+    if ($faClass !== null) {
+        $style = 'fa-solid';
+        foreach ($tokens as $token) {
+            if (preg_match('/^(fa|fas|far|fab|fal|fad|fa-solid|fa-regular|fa-brands)$/', $token)) {
+                $style = $token;
+                break;
+            }
+        }
+
+        $safeClass = preg_replace('/[^a-z0-9 -]/', '', strtolower($style . ' ' . $faClass));
+        $safeClass = trim(preg_replace('/\s+/', ' ', $safeClass));
+
+        return '<i class="' . htmlspecialchars($safeClass, ENT_QUOTES, 'UTF-8') . '" aria-hidden="true"></i>';
+    }
+
+    // emoji / 中文 / 短文本图标：保留最多 4 个可见字符并转义
+    $text = function_exists('mb_substr') ? mb_substr($icon, 0, 4, 'UTF-8') : substr($icon, 0, 12);
+
+    return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+}
+
 $hasDeletedAt = $hasV2Columns;
 
 try {
@@ -361,7 +512,7 @@ if (isset($_GET['edit'])) {
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
     <link href="../assets/css/dataTables.bootstrap5.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css';">
-    <link href="../assets/css/admin.css?v=2.10.9" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.11.0" rel="stylesheet">
     <style>
         /* 二级分类行的缩进与连接线，让层级关系一眼可见 */
         .cell-tree {
@@ -639,11 +790,11 @@ if (isset($_GET['edit'])) {
                                                                     <span class="tree-indent" aria-hidden="true"></span>
                                                                 <?php endif; ?>
                                                                 <div class="flex-grow-1" style="min-width:0;">
-                                                                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                                                                        <?php if ($icon !== ''): ?>
-                                                                            <span class="category-icon-chip"><?php echo $functions->escape($icon); ?></span>
-                                                                        <?php endif; ?>
-                                                                        <span class="cell-title"><?php echo $functions->escape($category['name']); ?></span>
+                                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                        <?php if ($icon !== ''): ?>
+                                                            <span class="category-icon-chip" title="<?php echo $functions->escape($icon); ?>"><?php echo navCategoryIconHtml($icon); ?></span>
+                                                        <?php endif; ?>
+                                                        <span class="cell-title"><?php echo $functions->escape($category['name']); ?></span>
                                                                         <?php if (!empty($category['is_private'])): ?>
                                                                             <span class="badge badge-soft-warning"><i class="fas fa-lock"></i> 私密</span>
                                                                         <?php endif; ?>

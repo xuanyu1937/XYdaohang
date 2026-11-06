@@ -261,7 +261,7 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.9">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.11.0">
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -664,11 +664,67 @@ $hasLinks = $totalLinks > 0;
             white-space: nowrap;
         }
 
+        /* 操作按钮默认不占布局空间：列表只剩「名称 + 域名」。
+           桌面端 hover / 键盘聚焦才浮现；触屏与窄屏完全隐藏，改走长按菜单。
+           以前 7 个 34px 按钮常驻，390px 下把 .my-info 挤到只剩 16px，
+           名称与域名都被截成一两个字 —— 问题 1、2 其实是同一个根因。 */
+        .my-item { position: relative; }
+
         .my-item-actions {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
             display: flex;
             align-items: center;
             gap: 4px;
-            flex: 0 0 auto;
+            padding-left: 22px;
+            background: linear-gradient(90deg, transparent, var(--surface) 24%);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.16s ease, visibility 0.16s ease;
+        }
+
+        /* 键盘聚焦始终可用，不依赖设备是否支持 hover（WCAG 键盘可达） */
+        .my-item:focus-within .my-item-actions {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .my-item:hover .my-item-actions {
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+            }
+        }
+
+        /* 按「输入能力」而不是「屏幕宽度」区分：触屏没有 hover，
+           按钮一律隐藏走长按菜单；桌面浏览器即使缩到窄窗口仍可 hover。 */
+        @media (hover: none) {
+            .my-item-actions { display: none !important; }
+        }
+
+        /* 窄屏排版：名称最多两行，域名完整换行，不再压缩到无法识别 */
+        @media (max-width: 720px) {
+            .my-link-name {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                white-space: normal;
+                line-height: 1.4;
+            }
+
+            .my-link-url {
+                white-space: normal;
+                overflow-wrap: anywhere;
+                line-height: 1.35;
+            }
+
+            .my-item { padding-right: 12px; }
         }
 
         .my-iconbtn {
@@ -1164,6 +1220,7 @@ $hasLinks = $totalLinks > 0;
         }
 
         .my-group-item {
+            position: relative;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -1173,21 +1230,31 @@ $hasLinks = $totalLinks > 0;
             background: var(--surface-2);
         }
 
+        .my-group-item.is-dragging { opacity: 0.5; }
+        .my-group-item.is-drop-target { border-color: var(--primary); background: var(--primary-soft); }
+
+        /* 名称平时像纯文本，聚焦或悬浮才显示输入态，改完失焦自动保存 */
         .my-group-item .my-group-name {
             flex: 1 1 auto;
             min-width: 0;
             padding: 6px 10px;
-            border: 1px solid var(--border-strong);
+            border: 1px solid transparent;
             border-radius: 8px;
-            background: var(--surface);
+            background: transparent;
             color: var(--text);
             font-size: 13px;
+            font-weight: 600;
             outline: none;
+            transition: border-color 0.15s ease, background-color 0.15s ease;
         }
 
+        .my-group-item .my-group-name:hover,
         .my-group-item .my-group-name:focus {
-            border-color: var(--primary);
+            border-color: var(--border-strong);
+            background: var(--surface);
         }
+
+        .my-group-item .my-group-name:focus { border-color: var(--primary); }
 
         .my-group-private-toggle {
             display: inline-flex;
@@ -1199,50 +1266,71 @@ $hasLinks = $totalLinks > 0;
             white-space: nowrap;
         }
 
-        .my-group-item .my-btn {
-            flex: 0 0 auto;
-            padding: 6px 10px;
-            font-size: 12px;
-        }
-
-        /* 分组排序：上移 / 下移小图标按钮 */
-        .my-group-order {
-            display: inline-flex;
-            flex: 0 0 auto;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .my-group-move {
+        /* 排序手柄 + 更多操作：两个 26px 图标，替代原来 7 个挤在一行的控件 */
+        .my-group-handle,
+        .my-group-more {
             display: inline-grid;
             flex: 0 0 auto;
             place-items: center;
             width: 26px;
             height: 26px;
             padding: 0;
-            border: 1px solid var(--border);
+            border: 1px solid transparent;
             border-radius: 7px;
-            background: var(--surface);
+            background: transparent;
             color: var(--muted);
             cursor: pointer;
             transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
         }
 
-        .my-group-move:hover:not(:disabled) {
+        .my-group-handle { cursor: grab; }
+        .my-group-handle:active { cursor: grabbing; }
+
+        .my-group-handle:hover,
+        .my-group-more:hover,
+        .my-group-more[aria-expanded="true"] {
             border-color: var(--primary-border);
             background: var(--primary-soft);
             color: var(--primary);
         }
 
-        .my-group-move:disabled {
-            opacity: 0.35;
-            cursor: default;
+        .my-group-handle svg,
+        .my-group-more svg { width: 15px; height: 15px; }
+
+        .my-group-handle:focus-visible,
+        .my-group-more:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+
+        .my-group-menu {
+            position: absolute;
+            right: 8px;
+            top: calc(100% - 4px);
+            z-index: 5;
+            min-width: 118px;
+            padding: 5px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface);
+            box-shadow: 0 10px 28px -12px rgba(15, 23, 42, 0.35);
         }
 
-        .my-group-move svg {
-            width: 13px;
-            height: 13px;
+        .my-group-menu[hidden] { display: none; }
+
+        .my-group-menu-item {
+            display: block;
+            width: 100%;
+            padding: 7px 10px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: var(--text);
+            font-size: 12.5px;
+            text-align: left;
+            cursor: pointer;
         }
+
+        .my-group-menu-item:hover { background: var(--surface-2); }
+        .my-group-menu-item.is-danger { color: #dc2626; }
+        .my-group-menu-item.is-danger:hover { background: rgba(220, 38, 38, 0.08); }
 
         /* 抓取按钮：主色渐变实心 + 白图标，悬浮上浮、点击下压，进行中图标旋转 */
         #fetchBtn {
@@ -1407,14 +1495,27 @@ $hasLinks = $totalLinks > 0;
                 display: none;
             }
 
-            /* 仅隐藏外层工具栏按钮的 label，对话框/表单项内按钮保留文字语义 */
+            /* 保留文字标签：此前移动端把 label 全隐藏，只剩一排看不懂的图标。
+               改为小字号 + 工具栏横向滚动，标签始终可见。 */
             .my-btn:not(.my-dialog .my-btn):not(.my-field-row .my-btn) .my-btn-label {
-                display: none;
+                display: inline;
+                font-size: 11.5px;
+                white-space: nowrap;
             }
 
             .my-btn {
                 padding: 0 11px;
+                flex: 0 0 auto;
             }
+
+            .my-actions {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                scrollbar-width: none;
+                padding-bottom: 2px;
+            }
+
+            .my-actions::-webkit-scrollbar { display: none; }
 
             .my-sharebar {
                 left: 12px;
@@ -2090,6 +2191,23 @@ $hasLinks = $totalLinks > 0;
             </div>
 
             <div class="my-field">
+                <label for="nickname">昵称</label>
+                <div class="my-field-row">
+                    <input type="text" id="nickname" maxlength="30" autocomplete="off"
+                           value="<?php echo $functions->escape($user['username']); ?>">
+                    <button type="button" class="my-btn" id="saveNicknameBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        <span class="my-btn-label">保存</span>
+                    </button>
+                </div>
+                <p class="my-note">昵称同时是登录账号名，修改后请用新名称登录；2 ~ 30 个字符，不可与其他用户重名。</p>
+            </div>
+
+            <div class="my-field">
                 <label>邮箱</label>
                 <input type="text" value="<?php echo $functions->escape($user['email']); ?>" readonly>
             </div>
@@ -2230,6 +2348,19 @@ $hasLinks = $totalLinks > 0;
             </div>
         </div>
     </dialog>
+
+    <!-- 卡片右键 / 长按菜单。
+         v2.11.0：必须放在下方主交互脚本之前。此前它挂在 </body> 前，
+         脚本同步执行时该节点尚未解析，qs('#cardContextMenu') 恒为 null，
+         导致右键菜单和移动端长按菜单都弹不出来。 -->
+    <div class="card-context-menu" id="cardContextMenu" hidden>
+        <button type="button" class="ccm-item" data-action="open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg>新标签打开</button>
+        <button type="button" class="ccm-item" data-action="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>复制链接</button>
+        <button type="button" class="ccm-item" data-action="qrcode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3M21 14v7M14 21h3M17 17h4"></path></svg>二维码</button>
+        <button type="button" class="ccm-item" data-action="edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>编辑</button>
+        <button type="button" class="ccm-item" data-action="move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14M5 12h14M5 20h14"></path><path d="M9 8l3-3 3 3M9 16l3 3 3-3"></path></svg>移动分组</button>
+        <button type="button" class="ccm-item ccm-danger" data-action="delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg>删除</button>
+    </div>
 
     <script>
         (function () {
@@ -2648,6 +2779,12 @@ $hasLinks = $totalLinks > 0;
                         description: row.getAttribute('data-description') || '',
                         logo: row.getAttribute('data-logo') || ''
                     };
+
+                    /* v2.11.0：列表删除按钮与右键/长按菜单保持同一套规则，
+                       先二次确认，确认后仍保留 5 秒可撤销的提示条。 */
+                    if (!window.confirm('确定删除「' + snap.name + '」吗？删除后可在提示条中撤销。')) {
+                        return;
+                    }
 
                     postForm(API_SITES, { action: 'delete', id: snap.id }).then(function (result) {
                         if (!result.ok) {
@@ -3613,6 +3750,46 @@ $hasLinks = $totalLinks > 0;
                 });
             }
 
+            /* ----------------------------- 昵称 ----------------------------- */
+
+            var saveNicknameBtn = qs('#saveNicknameBtn');
+            var nicknameInput = qs('#nickname');
+
+            if (saveNicknameBtn && nicknameInput) {
+                saveNicknameBtn.addEventListener('click', function () {
+                    setBusy(saveNicknameBtn, true, '保存中…');
+
+                    postForm(API_AUTH, {
+                        action: 'update_profile',
+                        nickname: nicknameInput.value.trim()
+                    }).then(function (result) {
+                        setBusy(saveNicknameBtn, false);
+
+                        if (!result.ok) {
+                            showMsg(accountMsg, result.error || '保存失败');
+                            return;
+                        }
+
+                        showMsg(accountMsg, '昵称已保存', 'success');
+                        window.setTimeout(function () { window.location.reload(); }, 700);
+                    });
+                });
+            }
+
+            // 前台头像下拉「账号设置」会带 ?open=account 跳过来，直接展开弹窗
+            if (/(?:^|[?&])open=account(?:&|$)/.test(window.location.search)) {
+                if (window.history && window.history.replaceState) {
+                    try {
+                        var cleanUrl = new URL(window.location.href);
+                        cleanUrl.searchParams.delete('open');
+                        window.history.replaceState({}, '', cleanUrl.toString());
+                    } catch (urlError) { /* 老浏览器忽略即可 */ }
+                }
+
+                var accountEntry = qs('#accountBtn');
+                if (accountEntry) { accountEntry.click(); }
+            }
+
             /* ----------------------------- 分组管理 ----------------------------- */
 
             var groupDialog = qs('#groupDialog');
@@ -3642,22 +3819,29 @@ $hasLinks = $totalLinks > 0;
                     li.className = 'my-group-item';
                     li.setAttribute('data-id', group.id);
 
-                    var lock = group.is_private ? '<span class="my-group-privacy" title="私密分组">&#x1f512;</span>' : '';
-
+                    /* v2.11.0：一行只留「排序手柄 + 名称 + 私密 + 更多」四个元素。
+                       以前上移/下移/输入框/锁/私密/保存/删除挤成一排，窄屏极易误触。
+                       重命名改为失焦或回车自动保存，编辑与删除收进「更多」菜单。 */
                     li.innerHTML =
-                        '<span class="my-group-order" aria-label="调整顺序">' +
-                            '<button type="button" class="my-group-move my-group-up" title="上移"' + (index === 0 ? ' disabled' : '') + '>' +
-                                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m6 14 6-6 6 6"></path></svg>' +
-                            '</button>' +
-                            '<button type="button" class="my-group-move my-group-down" title="下移"' + (index === OWN_GROUPS.length - 1 ? ' disabled' : '') + '>' +
-                                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m6 10 6 6 6-6"></path></svg>' +
-                            '</button>' +
-                        '</span>' +
-                        '<input type="text" class="my-group-name" value="' + escapeHtml(group.name) + '" maxlength="30" aria-label="分组名称">' +
-                        lock +
+                        '<button type="button" class="my-group-handle" data-id="' + group.id + '" draggable="true"' +
+                            ' title="拖动排序；聚焦后可用上下方向键"' +
+                            ' aria-label="调整「' + escapeHtml(group.name) + '」的顺序">' +
+                            '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+                                '<circle cx="9" cy="6" r="1.4"></circle><circle cx="15" cy="6" r="1.4"></circle>' +
+                                '<circle cx="9" cy="12" r="1.4"></circle><circle cx="15" cy="12" r="1.4"></circle>' +
+                                '<circle cx="9" cy="18" r="1.4"></circle><circle cx="15" cy="18" r="1.4"></circle>' +
+                            '</svg>' +
+                        '</button>' +
+                        '<input type="text" class="my-group-name" value="' + escapeHtml(group.name) + '" maxlength="30"' +
+                            ' aria-label="分组名称，修改后按回车或失焦自动保存">' +
                         '<label class="my-check my-group-private-toggle" title="私密分组仅本人可见"><input type="checkbox" class="my-group-private" ' + (group.is_private ? 'checked' : '') + '> 私密</label>' +
-                        '<button type="button" class="my-btn my-group-save">保存</button>' +
-                        '<button type="button" class="my-btn is-ghost my-group-del">删除</button>';
+                        '<button type="button" class="my-group-more" aria-label="更多操作" aria-expanded="false" title="更多操作">' +
+                            '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg>' +
+                        '</button>' +
+                        '<div class="my-group-menu" hidden>' +
+                            '<button type="button" class="my-group-menu-item my-group-rename">重命名</button>' +
+                            '<button type="button" class="my-group-menu-item is-danger my-group-del">删除分组</button>' +
+                        '</div>';
 
                     groupList.appendChild(li);
                 });
@@ -3765,63 +3949,178 @@ $hasLinks = $totalLinks > 0;
             }
 
             if (groupList) {
-                groupList.addEventListener('click', function (event) {
-                    var moveBtn = event.target.closest ? event.target.closest('.my-group-move') : null;
+                function closeGroupMenus() {
+                    qsa('.my-group-menu').forEach(function (menu) { menu.hidden = true; });
+                    qsa('.my-group-more').forEach(function (btn) { btn.setAttribute('aria-expanded', 'false'); });
+                }
 
-                    if (moveBtn && !moveBtn.disabled) {
-                        var moveItem = moveBtn.closest('.my-group-item');
-                        var moveId = moveItem ? parseInt(moveItem.getAttribute('data-id'), 10) : 0;
-                        var from = -1;
+                function moveGroupTo(id, to) {
+                    var from = -1;
+                    OWN_GROUPS.forEach(function (group, idx) { if (group.id === id) { from = idx; } });
 
-                        OWN_GROUPS.forEach(function (group, idx) { if (group.id === moveId) { from = idx; } });
+                    if (from < 0 || to < 0 || to >= OWN_GROUPS.length || from === to) { return false; }
 
-                        if (from >= 0) {
-                            var to = moveBtn.classList.contains('my-group-up') ? from - 1 : from + 1;
+                    var moved = OWN_GROUPS.splice(from, 1)[0];
+                    OWN_GROUPS.splice(to, 0, moved);
 
-                            if (to >= 0 && to < OWN_GROUPS.length) {
-                                var temp = OWN_GROUPS[from];
-                                OWN_GROUPS[from] = OWN_GROUPS[to];
-                                OWN_GROUPS[to] = temp;
+                    renderGroupList();
+                    refreshCategorySelects();
+                    submitGroupOrder();
 
-                                renderGroupList();
-                                refreshCategorySelects();
-                                submitGroupOrder();
-                            }
-                        }
+                    var handle = groupList.querySelector('.my-group-handle[data-id="' + id + '"]');
+                    if (handle) { handle.focus(); }
 
+                    return true;
+                }
+
+                function renameGroup(id, input) {
+                    var name = input ? input.value.trim() : '';
+
+                    if (!id || name === '') {
+                        showMsg(groupMsg, '请输入分组名称');
                         return;
                     }
 
-                    var item = event.target.closest ? event.target.closest('.my-group-item') : null;
+                    var unchanged = false;
+                    OWN_GROUPS.forEach(function (group) { if (group.id === id && group.name === name) { unchanged = true; } });
+                    if (unchanged) { return; }
 
-                    if (!item) { return; }
-
-                    var id = parseInt(item.getAttribute('data-id'), 10);
-
-                    if (event.target.classList.contains('my-group-del')) {
-                        if (!window.confirm('删除该分组？分组下的网址会移到「未分类」，不会被删除。')) {
+                    postForm(API_CATEGORIES, { action: 'rename', id: id, name: name }).then(function (result) {
+                        if (!result.ok) {
+                            showMsg(groupMsg, result.error || '重命名失败');
                             return;
                         }
 
-                        postForm(API_CATEGORIES, { action: 'delete', id: id }).then(function (result) {
-                            if (!result.ok) {
-                                showMsg(groupMsg, result.error || '删除失败');
-                                return;
-                            }
+                        OWN_GROUPS.forEach(function (group) { if (group.id === id) { group.name = name; } });
+                        renderGroupList();
+                        refreshCategorySelects();
+                        showMsg(groupMsg, '分组名称已保存', 'success');
+                    });
+                }
 
-                            showMsg(groupMsg, '分组已删除', 'success');
-                            window.setTimeout(function () { window.location.reload(); }, 800);
-                        });
+                function deleteGroup(id) {
+                    if (!window.confirm('删除该分组？分组下的网址会移到「未分类」，不会被删除。')) { return; }
+
+                    postForm(API_CATEGORIES, { action: 'delete', id: id }).then(function (result) {
+                        if (!result.ok) {
+                            showMsg(groupMsg, result.error || '删除失败');
+                            return;
+                        }
+
+                        showMsg(groupMsg, '分组已删除', 'success');
+                        window.setTimeout(function () { window.location.reload(); }, 800);
+                    });
+                }
+
+                groupList.addEventListener('click', function (event) {
+                    var target = event.target;
+                    if (!target.closest) { return; }
+
+                    var item = target.closest('.my-group-item');
+                    if (!item) { return; }
+
+                    var id = parseInt(item.getAttribute('data-id'), 10) || 0;
+
+                    if (target.closest('.my-group-more')) {
+                        var menu = item.querySelector('.my-group-menu');
+                        var willOpen = menu ? menu.hidden : false;
+                        closeGroupMenus();
+                        if (menu) { menu.hidden = !willOpen; }
+                        target.closest('.my-group-more').setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                        return;
+                    }
+
+                    if (target.closest('.my-group-rename')) {
+                        var input = item.querySelector('.my-group-name');
+                        if (input) { input.focus(); input.select(); }
+                        closeGroupMenus();
+                        return;
+                    }
+
+                    if (target.closest('.my-group-del')) {
+                        closeGroupMenus();
+                        deleteGroup(id);
                     }
                 });
 
-                groupList.addEventListener('change', function (event) {
-                    if (!event.target.classList.contains('my-group-private')) { return; }
+                // 点击行外收起「更多」菜单
+                document.addEventListener('click', function (event) {
+                    if (event.target.closest && event.target.closest('.my-group-item')) { return; }
+                    closeGroupMenus();
+                });
 
+                groupList.addEventListener('keydown', function (event) {
+                    var target = event.target;
+
+                    if (target.classList.contains('my-group-handle') && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+                        event.preventDefault();
+                        var item = target.closest('.my-group-item');
+                        var id = parseInt(item.getAttribute('data-id'), 10) || 0;
+                        var from = -1;
+                        OWN_GROUPS.forEach(function (group, idx) { if (group.id === id) { from = idx; } });
+                        moveGroupTo(id, from + (event.key === 'ArrowUp' ? -1 : 1));
+                        return;
+                    }
+
+                    if (target.classList.contains('my-group-name') && event.key === 'Enter') {
+                        event.preventDefault();
+                        target.blur();
+                    }
+                });
+
+                /* 拖拽排序：只有手柄可拖动，输入框仍可正常选中文字 */
+                var dragGroupId = 0;
+
+                groupList.addEventListener('dragstart', function (event) {
+                    var item = event.target.closest ? event.target.closest('.my-group-item') : null;
+                    if (!item) { return; }
+
+                    dragGroupId = parseInt(item.getAttribute('data-id'), 10) || 0;
+                    item.classList.add('is-dragging');
+
+                    if (event.dataTransfer) {
+                        event.dataTransfer.effectAllowed = 'move';
+                        event.dataTransfer.setData('text/plain', String(dragGroupId));
+                    }
+                });
+
+                groupList.addEventListener('dragover', function (event) {
+                    event.preventDefault();
+                    var item = event.target.closest ? event.target.closest('.my-group-item') : null;
+                    qsa('.my-group-item').forEach(function (node) { node.classList.remove('is-drop-target'); });
+                    if (item) { item.classList.add('is-drop-target'); }
+                });
+
+                groupList.addEventListener('drop', function (event) {
+                    event.preventDefault();
+                    var item = event.target.closest ? event.target.closest('.my-group-item') : null;
+                    qsa('.my-group-item').forEach(function (node) { node.classList.remove('is-drop-target', 'is-dragging'); });
+
+                    if (!item || !dragGroupId) { return; }
+
+                    var targetId = parseInt(item.getAttribute('data-id'), 10) || 0;
+                    var to = -1;
+                    OWN_GROUPS.forEach(function (group, idx) { if (group.id === targetId) { to = idx; } });
+                    moveGroupTo(dragGroupId, to);
+                    dragGroupId = 0;
+                });
+
+                groupList.addEventListener('dragend', function () {
+                    qsa('.my-group-item').forEach(function (node) { node.classList.remove('is-drop-target', 'is-dragging'); });
+                    dragGroupId = 0;
+                });
+
+                groupList.addEventListener('change', function (event) {
                     var item = event.target.closest ? event.target.closest('.my-group-item') : null;
                     var id = item ? parseInt(item.getAttribute('data-id'), 10) : 0;
 
-                    if (!id) { return; }
+                    // 名称改完失焦 / 回车即自动保存，不再需要单独的「保存」按钮
+                    if (event.target.classList.contains('my-group-name')) {
+                        renameGroup(id, event.target);
+                        return;
+                    }
+
+                    if (!event.target.classList.contains('my-group-private') || !id) { return; }
 
                     postForm(API_CATEGORIES, {
                         action: 'set_private',
@@ -3834,40 +4133,10 @@ $hasLinks = $totalLinks > 0;
                             return;
                         }
 
-                        var found = null;
-                        OWN_GROUPS.forEach(function (group) { if (group.id === id) { found = group; } });
-                        if (found) { found.is_private = event.target.checked ? 1 : 0; }
-
+                        OWN_GROUPS.forEach(function (group) { if (group.id === id) { group.is_private = event.target.checked ? 1 : 0; } });
                         renderGroupList();
                         refreshCategorySelects();
                         showMsg(groupMsg, event.target.checked ? '已设为私密分组' : '已取消私密', 'success');
-                    });
-                });
-
-                groupList.addEventListener('click', function (event) {
-                    if (!event.target.classList.contains('my-group-save')) { return; }
-
-                    var item = event.target.closest ? event.target.closest('.my-group-item') : null;
-                    var input = item ? item.querySelector('.my-group-name') : null;
-                    var id = item ? parseInt(item.getAttribute('data-id'), 10) : 0;
-                    var name = input ? input.value.trim() : '';
-
-                    if (!id || name === '') {
-                        showMsg(groupMsg, '请输入分组名称');
-                        return;
-                    }
-
-                    postForm(API_CATEGORIES, { action: 'rename', id: id, name: name }).then(function (result) {
-                        if (!result.ok) {
-                            showMsg(groupMsg, result.error || '重命名失败');
-                            return;
-                        }
-
-                        OWN_GROUPS.forEach(function (group) { if (group.id === id) { group.name = name; } });
-                        renderGroupList();
-                        refreshCategorySelects();
-                        showMsg(groupMsg, '已保存', 'success');
-                        window.setTimeout(function () { window.location.reload(); }, 800);
                     });
                 });
             }
@@ -3893,6 +4162,8 @@ $hasLinks = $totalLinks > 0;
             var contextMenu = qs('#cardContextMenu');
             var contextTarget = null;
             var longPressTimer = null;
+            var longPressFired = false;
+            var longPressUntil = 0;
 
             function openDialog2(dialog) {
                 if (!dialog) { return; }
@@ -4117,36 +4388,134 @@ $hasLinks = $totalLinks > 0;
                 }
             });
 
-            // 长按菜单（移动端）
+            /* ---------- 长按 / 短按（v2.11.0 重写） ----------
+               触屏上不再有常驻按钮：长按 ~500ms 弹操作菜单，短按打开网址，
+               滚动不触发。短按改由 touchend 直接处理，不再依赖浏览器补发的
+               合成 click，也不用媒体查询猜设备，避免「长按后残留标记吞掉
+               后续点击」以及桌面端点击名称误开新标签。 */
+            var touchRow = null;
+            var touchStartX = 0;
+            var touchStartY = 0;
+            var tapHandledRow = null;
+            var tapHandledUntil = 0;
+
+            function isInteractiveTarget(node) {
+                return !!(node && node.closest && node.closest('a, button, input, select, textarea, label'));
+            }
+
+            function openRowUrl(item) {
+                var url = item.getAttribute('data-url');
+
+                if (url) { window.open(url, '_blank', 'noopener,noreferrer'); }
+            }
+
+            function showRowMenu(item, x, y) {
+                if (!contextMenu) { return; }
+
+                contextMenu.hidden = false;
+                var menuRect = contextMenu.getBoundingClientRect();
+
+                if (x + menuRect.width > window.innerWidth) { x = window.innerWidth - menuRect.width - 8; }
+                if (y + menuRect.height > window.innerHeight) { y = window.innerHeight - menuRect.height - 8; }
+
+                contextMenu.style.left = Math.max(8, x) + 'px';
+                contextMenu.style.top = Math.max(8, y) + 'px';
+            }
+
             qsa('.my-item').forEach(function (item) {
-                item.addEventListener('touchstart', function () {
+                item.addEventListener('touchstart', function (event) {
+                    longPressFired = false;
+
+                    /* 点的是行内按钮/复选框/链接时交给它们自己处理，不启动长按 */
+                    if (isInteractiveTarget(event.target)) {
+                        touchRow = null;
+                        return;
+                    }
+
+                    touchRow = item;
+                    var t = event.touches && event.touches[0];
+                    touchStartX = t ? t.clientX : 0;
+                    touchStartY = t ? t.clientY : 0;
+
                     longPressTimer = setTimeout(function () {
+                        longPressTimer = null;
+                        longPressFired = true;
+                        longPressUntil = Date.now() + 800;
+                        touchRow = null;              // 已成长按，不再当短按处理
                         contextTarget = item;
 
-                        if (contextMenu) {
-                            contextMenu.hidden = false;
-                            var rect = item.getBoundingClientRect();
-                            var x = rect.left + rect.width / 2;
-                            var y = rect.top + rect.height / 2;
-                            var menuRect = contextMenu.getBoundingClientRect();
+                        var rect = item.getBoundingClientRect();
+                        showRowMenu(item, rect.left + rect.width / 2, rect.top + rect.height / 2);
 
-                            if (x + menuRect.width > window.innerWidth) { x = window.innerWidth - menuRect.width - 8; }
-                            if (y + menuRect.height > window.innerHeight) { y = window.innerHeight - menuRect.height - 8; }
-
-                            contextMenu.style.left = Math.max(8, x) + 'px';
-                            contextMenu.style.top = Math.max(8, y) + 'px';
-                        }
+                        if (navigator.vibrate) { navigator.vibrate(12); }
                     }, 500);
                 }, { passive: true });
 
-                item.addEventListener('touchmove', function () {
-                    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+                item.addEventListener('touchmove', function (event) {
+                    var t = event.touches && event.touches[0];
+
+                    if (t && (Math.abs(t.clientX - touchStartX) > 10 || Math.abs(t.clientY - touchStartY) > 10)) {
+                        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+                        touchRow = null;              // 滚动浏览，不视为短按
+                    }
                 }, { passive: true });
 
                 item.addEventListener('touchend', function () {
                     if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+
+                    if (touchRow === item) {
+                        /* 短按：立刻打开网址，并记下这一行，
+                           让随后补发的 click 不再重复打开一个标签。 */
+                        tapHandledRow = item;
+                        tapHandledUntil = Date.now() + 700;
+                        openRowUrl(item);
+                    }
+
+                    touchRow = null;
+                });
+
+                item.addEventListener('touchcancel', function () {
+                    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+                    touchRow = null;
                 });
             });
+
+            // 捕获阶段处理两类需要拦掉的补发 click：
+            // 1) 短按已由 touchend 打开过网址 → 吞掉同一行上的这次 click，避免开两个标签；
+            // 2) 长按触发后 → 只吞「800ms 内、落在被长按行上」的那一次。
+            // 菜单在 body 末尾，点菜单项必须放行；超时残留标记也不误吞正常点击。
+            document.addEventListener('click', function (event) {
+                var row = event.target.closest ? event.target.closest('.my-item') : null;
+
+                if (tapHandledRow && Date.now() < tapHandledUntil && row === tapHandledRow) {
+                    tapHandledRow = null;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return;
+                }
+
+                if (!longPressFired) { return; }
+                longPressFired = false;
+
+                if (Date.now() > longPressUntil || !row) { return; }
+
+                event.preventDefault();
+                event.stopPropagation();
+            }, true);
+
+            // 短按兜底：只在无 hover 能力的触屏设备启用，覆盖没有 touch 事件的
+            // 合成 click（辅助技术等）。桌面端有 hover 按钮，点击名称不应误开标签。
+            var isTouchOnly = window.matchMedia && window.matchMedia('(hover: none)').matches;
+            if (isTouchOnly) {
+                document.addEventListener('click', function (event) {
+                    if (event.defaultPrevented || Date.now() < tapHandledUntil) { return; }
+                    var info = event.target.closest ? event.target.closest('.my-info') : null;
+                    if (!info) { return; }
+                    var row = info.closest('.my-item');
+                    if (!row || isInteractiveTarget(event.target)) { return; }
+                    openRowUrl(row);
+                });
+            }
 
             // 菜单点击
             if (contextMenu) {
@@ -4185,15 +4554,50 @@ $hasLinks = $totalLinks > 0;
                             openMoveDialog(target);
                             break;
                         case 'delete':
-                            if (confirm('确定删除「' + data.name + '」吗？')) {
-                                postForm(API_SITES, { action: 'delete', id: data.id }).then(function (result) {
-                                    if (result.ok) {
-                                        target.remove();
-                                    } else {
-                                        alert(result.error || '删除失败');
+                            // 二次确认 + 可撤销（与列表删除按钮同一套 pushUndo 机制）
+                            if (!window.confirm('确定删除「' + data.name + '」吗？删除后可在提示条中撤销。')) { break; }
+
+                            var delSnap = {
+                                id: data.id,
+                                name: data.name,
+                                url: data.url,
+                                category: data.category,
+                                description: target.getAttribute('data-description') || '',
+                                logo: target.getAttribute('data-logo') || ''
+                            };
+
+                            postForm(API_SITES, { action: 'delete', id: delSnap.id }).then(function (result) {
+                                if (!result.ok) { window.alert(result.error || '删除失败'); return; }
+
+                                target.style.display = 'none';
+
+                                pushUndo({
+                                    type: 'delete',
+                                    undo: function () {
+                                        postForm(API_SITES, {
+                                            action: 'add',
+                                            url: delSnap.url,
+                                            name: delSnap.name,
+                                            category_id: delSnap.category,
+                                            description: delSnap.description,
+                                            logo: delSnap.logo
+                                        }).then(function (res) {
+                                            if (res && res.ok) {
+                                                target.style.display = '';
+                                                target.setAttribute('data-id', res.id);
+                                                showToast('已恢复');
+                                            } else {
+                                                showToast('恢复失败');
+                                            }
+                                        });
                                     }
                                 });
-                            }
+
+                                showToast('已删除「' + delSnap.name + '」', function () {
+                                    var entry = popUndo();
+                                    if (entry && typeof entry.undo === 'function') { entry.undo(); }
+                                });
+                            });
                             break;
                     }
                 });
@@ -4679,17 +5083,7 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-<script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.10.9" defer></script>
-
-    <!-- 卡片右键 / 长按菜单 -->
-    <div class="card-context-menu" id="cardContextMenu" hidden>
-        <button type="button" class="ccm-item" data-action="open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg>新标签打开</button>
-        <button type="button" class="ccm-item" data-action="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>复制链接</button>
-        <button type="button" class="ccm-item" data-action="qrcode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3M21 14v7M14 21h3M17 17h4"></path></svg>二维码</button>
-        <button type="button" class="ccm-item" data-action="edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>编辑</button>
-        <button type="button" class="ccm-item" data-action="move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14M5 12h14M5 20h14"></path><path d="M9 8l3-3 3 3M9 16l3 3 3-3"></path></svg>移动分组</button>
-        <button type="button" class="ccm-item ccm-danger" data-action="delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg>删除</button>
-    </div>
+    <script src="assets/js/pinyin-pro.min.js" defer></script>
+<script src="assets/js/search.js?v=2.11.0" defer></script>
 </body>
 </html>

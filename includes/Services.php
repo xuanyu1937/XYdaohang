@@ -529,6 +529,53 @@ class UserService extends BaseService
     }
 
     /**
+     * 修改昵称。当前版本昵称即登录用户名，这样不需要新增数据库列，
+     * 改完顶栏、头像下拉与后台归属都能立即同步；代价是登录名也一起变，
+     * 界面上已明确提示用户。
+     *
+     * @return array{ok:bool,error:string}
+     */
+    public function updateUsername($id, $name)
+    {
+        $id = (int) $id;
+        $name = trim((string) $name);
+
+        if ($id <= 0 || !$this->usersTableExists()) {
+            return ['ok' => false, 'error' => '用户状态异常，请重新登录'];
+        }
+
+        $length = function_exists('mb_strlen') ? mb_strlen($name, 'UTF-8') : strlen($name);
+
+        if ($length < 2 || $length > 30) {
+            return ['ok' => false, 'error' => '昵称长度需为 2 ~ 30 个字符'];
+        }
+
+        if (preg_match('/[\x00-\x1f]/', $name) || preg_match('/[<>]/u', $name)) {
+            return ['ok' => false, 'error' => '昵称不能包含控制字符或 < >'];
+        }
+
+        try {
+            $dup = $this->db->prepare('SELECT id FROM users WHERE username = ? AND id <> ? LIMIT 1');
+            $dup->execute([$name, $id]);
+
+            if ($dup->fetch()) {
+                return ['ok' => false, 'error' => '该昵称已被其他用户使用'];
+            }
+
+            $stmt = $this->db->prepare('UPDATE users SET username = ? WHERE id = ?');
+            $stmt->execute([$name, $id]);
+
+            if (isset($_SESSION['username'])) {
+                $_SESSION['username'] = $name;
+            }
+
+            return ['ok' => true, 'error' => ''];
+        } catch (Throwable $error) {
+            return ['ok' => false, 'error' => '保存失败，请稍后重试'];
+        }
+    }
+
+    /**
      * 更新用户头像。
      *
      * @param int $id 用户 id

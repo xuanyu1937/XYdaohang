@@ -202,7 +202,7 @@ $currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.1.3';
             font-size: 1rem !important;
         }
     </style>
-    <link href="../assets/css/admin.css?v=2.10.9" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.11.0" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -245,7 +245,7 @@ $currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.1.3';
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <h4 class="mb-1 welcome-text">欢迎回来，<?php echo htmlspecialchars((string) ($_SESSION['admin_username'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>！</h4>
-                                <p class="text-muted mb-0">今天是 <?php echo date('Y年m月d日 l'); ?>，祝你工作愉快！</p>
+                                <p class="text-muted mb-0">今天是 <?php echo date('Y年m月d日') . ' 星期' . ['日', '一', '二', '三', '四', '五', '六'][(int) date('w')]; ?>，祝你工作愉快！</p>
                             </div>
                             <div class="text-end">
                                 <div class="text-muted small">

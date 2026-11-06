@@ -969,8 +969,15 @@ html[data-theme="light"] .theme-toggle .icon-sun {
     background: var(--surface-2);
 }
 
+/* favicon 兜底：域名首字母 + 稳定底色铺满整个图标区。
+   favicon 加载成功后由 .site-favicon 覆盖，失败时不会出现空白卡片。 */
 .site-icon-letter {
-    color: var(--primary);
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: var(--fallback-bg, var(--surface-2));
+    color: var(--fallback-fg, var(--primary));
     font-size: 18px;
     font-weight: 700;
     line-height: 1;

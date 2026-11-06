@@ -44,8 +44,6 @@
     var filterKeywordText = document.getElementById('filterKeywordText');
     var filterCategory = document.getElementById('filterCategory');
     var filterCategoryText = document.getElementById('filterCategoryText');
-    var filterClearKeyword = document.getElementById('filterClearKeyword');
-    var filterClearCategory = document.getElementById('filterClearCategory');
     var filterResetAll = document.getElementById('filterResetAll');
     // 记录初始空状态文案：登录用户与访客的引导语不同，由服务端渲染后在这里缓存
     var emptyDefaultTitle = emptyTitle ? emptyTitle.textContent : '';
@@ -617,14 +615,21 @@
 
         if (sectionTitle) {
             if (state.query) {
-                sectionTitle.textContent = '搜索结果';
-            } else if (state.category !== 'all') {
-                var activeItem = qsa('.rail-item.is-active')[0];
-                sectionTitle.textContent = activeItem
-                    ? (activeItem.getAttribute('data-name') || '全部网站')
-                    : '全部网站';
+                /* v2.11.0：搜索结果本身就按分组展示，分组名即层级。
+                   再叠一个「搜索结果」总标题属于重复，这里直接隐藏，
+                   右侧「N 个网站」计数保留，作为结果量反馈。 */
+                sectionTitle.style.display = 'none';
             } else {
-                sectionTitle.textContent = '全部网站';
+                sectionTitle.style.display = '';
+
+                if (state.category !== 'all') {
+                    var activeItem = qsa('.rail-item.is-active')[0];
+                    sectionTitle.textContent = activeItem
+                        ? (activeItem.getAttribute('data-name') || '全部网站')
+                        : '全部网站';
+                } else {
+                    sectionTitle.textContent = '全部网站';
+                }
             }
         }
 
@@ -718,25 +723,8 @@
         setCategory('all', true);
     }
 
-    if (filterClearKeyword) {
-        filterClearKeyword.addEventListener('click', function () {
-            if (searchInput) {
-                searchInput.value = '';
-                searchInput.focus();
-            }
-
-            state.query = '';
-            updateSearchClear();
-            applyFilters();
-        });
-    }
-
-    if (filterClearCategory) {
-        filterClearCategory.addEventListener('click', function () {
-            setCategory('all', true);
-        });
-    }
-
+    /* v2.11.0：筛选栏只保留一个「清除筛选」按钮，不再与 chip 内的 × 重复。
+       两个 chip 现在是纯状态展示，清空统一走 clearAllFilters()。 */
     if (filterResetAll) {
         filterResetAll.addEventListener('click', clearAllFilters);
     }
@@ -1291,11 +1279,7 @@
 
             var index = 0;
 
-            img.addEventListener('load', function () {
-                img.classList.add('is-loaded');
-            });
-
-            img.addEventListener('error', function () {
+            function advance() {
                 index++;
 
                 if (index < chain.length) {
@@ -1303,7 +1287,20 @@
                 } else {
                     img.classList.remove('is-loaded');
                 }
+            }
+
+            img.addEventListener('load', function () {
+                /* 部分图标服务会返回 1x1 透明占位图，HTTP 是 200 但视觉上仍是空白。
+                   这种情况当作失败继续走下一级，最后露出域名首字母色块兜底。 */
+                if (img.naturalWidth <= 1 || img.naturalHeight <= 1) {
+                    advance();
+                    return;
+                }
+
+                img.classList.add('is-loaded');
             });
+
+            img.addEventListener('error', advance);
 
             img.src = chain[index];
         });

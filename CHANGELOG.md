@@ -1,5 +1,67 @@
 # 轩宇-导航 · 版本记录
 
+## v2.11.0（2026-11-06）
+
+> **基于线上真实检测的全量体验修复**。按用户给出的 17 项清单（P0 严重 1–4、P1 中等 5–11、P2 细节 12–17）逐项实测、定位根因、改代码并回归。**无数据库结构变更、无 API 契约变更、无新增依赖。** 全量 Playwright 回归 **49/49 通过，脚本级 JS 错误 0**。
+
+### 本版最关键的一个隐藏 Bug：右键/长按菜单从来就弹不出来
+
+`#cardContextMenu` 这个 `<div>` 原先挂在 `</body>` 前（5016 行），而绑定它的主交互 `<script>` 在 **2352–5011 行**。浏览器同步执行脚本时，后面的 DOM 还没解析，`qs('#cardContextMenu')` 恒为 `null`：
+
+- 右键菜单 `contextmenu` 回调里 `if (contextMenu)` 整块被跳过；
+- 移动端长按 500ms 的 `setTimeout` 即使触发，也只设了 `longPressFired = true` 而弹不出菜单；
+- 这个残留的 `longPressFired` 反过来把后续短按的 click 吞掉，于是「短按打开网址」也一起失效。
+
+**修复**：把菜单 DOM 移到主交互脚本之前（`</dialog>` 之后）。它是 `position: fixed; z-index: 9999`，移动位置不影响样式。顺带修好了桌面右键菜单。
+
+### P0 严重问题
+
+| # | 问题 | 根因与修复 |
+| --- | --- | --- |
+| 1 | 网址行常驻 6~7 个操作按钮、移动端误触 | `.my-item` 是 flex，7 个 34px 按钮把 `.my-info` 挤到 390px 下只剩 **16px**。改为 `.my-item-actions` 绝对定位 + 默认 `opacity:0/visibility:hidden`，仅桌面 `:hover` / `:focus-within` 显示，触屏 `@media (hover:none)` 下 `display:none`。 |
+| 1 | 长按 / 短按 | 重写为 touch 事件自行判定：`touchend` 直接 `window.open` 处理短按，不再依赖浏览器补发的合成 click 和 `(hover:none)` 媒体查询；`touchmove` 位移 >10px 判为滚动并取消；`tapHandledRow` + 700ms 时间窗去重，避免同一次短按开两个标签；捕获阶段只吞「长按后 800ms 内、落在被长按行上」的那一次 click，菜单项点击放行。 |
+| 1 | 删除缺二次确认 | 右键/长按菜单的 `case 'delete'` 已有 `window.confirm`，但主列表 `.js-delete` 分支漏了。补上同一句确认，两条路径都保留 5 秒 `showToast` 撤销 + Ctrl+Z。 |
+| 2 | 名称/域名被截断到「轩 p..」 | 移动端允许名称两行截断、域名 `overflow-wrap:anywhere` 换行，行右侧留白从被按钮占用改为 `padding-right:12px`。实测宽度 **16px → 287px**。 |
+| 3 | 分类名显示 `bi-folder 小智` | 图标字段存的是 Bootstrap Icons class，后台实际引入 FontAwesome 6.4.0。新增 `navCategoryIconHtml()` 把 `bi-*` 映射为 `fa-*`，emoji/短文本仍安全截断输出；补齐上一轮遗留的「helper 已调用但未定义」fatal 风险。 |
+| 4 | 添加导航「所属分类」下拉同名无法区分 | `categories` LEFT JOIN `users` 取 `owner_name`，按名称计数，仅重名项追加「（公共）/（用户名）」；JOIN 失败自动回退原查询。实测 `我的收藏（公共）`、`我的收藏（admin）`、`个人网站（公共）`、`个人网站（admin）`。 |
+
+### P1 中等问题
+
+| # | 问题 | 根因与修复 |
+| --- | --- | --- |
+| 5 | 搜索冗余 | 删除 `#filterClearKeyword` / `#filterClearCategory` 两个 `×`，只留一个「清除筛选」；搜索时 `sectionTitle.style.display='none'`。联想卡片 `siteRow()` 经 DOM 级复核确认**没有三点菜单**（只有域名与访问次数），无需改动，并补了回归断言。 |
+| 6 | 「搜完点搜索框显示暂无搜索记录」 | 首页是「输入即筛选」，用户常不按回车/不点提交，而旧逻辑只在提交时写历史，且 `recordTyping` 是 **1200ms debounce**——搜完立刻清空就会读到空值而丢记录。改为**每次输入即时落库**，`recordQuery` 用「互为前缀」去重（同时覆盖连续输入与删字回退，历史里只留最终词），清空前补记一次，blur 再兜底。实测输入 250ms 内即写入 `["AI"]`，清空后仍在，面板显示 `AI`；连续输入「小米 → 小米手机」只留 `小米手机`。 |
+| 7 | favicon 失败空白 | 卡片兜底改为域名首字母 + md5 稳定 8 色配色；`nav.js` 识别 `naturalWidth/Height ≤ 1` 的 1×1 透明图，继续走 fallback 链。 |
+| 8 | 健康状态「失效 110ms」自相矛盾 | `nav_links.check_status` 是 `enum('unknown','ok','slow','down')`，不能新增状态，也不改检测服务。在渲染层用 `latency_ms` / `http_code` 细分：快速 `down` 显示「状态码异常」，超时/无延迟显示「超时无响应」，并加 `title` 说明。实测 `状态码异常 110 ms`、`较慢 4200 ms`，不再有「失效 + 小延迟」。 |
+| 9 | 前后台主题不统一 | 后台 `sidebar.php` 顶部加**早于 CSS** 的主题初始化脚本，直接读前台的 `localStorage['xy-nav-theme']`，避免浅色闪一下；侧栏加独立深色开关 + `storage` 事件跨标签同步；`admin.css` 把 10 处硬编码 `#ffffff` 换成变量并新增完整 `html[data-theme="dark"]` 块。实测深色 `body bg = rgb(13, 19, 31)`，前台设深色后后台自动 `data-theme=dark`。 |
+| 10 | 公告栏「没有」 | 前台公告栏本就在 `header` 之后、`search-section` 之前，带喇叭图标和「公告」标签；真实原因是后台 `announcement_enabled=0`。`admin/settings.php` 按「有内容但未启用 / 尚无内容」给两种醒目提示并写清显示位置。实测启用后 `barTop=149.9 < searchTop=219.9`。 |
+| 11 | 左侧分类索引重名 | 与 P0-4 同源，按「（公共）/（我的）」加后缀，不改动后台数据。 |
+
+### P2 细节优化
+
+- **12 后台移动端导航**：抽屉断点 `768px → 991px`，汉堡按钮补 `aria-label/expanded/controls`，加遮罩点击、`Esc`、`body` 滚动锁、窗口变宽自动关闭、`resize` 绑定去重（用 `dataset.mobileBound` 防重复绑定导致点一次切两下）。
+- **13 仪表盘日期中英混排**：`date('l')` 输出 `Friday` → 用中文星期数组拼 `date('Y年m月d日') . ' 星期' . ['日','一',…][date('w')]`。实测 `2026年11月06日 星期五`。
+- **14 移动端工具栏按钮只有图标**：恢复小字号文字标签，`.my-actions` 改 `flex-wrap:nowrap` + 横向滚动并隐藏滚动条。
+- **15 分组管理弹窗太挤**：每行由「上移/下移/输入框/锁/私密/保存/删除」简化为「拖拽手柄 + 名称 + 私密勾选 + 更多菜单」，重命名/删除收进菜单；支持拖拽排序与聚焦后上下方向键排序。
+- **16 页脚 `2026轩宇-导航` 黏连**：不是代码写死，是后台紧凑模板 `{year}{site}` 的渲染结果。`footerCopyrightText()` 只在渲染时把该模板规范成 `© {year} {site}`，不改数据库、不覆盖用户自定义。实测 `© 2026 轩宇导航`。
+- **17 账号设置入口**：头像下拉新增「账号设置」，`my.php?open=account` 自动打开弹窗；弹窗含头像上传、密码修改、昵称、版权四项。新增 `UserService::updateUsername()`（当前 `users` 表无独立 nickname 列，复用 `username`，**故无 DB 变更**，界面提示「昵称同时是登录账号名」）；`api/auth.php` 的 `update_profile` 改用 `array_key_exists()` 只处理本次提交的字段，避免只传版权时误改昵称或反之。
+
+### 验证记录
+
+| 项目 | 结果 |
+| --- | --- |
+| `php -l`（10 个改动 PHP 文件） | 全部通过 |
+| `node --check`（`nav.js` / `search.js`） | 通过 |
+| 各页面内联 JS（11 个 script 块，替换 PHP 模板后检查） | 全部通过 |
+| Playwright 本地全量回归 | **49/49 通过** |
+| 脚本级 JS 错误 | **0**（已排除外链 favicon 的 404/证书告警） |
+| 移动端 390px 名称/域名宽度 | `16px → 287px` |
+| 长按 500ms | 菜单弹出 `left=195px, top=259.3px, display=block`，菜单项可点击 |
+| 短按 | 新标签打开 `https://weather.cma.cn/`，且短按/滚动均不误弹菜单 |
+| 删除二次确认 | `确定删除「天气预报」吗？删除后可在提示条中撤销。`，取消后行数 47→47 未变 |
+
+版本号同步 **27 处**：`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php`、`api/index.php` 的 fallback，以及全部 PHP 页面 22 处资源参数 `?v=2.11.0`。
+
 ## v2.10.9（2026-11-06）
 
 > **紧急修复**：v2.10.8 为了在 IIS 下让 `/api/` 打开文档页，往 `web.config` 加了 `<defaultDocument><add value="index.php" /></defaultDocument>`。结果在主机全局默认文档**本来就包含 `index.php`** 的环境里触发配置重复，报 `500.19 / 0x800700b7`，**首页 `/` 与 `/api/` 全部 500**。本次移除该节点。**无数据库变更、无 API 行为变更。**

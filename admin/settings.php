@@ -193,7 +193,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
     <link href="../assets/sweetalert2/sweetalert2.min.css" rel="stylesheet">
-    <link href="../assets/css/admin.css?v=2.10.9" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.11.0" rel="stylesheet">
     <style>
         /* ==================================================================
            系统设置页（仅本页使用，颜色与间距统一取自 admin.css 变量）
@@ -1098,10 +1098,16 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
                                 <label class="form-check-label" for="announcement_enabled">启用顶部公告栏</label>
                             </div>
 
-                            <?php if (!$announcementEnabled || trim((string) $announcementContent) === ''): ?>
+                            <?php $announcementHasContent = trim((string) $announcementContent) !== ''; ?>
+                            <?php if ($announcementHasContent && !$announcementEnabled): ?>
+                                <div class="alert alert-warning" style="margin-bottom:14px;padding:10px 14px;font-size:13px;border-radius:8px;">
+                                    <i class="fas fa-triangle-exclamation"></i>
+                                    <strong>公告内容已填写，但尚未启用。</strong>前台目前看不到公告，勾选上方「启用顶部公告栏」并保存即可发布；公告会显示在前台顶栏下方、搜索框上方。
+                                </div>
+                            <?php elseif (!$announcementHasContent): ?>
                                 <div class="alert alert-info" style="margin-bottom:14px;padding:10px 14px;font-size:13px;border-radius:8px;">
                                     <i class="fas fa-circle-info"></i>
-                                    当前公告未在前台展示：请勾选「启用顶部公告栏」并填写公告内容，保存后刷新前台首页即可看到滚动公告条。
+                                    还没有填写公告内容。填写后勾选「启用顶部公告栏」并保存，前台顶部（搜索框上方）就会显示带喇叭图标的公告条。
                                 </div>
                             <?php endif; ?>
 

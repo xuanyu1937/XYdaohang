@@ -14,6 +14,20 @@ try {
     $unreadMessages = 0;
 }
 ?>
+<script>
+/* v2.11.0：与前台共用 localStorage['xy-nav-theme']，页面解析时就定好主题，
+   避免后台先渲染浅色再跳成深色的闪烁。前台切主题，后台这边同步生效。 */
+(function () {
+    var saved = null;
+    try { saved = localStorage.getItem('xy-nav-theme'); } catch (e) { saved = null; }
+
+    var theme = (saved === 'dark' || saved === 'light')
+        ? saved
+        : ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light');
+
+    document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 <style>
     :root {
         --sidebar-width: 260px;
@@ -361,7 +375,10 @@ try {
         display: none;
     }
 
-    @media (max-width: 768px) {
+    /* 平板横屏也走抽屉，避免 769~991px 之间侧栏挤占内容区 */
+    @media (max-width: 991px) {
+        body.sidebar-menu-open { overflow: hidden; }
+
         .sidebar {
             width: 280px;
             transform: translateX(-100%);
@@ -423,8 +440,9 @@ try {
     }
 </style>
 
-<button class="mobile-menu-toggle" id="mobileMenuToggle">
-    <i class="fas fa-bars"></i>
+<button class="mobile-menu-toggle" id="mobileMenuToggle"
+        type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="sidebar">
+    <i class="fas fa-bars" aria-hidden="true"></i>
 </button>
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -504,6 +522,12 @@ try {
     </nav>
     
     <div class="sidebar-footer">
+        <button type="button" class="admin-theme-toggle" id="adminThemeToggle"
+                aria-label="切换深浅色" aria-pressed="false"
+                title="切换深浅色（与前台共用同一设置）">
+            <i class="fas fa-moon" id="adminThemeIcon" aria-hidden="true"></i>
+            <span>深色模式</span>
+        </button>
         <div class="user-info">
             <div class="user-avatar" title="<?php echo $functions->escape($_SESSION['admin_username'] ?? ''); ?>">
                 <?php echo $functions->escape(strtoupper(substr((string) ($_SESSION['admin_username'] ?? ''), 0, 1))); ?>
@@ -537,12 +561,42 @@ function toggleSidebar() {
     toggleIcon.style.transform = isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
 }
 
-function toggleMobileMenu() {
+function toggleMobileMenu(forceClose) {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
-    
-    sidebar.classList.toggle('mobile-open');
-    overlay.classList.toggle('active');
+    const toggle = document.getElementById('mobileMenuToggle');
+
+    const open = forceClose === true ? false : !sidebar.classList.contains('mobile-open');
+
+    sidebar.classList.toggle('mobile-open', open);
+    overlay.classList.toggle('active', open);
+    document.body.classList.toggle('sidebar-menu-open', open);
+
+    if (toggle) {
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        toggle.setAttribute('aria-label', open ? '关闭导航菜单' : '打开导航菜单');
+    }
+}
+
+/* v2.11.0：后台主题与前台共用 xy-nav-theme，任一侧切换另一侧同步 */
+function applyAdminTheme(theme) {
+    const next = theme === 'dark' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+
+    try { localStorage.setItem('xy-nav-theme', next); } catch (e) { /* 隐私模式忽略 */ }
+
+    const btn = document.getElementById('adminThemeToggle');
+    if (!btn) { return; }
+
+    const label = next === 'dark' ? '浅色模式' : '深色模式';
+    const icon = document.getElementById('adminThemeIcon');
+    const text = btn.querySelector('span');
+
+    btn.setAttribute('aria-label', '切换到' + label);
+    btn.setAttribute('title', '切换到' + label + '（与前台共用同一设置）');
+    btn.setAttribute('aria-pressed', next === 'dark' ? 'true' : 'false');
+    if (icon) { icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon'; }
+    if (text) { text.textContent = label; }
 }
 
 function updateSidebarTime() {
@@ -561,7 +615,7 @@ function initSidebar() {
     const mainContent = document.querySelector('.main-content-wrapper');
     const toggleIcon = document.querySelector('.toggle-icon');
     const savedState = localStorage.getItem('sidebarCollapsed');
-    const isMobile = window.innerWidth <= 768;
+    const isMobile = window.innerWidth <= 991;
     
     if (!document.querySelector('.main-content-wrapper')) {
         const mainContent = document.querySelector('.main-content');
@@ -588,8 +642,11 @@ function initSidebar() {
     
     if (isMobile) {
         document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
+            // resize 会反复调用 initSidebar，避免重复绑定导致点一次菜单切换多次
+            if (link.dataset.mobileBound === '1') { return; }
+            link.dataset.mobileBound = '1';
             link.addEventListener('click', () => {
-                toggleMobileMenu();
+                toggleMobileMenu(true);
             });
         });
     }
@@ -597,25 +654,51 @@ function initSidebar() {
 
 document.addEventListener('DOMContentLoaded', function() {
     initSidebar();
-    
+
+    /* 主题：初始同步 + 侧栏开关 + 其它标签页变更同步 */
+    applyAdminTheme(document.documentElement.getAttribute('data-theme'));
+    const adminThemeToggle = document.getElementById('adminThemeToggle');
+    if (adminThemeToggle) {
+        adminThemeToggle.addEventListener('click', function () {
+            applyAdminTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+        });
+    }
+    window.addEventListener('storage', function (event) {
+        if (event.key === 'xy-nav-theme' && (event.newValue === 'dark' || event.newValue === 'light')) {
+            applyAdminTheme(event.newValue);
+        }
+    });
+
     const collapseToggle = document.getElementById('collapseToggle');
     if (collapseToggle) {
         collapseToggle.addEventListener('click', toggleSidebar);
     }
-    
+
     const mobileMenuToggle = document.getElementById('mobileMenuToggle');
     if (mobileMenuToggle) {
-        mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+        mobileMenuToggle.addEventListener('click', function () { toggleMobileMenu(); });
     }
-    
+
     const sidebarOverlay = document.getElementById('sidebarOverlay');
     if (sidebarOverlay) {
-        sidebarOverlay.addEventListener('click', toggleMobileMenu);
+        sidebarOverlay.addEventListener('click', function () { toggleMobileMenu(true); });
     }
-    
+
+    /* Esc 关闭抽屉；窗口变宽到桌面尺寸时自动收起，避免残留遮罩 */
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && document.body.classList.contains('sidebar-menu-open')) {
+            toggleMobileMenu(true);
+        }
+    });
+
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 991 && document.body.classList.contains('sidebar-menu-open')) {
+            toggleMobileMenu(true);
+        }
+        initSidebar();
+    });
+
     updateSidebarTime();
     setInterval(updateSidebarTime, 1000);
-    
-    window.addEventListener('resize', initSidebar);
 });
 </script>

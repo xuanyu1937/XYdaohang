@@ -1,29 +1,61 @@
-# 轩宇-导航 v2.10.9 部署清单
+# 轩宇-导航 v2.11.0 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.10.9
+当前版本：v2.11.0
 
-> **紧急修复版 · 无数据库变更、无 API 行为变更**。v2.10.8 在 `web.config` 里加的 `<defaultDocument><add value="index.php" /></defaultDocument>`，在主机全局默认文档**本来就有 `index.php`** 的环境里触发 `500.19 / 0x800700b7`（重复集合项），**首页 `/` 与 `/api/` 全部 500**。本次移除该节点。
+> **体验修复版 · 无数据库变更、无 API 契约变更、无新增依赖**。按线上真实检测出的 17 项问题逐项修复并回归，完整根因见 [CHANGELOG.md](CHANGELOG.md)。本地全量回归 **49/49 通过，脚本级 JS 错误 0**。
 
-## 本次 v2.10.9 变动文件
+## 本次 v2.11.0 变动文件
 
 | 文件 | 说明 |
 | --- | --- |
-| **`web.config`** | **移除整个 `<defaultDocument>` 节点**，保留说明注释，明确不要重复 `<add value="index.php" />` |
-| `api/index.php` | 注意事项改为「若 `/api/` 仍 403 请到主机面板添加默认文档」，并写明重复声明会触发 500.19 |
-| 全部 PHP 页面（22 处） | 资源参数 `?v=2.10.9` |
-| `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `VERSION` / `api/index.php` | 版本号升至 2.10.9 |
+| `my.php` | **菜单 DOM 移到主脚本之前**（修好右键/长按菜单）；列表操作按钮改 hover 显示、触屏隐藏；长按/短按重写；删除二次确认；分组管理弹窗；账号设置（`?open=account`、昵称） |
+| `assets/js/search.js` | 最近搜索即时落库、互为前缀去重、清空前补记 |
+| `assets/js/nav.js` | 筛选栏只留一个清除按钮、搜索时隐藏总标题、favicon 1×1 透明图识别 |
+| `assets/css/nav.css`、`assets/css/admin.css` | favicon 首字母兜底；后台深色主题变量化与完整暗色块 |
+| `admin/categories.php` | `navCategoryIconHtml()`：`bi-*` → FontAwesome `<i>`，不再显示 class 文本 |
+| `admin/nav_links.php` | 分类下拉同名加归属后缀；健康状态细分「状态码异常 / 超时无响应」 |
+| `admin/sidebar.php` | 前后台主题共用 `xy-nav-theme`、独立深色开关、移动端抽屉增强 |
+| `admin/index.php` | 仪表盘日期改纯中文星期 |
+| `admin/settings.php` | 公告「已填未启用」醒目提示 |
+| `includes/Services.php` | `UserService::updateUsername()`（复用 `username`，无 DB 变更） |
+| `includes/functions.php` | `{year}{site}` 紧凑模板渲染时补 `© ` 与空格 |
+| `api/auth.php` | `update_profile` 按 `array_key_exists()` 只处理提交的字段 |
+| 全部 PHP 页面（22 处） | 资源参数 `?v=2.11.0` |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` | 版本号升至 2.11.0（共同步 27 处） |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
 
-> **⚠️ 已部署 v2.10.8 且首页 500 时，立即恢复办法**：编辑线上根目录 `web.config`，删掉 `<defaultDocument enabled="true">…</defaultDocument>` 整段（含中间 `<files>`），保存即恢复。不用回滚其它文件、不用动数据库、不用重传整包。
+## 本次修复的 17 项（线上检测清单）
 
-> 升级要点：
-> 1. **IIS 主机**：用本版 `web.config` 覆盖线上，或直接删掉线上那段 `<defaultDocument>`。主机全局默认文档通常已含 `index.php`，`api/index.php` 传上去后 `/api/` 会自动命中，项目侧不需要声明。
-> 2. 若个别主机默认文档确实没有 `index.php` 导致 `/api/` 仍 403，请到**主机面板**添加，不要改 `web.config`。
-> 3. **Apache 主机**：`.htaccess` 已有 `DirectoryIndex index.php index.html`，只传 `api/index.php` 即生效。
-> 4. 最快验证：直接访问 `http://你的域名/api/index.php`，永远可用，不依赖任何配置。
-> 5. 带令牌的请求仍发到 `api/sites.php`，**不是**文档页；`/api/sites.php` 返回 401 是正确行为（缺令牌）。
+- **P0 严重**：① 网址行常驻按钮误触 + 长按菜单/短按打开网址 + 删除二次确认与撤销；② 移动端名称/域名被压到 16px；③ 分类图标显示 `bi-folder` 文本；④ 添加导航分类下拉同名无法区分。
+- **P1 中等**：⑤ 搜索清除按钮与结果标题冗余；⑥ 最近搜索不保存；⑦ favicon 失败空白；⑧ 健康状态「失效 110ms」矛盾；⑨ 前后台主题不统一；⑩ 公告栏未显示；⑪ 左侧分类索引重名。
+- **P2 细节**：⑫ 后台移动端抽屉菜单；⑬ 仪表盘 `Friday` 中英混排；⑭ 移动端工具栏文字标签；⑮ 分组管理弹窗简化；⑯ 页脚版权黏连；⑰ 头像下拉「账号设置」入口与昵称修改。
+
+## 升级要点
+
+1. **直接覆盖代码文件即可**，不需要执行任何 SQL，不需要改 `web.config` / `.htaccess`。
+2. 覆盖后清理 `cache/` 目录，前台强制刷新（Ctrl+F5）——本版改动集中在 CSS/JS，`?v=` 已升至 2.11.0，正常会自然刷新，但清缓存最稳妥。
+3. **推荐用后台「系统工具 → 在线更新」上传整包**：接口会跳过 `config/database.php`、`config/smtp.php`、`config/config.php`、`install/install.lock`、`.env` 及 `backups/`、`cache/`、`uploads/` 等目录，并自动备份被覆盖的原文件。
+4. 最快验证：访问 `/api/index.php`（零依赖，永远可用），徽章应显示 `v2.11.0`；首页资源参数应为 `?v=2.11.0`。
+5. 带令牌的请求仍发到 `api/sites.php`，**不是**文档页；`/api/sites.php` 返回 401 是正确行为（缺令牌）。
+
+## 验证记录
+
+| 项目 | 结果 |
+| --- | --- |
+| Playwright 本地全量回归 | 49/49 通过 |
+| 脚本级 JS 错误 | 0 |
+| 移动端 390px 名称/域名宽度 | 16px → 287px |
+| 长按 500ms / 短按 | 菜单弹出、新标签打开网址、滚动不误触 |
+| 搜索历史 | 输入即写入，清空不丢，面板可见 |
+| `php -l` / `node --check` / 内联 JS | 全部通过 |
+
+## v2.10.9 回顾
+
+紧急修复 v2.10.8 在 `web.config` 里重复声明 `<defaultDocument><add value="index.php" /></defaultDocument>` 导致的 `500.19 / 0x800700b7`（主机全局默认文档本已含 `index.php`，子级重复 `<add>` 使整个配置失效，首页 `/` 与 `/api/` 全 500）。该版移除该节点，并同步修正文档与部署清单。**当前 `web.config` 保持 v2.10.9 的修复版，v2.11.0 不再改动它。**
+
+> 若部署后首页出现 500.19，检查线上 `web.config` 是否又被加回了 `<defaultDocument>`；删掉整段即可恢复，不用回滚其它文件、不用动数据库。
 
 ## v2.10.8 回顾
 

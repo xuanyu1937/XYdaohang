@@ -149,18 +149,27 @@ switch ($action) {
         break;
 
     case 'update_profile':
-        // 个人资料：自定义底部版权文字（v2.3.0 新增）
+        // 个人资料：昵称 + 自定义底部版权文字（只处理本次实际提交的字段）
         $user = $users->currentUser();
 
         if (!$user) {
             $functions->jsonResponse(['ok' => false, 'error' => '请先登录'], 401);
         }
 
-        $copyright = (string) ($_POST['footer_copyright'] ?? '');
-        $saved = $users->updateFooterCopyright((int) $user['id'], $copyright);
+        if (array_key_exists('nickname', $_POST)) {
+            $nameResult = $users->updateUsername((int) $user['id'], (string) $_POST['nickname']);
 
-        if (!$saved) {
-            $functions->jsonResponse(['ok' => false, 'error' => '保存失败：请先执行 upgrade_v2.3.0.sql 升级数据库'], 500);
+            if (!$nameResult['ok']) {
+                $functions->jsonResponse(['ok' => false, 'error' => $nameResult['error']], 400);
+            }
+        }
+
+        if (array_key_exists('footer_copyright', $_POST)) {
+            $saved = $users->updateFooterCopyright((int) $user['id'], (string) $_POST['footer_copyright']);
+
+            if (!$saved) {
+                $functions->jsonResponse(['ok' => false, 'error' => '版权保存失败：请先执行 upgrade_v2.3.0.sql 升级数据库'], 500);
+            }
         }
 
         $functions->jsonResponse(['ok' => true]);

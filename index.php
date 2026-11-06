@@ -245,6 +245,30 @@ function navBuildCard(array $row, Functions $functions)
     $row['display_domain'] = preg_replace('/^www\./i', '', $host);
     $row['display_name'] = $displayName;
     $row['initial'] = $initial;
+
+    /* favicon 全部失败时的兜底：取域名首字母 + 由域名哈希决定的稳定底色。
+       以前只用网站名首字且没有底色，图标服务返回透明图时看起来就是空白卡片。 */
+    $domainForInitial = preg_replace('/^www\./i', '', (string) $host);
+    $fallbackInitial = function_exists('mb_substr')
+        ? mb_substr($domainForInitial, 0, 1, 'UTF-8')
+        : substr($domainForInitial, 0, 1);
+    $fallbackInitial = strtoupper((string) $fallbackInitial);
+
+    if ($fallbackInitial === '') {
+        $fallbackInitial = '#';
+    }
+
+    $fallbackPalette = [
+        ['#e8efff', '#3457c5'], ['#e7f6ee', '#1e7a52'],
+        ['#fff0e4', '#b6601c'], ['#f2eaff', '#7040b5'],
+        ['#ffecef', '#b83a54'], ['#e4f5f8', '#1b7189'],
+        ['#fbf1d8', '#8a6816'], ['#ecf2e5', '#4a7030'],
+    ];
+    $fallbackPair = $fallbackPalette[hexdec(substr(md5((string) $host), 0, 2)) % count($fallbackPalette)];
+
+    $row['fallback_initial'] = $fallbackInitial;
+    $row['fallback_bg'] = $fallbackPair[0];
+    $row['fallback_fg'] = $fallbackPair[1];
     $row['favicon_chain'] = $chain;
     $row['click_count'] = max(0, (int) ($row['clicks'] ?? 0));
     $row['check_status'] = (string) ($row['check_status'] ?? 'unknown');
@@ -345,6 +369,25 @@ foreach ($categoryRows as $category) {
         'count' => $ownCount,
         'children' => $children,
     ];
+}
+
+/* 左侧分类索引里可能出现两个同名「我的收藏」（一个公共、一个用户自建），
+   数量不同但名字一样，用户分不清。只给重名的分组追加归属后缀，
+   不重名的保持原样，避免所有分类都挂一堆冗余文字。 */
+$railNameCounts = [];
+
+foreach ($railGroups as $group) {
+    $key = (string) $group['name'];
+    $railNameCounts[$key] = ($railNameCounts[$key] ?? 0) + 1;
+}
+
+foreach ($railGroups as $index => $group) {
+    if (($railNameCounts[(string) $group['name']] ?? 0) < 2) {
+        continue;
+    }
+
+    $ownerId = (int) ($categoryById[(int) $group['id']]['user_id'] ?? 0);
+    $railGroups[$index]['name'] = $group['name'] . ($ownerId > 0 ? '（我的）' : '（公共）');
 }
 
 // 分组卡片区：按分类排序输出，父分类下先放自身链接，再放子分类。
@@ -488,11 +531,11 @@ if ($bgImage !== '') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.9">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.11.0">
     <script src="assets/js/pinyin-pro.min.js" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.10.9" defer></script>
-    <script src="assets/js/search.js?v=2.10.9" defer></script>
+    <script src="assets/js/nav.js?v=2.11.0" defer></script>
+    <script src="assets/js/search.js?v=2.11.0" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -630,6 +673,10 @@ if ($bgImage !== '') {
                             </div>
                             <a class="user-item<?php echo $isOwner ? ' is-current' : ''; ?>" href="index.php">全部导航</a>
                             <a class="user-item" href="my.php">我的导航</a>
+                            <a class="user-item" href="my.php?open=account" title="头像、昵称、密码与页脚版权">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="15" height="15"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"></path></svg>
+                                <span>账号设置</span>
+                            </a>
                             <button type="button" class="user-item user-item-btn" id="quickAddTrigger">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="15" height="15"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                                 <span>快捷收藏</span>
@@ -908,13 +955,11 @@ if ($bgImage !== '') {
                     <div class="filter-chip" id="filterKeyword" hidden>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
                         <span>关键词：<strong id="filterKeywordText"></strong></span>
-                        <button type="button" class="filter-chip-x" id="filterClearKeyword" aria-label="清除关键词">×</button>
                     </div>
                     <div class="filter-chip" id="filterCategory" hidden>
                         <span>分类：<strong id="filterCategoryText"></strong></span>
-                        <button type="button" class="filter-chip-x" id="filterClearCategory" aria-label="清除分类筛选">×</button>
                     </div>
-                    <button type="button" class="filter-reset" id="filterResetAll">清除全部筛选</button>
+                    <button type="button" class="filter-reset" id="filterResetAll">清除筛选</button>
                 </div>
                 </div>
 
@@ -985,7 +1030,7 @@ if ($bgImage !== '') {
 
                                             <span class="site-card-main">
                                                 <span class="site-icon" aria-hidden="true">
-                                                    <span class="site-icon-letter"><?php echo $functions->escape($link['initial']); ?></span>
+                                                    <span class="site-icon-letter" style="--fallback-bg: <?php echo $functions->escape($link['fallback_bg']); ?>; --fallback-fg: <?php echo $functions->escape($link['fallback_fg']); ?>"><?php echo $functions->escape($link['fallback_initial']); ?></span>
                                                     <img class="site-favicon"
                                                          alt=""
                                                          width="44"
@@ -1095,7 +1140,7 @@ if ($bgImage !== '') {
 
                                             <span class="site-card-main">
                                                 <span class="site-icon" aria-hidden="true">
-                                                    <span class="site-icon-letter"><?php echo $functions->escape($link['initial']); ?></span>
+                                                    <span class="site-icon-letter" style="--fallback-bg: <?php echo $functions->escape($link['fallback_bg']); ?>; --fallback-fg: <?php echo $functions->escape($link['fallback_fg']); ?>"><?php echo $functions->escape($link['fallback_initial']); ?></span>
                                                     <img class="site-favicon"
                                                          alt=""
                                                          width="44"

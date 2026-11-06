@@ -554,7 +554,18 @@
         }
 
         var list = loadHistory().filter(function (item) {
-            return item !== q;
+            if (item === q) {
+                return false;
+            }
+
+            /* v2.11.0：互为前缀的两条视为同一次输入的不同阶段，只保留最新词。
+               既覆盖连续输入（"小" → "小米"），也覆盖用户删字回退
+               （"小米手机" → "小米"），避免历史里堆一串中间态。 */
+            if (q.indexOf(item) === 0 || item.indexOf(q) === 0) {
+                return false;
+            }
+
+            return true;
         });
 
         list.unshift(q);
@@ -1339,12 +1350,41 @@
             panel.renderSuggest(value);
         }, 120);
 
+        /* v2.11.0：首页是「输入即筛选」，用户往往不按回车也不点搜索按钮，
+           而旧逻辑只在回车 / 点提交 / 点联想项时写历史，导致搜完再点搜索框
+           看到「暂无搜索记录」。这里改为每次输入即时落库（recordQuery 的
+           前缀去重保证历史里只留最终词），并在清空 / 失焦时补记一次。
+           不再用 1200ms debounce：搜完立刻点搜索框也要能看到记录。 */
+        var lastTyped = '';
+
+        function commitTyped(value) {
+            var v = String(value || '').trim();
+
+            if (v.length >= 2) {
+                recordQuery(v);
+            }
+        }
+
         input.addEventListener('input', function (event) {
             if (event && event.isComposing) {
                 return;
             }
 
+            var value = input.value;
+
+            /* 按清空按钮 / 全选删除：先把清空前的词记入历史，
+               否则这次搜索会因为输入框已空而丢失。 */
+            if (!value.trim() && lastTyped.trim()) {
+                commitTyped(lastTyped);
+            }
+
+            lastTyped = value;
             suggest();
+            commitTyped(value);
+        });
+
+        input.addEventListener('blur', function () {
+            commitTyped(input.value || lastTyped);
         });
 
         input.addEventListener('focus', function () {

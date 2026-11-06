@@ -67,6 +67,70 @@ $hasAlias       = nav_links_has_column($db, 'alias');
 $hasTags        = nav_links_has_column($db, 'tags');
 $hasUsersTable  = $hasUserId && nav_links_has_table($db, 'users');
 
+if (!function_exists('navLinkCategoryLabel')) {
+    /**
+     * 生成后台分类下拉的可读名称：同名分组追加归属后缀。
+     * 例如"个人网站（公共）""个人网站（xuanyu）"，避免多个同名选项无法区分。
+     */
+    function navLinkCategoryLabel(array $category, array $nameCounts)
+    {
+        $name = trim((string) ($category['name'] ?? ''));
+
+        if (($nameCounts[$name] ?? 0) < 2) {
+            return $name;
+        }
+
+        $ownerId = (int) ($category['user_id'] ?? 0);
+
+        if ($ownerId <= 0) {
+            return $name . '（公共）';
+        }
+
+        $owner = trim((string) ($category['owner_name'] ?? ''));
+
+        return $name . '（' . ($owner !== '' ? $owner : '用户#' . $ownerId) . '）';
+    }
+}
+
+if (!function_exists('navLinkHealthMeta')) {
+    /**
+     * 健康状态徽章元数据。
+     *
+     * check_status 是 enum('unknown','ok','slow','down')，为避免数据库结构变更，
+     * 这里只在渲染层把 down 细分为「状态码异常」与「超时无响应」：
+     * 站点快速返回了 HTTP 错误码，说明它其实是可达的，不该显示"失效 110ms"
+     * 这种自相矛盾的状态；真正连不上/超时的才叫超时无响应。
+     *
+     * @return array{0:string,1:string,2:string} 文案、badge class、说明
+     */
+    function navLinkHealthMeta($status, $latencyMs, $httpCode = 0)
+    {
+        $status = (string) $status;
+        $latency = ($latencyMs === null || $latencyMs === '') ? null : (int) $latencyMs;
+        $code = (int) $httpCode;
+
+        if ($status === 'ok') {
+            return ['正常', 'bg-success', '站点响应正常'];
+        }
+
+        if ($status === 'slow') {
+            return ['较慢', 'bg-warning text-dark', '响应超过 3 秒'];
+        }
+
+        if ($status === 'down') {
+            $quick = $code > 0 || ($latency !== null && $latency > 0 && $latency < 3000);
+
+            if ($quick) {
+                return ['状态码异常', 'bg-warning text-dark', '站点有响应，但返回了错误状态码，不属于无法访问'];
+            }
+
+            return ['超时无响应', 'bg-danger', '连接超时或无法建立连接'];
+        }
+
+        return ['未检测', 'bg-secondary', '尚未进行健康检测'];
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['delete']) || isset($_GET['toggle'])) {
     $functions->requireSameOrigin();
 }
@@ -469,7 +533,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sort_ids'])) {
     }
 }
 
-$categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fetchAll();
+// 同名分类（不同用户各自建了"个人网站""我的收藏"）在下拉里无法区分，
+// 这里把归属用户名一并取出，为后续生成带后缀的显示名做准备。
+// 老库没有 users 表 / categories.user_id 时退回原始查询，不影响使用。
+try {
+    $categories = $db->query(
+        'SELECT c.*, u.username AS owner_name
+         FROM categories c
+         LEFT JOIN users u ON c.user_id = u.id
+         ORDER BY c.sort_order, c.id'
+    )->fetchAll();
+} catch (Throwable $categoryJoinError) {
+    $categories = $db->query('SELECT * FROM categories ORDER BY sort_order, id')->fetchAll();
+}
+
+$categoryNameCounts = [];
+foreach ($categories as $category) {
+    $categoryName = (string) ($category['name'] ?? '');
+    $categoryNameCounts[$categoryName] = ($categoryNameCounts[$categoryName] ?? 0) + 1;
+}
+
+foreach ($categories as $index => $category) {
+    $categories[$index]['display_name'] = navLinkCategoryLabel($category, $categoryNameCounts);
+}
 
 $editNavLink = null;
 if (isset($_GET['edit'])) {
@@ -575,13 +661,8 @@ $trashCount = $hasDeletedAt
     ? (int) $db->query("SELECT COUNT(*) as count FROM nav_links WHERE deleted_at IS NOT NULL")->fetch()['count']
     : 0;
 
-// 健康状态徽章映射
-$healthMap = [
-    'ok' => ['正常', 'bg-success'],
-    'slow' => ['较慢', 'bg-warning text-dark'],
-    'down' => ['失效', 'bg-danger'],
-    'unknown' => ['未检测', 'bg-secondary'],
-];
+// 健康状态徽章映射统一由 navLinkHealthMeta() 提供（见文件头部）。
+// down 会按响应快慢细分为「状态码异常」/「超时无响应」，避免"失效 110ms"这类矛盾显示。
 
 // Tab 链接（保留当前筛选条件）
 $filterQuery = [];
@@ -685,7 +766,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
             gap: .5rem;
         }
     </style>
-    <link href="../assets/css/admin.css?v=2.10.9" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.11.0" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -853,7 +934,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                                 <?php foreach ($categories as $category): ?>
                                                     <option value="<?php echo $category['id']; ?>"
                                                             <?php echo ($editNavLink && $editNavLink['category_id'] == $category['id']) ? 'selected' : ''; ?>>
-                                                        <?php echo $functions->escape($category['name']); ?>
+                                                        <?php echo $functions->escape($category['display_name'] ?? $category['name']); ?>
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
@@ -950,7 +1031,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                                 <?php foreach ($categories as $category): ?>
                                                     <option value="<?php echo $category['id']; ?>"
                                                             <?php echo $categoryFilter == $category['id'] ? 'selected' : ''; ?>>
-                                                        <?php echo $functions->escape($category['name']); ?>
+                                                        <?php echo $functions->escape($category['display_name'] ?? $category['name']); ?>
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
@@ -1088,12 +1169,13 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                                             <?php if ($hasCheckStatus): ?>
                                                                 <?php
                                                                     $checkStatusValue = (string) ($link['check_status'] ?? 'unknown');
-                                                                    $healthMeta = $healthMap[$checkStatusValue] ?? $healthMap['unknown'];
                                                                     $latencyValue = ($hasLatency && isset($link['latency_ms']) && $link['latency_ms'] !== null)
                                                                         ? (int) $link['latency_ms'] : null;
+                                                                    $healthMeta = navLinkHealthMeta($checkStatusValue, $latencyValue);
                                                                 ?>
-                                                                <span class="badge health-badge <?php echo $healthMeta[1]; ?>"><?php echo $functions->escape($healthMeta[0]); ?></span>
-                                                                <span class="health-latency ms-1"><?php echo $latencyValue !== null ? (int) $latencyValue . ' ms' : ''; ?></span>
+                                                                <span class="badge health-badge <?php echo $healthMeta[1]; ?>"
+                                                                      title="<?php echo $functions->escape($healthMeta[2]); ?>"><?php echo $functions->escape($healthMeta[0]); ?></span>
+                                                                <span class="health-latency ms-1"><?php echo $latencyValue !== null && $latencyValue > 0 ? (int) $latencyValue . ' ms' : ''; ?></span>
                                                                 <button type="button" class="btn btn-sm btn-outline-secondary ms-1"
                                                                         onclick="checkOne(<?php echo (int) $link['id']; ?>, this)"
                                                                         title="检测该链接">
@@ -1158,7 +1240,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                                         <select name="batch_category_id" class="form-select form-select-sm" style="width:auto;">
                                                             <option value="">移动到分类…</option>
                                                             <?php foreach ($categories as $category): ?>
-                                                                <option value="<?php echo $category['id']; ?>"><?php echo $functions->escape($category['name']); ?></option>
+                                                                <option value="<?php echo $category['id']; ?>"><?php echo $functions->escape($category['display_name'] ?? $category['name']); ?></option>
                                                             <?php endforeach; ?>
                                                         </select>
                                                         <button type="button" class="btn btn-sm btn-outline-primary" onclick="submitBatch('move_category')">
@@ -1279,12 +1361,26 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
     (function () {
         'use strict';
 
-        var HEALTH_MAP = {
-            ok: ['正常', 'bg-success'],
-            slow: ['较慢', 'bg-warning text-dark'],
-            down: ['失效', 'bg-danger'],
-            unknown: ['未检测', 'bg-secondary']
-        };
+        // 与后端 navLinkHealthMeta() 保持一致：down 细分为「状态码异常」/「超时无响应」。
+        function healthMeta(item) {
+            var status = (item && item.status) || 'unknown';
+            var ms = parseInt(item && item.latency_ms, 10) || 0;
+            var code = parseInt(item && item.http_code, 10) || 0;
+
+            if (status === 'ok') {
+                return ['正常', 'bg-success', '站点响应正常'];
+            }
+            if (status === 'slow') {
+                return ['较慢', 'bg-warning text-dark', '响应超过 3 秒'];
+            }
+            if (status === 'down') {
+                if (code > 0 || (ms > 0 && ms < 3000)) {
+                    return ['状态码异常', 'bg-warning text-dark', '站点有响应，但返回了错误状态码，不属于无法访问'];
+                }
+                return ['超时无响应', 'bg-danger', '连接超时或无法建立连接'];
+            }
+            return ['未检测', 'bg-secondary', '尚未进行健康检测'];
+        }
 
         // 列表初始化：正常列表与回收站各初始化一次 DataTables
         $(document).ready(function () {
@@ -1437,11 +1533,12 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
             if (!row) {
                 return;
             }
+            var meta = healthMeta(item);
             var badge = row.querySelector('.health-badge');
             if (badge) {
-                var meta = HEALTH_MAP[item.status] || HEALTH_MAP.unknown;
                 badge.textContent = meta[0];
                 badge.className = 'badge health-badge ' + meta[1];
+                badge.title = meta[2];
             }
             var latency = row.querySelector('.health-latency');
             if (latency) {
