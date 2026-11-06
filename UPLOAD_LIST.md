@@ -1,23 +1,30 @@
-# 轩宇-导航 v2.10.7 部署清单
+# 轩宇-导航 v2.10.8 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.10.7
+当前版本：v2.10.8
 
-> **本版本无数据库变更**，新增批量导入网址：一次粘贴最多 50 条，并发抓取标题/图标/描述并推荐分组，**落库前给出可校对清单**。改 `includes/Services.php`、`api/user_sites.php`、`my.php` 三个文件（其余是版本号）。覆盖后强刷即可。
+> **本版本无数据库变更、无 API 行为变更**，修复「API 页面进不去」：`/api/` 原本返回 403（IIS 禁止列目录 + 没有默认文档），现补一个开放 API 文档页。新增 `api/index.php`、改 `web.config`（其余是版本号）。覆盖后强刷即可。
 
-## 本次 v2.10.7 变动文件
+## 本次 v2.10.8 变动文件
 
 | 文件 | 说明 |
 | --- | --- |
-| `includes/Services.php` | `SiteInfoService` 新增 `fetchMany()`（`curl_multi` 并发，每批 8 条 / 总预算 18s）；抽出 `prepareFetch()`（URL 校验 + SSRF 拦截 + 缓存读取）与 `finishFetch()`（解析 + 写缓存）供单条与批量共用；新增无副作用的 `parseResponse()` 避免并发下 `$lastRedirectUrl` 互相覆盖；批量场景对 3xx 再跟一轮重定向（同样过 SSRF 校验） |
-| `api/user_sites.php` | 新增 `batch_preview`（解析 → 标重复 → 只对未重复项抓取 → 推荐分组，**不写库**）；重写 `batch_add`（支持确认过的 `items`，补写原先漏掉的 `logo` / `description`，校验分组归属）；新增 `BATCH_IMPORT_LIMIT = 50`；接口层增加 `application/json` 请求体兼容；新增公共函数 `userSiteParseLines()` / `userSiteSuggestCategory()` / `userSiteCategories()` 与单条收录共用 |
-| `my.php` | 工具栏新增「批量导入」入口；批量粘贴对话框升级为两阶段（粘贴 → 逐条复核）；复核页每行可勾选 / 改名称 / 换分组，重复项虚线框禁用并注明「已在你的导航中」；新增「返回修改」与全选联动；新增 `.bp-*` 样式段（含 `inset` 底部渐隐提示与 ≤560px 换列布局） |
-| 全部 PHP 页面（22 处） | 资源参数 `?v=2.10.7` |
-| `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `VERSION` | 版本号升至 2.10.7 |
+| **`api/index.php`（新增）** | 开放 API 文档页。零依赖（不连数据库、不开会话、不读站点设置），内容按 `api/sites.php` 真实实现逐条核对：鉴权三方式 / read-write 权限 / 管理级与用户级数据范围 / 五个端点 / 查询与写入字段 / curl 示例 / 响应结构 / 六个错误码；明确区分对外开放接口（只有 `sites.php`）与站内会话接口。带一键复制、示例 tab、深浅色切换、目录高亮、内联 SVG favicon |
+| `web.config` | 新增 `defaultDocument` 节点，把 `index.php` 追加到 IIS 默认文档列表，让 `/api/` 落到文档页。Apache 的 `.htaccess` 已有 `DirectoryIndex index.php`，无需改动 |
+| 全部 PHP 页面（22 处） | 资源参数 `?v=2.10.8` |
+| `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `VERSION` | 版本号升至 2.10.8 |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
 
-> 升级要点：三个文件都要覆盖 —— `Services.php` 提供并发抓取，`api/user_sites.php` 提供接口，`my.php` 提供入口与界面，缺任何一个功能都不会出现。`?v=` 已一并更新，整包覆盖后强刷（Ctrl+F5）。
+> 升级要点：
+> 1. **IIS 主机**：需一并覆盖 `web.config`。若主机锁定 `defaultDocument` 节点导致 **500.19**，删除新加的 `<defaultDocument>` 节点即可 —— 文档仍可通过 `/api/index.php` 直接访问，API 本身完全不受影响。
+> 2. **Apache 主机**：`.htaccess` 已有 `DirectoryIndex index.php index.html`，只传 `api/index.php` 即生效。
+> 3. 只想最快看到效果：直接访问 `http://你的域名/api/index.php`，不用改任何配置。
+> 4. 带令牌的请求仍发到 `api/sites.php`，**不是**文档页；`/api/sites.php` 返回 401 是正确行为（缺令牌）。
+
+## v2.10.7 回顾
+
+新增批量导入网址：一次粘贴最多 50 条，`curl_multi` 并发抓取标题/图标/描述并推荐分组，落库前给出可校对清单（识别 → 复核 → 确认）。改 `includes/Services.php`、`api/user_sites.php`、`my.php`。10 条并发首抓 1.08s，缓存 0.16s。无数据库变更。
 
 ## v2.10.6 回顾
 

@@ -261,7 +261,7 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.7">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.10.8">
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -4680,7 +4680,7 @@ $hasLinks = $totalLinks > 0;
         })();
     </script>
 <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.10.7" defer></script>
+<script src="assets/js/search.js?v=2.10.8" defer></script>
 
     <!-- 卡片右键 / 长按菜单 -->
     <div class="card-context-menu" id="cardContextMenu" hidden>
