@@ -1,12 +1,60 @@
-# 轩宇-导航 部署清单（当前版本 v2.15.2）
+# 轩宇-导航 部署清单（当前版本 v2.16.0）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.15.2
+当前版本：v2.16.0
 
-> **AI 测试连接 TLS 修复 + 前台用户自助管理 API 令牌**。关闭 `includes/Services.php` 全部 HTTPS 请求的严格 SSL 证书校验，未配置 CA 证书包时 deepseek 等接口不再报 TLS 错误；前台「我的导航」新增登录用户可见的 **API 令牌** 管理区块（生成 / 列表 / 删除 / 重置 / 切换权限，明文仅显示一次，仅本人可见）。**无数据库结构变更、无新增文件、无 `web.config` / `.htaccess` 改动，对外 API 契约向后兼容**。完整根因见 [CHANGELOG.md](CHANGELOG.md)。
+> **批量归属管理 + 回收站 + 首页提速 + 快捷收录智能分组 + 开放 API 自动建分类**。后台导航管理可勾选后批量转移 / 复制归属；前后台双双上线回收站（恢复 / 彻底删除 / 一键清空）；管理员前台登录后点「管理后台」直达；首页首屏少下载 316KB、gzip 后响应体缩到 7%、新增 2 个复合索引；首页搜索框收藏支持新建分组，AI 推荐的新分组只在采纳后才创建；开放 API 的 POST 新增 `category_name` 与 `ai_recommend`。**本版有数据库索引变更，需执行 `upgrade_v2.16.0.sql`（幂等，重复执行安全）**。完整说明见 [CHANGELOG.md](CHANGELOG.md)。
 
-## 本次 v2.15.2 变动文件
+## ⚠️ 升级必读（三步）
+
+1. **上传并覆盖**全部文件（列表见下）。
+2. **执行 `upgrade_v2.16.0.sql`**（phpMyAdmin 导入，或 `mysql -u用户 -p 库名 < upgrade_v2.16.0.sql`）。
+   - 只加两个索引：`nav_links(user_id, deleted_at, is_active)`、`categories(user_id, is_private)`。
+   - 脚本内部用 `information_schema.STATISTICS` 判重，**重复执行无副作用**；忘了执行也不影响功能，只是回收站 / 我的导航在数据量变大后会慢。
+3. **清一次浏览器缓存**（或强刷 Ctrl+F5）。本版改了 `nav.css` / `nav.js` / `search.js`，资源版本号已同步到 `?v=2.16.0`，正常情况会自动刷新。
+
+**验证是否生效**：后台「仪表盘」或 `/api/index.php` 徽章显示 `v2.16.0`；登录后「我的导航」顶部出现带数字角标的「回收站」按钮；手机端卡片看不到常驻的操作按钮（只能长按）。
+
+## 本次 v2.16.0 变动文件
+
+| 文件 | 说明 |
+| --- | --- |
+| `upgrade_v2.16.0.sql` | **新增文件**，两个复合索引，幂等 |
+| `admin/nav_links.php` | 批量栏移到列表顶部并 sticky；新增「批量转移归属」「批量复制归属」（事务 + 跨归属分类重挂到目标用户「未分类」）；新增回收站视图、逐条恢复 / 彻底删除 / 一键清空（彻底删除连带清理 logo 文件）；补 `Services.php` 引入修复 `CategoryEngine not found` |
+| `my.php` | 前台回收站：顶部按钮 + 数量角标 + 弹窗（全选 / 批量恢复 / 批量彻底删除 / 一键清空 / 逐条操作），所有操作强制 `WHERE user_id = ?` |
+| `apply(1).php`（`apply.php` 引用它） | 手机端适配：输入框 `min-width:0`、logo 文件选择行重排、卡片内边距与按钮 44px；横向溢出 55px → 0 |
+| `assets/css/page.css` | `max-width: 620px` 断点：`.page-actions` 纵向排列、按钮全宽、长串 `word-break`、输入框 `min-width:0` |
+| `includes/functions.php` | `isLoggedIn()` 打通前后台会话；新增 `findAdminUserById()`，只认数据库 `is_admin=1` 且未封禁 |
+| `logout.php` | 修复登出残留：前台打通的会话需一并清理 `admin_id / admin_username / last_activity` |
+| `includes/Services.php` | 新增 `AiService::recommendCategory()`：允许 AI 给出候选外的新分类名并标记 `is_new` |
+| `api/sites.php` | POST 新增 `category_name` / `ai_recommend` / `allow_ai_fallback`；优先级 `category_id > category_name > ai_recommend > 未分类`；返回新增 `category_id` / `category_name` / `category_source` |
+| `api/user_sites.php` | `quick_preview` 支持 AI 新分类建议（只建议不建）；`quick_add` 支持 `category_name`，采纳时才建 |
+| `api/index.php` | 文档新增「快速入门」「方法伪装」「分类管理」三大章节；参数表补三个新参数；错误码补 `400 ai_disabled` |
+| `index.php` | pinyin-pro 改按需加载（`window.NAV_LOAD_PINYIN` + 首次交互预热）；快捷收录新增内联「新建分组」输入框；卡片 `--enter-index` 收窄 |
+| `assets/js/nav.js` | 拼音检测改运行时（`pinyinSupportedNow()`）；监听 `xy:pinyin-ready` 清缓存并重算过滤 |
+| `assets/js/search.js` | 复用首页按需加载函数；新增就绪回调机制，库到达后自动重算搜索 |
+| `assets/css/nav.css` | `@media (hover: none) and (pointer: coarse)` 下操作按钮彻底隐藏；卡片入场动画降级；`prefers-reduced-motion` 全关 |
+| `includes/bootstrap.php` | 新增 `navMaybeGzip()` 输出压缩兜底 |
+| `install/install.sql` | 建表语句同步两个新索引（全新安装用） |
+| 全部 PHP 页面（31 处） | 资源参数 `?v=2.16.0` |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.16.0 |
+| `CHANGELOG.md`、`UPLOAD_LIST.md` | 文档同步 |
+
+**本版仅新增 1 个文件**（`upgrade_v2.16.0.sql`），其余为既有文件覆盖。无 `web.config` / `.htaccess` 改动，对外 API 契约向后兼容。
+
+## 本次实测数据（本地 PHP 8.3 + MySQL 8.0 + Chromium）
+
+| 项目 | 优化前 | 优化后 |
+| --- | --- | --- |
+| 首屏 JS（3G 节流） | 533KB | **217KB** |
+| 首页响应体 | 341,606 字节 | **23,224 字节（gzip，省 93%）** |
+| 卡片入场动画 | 最多 24 张 × 26ms | 最多 6 张 × 22ms |
+| 布局偏移 CLS | 0 | **0**（卡片本就服务端直出，无需骨架屏） |
+| 手机端卡片操作按钮 | 可见 | **grid / list / compact 三视图 240 个按钮全部隐藏** |
+| 拼音搜索 | 可用 | **可用**（全拼 `tianqiyubao`、简拼 `tqyb` 均命中） |
+
+## 历史：v2.15.2 变动文件（回顾）
 
 | 文件 | 说明 |
 | --- | --- |
@@ -17,7 +65,7 @@
 | `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.15.2 |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
 
-**本版没有新增文件**，全部为既有文件修改，直接覆盖即可。
+**v2.15.2 没有新增文件**，全部为既有文件修改，直接覆盖即可。
 
 ## 历史：v2.14.1 变动文件（回顾）
 
