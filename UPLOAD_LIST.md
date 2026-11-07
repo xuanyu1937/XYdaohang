@@ -51,6 +51,7 @@
 4. **推荐用后台「系统工具 → 在线更新」上传整包**：接口会跳过 `config/database.php`、`config/smtp.php`、`config/config.php`、`install/install.lock`、`.env` 及 `backups/`、`cache/`、`uploads/` 等目录，并自动备份被覆盖的原文件。
 5. 最快验证：访问 `/api/index.php`（零依赖，永远可用），徽章应显示 `v2.13.0`；`curl -X OPTIONS -i /api/sites.php` 应返回 `204` 且带 `Access-Control-Allow-Origin`；`sites.php` 无令牌仍返回 `401 unauthorized`。
 6. 若线上有第三方前端跨域调用，现在可直连，无需代理；令牌仍须由调用方自己保管。
+7. **IIS 10 主机**：`OPTIONS` 预检可能被 `OPTIONSVerbHandler` 接管，此时跨域简单 GET（令牌放 `?token=`）与服务端调用仍可用，带 `Authorization` 头的浏览器写请求需在主机面板把 `OPTIONS` 交给 PHP handler。`/api/` 文档页已写明；未改动根 `web.config`，避免重蹈 500.19。
 
 ## 验证记录
 

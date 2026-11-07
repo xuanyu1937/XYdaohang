@@ -509,7 +509,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
                 <table>
                     <thead><tr><th>项目</th><th>值 / 行为</th></tr></thead>
                     <tbody>
-                        <tr><td><code>OPTIONS</code> 预检</td><td>返回 <strong>204</strong>，在令牌校验之前完成，不需要带令牌</td></tr>
+                        <tr><td><code>OPTIONS</code> 预检</td><td>返回 <strong>204</strong>（IIS 例外见下方），在令牌校验之前完成，不需要带令牌</td></tr>
                         <tr><td><code>Access-Control-Allow-Origin</code></td><td><code>*</code></td></tr>
                         <tr><td><code>Access-Control-Allow-Methods</code></td><td><code>GET, POST, PUT, PATCH, DELETE, OPTIONS</code></td></tr>
                         <tr><td><code>Access-Control-Allow-Headers</code></td><td><code>Authorization, X-Api-Token, Content-Type, Accept, X-Requested-With</code></td></tr>
@@ -518,6 +518,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
                 </table>
             </div>
             <div class="callout"><strong>令牌由调用方自己保管。</strong>允许跨域不等于允许匿名访问：没有有效令牌，任何来源都只会拿到 <code>401 unauthorized</code>。请勿把令牌写进公开的前端代码或公开仓库。</div>
+            <div class="callout"><strong>IIS 10 主机请注意。</strong>部分 Windows 主机由 <code>OPTIONSVerbHandler</code> 接管 <code>OPTIONS</code> 请求，预检不会到达 PHP，响应是 <code>200</code> 且不带 CORS 头。此时：① <strong>跨域简单 GET 仍然可用</strong>——把令牌放在 <code>?token=</code> 且不添加自定义请求头，浏览器不会发预检；② 服务端脚本、curl、同源调用完全不受影响；③ 若要让浏览器直接发带 <code>Authorization</code> 头的写请求，请到<strong>主机面板</strong>把 <code>OPTIONS</code> 动词交给 PHP handler，或移除 <code>OPTIONSVerbHandler</code> 映射。不要在根 <code>web.config</code> 里重复 <code>&lt;add&gt;</code> 节点，那会触发 500.19 导致全站不可用。</div>
         </section>
 
         <section id="internal">
