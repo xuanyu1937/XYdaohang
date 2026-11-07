@@ -90,6 +90,116 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_avatar'])) {
     }
 }
 
+// ------------------------------------------------------------------
+// 前台用户自助管理 API 令牌（复用 api_tokens 表，user_id 绑定当前用户）
+// ------------------------------------------------------------------
+$tokenMsg = '';
+$tokenError = '';
+$newTokenPlain = '';   // 仅创建 / 重置时在本请求内显示一次明文
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['token_action'])) {
+    $functions->requireSameOrigin();
+    $tokenAction = (string) $_POST['token_action'];
+
+    if ($tokenAction === 'create_user_token') {
+        $name = trim((string) ($_POST['token_name'] ?? ''));
+        $permissions = (string) ($_POST['token_permissions'] ?? 'read');
+        $expiresOption = trim((string) ($_POST['token_expires'] ?? 'never'));
+
+        if ($name === '') {
+            $tokenError = '令牌名称不能为空';
+        } elseif (!in_array($permissions, ['read', 'write'], true)) {
+            $tokenError = '权限参数不合法';
+        } else {
+            $name = $functions->textCut($name, 100);
+            $expiresValue = null;
+
+            if ($expiresOption === '30') {
+                $expiresValue = date('Y-m-d H:i:s', strtotime('+30 days'));
+            } elseif ($expiresOption === '90') {
+                $expiresValue = date('Y-m-d H:i:s', strtotime('+90 days'));
+            } elseif ($expiresOption === '365') {
+                $expiresValue = date('Y-m-d H:i:s', strtotime('+1 year'));
+            }
+
+            try {
+                $plainToken = bin2hex(random_bytes(32));
+            } catch (Throwable $e) {
+                $plainToken = md5(uniqid('', true)) . md5(uniqid('', true));
+            }
+
+            // 库里只存 SHA-256 摘要，明文仅本次响应显示一次。
+            $tokenDigest = hash('sha256', $plainToken);
+
+            $stmt = $db->prepare(
+                'INSERT INTO api_tokens (token, name, permissions, user_id, expires_at, created_at)
+                 VALUES (?, ?, ?, ?, ?, NOW())'
+            );
+
+            try {
+                $stmt->execute([$tokenDigest, $name, $permissions, $userId, $expiresValue]);
+                $newTokenPlain = $plainToken;
+                $tokenMsg = '令牌创建成功，请立即复制保存（明文仅本次显示）';
+            } catch (Throwable $e) {
+                $tokenError = '令牌创建失败：' . $e->getMessage();
+            }
+        }
+    } elseif ($tokenAction === 'toggle_user_token_perm') {
+        $id = (int) ($_POST['token_id'] ?? 0);
+        $stmt = $db->prepare('SELECT permissions FROM api_tokens WHERE id = ? AND user_id = ? LIMIT 1');
+        $stmt->execute([$id, $userId]);
+        $row = $stmt->fetch();
+
+        if (!$row) {
+            $tokenError = '令牌不存在';
+        } else {
+            $next = strtolower((string) $row['permissions']) === 'write' ? 'read' : 'write';
+            $upd = $db->prepare('UPDATE api_tokens SET permissions = ? WHERE id = ? AND user_id = ?');
+            $upd->execute([$next, $id, $userId]);
+            $tokenMsg = '令牌权限已切换为「' . ($next === 'write' ? '读写' : '只读') . '」';
+        }
+    } elseif ($tokenAction === 'delete_user_token') {
+        $id = (int) ($_POST['token_id'] ?? 0);
+        $stmt = $db->prepare('DELETE FROM api_tokens WHERE id = ? AND user_id = ?');
+        $stmt->execute([$id, $userId]);
+        $tokenMsg = '令牌已删除';
+    } elseif ($tokenAction === 'reset_user_token') {
+        $id = (int) ($_POST['token_id'] ?? 0);
+        $stmt = $db->prepare('SELECT id FROM api_tokens WHERE id = ? AND user_id = ? LIMIT 1');
+        $stmt->execute([$id, $userId]);
+
+        if (!$stmt->fetch()) {
+            $tokenError = '令牌不存在';
+        } else {
+            try {
+                $plainToken = bin2hex(random_bytes(32));
+            } catch (Throwable $e) {
+                $plainToken = md5(uniqid('', true)) . md5(uniqid('', true));
+            }
+
+            $tokenDigest = hash('sha256', $plainToken);
+            $upd = $db->prepare('UPDATE api_tokens SET token = ?, last_used_at = NULL WHERE id = ? AND user_id = ?');
+            $upd->execute([$tokenDigest, $id, $userId]);
+            $newTokenPlain = $plainToken;
+            $tokenMsg = '令牌已重置，旧令牌立即失效，请复制新的 Token（明文仅本次显示）';
+        }
+    }
+}
+
+// 读取当前用户的令牌列表（仅本人，看不到其他用户或管理员的令牌）
+$userTokens = [];
+
+try {
+    $stmt = $db->prepare(
+        'SELECT id, name, permissions, user_id, created_at, expires_at, last_used_at
+         FROM api_tokens WHERE user_id = ? ORDER BY id DESC'
+    );
+    $stmt->execute([$userId]);
+    $userTokens = $stmt->fetchAll();
+} catch (Throwable $error) {
+    $userTokens = [];
+}
+
 $brandName = trim((string) $functions->getSetting('site_title'));
 $brandName = $brandName !== '' ? $brandName : '轩宇-导航';
 $siteLogoUrl = $functions->getLogoUrl($functions->getSetting('site_logo'));
@@ -262,9 +372,9 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.14.1">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.14.1">
-    <script src="assets/js/category-quick-add.js?v=2.14.1" defer></script>
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.15.0">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.15.0">
+    <script src="assets/js/category-quick-add.js?v=2.15.0" defer></script>
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -1048,6 +1158,143 @@ $hasLinks = $totalLinks > 0;
             overscroll-behavior: contain;
         }
 
+        /* API 令牌管理 */
+        .my-token-create {
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .my-token-create > label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        .my-token-new {
+            background: var(--primary-soft, rgba(102,126,234,0.12));
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+        }
+
+        .my-token-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .my-token-row code {
+            flex: 1;
+            min-width: 0;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 12.5px;
+            background: var(--surface-2, #f4f5f7);
+            border-radius: 7px;
+            padding: 8px 10px;
+            word-break: break-all;
+            color: var(--text);
+        }
+
+        .my-subtitle {
+            font-size: 14px;
+            font-weight: 700;
+            margin: 18px 0 10px;
+            color: var(--text);
+        }
+
+        .my-token-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .my-token-item {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            background: var(--surface, #fff);
+        }
+
+        .my-token-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .my-token-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .my-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+
+        .my-badge.is-read {
+            background: var(--surface-2, #eef0f4);
+            color: var(--muted, #6b7280);
+        }
+
+        .my-badge.is-write {
+            background: var(--primary-soft, rgba(102,126,234,0.15));
+            color: var(--primary, #667eea);
+        }
+
+        .my-token-info {
+            font-size: 12.5px;
+            color: var(--muted, #6b7280);
+            margin: 6px 0 10px;
+        }
+
+        .my-token-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .my-btn.is-small {
+            padding: 5px 12px;
+            font-size: 12.5px;
+            border-radius: 8px;
+        }
+
+        .my-btn.is-danger {
+            border-color: var(--danger-border, #f3b4b4);
+            color: var(--danger, #d64545);
+        }
+
+        .my-btn.is-danger:hover {
+            background: var(--danger-soft, #fdeaea);
+        }
+
+        .my-api-docs pre {
+            background: var(--surface-2, #f4f5f7);
+            border-radius: 8px;
+            padding: 10px 12px;
+            overflow-x: auto;
+            font-size: 12.5px;
+            line-height: 1.6;
+            margin: 6px 0 12px;
+        }
+
+        .my-api-docs code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        }
+
+        .my-api-docs p {
+            font-size: 13px;
+            color: var(--text);
+            margin: 4px 0;
+        }
+
         .my-dialog-foot {
             display: flex;
             align-items: center;
@@ -1743,6 +1990,13 @@ $hasLinks = $totalLinks > 0;
                         </svg>
                         <span class="my-btn-label">账号</span>
                     </button>
+                    <button type="button" class="my-btn is-ghost" id="apiTokenBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="7.5" cy="15.5" r="4.5"></circle>
+                            <path d="M10.7 12.3 21 2l-3 1-4 4 2 2 4-4 1 3z"></path>
+                        </svg>
+                        <span class="my-btn-label">API 令牌</span>
+                    </button>
                 </div>
             </div>
 
@@ -2359,6 +2613,101 @@ $hasLinks = $totalLinks > 0;
         </div>
     </dialog>
 
+    <!-- API 令牌管理（前台用户自助） -->
+    <dialog class="my-dialog" id="apiTokenDialog"<?php echo ($tokenMsg || $tokenError || $newTokenPlain) ? ' data-autoopen="1"' : ''; ?>>
+        <div class="my-dialog-head">
+            <h3>API 令牌</h3>
+            <button type="button" class="my-iconbtn" id="apiTokenClose" aria-label="关闭">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+            </button>
+        </div>
+
+        <div class="my-dialog-body">
+            <p class="my-msg" id="apiTokenMsg" role="alert"></p>
+
+            <form method="POST" class="my-token-create">
+                <input type="hidden" name="token_action" value="create_user_token">
+                <label for="tokenName">新建令牌</label>
+                <input type="text" id="tokenName" name="token_name" maxlength="100" placeholder="如：我的手机 / 同步脚本" autocomplete="off" required>
+                <div class="my-field-row" style="margin-top:8px;">
+                    <select name="token_permissions" aria-label="权限">
+                        <option value="read">只读</option>
+                        <option value="write">读写</option>
+                    </select>
+                    <select name="token_expires" aria-label="过期时间">
+                        <option value="never">永不过期</option>
+                        <option value="30">30 天</option>
+                        <option value="90">90 天</option>
+                        <option value="365">1 年</option>
+                    </select>
+                    <button type="submit" class="my-btn is-primary">生成令牌</button>
+                </div>
+            </form>
+
+            <?php if ($newTokenPlain !== ''): ?>
+            <div class="my-token-new">
+                <p class="my-note">这是完整 Token，<strong>仅显示一次</strong>，请立即复制保存：</p>
+                <div class="my-token-row">
+                    <code id="newTokenValue"><?php echo $functions->escape($newTokenPlain); ?></code>
+                    <button type="button" class="my-btn" id="copyNewTokenBtn">复制</button>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <h4 class="my-subtitle">我的令牌</h4>
+            <?php if (empty($userTokens)): ?>
+                <p class="my-note">还没有令牌。创建一个，即可用脚本或第三方客户端访问你自己的导航数据。</p>
+            <?php else: ?>
+                <div class="my-token-list">
+                    <?php foreach ($userTokens as $t): ?>
+                        <div class="my-token-item">
+                            <div class="my-token-meta">
+                                <span class="my-token-name"><?php echo $functions->escape($t['name']); ?></span>
+                                <span class="my-badge <?php echo $t['permissions'] === 'write' ? 'is-write' : 'is-read'; ?>"><?php echo $t['permissions'] === 'write' ? '读写' : '只读'; ?></span>
+                            </div>
+                            <div class="my-token-info">
+                                创建 <?php echo $functions->escape(substr((string) $t['created_at'], 0, 10)); ?>
+                                · 过期 <?php echo $t['expires_at'] ? $functions->escape(substr((string) $t['expires_at'], 0, 10)) : '永不过期'; ?>
+                                · 最近使用 <?php echo $t['last_used_at'] ? $functions->escape(substr((string) $t['last_used_at'], 0, 16)) : '从未'; ?>
+                            </div>
+                            <div class="my-token-actions">
+                                <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="token_action" value="toggle_user_token_perm">
+                                    <input type="hidden" name="token_id" value="<?php echo (int) $t['id']; ?>">
+                                    <button type="submit" class="my-btn is-small">切换权限</button>
+                                </form>
+                                <form method="POST" style="display:inline;" onsubmit="return confirm('确定重置该令牌？旧令牌将立即失效');">
+                                    <input type="hidden" name="token_action" value="reset_user_token">
+                                    <input type="hidden" name="token_id" value="<?php echo (int) $t['id']; ?>">
+                                    <button type="submit" class="my-btn is-small">重置</button>
+                                </form>
+                                <form method="POST" style="display:inline;" onsubmit="return confirm('确定删除该令牌？此操作不可恢复');">
+                                    <input type="hidden" name="token_action" value="delete_user_token">
+                                    <input type="hidden" name="token_id" value="<?php echo (int) $t['id']; ?>">
+                                    <button type="submit" class="my-btn is-small is-danger">删除</button>
+                                </form>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
+            <h4 class="my-subtitle">使用说明</h4>
+            <div class="my-api-docs">
+                <p>在请求头携带令牌：</p>
+                <pre><code>Authorization: Bearer &lt;你的 Token&gt;</code></pre>
+                <p>可用接口（数据范围：仅你本人导航，不能访问公共或其他用户数据）：</p>
+                <pre><code>GET    /api/sites.php       分页列表（含 categories 字段）
+POST   /api/sites.php       新建网址
+PUT    /api/sites.php       更新网址
+DELETE /api/sites.php       删除网址</code></pre>
+                <p>示例：</p>
+                <pre><code>curl -H "Authorization: Bearer &lt;TOKEN&gt;" \
+     "https://你的域名/api/sites.php?page=1&size=20"</code></pre>
+            </div>
+        </div>
+    </dialog>
+
     <!-- 头像设置弹窗 -->
     <dialog class="my-dialog" id="avatarDialog">
         <form method="POST" enctype="multipart/form-data">
@@ -2741,6 +3090,64 @@ $hasLinks = $totalLinks > 0;
                     avatarDialog.close();
                 });
             }
+
+            // API 令牌管理弹窗
+            (function () {
+                var dialog = qs('#apiTokenDialog');
+                var openBtn = qs('#apiTokenBtn');
+                var closeBtn = qs('#apiTokenClose');
+                var copyBtn = qs('#copyNewTokenBtn');
+                var msg = qs('#apiTokenMsg');
+
+                if (openBtn && dialog) {
+                    openBtn.addEventListener('click', function () {
+                        dialog.showModal();
+                    });
+                }
+                if (closeBtn && dialog) {
+                    closeBtn.addEventListener('click', function () {
+                        dialog.close();
+                    });
+                }
+
+                // 创建 / 重置后页面刷新，自动重新打开弹窗并展示结果
+                if (dialog && dialog.getAttribute('data-autoopen')) {
+                    if (typeof dialog.showModal === 'function') {
+                        dialog.showModal();
+                    }
+                    <?php if ($tokenMsg !== ''): ?>
+                    if (msg) {
+                        msg.textContent = <?php echo json_encode($tokenMsg); ?>;
+                        msg.className = 'my-msg is-success';
+                        msg.style.display = 'block';
+                    }
+                    <?php elseif ($tokenError !== ''): ?>
+                    if (msg) {
+                        msg.textContent = <?php echo json_encode($tokenError); ?>;
+                        msg.className = 'my-msg is-error';
+                        msg.style.display = 'block';
+                    }
+                    <?php endif; ?>
+                }
+
+                if (copyBtn) {
+                    copyBtn.addEventListener('click', function () {
+                        var text = qs('#newTokenValue') ? qs('#newTokenValue').textContent : '';
+                        if (!text) { return; }
+                        var done = function () {
+                            copyBtn.textContent = '已复制';
+                            setTimeout(function () { copyBtn.textContent = '复制'; }, 1500);
+                        };
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(text).then(done, function () {
+                                window.prompt('复制下面的 Token：', text);
+                            });
+                        } else {
+                            window.prompt('复制下面的 Token：', text);
+                        }
+                    });
+                }
+            })();
 
             var fetchBtn = qs('#fetchBtn');
 
@@ -5464,6 +5871,6 @@ $hasLinks = $totalLinks > 0;
         })();
     </script>
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.14.1" defer></script>
+<script src="assets/js/search.js?v=2.15.0" defer></script>
 </body>
 </html>

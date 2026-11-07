@@ -1,5 +1,22 @@
 # 轩宇-导航 · 版本记录
 
+## v2.15.0（2026-11-07）
+
+> **AI 测试连接 TLS 修复 + 前台用户自助管理 API 令牌**。① 关闭 `includes/Services.php` 内所有 HTTPS 请求的严格 SSL 证书校验（与站点抓取 / 健康检测一致），服务器未配置 CA 证书包时 deepseek 等 HTTPS 接口不再报 TLS 错误；② 前台「我的导航」新增登录用户可见的 **API 令牌** 管理区块，可自助生成 / 列表 / 删除 / 重置 / 切换权限，明文仅显示一次，库内存 SHA-256 摘要，且仅能看到和管理自己的令牌。**无数据库结构变更、无新增文件、无 `web.config` / `.htaccess` 改动，对外 API 契约向后兼容。**
+
+### 1. AI / HTTPS SSL 证书校验修复
+- 根因：`AiService::postJson()` 与站点健康检测用 `CURLOPT_SSL_VERIFYPEER=true` + `CURLOPT_SSL_VERIFYHOST=2`，但服务器 PHP/curl 环境未配置 CA 证书包，所有 HTTPS 调用（含「AI 测试连接」）都报 TLS 证书校验失败。
+- 修复（`includes/Services.php`）：将 `postJson`、健康检测（HEAD/GET 两次）、站点下载重试全部统一为 `CURLOPT_SSL_VERIFYPEER => false` / `CURLOPT_SSL_VERIFYHOST => 0`，与已有的站点抓取保持一致。
+- 验证：`postJson` 实测可达 `https://postman-echo.com/post`、`https://httpbin.org/post`（200 + JSON）；deepseek 返回正确的 `http_401`（鉴权失败，而非 TLS 报错），说明 TLS 握手已通过。
+
+### 2. 前台用户 API 令牌管理（`my.php`）
+- 顶部操作栏新增 **API 令牌** 按钮，登录用户可见；弹窗内完成全部自助操作。
+- 生成：名称 + 权限（只读 / 读写）+ 过期（永不过期 / 30 天 / 90 天 / 1 年）；明文仅本次显示一次，附「复制」按钮；库内存 `sha256(token)`。
+- 列表：名称、权限徽标、创建时间、过期时间、最近使用时间；操作含切换权限、重置（重新生成、旧令牌立即失效）、删除。
+- 数据隔离：复用 `api_tokens` 表，前台令牌 `user_id` 强制绑定当前登录用户；仅显示本人令牌，看不到其他用户或管理员令牌；用户级令牌不支持指定 `user_id`，固定绑定当前用户，调用 `GET/POST/PUT/DELETE /api/sites.php` 只能访问本人数据。
+- 弹窗底部附 API 使用说明（Bearer 认证、可用接口、curl 示例）。
+- 验证（本地 Playwright）：创建→明文展示→API 调用成功且只返回本人数据→切换权限→重置（旧令牌 401）→删除（令牌 401），共 **17/17** 通过；管理员数据对用户级令牌不可见（隔离测试通过）。
+
 ## v2.14.1（2026-11-07）
 
 > **开放 API 列表接口新增 `categories` 字段**。GET `/api/sites.php` 列表响应除 `items` 外，额外返回当前令牌可见的全部分类分组（含尚未挂任何网址的空分组），开发者无需再单独轮询分类，新建分组也能即时在列表响应里看到。**无数据库结构变更、无新增文件、无 `web.config` / `.htaccess` 改动，对外 API 契约向后兼容。**

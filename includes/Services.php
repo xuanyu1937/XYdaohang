@@ -1585,9 +1585,10 @@ class SiteInfoService extends BaseService
         $this->lastRedirectUrl = '';
 
         if (function_exists('curl_init')) {
-            // 首次请求：严格 SSL + 较短超时；失败则用宽松策略重试一次。
+            // 服务器环境未配置 CA 证书包，统一关闭 SSL 证书校验，避免 TLS 报错。
+            // 仅做超时重试：首次较短超时，失败再用更长超时重试一次。
             $attempts = [
-                ['connect' => 5, 'total' => 10, 'verify' => true],
+                ['connect' => 5, 'total' => 10, 'verify' => false],
                 ['connect' => 8, 'total' => 15, 'verify' => false],
             ];
 
@@ -1604,8 +1605,8 @@ class SiteInfoService extends BaseService
                     CURLOPT_TIMEOUT => $attempt['total'],
                     CURLOPT_USERAGENT => $userAgent,
                     CURLOPT_ENCODING => '',
-                    CURLOPT_SSL_VERIFYPEER => $attempt['verify'],
-                    CURLOPT_SSL_VERIFYHOST => $attempt['verify'] ? 2 : 0,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => 0,
                     CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
                     CURLOPT_HEADER => true,
                     CURLOPT_HTTPHEADER => [
@@ -1880,8 +1881,8 @@ class AiService extends BaseService
             CURLOPT_HTTPHEADER => $headers,
             CURLOPT_CONNECTTIMEOUT => 5,
             CURLOPT_TIMEOUT => (int) $timeout,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => 0,
         ]);
 
         $result = curl_exec($ch);
@@ -2316,8 +2317,8 @@ class HealthCheckService extends BaseService
             CURLOPT_CONNECTTIMEOUT => 4,
             CURLOPT_TIMEOUT => (int) $timeout,
             CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; XuanyuNav/2.0; +health-check)',
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => 0,
         ]);
 
         curl_exec($ch);
@@ -2335,8 +2336,8 @@ class HealthCheckService extends BaseService
                 CURLOPT_CONNECTTIMEOUT => 4,
                 CURLOPT_TIMEOUT => (int) $timeout,
                 CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; XuanyuNav/2.0; +health-check)',
-                CURLOPT_SSL_VERIFYPEER => true,
-                CURLOPT_SSL_VERIFYHOST => 2,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => 0,
                 CURLOPT_RANGE => '0-2048',
             ]);
             curl_exec($ch);

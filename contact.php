@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.14.1">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.15.0">
     <link rel="stylesheet" href="assets/css/page.css">
 </head>
 <body data-monitor="0">
@@ -314,6 +314,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.14.1" defer></script>
+<script src="assets/js/search.js?v=2.15.0" defer></script>
 </body>
 </html>
