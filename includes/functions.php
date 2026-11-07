@@ -255,19 +255,84 @@ class Functions {
     // ==================== 认证和权限方法 ====================
     
     public function isLoggedIn() {
-        if (!isset($_SESSION['admin_id'])) {
-            return false;
+        if (isset($_SESSION['admin_id'])) {
+            $lifetime = (int) $this->getConfig('security.session_lifetime', 7200);
+
+            if (isset($_SESSION['last_activity']) && (time() - (int) $_SESSION['last_activity']) > $lifetime) {
+                $_SESSION = [];
+                return false;
+            }
+
+            $_SESSION['last_activity'] = time();
+            return true;
         }
-        
-        $lifetime = (int) $this->getConfig('security.session_lifetime', 7200);
-        
-        if (isset($_SESSION['last_activity']) && (time() - (int) $_SESSION['last_activity']) > $lifetime) {
-            $_SESSION = [];
-            return false;
+
+        // v2.16.0 · 管理员登录态打通：
+        // 前台用同一个管理员账号登录后（users.is_admin = 1），直接进后台无需二次登录。
+        // 安全边界：
+        //   1) 只认数据库里 is_admin = 1 的账号，不看会话里的 user_is_admin 标记，
+        //      避免会话被篡改后提权；
+        //   2) 账号被禁用（status = banned）时一律不认；
+        //   3) 同时补齐 admin_id / admin_username，让后续后台页面按正常登录态工作。
+        if (isset($_SESSION['user_id']) && (int) $_SESSION['user_id'] > 0) {
+            $lifetime = (int) $this->getConfig('security.session_lifetime', 7200);
+
+            if (isset($_SESSION['last_activity']) && (time() - (int) $_SESSION['last_activity']) > $lifetime) {
+                // 前台会话过期时只清前台身份，保留其它会话数据
+                unset($_SESSION['user_id'], $_SESSION['user_username'], $_SESSION['user_is_admin']);
+                return false;
+            }
+
+            $adminUser = $this->findAdminUserById((int) $_SESSION['user_id']);
+
+            if ($adminUser !== null) {
+                $_SESSION['admin_id'] = (int) $adminUser['id'];
+                $_SESSION['admin_username'] = (string) $adminUser['username'];
+                $_SESSION['last_activity'] = time();
+
+                return true;
+            }
         }
-        
-        $_SESSION['last_activity'] = time();
-        return true;
+
+        return false;
+    }
+
+    /**
+     * v2.16.0 · 按 id 取「可登录后台」的前台用户（is_admin = 1 且未被禁用）。
+     *
+     * @return array|null
+     */
+    private function findAdminUserById($id) {
+        $id = (int) $id;
+
+        if ($id <= 0) {
+            return null;
+        }
+
+        try {
+            $stmt = $this->db->prepare(
+                'SELECT id, username, is_admin, status FROM users WHERE id = ? LIMIT 1'
+            );
+            $stmt->execute([$id]);
+            $row = $stmt->fetch();
+        } catch (Throwable $e) {
+            // 老库没有 users 表时不打通，保持原有「必须后台登录」的行为
+            return null;
+        }
+
+        if (!$row) {
+            return null;
+        }
+
+        if ((int) ($row['is_admin'] ?? 0) !== 1) {
+            return null;
+        }
+
+        if (isset($row['status']) && (string) $row['status'] === 'banned') {
+            return null;
+        }
+
+        return $row;
     }
     
     /**

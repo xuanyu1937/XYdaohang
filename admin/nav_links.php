@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_once '../includes/functions.php';
+// v2.16.0：批量转移/复制归属需要为「未分类」补建分组，故引入 Services
+require_once __DIR__ . '/../includes/Services.php';
 
 $functions = new Functions();
 
@@ -368,6 +370,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['purge_id'])) {
 }
 
 /* ==========================================================================
+ * v2.16.0：回收站 - 一键清空（彻底删除回收站内全部记录）
+ * ========================================================================== */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['empty_trash'])) {
+    if (!$hasDeletedAt) {
+        $error = '当前数据库尚未执行 v2.0.0 升级脚本，回收站不可用';
+    } else {
+        try {
+            // 先取全部回收站记录的 logo，物理文件随后一并清理，避免留下孤儿文件
+            $logos = $db->query('SELECT logo FROM nav_links WHERE deleted_at IS NOT NULL')
+                ->fetchAll(PDO::FETCH_COLUMN);
+
+            $stmt = $db->prepare('DELETE FROM nav_links WHERE deleted_at IS NOT NULL');
+            $stmt->execute();
+            $purged = $stmt->rowCount();
+
+            foreach ($logos as $logo) {
+                if (!empty($logo)) {
+                    $functions->deleteLogoFile((string) $logo);
+                }
+            }
+
+            $message = $purged > 0 ? '回收站已清空，共彻底删除 ' . $purged . ' 条导航链接' : '回收站已经是空的';
+        } catch (Throwable $e) {
+            $error = '清空回收站失败，请稍后重试';
+        }
+    }
+}
+
+/* ==========================================================================
  * 新增：批量操作（移动到分类 / 移入回收站 / 批量启用 / 批量停用 / 导出 CSV）
  * 全部走 POST + requireSameOrigin，且只处理选中的 id。
  * ========================================================================== */
@@ -417,6 +448,138 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['batch_action'])) {
                         $message = '已移动分类 ' . $stmt->rowCount() . ' 条导航链接';
                     } else {
                         $error = '批量移动分类失败，请稍后重试';
+                    }
+                }
+            }
+        } elseif ($batchAction === 'transfer_owner' || $batchAction === 'copy_owner') {
+            /* v2.16.0 归属批量管理：
+               - transfer_owner：把选中记录整体改挂到目标用户名下（原记录被移动）
+               - copy_owner：为目标用户复制一份，原记录保持不动
+               目标可以是「公共」（batch_owner_id=0）或某个用户。
+               用户被移走时，原分类属于旧用户，新用户无权使用，这里统一改挂到目标用户的「未分类」
+               （copy 时只在分类归属与新归属不一致时才调整，避免无谓改动）。 */
+            if (!$hasUserId) {
+                $error = '当前数据库尚未执行 v2.0.0 升级脚本，暂不支持归属管理';
+            } else {
+                $targetOwner = intval($_POST['batch_owner_id'] ?? 0);
+
+                if ($targetOwner < 0) {
+                    $error = '请选择目标归属';
+                } else {
+                    $ownerValid = true;
+
+                    if ($targetOwner > 0) {
+                        $ownerCheck = $db->prepare('SELECT id FROM users WHERE id = ? LIMIT 1');
+                        $ownerCheck->execute([$targetOwner]);
+                        $ownerValid = (bool) $ownerCheck->fetch();
+                    }
+
+                    if (!$ownerValid) {
+                        $error = '目标用户不存在';
+                    } else {
+                        $engine = new CategoryEngine($functions);
+                        $engine->setUserId($targetOwner);
+                        $fallbackCategory = $engine->ensure('未分类', 'bi-collection');
+                        $affected = 0;
+
+                        try {
+                            $db->beginTransaction();
+
+                            // 记录级查询：拿到当前归属与分类，逐条判断是否需要改挂分类
+                            $rowStmt = $db->prepare(
+                                'SELECT nl.id, nl.user_id, nl.category_id, c.user_id AS category_owner
+                                 FROM nav_links nl
+                                 LEFT JOIN categories c ON nl.category_id = c.id
+                                 WHERE nl.id IN (' . $placeholders . ') AND nl.deleted_at IS NULL'
+                            );
+                            $rowStmt->execute($ids);
+                            $rows = $rowStmt->fetchAll();
+
+                            foreach ($rows as $row) {
+                                $categoryOwner = $row['category_owner'] === null ? null : (int) $row['category_owner'];
+                                // 分类不属于目标归属（公共分类 user_id=0 允许所有人用）时改挂未分类
+                                $needFallback = $categoryOwner !== null
+                                    && $categoryOwner !== 0
+                                    && $categoryOwner !== $targetOwner;
+
+                                if ($batchAction === 'transfer_owner') {
+                                    $update = $db->prepare(
+                                        'UPDATE nav_links SET user_id = ?' . ($needFallback ? ', category_id = ?' : '') . '
+                                         WHERE id = ? AND deleted_at IS NULL'
+                                    );
+                                    $params = [$targetOwner];
+                                    if ($needFallback) {
+                                        $params[] = $fallbackCategory;
+                                    }
+                                    $params[] = (int) $row['id'];
+                                    $update->execute($params);
+                                    $affected += $update->rowCount();
+                                } else {
+                                    // 复制：新增一条，字段与源记录一致，归属改为目标
+                                    $srcStmt = $db->prepare('SELECT * FROM nav_links WHERE id = ? LIMIT 1');
+                                    $srcStmt->execute([(int) $row['id']]);
+                                    $src = $srcStmt->fetch();
+
+                                    if (!$src) {
+                                        continue;
+                                    }
+
+                                    // 目标归属下排序放到末尾
+                                    $sortStmt = $db->prepare('SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_sort FROM nav_links WHERE user_id = ?');
+                                    $sortStmt->execute([$targetOwner]);
+                                    $nextSort = (int) ($sortStmt->fetch()['next_sort'] ?? 1);
+
+                                    $copyColumns = ['name', 'url', 'logo', 'description', 'category_id', 'user_id',
+                                        'sort_order', 'is_active', 'created_at'];
+                                    $copyValues = [
+                                        (string) $src['name'],
+                                        (string) $src['url'],
+                                        (string) ($src['logo'] ?? ''),
+                                        (string) ($src['description'] ?? ''),
+                                        $needFallback ? $fallbackCategory : (int) $src['category_id'],
+                                        $targetOwner,
+                                        $nextSort,
+                                        (int) $src['is_active'],
+                                        date('Y-m-d H:i:s'),
+                                    ];
+
+                                    $insert = $db->prepare(
+                                        'INSERT INTO nav_links (' . implode(', ', $copyColumns) . ')
+                                         VALUES (' . implode(', ', array_fill(0, count($copyColumns), '?')) . ')'
+                                    );
+                                    $insert->execute($copyValues);
+                                    $affected++;
+                                }
+                            }
+
+                            $db->commit();
+                        } catch (Throwable $e) {
+                            if ($db->inTransaction()) {
+                                $db->rollBack();
+                            }
+                            $affected = -1;
+                        }
+
+                        if ($affected < 0) {
+                            $error = '归属操作失败，已回滚，请稍后重试';
+                        } elseif ($affected === 0) {
+                            $error = '选中的记录均已不在正常列表中，未做任何修改';
+                        } else {
+                            $ownerLabel = '公共';
+
+                            if ($targetOwner > 0) {
+                                $ownerLabel = '用户#' . $targetOwner;
+                                $nameStmt = $db->prepare('SELECT username FROM users WHERE id = ? LIMIT 1');
+                                $nameStmt->execute([$targetOwner]);
+                                $ownerName = (string) ($nameStmt->fetch()['username'] ?? '');
+
+                                if ($ownerName !== '') {
+                                    $ownerLabel = $ownerName;
+                                }
+                            }
+                            $message = ($batchAction === 'transfer_owner' ? '已转移 ' : '已复制 ') . $affected
+                                . ' 条导航链接到「' . $ownerLabel . '」';
+                        }
                     }
                 }
             }
@@ -765,9 +928,39 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
         .batch-toolbar {
             gap: .5rem;
         }
+        /* v2.16.0：批量操作栏置顶 + 分组分隔线；窄屏下按钮自动换行、不溢出 */
+        .batch-toolbar-wrap {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            padding: .6rem .75rem;
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: .5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+        }
+        .batch-toolbar .batch-divider {
+            width: 1px;
+            height: 22px;
+            background: #dee2e6;
+        }
+        .batch-toolbar .btn,
+        .batch-toolbar .form-select {
+            white-space: nowrap;
+        }
+        @media (max-width: 575.98px) {
+            .batch-toolbar .batch-divider {
+                display: none;
+            }
+            .batch-toolbar .btn,
+            .batch-toolbar .form-select {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+        }
     </style>
-    <link href="../assets/css/admin.css?v=2.15.2" rel="stylesheet">
-    <link href="../assets/css/category-quick-add.css?v=2.15.2" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.16.0" rel="stylesheet">
+    <link href="../assets/css/category-quick-add.css?v=2.16.0" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -1022,6 +1215,62 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                     <?php endif; ?>
                                 </div>
                                 <div class="card-body">
+                                    <?php if (!empty($navLinks)): ?>
+                                        <!-- v2.16.0：批量操作栏移到列表顶部，勾选后即可操作 -->
+                                        <div class="batch-toolbar-wrap mb-3">
+                                            <form method="POST" id="batchForm">
+                                                <div class="d-flex flex-wrap justify-content-between align-items-center batch-toolbar">
+                                                    <div class="text-muted small">
+                                                        <i class="fas fa-check-square me-1"></i>已选 <span id="selectedCount">0</span> 项
+                                                    </div>
+                                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                                        <select name="batch_category_id" class="form-select form-select-sm" data-category-options style="width:auto;">
+                                                            <option value="">移动到分类…</option>
+                                                            <?php foreach ($categories as $category): ?>
+                                                                <option value="<?php echo $category['id']; ?>"><?php echo $functions->escape($category['display_name'] ?? $category['name']); ?></option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="submitBatch('move_category')">
+                                                            <i class="fas fa-folder-tree me-1"></i>移动
+                                                        </button>
+                                                        <?php if ($hasUserId): ?>
+                                                            <span class="batch-divider"></span>
+                                                            <select name="batch_owner_id" id="batchOwnerSelect" class="form-select form-select-sm" style="width:auto;">
+                                                                <option value="">归属用户…</option>
+                                                                <option value="0">公共（所有人可见）</option>
+                                                                <?php foreach ($userOptions as $userOption): ?>
+                                                                    <option value="<?php echo (int) $userOption['id']; ?>"><?php echo $functions->escape((string) $userOption['username']); ?></option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                            <button type="button" class="btn btn-sm btn-outline-info" onclick="submitBatch('transfer_owner')" title="把选中网址整体改挂到目标用户名下">
+                                                                <i class="fas fa-right-left me-1"></i>批量转移归属
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-info" onclick="submitBatch('copy_owner')" title="为目标用户复制一份，原网址保留">
+                                                                <i class="fas fa-clone me-1"></i>批量复制归属
+                                                            </button>
+                                                            <span class="batch-divider"></span>
+                                                        <?php endif; ?>
+                                                        <button type="button" class="btn btn-sm btn-outline-success" onclick="submitBatch('enable')">
+                                                            <i class="fas fa-check me-1"></i>批量启用
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="submitBatch('disable')">
+                                                            <i class="fas fa-ban me-1"></i>批量停用
+                                                        </button>
+                                                        <?php if ($hasDeletedAt): ?>
+                                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="submitBatch('trash')">
+                                                                <i class="fas fa-trash-can me-1"></i>批量删除
+                                                            </button>
+                                                        <?php endif; ?>
+                                                        <button type="button" class="btn btn-sm btn-outline-dark" onclick="submitBatch('export_csv')">
+                                                            <i class="fas fa-file-csv me-1"></i>导出 CSV
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div id="batchFormFields"></div>
+                                            </form>
+                                        </div>
+                                    <?php endif; ?>
+
                                     <?php if ($tab === 'normal'): ?>
                                     <form method="GET" class="row g-3 mb-4 align-items-end">
                                         <input type="hidden" name="tab" value="normal">
@@ -1242,45 +1491,20 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                         </div>
                                     <?php endif; ?>
                                     
-                                    <?php if (!empty($navLinks)): ?>
-                                        <div class="mt-4 pt-3 border-top">
-                                            <form method="POST" id="batchForm">
-                                                <div class="d-flex flex-wrap justify-content-between align-items-center batch-toolbar">
-                                                    <div class="text-muted small">
-                                                        <i class="fas fa-check-square me-1"></i>已选 <span id="selectedCount">0</span> 项
-                                                    </div>
-                                                    <div class="d-flex flex-wrap align-items-center gap-2">
-                                                        <select name="batch_category_id" class="form-select form-select-sm" data-category-options style="width:auto;">
-                                                            <option value="">移动到分类…</option>
-                                                            <?php foreach ($categories as $category): ?>
-                                                                <option value="<?php echo $category['id']; ?>"><?php echo $functions->escape($category['display_name'] ?? $category['name']); ?></option>
-                                                            <?php endforeach; ?>
-                                                        </select>
-                                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="submitBatch('move_category')">
-                                                            <i class="fas fa-folder-tree me-1"></i>移动
-                                                        </button>
-                                                        <button type="button" class="btn btn-sm btn-outline-success" onclick="submitBatch('enable')">
-                                                            <i class="fas fa-check me-1"></i>批量启用
-                                                        </button>
-                                                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="submitBatch('disable')">
-                                                            <i class="fas fa-ban me-1"></i>批量停用
-                                                        </button>
-                                                        <?php if ($hasDeletedAt): ?>
-                                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="submitBatch('trash')">
-                                                                <i class="fas fa-trash-can me-1"></i>移入回收站
-                                                            </button>
-                                                        <?php endif; ?>
-                                                        <button type="button" class="btn btn-sm btn-outline-dark" onclick="submitBatch('export_csv')">
-                                                            <i class="fas fa-file-csv me-1"></i>导出 CSV
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div id="batchFormFields"></div>
-                                            </form>
-                                        </div>
-                                    <?php endif; ?>
-                                    
                                     <?php else: ?>
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                                        <div class="text-muted small">
+                                            <i class="fas fa-circle-info me-1"></i>回收站中的网站不会在前台显示，可随时恢复。
+                                        </div>
+                                        <?php if (!empty($navLinks)): ?>
+                                            <form method="POST" class="d-inline" onsubmit="return confirm('将彻底删除回收站中的全部 <?php echo count($navLinks); ?> 条记录，删除后不可恢复，确定继续吗？');">
+                                                <input type="hidden" name="empty_trash" value="1">
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-broom me-1"></i>一键清空回收站
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </div>
                                     <div class="table-responsive">
                                         <table id="navRecycleTable" class="table table-hover admin-table align-middle">
                                             <thead>
@@ -1492,6 +1716,30 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                 return;
             }
 
+            // v2.16.0 归属管理：必须先在「归属用户…」里选一个目标，未选时拦住，
+            // 避免把记录误挂到「公共」（值为 0，和「未选择」的空串要区分开）。
+            if (action === 'transfer_owner' || action === 'copy_owner') {
+                var ownerSelect = document.getElementById('batchOwnerSelect');
+                var ownerValue = ownerSelect ? ownerSelect.value : '';
+
+                if (ownerValue === '') {
+                    alert('请先在「归属用户…」中选择目标用户');
+                    if (ownerSelect) {
+                        ownerSelect.focus();
+                    }
+                    return;
+                }
+
+                var ownerLabel = ownerSelect.options[ownerSelect.selectedIndex].text;
+                var tip = action === 'transfer_owner'
+                    ? '确定把选中的 ' + ids.length + ' 条链接转移到「' + ownerLabel + '」名下吗？原归属将不再拥有这些链接。'
+                    : '确定为「' + ownerLabel + '」复制这 ' + ids.length + ' 条链接吗？原链接会保留。';
+
+                if (!confirm(tip)) {
+                    return;
+                }
+            }
+
             var form = document.getElementById('batchForm');
             if (!form) {
                 return;
@@ -1513,6 +1761,18 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
             actionInput.name = 'batch_action';
             actionInput.value = action;
             container.appendChild(actionInput);
+
+            // 归属类操作：把下拉选中的目标用户随表单一起提交
+            if (action === 'transfer_owner' || action === 'copy_owner') {
+                var ownerSel = document.getElementById('batchOwnerSelect');
+                if (ownerSel) {
+                    var ownerInput = document.createElement('input');
+                    ownerInput.type = 'hidden';
+                    ownerInput.name = 'batch_owner_id';
+                    ownerInput.value = ownerSel.value;
+                    container.appendChild(ownerInput);
+                }
+            }
 
             form.submit();
         };
@@ -1924,7 +2184,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
     })();
     </script>
 
-    <script src="../assets/js/category-quick-add.js?v=2.15.2"></script>
+    <script src="../assets/js/category-quick-add.js?v=2.16.0"></script>
     <script>
     /* v2.12.0 · 导航管理页「添加分类」：与分类管理用同一个组件、同一套字段和校验 */
     (function () {

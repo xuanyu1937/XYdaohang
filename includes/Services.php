@@ -1792,6 +1792,94 @@ class AiService extends BaseService
     }
 
     /**
+     * v2.16.0 · 推荐分类名，允许 AI 给出「列表里没有的新分类」。
+     *
+     * 与 suggestCategory() 的区别：suggestCategory 只在已有分类里挑，
+     * AI 答不上来就回落到本地关键词规则，用于「不得新增分类」的场景。
+     * 这里则明确允许 AI 建议一个新分类名（is_new = true），
+     * 由调用方决定是否真的创建，供开放 API 的 ai_recommend / 前台快捷收录使用。
+     *
+     * @param array $categories 当前用户可见的分类名列表
+     * @return array{ok:bool,source:string,category?:string,is_new?:bool,error?:string}
+     */
+    public function recommendCategory($name, $description, array $categories)
+    {
+        $categories = array_values(array_filter(array_map('strval', $categories)));
+        $name = trim((string) $name);
+        $description = trim((string) $description);
+
+        if ($name === '' && $description === '') {
+            return ['ok' => false, 'source' => 'none', 'error' => 'empty_input'];
+        }
+
+        if (!$this->enabled()) {
+            return ['ok' => false, 'source' => 'none', 'error' => 'ai_disabled'];
+        }
+
+        $url = $this->setting('ai_api_url');
+        $key = $this->setting('ai_api_key');
+        $model = $this->setting('ai_model', 'gpt-4o-mini');
+
+        if (strpos($url, 'http') !== 0) {
+            return ['ok' => false, 'source' => 'ai', 'error' => 'invalid_api_url'];
+        }
+
+        $url = $this->chatEndpoint($url);
+        $list = $categories ? implode('、', $categories) : '（暂无分类）';
+
+        $prompt = "站点名称：{$name}\n站点描述：{$description}\n\n"
+            . "现有分类：{$list}\n\n"
+            . "请为该站点选一个最合适的分类，规则：\n"
+            . "1. 现有分类够用就只回复该分类名，不要任何解释；\n"
+            . "2. 都不合适时，回复一个新的分类名（2-6 个汉字，如「AI 工具」「设计素材」）；\n"
+            . "3. 只输出分类名本身，不要标点、不要引号。";
+
+        $body = json_encode([
+            'model' => $model,
+            'messages' => [
+                ['role' => 'system', 'content' => '你是网站分类助手，只输出一个分类名。'],
+                ['role' => 'user', 'content' => $prompt],
+            ],
+            'temperature' => 0.2,
+            'max_tokens' => 32,
+        ], JSON_UNESCAPED_UNICODE);
+
+        $response = $this->postJson($url, $body, $key);
+
+        if (!$response['ok']) {
+            $this->log('AI 分类推荐失败: ' . ($response['error'] ?? 'unknown'), 'WARNING');
+
+            return ['ok' => false, 'source' => 'ai', 'error' => $response['error']];
+        }
+
+        $data = json_decode((string) $response['body'], true);
+        $content = '';
+
+        if (is_array($data) && isset($data['choices'][0]['message']['content'])) {
+            $content = (string) $data['choices'][0]['message']['content'];
+        }
+
+        // 清掉模型常见的包装：引号、书名号、句号、换行、前缀说明
+        $content = trim(str_replace(['"', "'", '「', '」', '《', '》', '。', '：', ':', "\n", "\r"], '', $content));
+        $content = preg_replace('/^(分类名|分类|建议)[:：]?/u', '', $content);
+        $content = trim((string) $content);
+
+        if ($content === '' || $content === '无') {
+            return ['ok' => false, 'source' => 'ai', 'error' => 'no_match'];
+        }
+
+        $content = $this->textCut($content, 50);
+        $isNew = !in_array($content, $categories, true);
+
+        return [
+            'ok' => true,
+            'source' => 'ai',
+            'category' => $content,
+            'is_new' => $isNew,
+        ];
+    }
+
+    /**
      * 调用 OpenAI 兼容的 chat completions 接口。
      */
     protected function askModel($name, $description, array $categories)

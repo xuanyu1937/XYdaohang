@@ -1,5 +1,87 @@
 # 轩宇-导航 · 版本记录
 
+## v2.16.0（2026-11-07）
+
+> **批量归属管理 + 回收站 + 首页提速 + 快捷收录智能分组 + 开放 API 自动建分类**。这是一次覆盖面较大的版本：后台导航管理支持勾选后**批量转移 / 批量复制归属**，前后台双双上线**回收站**（软删除、恢复、彻底删除、一键清空）；前台「我的导航」与后台登录态**打通**，管理员前台登录后点「管理后台」直达；首页首屏少下载 **316KB**、响应体 gzip 后缩到 **7%**、新增 2 个复合索引；首页搜索框收藏网址支持**新建分组**，AI 推荐的新分组只在采纳后创建；开放 API 的 POST 新增 `category_name` 与 `ai_recommend`，可自动建分类并回传 `category_id`。**本次有数据库索引变更，需执行 `upgrade_v2.16.0.sql`（幂等，重复执行安全）。**
+
+### 1. 后台导航管理 · 批量归属
+- 批量操作栏从列表底部移到**顶部**并 sticky，勾选后优先展示「批量转移归属」「批量复制归属」。
+- 转移：整条记录改 owner（`user_id`），跨归属时分类自动改挂目标用户的「未分类」，避免出现「别人的分类下的我的网址」。
+- 复制：为目标用户生成副本，原网址保留；副本的分类同样重挂到目标用户可用的分类。
+- 全流程走事务，任一条失败整体回滚。
+
+### 2. 回收站（后台 + 前台）
+- 后台导航管理新增「回收站」入口与**一键清空**，逐条可恢复 / 彻底删除；彻底删除时连带清理 uploads 里的 logo 文件。
+- 前台「我的导航」新增回收站按钮（带数量角标），支持全选、批量恢复、批量彻底删除、一键清空。
+- 前台所有回收站操作强制带 `WHERE user_id = ?`，越权删除他人记录影响行数为 0（已测）。
+
+### 3. 前台手机端适配
+- 申请收录页修复横向溢出（实测 55px → 0）：输入框 `min-width:0`、文件选择按钮、logo 行布局重排；手机端卡片内边距收紧、按钮全宽 44px 起。
+- `page.css` 补充 `max-width: 620px` 断点：`.page-actions` 纵向排列、按钮全宽、长 URL `word-break`。
+- `about.php` / `contact.php` / `share.php` 的资源引用补上版本号，解决改样式后浏览器仍用旧缓存。
+
+### 4. 管理员登录态打通
+- `Functions::isLoggedIn()` 先查后台会话，查不到再查前台会话并回源数据库校验 `is_admin=1` 且 `status != banned`，通过则补写后台会话字段。
+- **安全边界**：只信数据库，不信 session 里的 `user_is_admin`；封禁账号拒绝放行；伪造标记已实测返回 302。
+- 修复登出漏洞：前台打通的会话说 `admin_id === user_id`，登出时需一并清掉后台会话字段。
+
+### 5. 首页性能
+| 措施 | 效果 |
+| --- | --- |
+| pinyin-pro（322KB）改按需加载 | 首屏 JS **533KB → 217KB**（3G 下拼音库完全不进首屏），空闲或聚焦时预热，输入时通常已就绪 |
+| 卡片入场动画降级 | 最多 24×26ms → 6×22ms，第 7 张起不再动画 |
+| 响应 gzip | 首页 **341,606 → 23,224 字节（省 93%）**，带 `Vary: Accept-Encoding`，不压二进制、不压小于 1KB、压后不变小则回原文 |
+| 复合索引 | `nav_links(user_id, deleted_at, is_active)`、`categories(user_id, is_private)` |
+| 骨架屏 / CLS | 卡片本就服务端直出，实测 **CLS = 0**，无需再叠骨架屏；改成动画降级以避免「首屏大面积淡入」的观感开销 |
+
+### 6. 手机端卡片操作按钮
+- `@media (hover: none) and (pointer: coarse)` 下 `.card-actions` 及 list / compact 视图对应按钮全部 `display:none !important`，手机端只走长按菜单。
+- 实测 grid / list / compact 三视图共 **235 个按钮全部不可见**，星标角标保留；长按菜单 7 项正常。
+
+### 7. 首页搜索框快捷收录增强
+- 收藏下拉支持「＋ 新建分组…」，内联输入框创建（不再用 `window.prompt`）。
+- AI 推荐到**库里没有的分类**时，只在下拉里给出建议名（`is_new=1, id=0`），**不落库**；用户点「确认收录」采纳时才创建，改选其它分组则不创建（分类数不变，已测）。
+- 拼音库异步到达后自动清缓存并重算搜索结果，避免首屏搜索一直停在「只认汉字」的降级状态。
+
+### 8. 开放 API · 自动建分类
+- `POST /api/sites.php` 新增 `category_name`（不存在则创建）与 `ai_recommend=1`（调 AI 推荐，不存在则创建）。
+- 优先级：`category_id` > `category_name` > `ai_recommend` > 未分类；返回新增 `category_id` / `category_name` / `category_source`。
+- 归属规则：用户级令牌建到当前用户名下，管理级令牌建为公共分类（`user_id = 0`）。
+- 新增 `allow_ai_fallback`（默认 true）：显式关闭且 AI 未启用时返回 `400 ai_disabled`，不再静默落到未分类。
+- `AiService` 新增 `recommendCategory()`：允许 AI 给出候选列表外的新分类名并标记 `is_new`；与只做「列表内挑选」的 `suggestCategory()` 分开，互不影响。
+
+### 9. API 文档
+- `api/index.php` 新增「快速入门」（取令牌 → 鉴权 → 第一个请求）、「方法伪装」（IIS 限制与 `_method` 三种传参位置）、「分类管理」（优先级、归属、`category_source` 含义、两个完整示例）。
+- 目录锚点与章节一一对应（12 vs 12），每个接口均含请求方式、参数说明、示例请求、示例返回。
+
+### 改动文件
+
+| 文件 | 说明 |
+| --- | --- |
+| `admin/nav_links.php` | 顶部批量栏、批量转移 / 复制归属、回收站与一键清空；补 `Services.php` 引入 |
+| `my.php` | 前台回收站（restore / purge / empty）、角标、弹窗与样式 |
+| `apply(1).php` / `assets/css/page.css` | 手机端适配 |
+| `includes/functions.php` / `logout.php` | 登录态打通与登出清理 |
+| `includes/Services.php` | `AiService::recommendCategory()` |
+| `api/sites.php` | `category_name` / `ai_recommend` / `allow_ai_fallback`，返回分类信息 |
+| `api/user_sites.php` | `quick_preview` 支持 AI 新分类建议，`quick_add` 支持 `category_name` |
+| `api/index.php` | API 文档三大新章节 |
+| `index.php` / `assets/js/nav.js` / `assets/js/search.js` / `assets/css/nav.css` | 拼音按需加载、动画降级、手机端按钮隐藏、快捷收录新建分组、拼音就绪重算 |
+| `includes/bootstrap.php` | `navMaybeGzip()` 输出压缩 |
+| `upgrade_v2.16.0.sql` / `install/install.sql` | 新增 2 个复合索引（升级脚本幂等） |
+| 版本文件 | `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` 同步至 `2.16.0`，静态资源 `?v=2.16.0`（31 处） |
+
+### 升级说明
+1. 覆盖文件后访问后台「系统工具 → 在线更新」或手动执行 `upgrade_v2.16.0.sql`。
+2. 脚本用 `information_schema.STATISTICS` 判重，重复执行无副作用；索引缺失不影响功能，只是查询慢一些。
+3. 无 `web.config` / `.htaccess` 改动；API 契约向后兼容。
+
+### 验证结果
+- `php -l` **64 个文件全部通过**；`node --check` 校验 `nav.js` / `search.js` 通过。
+- 拼音搜索（Playwright 真实浏览器）：全拼 `tianqiyubao`、简拼 `tqyb` 均命中「天气预报」，无 JS 错误。
+- gzip：响应头 `Content-Encoding: gzip`、`Vary: Accept-Encoding`，解压后内容完整。
+- 越权、伪造管理员标记、封禁账号、登出残留会话四类安全用例全部按预期拦截。
+
 ## v2.15.2（2026-11-07）
 
 > **AI 接口地址自动补全 `/chat/completions`**。此前用户在「AI 分类推荐」里填 base URL（如 `https://open.bigmodel.cn/api/paas/v4/`）时，测试连接和业务推荐都会直接 POST 这个地址，必定 404。现在会自动补全为完整端点，并在测试结果里显示**实际请求地址**，方便排查。**无数据库结构变更、无新增文件、无 `web.config` / `.htaccess` 改动。**

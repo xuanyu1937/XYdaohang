@@ -98,8 +98,8 @@ $tokenParam = rawurlencode($token);
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.15.2">
-    <link rel="stylesheet" href="assets/css/page.css">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.16.0">
+    <link rel="stylesheet" href="assets/css/page.css?v=<?php echo APP_VERSION; ?>">
 </head>
 <body data-monitor="0">
     <a class="skip-link" href="#shareMain">跳到分享列表</a>
@@ -311,6 +311,6 @@ $tokenParam = rawurlencode($token);
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.15.2" defer></script>
+<script src="assets/js/search.js?v=2.16.0" defer></script>
 </body>
 </html>

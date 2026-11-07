@@ -467,4 +467,32 @@
     .share-list {
         grid-template-columns: 1fr;
     }
+
+    /* v2.16.0 · 手机端：操作按钮改为整行等宽，避免"提交留言"和"返回首页"一大一小、
+       也避免长文案在窄屏被挤成两行。同时保证 44px 的舒适点击高度。 */
+    .page-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .page-actions .page-btn {
+        width: 100%;
+        justify-content: center;
+        min-height: 44px;
+        text-align: center;
+    }
+
+    .page-hint,
+    .page-card p,
+    .page-card li {
+        word-break: break-word;
+    }
+
+    .page-card input,
+    .page-card textarea,
+    .page-card select {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
 }

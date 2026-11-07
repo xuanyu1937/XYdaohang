@@ -7,6 +7,11 @@
  *   GET    ?category=&user_id=&q=&page=&size=   列表（需 read 或 write）
  *   GET    ?id=                                 单条详情
  *   POST   创建                                 需 write
+ *          可选分类参数（优先级从左到右，命中即止）：
+ *            category_id     已有分类 id
+ *            category_name   分类名称，不存在自动创建（用户级令牌归属自己 / 管理级为公共）
+ *            ai_recommend=1  交给 AI 按名称+描述推荐，推荐分类不存在时自动创建
+ *          返回体带 category_id / category_name / category_source 便于核对。
  *   PUT    更新（body: id + 字段）               需 write
  *   DELETE ?id= （或 body: id）                  需 write
  *
@@ -276,8 +281,58 @@ function navApiVisibleCategories($db, $tokenUserId, $isAdminScope)
     return $categories;
 }
 
-function navApiNormalizeUrl($url)
+/**
+ * v2.16.0 · 截断字符串（按字符而不是字节，避免中文被腰斩）。
+ */
+function navApiTrim($value, $limit)
 {
+    $value = trim((string) $value);
+
+    if (function_exists('mb_substr')) {
+        return mb_substr($value, 0, (int) $limit, 'UTF-8');
+    }
+
+    return substr($value, 0, (int) $limit);
+}
+
+/**
+ * v2.16.0 · 宽松布尔值判断，兼容 JSON true / 1 / "1" / "true"。
+ * 注意 "0" / "false" / 空字符串都视为 false。
+ */
+function navApiTruthy($value)
+{
+    if (is_bool($value)) {
+        return $value;
+    }
+
+    if (is_int($value) || is_float($value)) {
+        return (int) $value === 1;
+    }
+
+    return in_array(strtolower(trim((string) $value)), ['1', 'true', 'yes', 'on'], true);
+}
+
+/**
+ * v2.16.0 · 取分类名称，供创建接口回传，方便调用方确认最终落到了哪个分类。
+ */
+function navApiCategoryName($db, $categoryId)
+{
+    if ((int) $categoryId <= 0) {
+        return '';
+    }
+
+    try {
+        $stmt = $db->prepare('SELECT name FROM categories WHERE id = ? LIMIT 1');
+        $stmt->execute([(int) $categoryId]);
+        $row = $stmt->fetch();
+
+        return $row ? (string) $row['name'] : '';
+    } catch (Throwable $error) {
+        return '';
+    }
+}
+
+function navApiNormalizeUrl($url){
     $url = trim((string) $url);
 
     if ($url === '' || strlen($url) > 500) {
@@ -548,6 +603,8 @@ switch ($method) {
         }
 
         $categoryId = (int) ($input['category_id'] ?? 0);
+        $categoryNameOut = '';
+        $categorySource = 'none';
 
         if ($categoryId > 0) {
             $check = $db->prepare('SELECT id FROM categories WHERE id = ? LIMIT 1');
@@ -560,12 +617,64 @@ switch ($method) {
             if (!navApiCategoryAllowed($db, $categoryId, $tokenUserId, $isAdminScope)) {
                 navApiFail($functions, '无权使用该分类，请改用自己名下的分类', 403, 'forbidden');
             }
+
+            $categorySource = 'category_id';
         } else {
-            $engine = new CategoryEngine($functions);
-            // v2.14.0：用户级令牌补建的分组归属令牌对应用户；管理级令牌仍建公共分组
-            $engine->setUserId($isAdminScope ? 0 : $tokenUserId);
-            $categoryId = $engine->ensure('未分类', 'bi-collection');
+            // 分类归属：用户级令牌归属自己；管理级令牌归属公共（user_id = 0）
+            $categoryOwner = $isAdminScope ? 0 : $tokenUserId;
+
+            // v2.16.0 ② · category_name：按名称指定分类，不存在则自动创建
+            $categoryNameInput = navApiTrim((string) ($input['category_name'] ?? ''), 50);
+
+            if ($categoryNameInput !== '') {
+                $engine = new CategoryEngine($functions);
+                $engine->setUserId($categoryOwner);
+                $categoryId = $engine->ensure($categoryNameInput, 'bi-collection');
+                $categorySource = 'category_name';
+            }
+
+            // v2.16.0 ③ · ai_recommend：让 AI 根据名称 + 描述推荐分类
+            if ($categoryId <= 0 && navApiTruthy($input['ai_recommend'] ?? null)) {
+                $ai = new AiService($functions);
+
+                if (!$ai->enabled()) {
+                    // 明确告诉调用方「没做成」的原因，而不是静默落到未分类
+                    if (!navApiTruthy($input['allow_ai_fallback'] ?? true)) {
+                        navApiFail($functions, 'AI 分类推荐未启用（后台需开启 AI 并配置密钥）', 400, 'ai_disabled');
+                    }
+                } else {
+                    $engine = new CategoryEngine($functions);
+                    $engine->setUserId($categoryOwner);
+                    $visibleNames = [];
+
+                    foreach ($engine->all() as $cat) {
+                        $visibleNames[] = (string) $cat['name'];
+                    }
+
+                    $result = $ai->recommendCategory($name, $description, $visibleNames);
+
+                    if (!empty($result['ok']) && !empty($result['category'])) {
+                        $categoryId = $engine->ensure(navApiTrim((string) $result['category'], 50), 'bi-collection');
+                        $categorySource = 'ai_recommend';
+                    } else {
+                        $categorySource = 'ai_no_match';
+                    }
+                }
+            }
+
+            if ($categoryId <= 0) {
+                $engine = new CategoryEngine($functions);
+                // v2.14.0：用户级令牌补建的分组归属令牌对应用户；管理级令牌仍建公共分组
+                $engine->setUserId($categoryOwner);
+                $categoryId = $engine->ensure('未分类', 'bi-collection');
+
+                if ($categorySource === 'none') {
+                    $categorySource = 'default';
+                }
+            }
         }
+
+        $categoryNameOut = navApiCategoryName($db, $categoryId);
 
         // 管理级令牌默认写入公共导航；用户级令牌写入自己名下
         $owner = $isAdminScope ? (int) ($input['user_id'] ?? 0) : $tokenUserId;
@@ -604,6 +713,10 @@ switch ($method) {
             'ok' => true,
             'message' => '创建成功',
             'id' => (int) $db->lastInsertId(),
+            // v2.16.0：回传最终使用的分类，调用方无需再查一次
+            'category_id' => $categoryId,
+            'category_name' => $categoryNameOut,
+            'category_source' => $categorySource,
         ], 201);
         break;
 

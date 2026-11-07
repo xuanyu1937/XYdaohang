@@ -530,8 +530,13 @@
         });
     }
 
-    var pinyinSupported = typeof window.pinyinPro !== 'undefined' &&
-        typeof window.pinyinPro.pinyin === 'function';
+    // v2.16.0 · 拼音库改为按需加载后，这里不能再在脚本解析时一次性定值，
+    // 否则 pinyin-pro 晚于 nav.js 到达时永远为 false，拼音搜索直接失效。
+    function pinyinSupportedNow() {
+        return typeof window.pinyinPro !== 'undefined' &&
+            typeof window.pinyinPro.pinyin === 'function';
+    }
+
 
     function cardPinyin(card) {
         if (card.__pinyinCache !== undefined) {
@@ -540,7 +545,7 @@
 
         var cache = '';
 
-        if (pinyinSupported) {
+        if (pinyinSupportedNow()) {
             var source = (card.getAttribute('data-name') || '') + ' ' +
                 (card.getAttribute('data-title') || '');
 
@@ -1234,6 +1239,16 @@
     updateSearchClear();
     setCategory('all', false);
     applyFilters();
+
+    /* v2.16.0 · 拼音库是异步按需加载的：它到达时如果用户已经在搜，
+       重算一次过滤，否则首屏结果会一直停在「只认汉字」的降级状态 */
+    window.addEventListener('xy:pinyin-ready', function () {
+        cards.forEach(function (card) {
+            delete card.__pinyinCache;
+        });
+
+        applyFilters();
+    });
 
     /* ----------------------------------------------------------------------
        公告滚动：按文本长度调整时长，避免长文本一闪而过
@@ -2610,7 +2625,7 @@
            ------------------------------------------------------------------ */
 
         // 收录框的当前状态：preview 成功后才有 logo / categories
-        var quickAddState = { logo: '', previewed: false, busy: false };
+        var quickAddState = { logo: '', previewed: false, busy: false, newCategoryName: '' };
 
         window.XYQuickAdd = {
             open: function (url, options) {
@@ -2867,19 +2882,38 @@
                 var list = Array.isArray(data.categories) ? data.categories : [];
 
                 list.forEach(function (item) {
+                    // v2.16.0：AI 推荐但尚不存在的分组，先以「新建」态占位，确认收录时才真正创建
+                    if (item.is_new || String(item.id) === '0') {
+                        var newOption = document.createElement('option');
+                        newOption.value = '__new__:' + item.name;
+                        newOption.textContent = '＋ 新建分组「' + item.name + '」（AI 推荐）';
+                        newOption.setAttribute('data-new-name', item.name);
+                        category.appendChild(newOption);
+                        return;
+                    }
+
                     var option = document.createElement('option');
                     option.value = String(item.id);
                     option.textContent = (item.is_private ? '🔒 ' : '') + item.name;
                     category.appendChild(option);
                 });
 
+                // 末尾固定提供「新建分组」入口
+                var createOption = document.createElement('option');
+                createOption.value = '__create__';
+                createOption.textContent = '＋ 新建分组…';
+                category.appendChild(createOption);
+
                 if (data.suggested_category_id) {
                     category.value = String(data.suggested_category_id);
+                } else if (data.suggested_category_name) {
+                    category.value = '__new__:' + data.suggested_category_name;
                 }
             }
 
             // 记下推荐值，供分组变化时判断「还是推荐的那个吗」
             quickAddState.suggestedId = data.suggested_category_id ? String(data.suggested_category_id) : '';
+            quickAddState.suggestedName = data.suggested_category_name || '';
             quickAddState.suggestReason = data.suggest_reason || 'none';
             quickAddState.fetchOk = data.fetch_ok !== false;
 
@@ -2914,7 +2948,44 @@
             var pickedName = '';
 
             if (category && category.selectedIndex >= 0) {
-                pickedName = category.options[category.selectedIndex].textContent.replace(/^🔒\s*/, '').trim();
+                // 去掉 🔒 与「＋ 新建分组…」/「＋ 新建分组「XX」（AI 推荐）」等前缀，只留纯分组名
+                pickedName = category.options[category.selectedIndex].textContent
+                    .replace(/^🔒\s*/, '')
+                    .replace(/^＋\s*(新建分组[「]?)/, '')
+                    .replace(/[」]$/, '')
+                    .replace(/（AI 推荐）$/, '')
+                    .trim();
+            }
+
+            var choosingNew = category && (
+                category.value === '__create__'
+                || String(category.value).indexOf('__new__:') === 0
+            );
+
+            // AI 推荐了一个本地还不存在的分组：明确告诉用户「确认后会新建」，
+            // 并强调改选已有分组就不会新建，避免用户误以为会凭空多出分类。
+            if (!choosingNew && quickAddState.suggestReason === 'ai_new' && pickedName) {
+                hint.textContent = 'AI 推荐新建分组「' + pickedName + '」，确认收录后自动创建；改选其他分组则不新建';
+                hint.hidden = false;
+
+                if (status) {
+                    status.textContent = 'AI 推荐分组';
+                    status.className = 'qa-status is-ok';
+                }
+
+                return;
+            }
+
+            if (choosingNew) {
+                hint.textContent = '将新建分组并把该网址放进去';
+                hint.hidden = false;
+
+                if (status) {
+                    status.textContent = '';
+                    status.className = 'qa-status';
+                }
+
+                return;
             }
 
             // 抓取失败时优先说清原因 —— 用户看到的名称是域名，
@@ -2933,18 +3004,26 @@
                 return;
             }
 
-            // 是否仍是自动推荐的那个分组
-            var stillSuggested = !!quickAddState.suggestedId
+            // 是否仍是自动推荐的那个分组（关键词匹配，或 AI 推荐——含待新建的同名分组）
+            var expectValue = quickAddState.suggestedReason === 'ai_new'
+                ? '__new__:' + (quickAddState.suggestedName || '')
+                : String(quickAddState.suggestedId || '');
+
+            var stillSuggested = !!expectValue
                 && category
-                && category.value === quickAddState.suggestedId
-                && quickAddState.suggestReason === 'keyword';
+                && category.value === expectValue
+                && (quickAddState.suggestReason === 'keyword'
+                    || quickAddState.suggestReason === 'ai'
+                    || quickAddState.suggestReason === 'ai_new');
 
             if (stillSuggested && pickedName) {
-                hint.textContent = '按网站信息自动归入「' + pickedName + '」，可手动改';
+                var byAi = quickAddState.suggestReason === 'ai' || quickAddState.suggestReason === 'ai_new';
+                hint.textContent = (byAi ? 'AI 推荐归入「' : '按网站信息自动归入「')
+                    + pickedName + '」，可手动改';
                 hint.hidden = false;
 
                 if (status) {
-                    status.textContent = '已自动匹配分组';
+                    status.textContent = byAi ? 'AI 推荐分组' : '已自动匹配分组';
                     status.className = 'qa-status is-ok';
                 }
 
@@ -3006,13 +3085,40 @@
                 msg.textContent = '';
             }
 
+            // v2.16.0：解析分组选择
+            //   __create__         用户点了「新建分组…」→ 询问名称
+            //   __new__:名称       AI 推荐的新分组 → 直接按名称创建（仅在这种情况下才建）
+            //   数字 id             已有分组，不创建任何分类
+            var chosenValue = category ? category.value : '';
+            var categoryPayload = { category_id: 0, category_name: '' };
+
+            if (chosenValue.indexOf('__new__:') === 0) {
+                categoryPayload.category_name = chosenValue.slice('__new__:'.length);
+            } else if (chosenValue === '__create__') {
+                // 内联输入框里填的名称（提交前已由 quickAddNewCatName 同步到这个变量）
+                var inlineName = quickAddState.newCategoryName || '';
+
+                if (inlineName === '') {
+                    setQuickAddBusy(false, '确认收录');
+                    if (msg) { msg.textContent = '请填写新分组名称，或改选已有分组'; }
+                    var newCatInput = quickAddEl('quickAddNewCatName');
+                    if (newCatInput) { newCatInput.focus(); }
+                    return;
+                }
+
+                categoryPayload.category_name = inlineName;
+            } else {
+                categoryPayload.category_id = chosenValue || 0;
+            }
+
             postForm({
                 action: 'quick_add',
                 url: url,
                 name: name,
                 description: descInput ? descInput.value.trim() : '',
                 logo: quickAddState.logo,
-                category_id: category ? category.value : 0
+                category_id: categoryPayload.category_id,
+                category_name: categoryPayload.category_name
             }).then(function (res) {
                 if (!res || !res.ok) {
                     setQuickAddBusy(false, '确认收录');
@@ -3439,7 +3545,47 @@
         bind('quickAddClose', 'click', function () { closeDlg(quickAddDialog); });
         bind('quickAddCancel', 'click', function () { closeDlg(quickAddDialog); });
         bind('quickAddSubmit', 'click', doQuickAdd);
-        bind('quickAddCategory', 'change', syncQuickAddHint);
+        bind('quickAddCategory', 'change', function () {
+            // v2.16.0：选「新建分组…」时展开内联输入框；选别的就收起并清空
+            var category = quickAddEl('quickAddCategory');
+            var box = quickAddEl('quickAddNewCat');
+            var input = quickAddEl('quickAddNewCatName');
+            var isCreate = category && category.value === '__create__';
+
+            if (box) { box.hidden = !isCreate; }
+
+            if (isCreate && input) {
+                quickAddState.newCategoryName = input.value.trim();
+                input.focus();
+            } else {
+                quickAddState.newCategoryName = '';
+                if (input) { input.value = ''; }
+            }
+
+            syncQuickAddHint();
+        });
+        bind('quickAddNewCatName', 'input', function () {
+            quickAddState.newCategoryName = this.value.trim();
+        });
+        bind('quickAddNewCatCancel', 'click', function () {
+            var category = quickAddEl('quickAddCategory');
+            var box = quickAddEl('quickAddNewCat');
+            var input = quickAddEl('quickAddNewCatName');
+
+            quickAddState.newCategoryName = '';
+            if (input) { input.value = ''; }
+            if (box) { box.hidden = true; }
+            // 退回 AI 推荐的分组（若有），否则退回第一个已有分组
+            if (category) {
+                if (quickAddState.suggestedId) {
+                    category.value = String(quickAddState.suggestedId);
+                } else if (category.options.length > 1) {
+                    category.selectedIndex = 0;
+                }
+                category.focus();
+            }
+            syncQuickAddHint();
+        });
         bind('quickAddUrl', 'keydown', function (event) {
             if (event.key === 'Enter') {
                 event.preventDefault();

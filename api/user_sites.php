@@ -543,6 +543,45 @@ switch ($action) {
         // 推荐分组：拿标题 + 描述 + 域名去模糊匹配
         $names = array_column($categories, 'name');
         $suggestedName = $engine->smartMatch($name . ' ' . $description . ' ' . $hostLabel, $names);
+        $suggestSource = 'keyword';
+
+        // v2.16.0 · AI 推荐分组
+        // 关键词没命中时才问 AI，避免多一次付费调用；AI 推荐的分类若尚不存在，
+        // 这里只把名字带回前端（suggested_category_name），由「确认收录」时再创建。
+        // 这样用户改选了别的分组就不会凭空多出一个空分类。
+        $aiSuggestion = null;
+
+        if ($suggestedName === null) {
+            try {
+                $aiService = new AiService($functions);
+
+                if ($aiService->enabled() && $names) {
+                    // v2.16.0：允许 AI 建议一个列表里没有的新分类（is_new），
+                    // 由「确认收录」时再创建，用户改选已有分组则不会新建。
+                    $aiResult = $aiService->recommendCategory($name, $description, $names);
+
+                    if (!empty($aiResult['ok']) && !empty($aiResult['category'])) {
+                        $suggestedName = (string) $aiResult['category'];
+                        $suggestSource = 'ai';
+                        $aiSuggestion = $suggestedName;
+
+                        // AI 可能给出一个列表里没有的新名称，补进候选供前端展示
+                        if (!in_array($suggestedName, $names, true)) {
+                            $categories[] = [
+                                'id' => 0,
+                                'name' => $suggestedName,
+                                'is_private' => 0,
+                                'link_count' => 0,
+                                'is_new' => 1,
+                            ];
+                        }
+                    }
+                }
+            } catch (Throwable $e) {
+                // AI 不可用时静默回落，收录流程不能因此中断
+                $aiSuggestion = null;
+            }
+        }
 
         $suggestedId = 0;
         $suggestReason = 'none';
@@ -551,14 +590,19 @@ switch ($action) {
             foreach ($categories as $category) {
                 if ($category['name'] === $suggestedName) {
                     $suggestedId = $category['id'];
-                    $suggestReason = 'keyword';
+                    $suggestReason = $suggestSource;
                     break;
                 }
+            }
+
+            // AI 推荐了本地尚不存在的分类：id 记 0，前端按名称显示「新建」态
+            if ($suggestedId === 0 && $suggestSource === 'ai') {
+                $suggestReason = 'ai_new';
             }
         }
 
         // 没匹配上就退回「未分类」，再退回第一个分组
-        if ($suggestedId === 0) {
+        if ($suggestedId === 0 && $suggestReason !== 'ai_new') {
             foreach ($categories as $category) {
                 if ($category['name'] === '未分类') {
                     $suggestedId = $category['id'];
@@ -568,7 +612,7 @@ switch ($action) {
             }
         }
 
-        if ($suggestedId === 0 && $categories) {
+        if ($suggestedId === 0 && $suggestReason !== 'ai_new' && $categories) {
             $suggestedId = $categories[0]['id'];
             $suggestReason = 'fallback';
         }
@@ -585,6 +629,8 @@ switch ($action) {
             'fetch_ok' => !empty($meta['ok']),
             'categories' => $categories,
             'suggested_category_id' => $suggestedId,
+            // v2.16.0：AI 推荐的新分组名（不存在时才非空），供「确认收录」时创建
+            'suggested_category_name' => ($suggestReason === 'ai_new') ? $suggestedName : '',
             'suggest_reason' => $suggestReason,
         ]);
         break;
@@ -663,6 +709,20 @@ switch ($action) {
                 if ($pubStmt->fetch()) {
                     $categoryId = $requested;
                 }
+            }
+        }
+
+        if ($categoryId <= 0) {
+            // v2.16.0 · 按名称建分类：
+            // 前端传入 category_name 表示用户「主动新建」或「采纳了 AI 推荐的新分组」。
+            // 只有这两种情况才会真正建分类，用户改选已有分组时 category_name 为空，
+            // 因此不会凭空多出空分类。
+            $newCategoryName = userSiteTrim($_POST['category_name'] ?? '', 30);
+
+            if ($newCategoryName !== '') {
+                $engine = new CategoryEngine($functions);
+                $engine->setUserId($userId);
+                $categoryId = $engine->ensure($newCategoryName, 'bi-collection');
             }
         }
 

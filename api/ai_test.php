@@ -124,7 +124,7 @@ $body = json_encode([
 
 $ai = new AiService($functions);
 
-// v2.15.2：用户允许只填 base URL（如 https://api.openai.com/v1/），
+// v2.16.0：用户允许只填 base URL（如 https://api.openai.com/v1/），
 // 这里统一补全为完整的 .../chat/completions 再请求，避免直接 POST base URL 得到 404。
 // 返回体里带 request_url，方便用户在测试结果里核对实际请求地址。
 $requestUrl = $ai->chatEndpoint($url);

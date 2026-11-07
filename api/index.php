@@ -9,7 +9,7 @@
  * 本页只输出静态说明，不读取也不展示任何令牌。
  */
 
-$version = '2.15.2';
+$version = '2.16.0';
 $versionFile = __DIR__ . '/../VERSION';
 
 if (is_readable($versionFile)) {
@@ -271,10 +271,12 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
 <div class="layout">
     <nav class="toc" aria-label="页内目录">
         <p class="toc-title">目录</p>
-        <a href="#start" class="is-active">快速开始</a>
+        <a href="#start" class="is-active">快速入门</a>
         <a href="#auth">鉴权方式</a>
+        <a href="#method">方法伪装</a>
         <a href="#endpoints">端点一览</a>
         <a href="#params">请求参数</a>
+        <a href="#category">分类管理</a>
         <a href="#examples">调用示例</a>
         <a href="#response">响应格式</a>
         <a href="#errors">错误码</a>
@@ -301,25 +303,47 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
         </div>
 
         <section id="start">
-            <h2>快速开始</h2>
-            <p class="sec-desc">三步发出第一个请求。</p>
+            <h2>快速入门</h2>
+            <p class="sec-desc">三步拿到第一条数据：获取令牌 → 带上鉴权 → 发出请求。</p>
             <div class="steps">
                 <div class="step">
                     <div class="step-num">1</div>
-                    <h4>生成令牌</h4>
-                    <p>登录后台 →<strong>系统工具 → API 令牌管理</strong>创建令牌，选择 <code>read</code>（只读）或 <code>write</code>（可写）。入口是 <code>admin/tools.php?tab=api</code>。</p>
+                    <h4>获取令牌</h4>
+                    <p>两种入口任选：<strong>后台 → 系统工具 → API 令牌管理</strong>（<code>admin/tools.php?tab=api</code>），或<strong>前台登录后「我的导航 → API 令牌」</strong>。选择 <code>read</code>（只读）或 <code>write</code>（可写）。<br>后台生成的令牌是<strong>管理级</strong>（可读写全部条目）；前台生成的是<strong>用户级</strong>（只能读写你自己名下的条目）。</p>
                 </div>
                 <div class="step">
                     <div class="step-num">2</div>
-                    <h4>带上令牌请求</h4>
-                    <p>在请求头加 <code>Authorization: Bearer &lt;token&gt;</code>。令牌只在创建时完整显示一次，请立即保存。</p>
+                    <h4>带上鉴权</h4>
+                    <p>请求头加 <code>Authorization: Bearer &lt;token&gt;</code>。令牌只在创建时完整显示一次，丢失只能重置，请立即保存。</p>
                 </div>
                 <div class="step">
                     <div class="step-num">3</div>
-                    <h4>读取 JSON</h4>
-                    <p>成功返回 <code>{"ok":true,…}</code>；失败返回 <code>{"ok":false,…}</code> 及对应状态码，<code>error</code> 是机器码、<code>message</code> 是中文说明。</p>
+                    <h4>发出第一个请求</h4>
+                    <p>先用 GET 列表验证连通性，看到 <code>"ok": true</code> 即说明令牌有效。</p>
                 </div>
             </div>
+
+            <div class="codebox">
+                <button class="copy-btn" type="button" data-copy="#code-first">复制</button>
+<pre id="code-first"><span class="c-com"># 第一个请求：读取 1 条导航，验证令牌是否可用</span>
+<span class="c-cmd">curl</span> <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php?size=1"</span> \
+  -H <span class="c-str">"Authorization: Bearer YOUR_TOKEN"</span></pre>
+            </div>
+
+            <div class="codebox">
+                <button class="copy-btn" type="button" data-copy="#code-first-resp">复制</button>
+<pre id="code-first-resp">{
+  <span class="c-key">"ok"</span>: true,
+  <span class="c-key">"page"</span>: 1,
+  <span class="c-key">"size"</span>: 1,
+  <span class="c-key">"total"</span>: 128,
+  <span class="c-key">"pages"</span>: 128,
+  <span class="c-key">"items"</span>: [ { <span class="c-key">"id"</span>: 42, <span class="c-key">"name"</span>: <span class="c-str">"智谱开放平台"</span>, <span class="c-key">"category_id"</span>: 3, <span class="c-key">"category_name"</span>: <span class="c-str">"AI 工具"</span> } ],
+  <span class="c-key">"categories"</span>: [ { <span class="c-key">"id"</span>: 3, <span class="c-key">"name"</span>: <span class="c-str">"AI 工具"</span>, <span class="c-key">"is_private"</span>: 0 } ]
+}</pre>
+            </div>
+
+            <div class="callout"><strong>IIS 主机必读。</strong>IIS 默认会拦截原生 <code>PUT</code> / <code>DELETE</code>（返回 405），所以<strong>更新和删除请统一用 <code>POST</code> + <code>_method</code> 伪装</strong>，见<a href="#method">方法伪装</a>。</div>
         </section>
 
         <section id="auth">
@@ -350,18 +374,61 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
             <div class="callout"><strong>令牌有有效期。</strong>创建时可设置过期时间，过期后返回 <code>401 token_expired</code>，到后台重新生成即可。</div>
         </section>
 
+        <section id="method">
+            <h2>方法伪装（IIS 兼容）</h2>
+            <p class="sec-desc">由于服务器 IIS 环境限制，<strong>更新和删除统一用 <code>POST</code> + <code>_method</code> 调用，不要使用原生 <code>PUT</code> / <code>DELETE</code></strong>——它们在 IIS 上会被直接拦截成 405，请求根本到不了 PHP。</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>想要的动作</th><th>推荐写法</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td>新建</td><td><code>POST</code> + body</td><td>本来就是 POST，无需伪装</td></tr>
+                        <tr><td>更新</td><td><code>POST</code> + <code>"_method":"PUT"</code></td><td>等价于原生 PUT；<code>PATCH</code> 同理</td></tr>
+                        <tr><td>删除</td><td><code>POST</code> + <code>"_method":"DELETE"</code></td><td>等价于原生 DELETE（进回收站）</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="sec-desc"><code>_method</code> 可以放在三个位置，任选其一（同时存在时按 JSON → 表单 → URL 的顺序取第一个）：</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>位置</th><th>写法</th></tr></thead>
+                    <tbody>
+                        <tr><td>JSON 请求体</td><td><code>{"_method":"DELETE","id":42}</code></td></tr>
+                        <tr><td>表单字段</td><td><code>_method=DELETE&amp;id=42</code></td></tr>
+                        <tr><td>URL 查询参数</td><td><code>sites.php?_method=DELETE&amp;id=42</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="codebox">
+                <button class="copy-btn" type="button" data-copy="#code-method">复制</button>
+<pre id="code-method"><span class="c-com"># 更新：POST + _method=PUT</span>
+<span class="c-cmd">curl</span> -X POST <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php"</span> \
+  -H <span class="c-str">"Authorization: Bearer YOUR_TOKEN"</span> \
+  -H <span class="c-str">"Content-Type: application/json"</span> \
+  -d <span class="c-str">'{"_method":"PUT","id":42,"name":"新名称"}'</span>
+
+<span class="c-com"># 删除：POST + _method=DELETE</span>
+<span class="c-cmd">curl</span> -X POST <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php"</span> \
+  -H <span class="c-str">"Authorization: Bearer YOUR_TOKEN"</span> \
+  -H <span class="c-str">"Content-Type: application/json"</span> \
+  -d <span class="c-str">'{"_method":"DELETE","id":42}'</span></pre>
+            </div>
+            <div class="callout"><strong>兼容性说明。</strong>原生 <code>PUT</code> / <code>PATCH</code> / <code>DELETE</code> 仍然支持（Apache、Nginx、PHP 内置服务器下可正常使用），<code>_method</code> 只在原始方法为 <code>POST</code> 且取值为 PUT / PATCH / DELETE 时生效；其他取值一律忽略，不会改变 POST 本身的语义。</div>
+        </section>
+
         <section id="endpoints">
             <h2>端点一览</h2>
-            <p class="sec-desc">所有操作都指向 <code>sites.php</code>，用 HTTP 方法区分动作。安装了重写模块时也可用简写 <code>/api/sites</code>。</p>
+            <p class="sec-desc">所有操作都指向 <code>sites.php</code>，用 HTTP 方法区分动作。安装了重写模块时也可用简写 <code>/api/sites</code>。<strong>IIS 环境请把 PUT / DELETE 换成 <code>POST + _method</code></strong>。</p>
             <div class="table-wrap">
                 <table>
                     <thead><tr><th>方法</th><th>路径</th><th>权限</th><th>说明</th></tr></thead>
                     <tbody>
                         <tr><td><span class="method m-get">GET</span></td><td><code>sites.php</code></td><td>read / write</td><td>分页列表，支持分类、关键词、用户过滤</td></tr>
                         <tr><td><span class="method m-get">GET</span></td><td><code>sites.php?id=1</code></td><td>read / write</td><td>单条详情</td></tr>
-                        <tr><td><span class="method m-post">POST</span></td><td><code>sites.php</code></td><td>write</td><td>新建条目，成功返回 201</td></tr>
-                        <tr><td><span class="method m-put">PUT</span></td><td><code>sites.php</code></td><td>write</td><td>按 <code>id</code> 更新字段（PATCH 同样可用）</td></tr>
-                        <tr><td><span class="method m-del">DELETE</span></td><td><code>sites.php?id=1</code></td><td>write</td><td>移入回收站，可在后台恢复</td></tr>
+                        <tr><td><span class="method m-post">POST</span></td><td><code>sites.php</code></td><td>write</td><td>新建条目，支持 <code>category_name</code> / <code>ai_recommend</code> 自动建分类，成功返回 201</td></tr>
+                        <tr><td><span class="method m-post">POST</span></td><td><code>sites.php</code> + <code>_method=PUT</code></td><td>write</td><td>按 <code>id</code> 更新字段（IIS 下推荐写法，PATCH 同理）</td></tr>
+                        <tr><td><span class="method m-post">POST</span></td><td><code>sites.php</code> + <code>_method=DELETE</code></td><td>write</td><td>移入回收站，可在后台恢复（IIS 下推荐写法）</td></tr>
+                        <tr><td><span class="method m-put">PUT</span></td><td><code>sites.php</code></td><td>write</td><td>原生更新，IIS 上会被拦截，非 IIS 可用</td></tr>
+                        <tr><td><span class="method m-del">DELETE</span></td><td><code>sites.php?id=1</code></td><td>write</td><td>原生删除，IIS 上会被拦截，非 IIS 可用</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -395,6 +462,9 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
                         <tr><td><code>description</code></td><td>string</td><td>介绍，最长 200 字</td></tr>
                         <tr><td><code>logo</code></td><td>string</td><td>图标地址，最长 500 字</td></tr>
                         <tr><td><code>category_id</code></td><td>int</td><td>分类 ID；传 0 或省略时归入「未分类」。<strong>用户级令牌只能传自己名下的分类</strong>，否则 403</td></tr>
+                        <tr><td><code>category_name</code></td><td>string</td><td><strong>v2.16.0 新增</strong>：按名称指定分类，不存在则自动创建（最长 50 字）。优先级低于 <code>category_id</code>，见<a href="#category">分类管理与自动创建</a></td></tr>
+                        <tr><td><code>ai_recommend</code></td><td>bool/int</td><td><strong>v2.16.0 新增</strong>：设为 1 / true 时由 AI 根据名称+描述推荐分类，推荐分类不存在则自动创建</td></tr>
+                        <tr><td><code>allow_ai_fallback</code></td><td>bool</td><td><strong>v2.16.0 新增</strong>：默认 true（AI 不可用时回落到未分类）；传 false 则 AI 未启用时返回 <code>400 ai_disabled</code></td></tr>
                         <tr><td><code>is_active</code></td><td>bool</td><td>是否启用，默认 true</td></tr>
                         <tr><td><code>sort_order</code></td><td>int</td><td>排序值（仅更新时有效）</td></tr>
                         <tr><td><code>user_id</code></td><td>int</td><td>归属用户，<strong>仅管理级令牌</strong>创建时可指定，且用户必须存在（否则 400）</td></tr>
@@ -403,6 +473,101 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
                 </table>
             </div>
             <div class="callout">请求体支持 <code>application/json</code>、<code>application/x-www-form-urlencoded</code> 两种；PUT / DELETE 请放 body，不要只放在查询串里。</div>
+        </section>
+
+        <section id="category">
+            <h2>分类管理与自动创建</h2>
+            <p class="sec-desc">新建条目时可以按 ID、按名称或交给 AI 决定分类，命中规则按优先级从左到右，<strong>命中第一个即停止</strong>。</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>优先级</th><th>参数</th><th>类型</th><th>行为</th></tr></thead>
+                    <tbody>
+                        <tr><td>1</td><td><code>category_id</code></td><td>int</td><td>使用已有分类；不存在返回 400，用户级令牌用了别人的分类返回 403</td></tr>
+                        <tr><td>2</td><td><code>category_name</code></td><td>string</td><td>按名称指定，<strong>不存在则自动创建</strong>；同名分类直接复用，最长 50 字</td></tr>
+                        <tr><td>3</td><td><code>ai_recommend</code></td><td>bool/int</td><td>设为 <code>1</code> / <code>true</code> 时，把名称+描述交给 AI 推荐；<strong>推荐的分类不存在则自动创建</strong></td></tr>
+                        <tr><td>4</td><td>（都不传）</td><td>—</td><td>归入「未分类」</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>自动创建的分类归属谁？</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>令牌类型</th><th>自动创建的分类归属</th></tr></thead>
+                    <tbody>
+                        <tr><td>用户级令牌（<code>user_id &gt; 0</code>）</td><td>归属该令牌对应的用户，只有他能看到和管理</td></tr>
+                        <tr><td>管理级令牌（<code>user_id = 0</code>）</td><td>归属<strong>公共分类</strong>（<code>user_id = 0</code>），全站可见</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>响应里如何知道最终用了哪个分类</h3>
+            <p class="sec-desc">新建成功（201）返回 <code>category_id</code>、<code>category_name</code> 与 <code>category_source</code>，调用方无需再查一次。</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th><code>category_source</code></th><th>含义</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>category_id</code></td><td>使用了调用方指定的分类 ID</td></tr>
+                        <tr><td><code>category_name</code></td><td>按名称命中已有分类，或按名称新建</td></tr>
+                        <tr><td><code>ai_recommend</code></td><td>AI 推荐成功，分类已存在或按推荐名新建</td></tr>
+                        <tr><td><code>ai_no_match</code></td><td>AI 未能给出可用分类，已回落到「未分类」</td></tr>
+                        <tr><td><code>default</code></td><td>未指定分类，默认归入「未分类」</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>示例 A：按名称指定分类（不存在自动创建）</h3>
+            <div class="codebox">
+                <button class="copy-btn" type="button" data-copy="#code-cat-name">复制</button>
+<pre id="code-cat-name"><span class="c-cmd">curl</span> -X POST <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php"</span> \
+  -H <span class="c-str">"Authorization: Bearer YOUR_TOKEN"</span> \
+  -H <span class="c-str">"Content-Type: application/json"</span> \
+  -d <span class="c-str">'{"name":"Midjourney","url":"https://midjourney.com","category_name":"AI 绘画"}'</span></pre>
+            </div>
+            <div class="codebox">
+                <button class="copy-btn" type="button" data-copy="#code-cat-name-resp">复制</button>
+<pre id="code-cat-name-resp">{
+  <span class="c-key">"ok"</span>: true,
+  <span class="c-key">"message"</span>: <span class="c-str">"创建成功"</span>,
+  <span class="c-key">"id"</span>: 43,
+  <span class="c-key">"category_id"</span>: 15,
+  <span class="c-key">"category_name"</span>: <span class="c-str">"AI 绘画"</span>,
+  <span class="c-key">"category_source"</span>: <span class="c-str">"category_name"</span>
+}</pre>
+            </div>
+
+            <h3>示例 B：AI 自动推荐分类</h3>
+            <p class="sec-desc">AI 从当前令牌可见的分类里挑选；都不合适时会建议一个新分类名并自动创建。前提是后台已启用 AI 并配置了模型与密钥。</p>
+            <div class="codebox">
+                <button class="copy-btn" type="button" data-copy="#code-cat-ai">复制</button>
+<pre id="code-cat-ai"><span class="c-cmd">curl</span> -X POST <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php"</span> \
+  -H <span class="c-str">"Authorization: Bearer YOUR_TOKEN"</span> \
+  -H <span class="c-str">"Content-Type: application/json"</span> \
+  -d <span class="c-str">'{"name":"Figma","url":"https://figma.com","description":"在线协作设计工具","ai_recommend":1}'</span></pre>
+            </div>
+            <div class="codebox">
+                <button class="copy-btn" type="button" data-copy="#code-cat-ai-resp">复制</button>
+<pre id="code-cat-ai-resp">{
+  <span class="c-key">"ok"</span>: true,
+  <span class="c-key">"message"</span>: <span class="c-str">"创建成功"</span>,
+  <span class="c-key">"id"</span>: 44,
+  <span class="c-key">"category_id"</span>: 16,
+  <span class="c-key">"category_name"</span>: <span class="c-str">"设计工具"</span>,
+  <span class="c-key">"category_source"</span>: <span class="c-str">"ai_recommend"</span>
+}</pre>
+            </div>
+
+            <h3>AI 不可用时怎么办</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>场景</th><th>默认行为（<code>allow_ai_fallback</code> 未传）</th><th>传 <code>allow_ai_fallback:false</code></th></tr></thead>
+                    <tbody>
+                        <tr><td>AI 未启用 / 无密钥</td><td>静默回落到「未分类」，<code>category_source</code> 为 <code>default</code></td><td>返回 <code>400 ai_disabled</code>，不创建条目</td></tr>
+                        <tr><td>AI 调用失败或无合适分类</td><td>回落到「未分类」，<code>category_source</code> 为 <code>ai_no_match</code></td><td>同左（AI 已启用，只是没给结果）</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="callout">需要「要么 AI 分类成功、要么报错」的严格场景，请同时传 <code>{"ai_recommend":1,"allow_ai_fallback":false}</code>。</div>
         </section>
 
         <section id="examples">
@@ -435,17 +600,21 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
 
             <div class="codebox" id="ex-update" data-pane-body hidden>
                 <button class="copy-btn" type="button" data-copy="#code-update">复制</button>
-<pre id="code-update"><span class="c-cmd">curl</span> -X PUT <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php"</span> \
+<pre id="code-update"><span class="c-com"># IIS 环境：POST + _method=PUT（原生 PUT 会被 IIS 拦截成 405）</span>
+<span class="c-cmd">curl</span> -X POST <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php"</span> \
   -H <span class="c-str">"Authorization: Bearer YOUR_TOKEN"</span> \
   -H <span class="c-str">"Content-Type: application/json"</span> \
-  -d <span class="c-str">'{"id":42,"name":"新名称","is_active":true}'</span></pre>
+  -d <span class="c-str">'{"_method":"PUT","id":42,"name":"新名称","is_active":true}'</span></pre>
             </div>
 
             <div class="codebox" id="ex-delete" data-pane-body hidden>
                 <button class="copy-btn" type="button" data-copy="#code-delete">复制</button>
 <pre id="code-delete"><span class="c-com"># 软删除，条目进入回收站，可在后台恢复</span>
-<span class="c-cmd">curl</span> -X DELETE <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php?id=42"</span> \
-  -H <span class="c-str">"Authorization: Bearer YOUR_TOKEN"</span></pre>
+<span class="c-com"># IIS 环境：POST + _method=DELETE</span>
+<span class="c-cmd">curl</span> -X POST <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php"</span> \
+  -H <span class="c-str">"Authorization: Bearer YOUR_TOKEN"</span> \
+  -H <span class="c-str">"Content-Type: application/json"</span> \
+  -d <span class="c-str">'{"_method":"DELETE","id":42}'</span></pre>
             </div>
         </section>
 
@@ -494,6 +663,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
                     <thead><tr><th>HTTP</th><th>error</th><th>常见原因</th></tr></thead>
                     <tbody>
                         <tr><td>400</td><td><code>bad_request</code></td><td>缺 <code>name</code> / <code>url</code> / <code>id</code>，或字段不合法、分类不存在</td></tr>
+                        <tr><td>400</td><td><code>ai_disabled</code></td><td>传了 <code>ai_recommend</code> 且 <code>allow_ai_fallback:false</code>，但后台未启用 AI 或无密钥</td></tr>
                         <tr><td>401</td><td><code>unauthorized</code></td><td>没带令牌、令牌格式不对、令牌无效</td></tr>
                         <tr><td>401</td><td><code>token_expired</code></td><td>令牌已过期</td></tr>
                         <tr><td>403</td><td><code>forbidden</code></td><td>只读令牌做了写操作，或访问了他人条目</td></tr>
@@ -560,7 +730,9 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
             <ul>
                 <li><strong>只有 <code>sites.php</code> 是对外 REST API。</strong><code>api/</code> 目录下其余 PHP（如 <code>auth.php</code>、<code>user_sites.php</code>、<code>site_meta.php</code>）是站内功能接口，靠登录会话鉴权，不提供开放令牌访问，直接打开返回 401 属正常现象。</li>
                 <li><strong>令牌等同密码。</strong>不要写进前端代码、公开仓库或截图；优先用请求头传递，避免 <code>?token=</code> 留在访问日志里。</li>
-                <li><strong>DELETE 是软删除</strong>，条目进回收站且停用，可在后台「导航管理 → 回收站」恢复。</li>
+                <li><strong>DELETE 是软删除</strong>，条目进回收站且停用，可在后台「导航管理 → 回收站」恢复。用户也可以在「我的导航 → 回收站」里自助恢复或彻底删除自己的条目。</li>
+                <li><strong>IIS 上必须用 <code>POST + _method</code></strong> 做更新/删除，原生 <code>PUT</code>/<code>DELETE</code> 会被服务器直接拦截成 405，详见<a href="#method">方法伪装</a>。</li>
+                <li><strong><code>category_name</code> / <code>ai_recommend</code> 会自动建分类</strong>：用户级令牌建的是你自己的分类，管理级令牌建的是公共分类。批量导入前建议先用 GET 的 <code>categories</code> 字段核对现有分类名，避免同义不同名（如「AI 工具」和「AI工具」）产生重复分组。</li>
                 <li><strong>写入会自动归一化网址</strong>：缺协议补 <code>https://</code>，非法地址直接拒绝。</li>
                 <li><strong>令牌在数据库里只存 SHA-256 摘要</strong>，完整明文仅在创建时显示一次；备份文件泄漏也不会直接交出可用令牌。旧版本创建的明文令牌仍可正常使用。</li>
                 <li><strong>列表的 <code>q</code> 按字面匹配</strong>：<code>%</code> 和 <code>_</code> 不再被当作 SQL 通配符，搜索结果与你输入的关键词一致。</li>

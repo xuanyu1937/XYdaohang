@@ -539,13 +539,43 @@ if ($bgImage !== '') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.15.2">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.15.2">
-    <script src="assets/js/pinyin-pro.min.js" defer></script>
-    <script src="assets/js/category-quick-add.js?v=2.15.2" defer></script>
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.16.0">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.16.0">
+    <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
+         改为「用户碰搜索框时才加载」，首屏少下载 320KB；
+         空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
+         nav.js / search.js 都做了运行时检测，晚到也能正常工作。 -->
+    <script>
+        (function () {
+            var loaded = false;
+            window.NAV_LOAD_PINYIN = function () {
+                if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
+                loaded = true;
+                var s = document.createElement('script');
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.16.0';
+                s.async = true;
+                document.head.appendChild(s);
+            };
+            var warm = function () {
+                window.removeEventListener('pointerdown', warm);
+                window.removeEventListener('keydown', warm);
+                window.removeEventListener('focusin', warm);
+                window.removeEventListener('touchstart', warm);
+                if (window.requestIdleCallback) {
+                    window.requestIdleCallback(function () { window.NAV_LOAD_PINYIN(); }, { timeout: 3000 });
+                } else {
+                    window.setTimeout(window.NAV_LOAD_PINYIN, 2500);
+                }
+            };
+            ['pointerdown', 'keydown', 'focusin', 'touchstart'].forEach(function (type) {
+                window.addEventListener(type, warm, { once: true, passive: true });
+            });
+        })();
+    </script>
+    <script src="assets/js/category-quick-add.js?v=2.16.0" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.15.2" defer></script>
-    <script src="assets/js/search.js?v=2.15.2" defer></script>
+    <script src="assets/js/nav.js?v=2.16.0" defer></script>
+    <script src="assets/js/search.js?v=2.16.0" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -1421,6 +1451,11 @@ if ($bgImage !== '') {
                 <div class="my-field">
                     <label for="quickAddCategory">收录到分组</label>
                     <select id="quickAddCategory" aria-label="收录到分组"></select>
+                    <!-- v2.16.0：选中「新建分组…」时在原地展开输入框，避免用 window.prompt（移动端易被拦截） -->
+                    <div class="qa-newcat" id="quickAddNewCat" hidden>
+                        <input type="text" id="quickAddNewCatName" maxlength="30" placeholder="新分组名称，如：AI 工具" autocomplete="off" aria-label="新分组名称">
+                        <button type="button" class="my-btn is-small" id="quickAddNewCatCancel">取消新建</button>
+                    </div>
                     <p class="qa-hint" id="quickAddSuggestHint" hidden></p>
                 </div>
             </div>

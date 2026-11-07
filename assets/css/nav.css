@@ -2183,15 +2183,23 @@ html[data-mode="compact"] .status-dot {
    卡片入场 + 3D 悬浮倾斜
    -------------------------------------------------------------------------- */
 
+/* v2.16.0 · 首屏稳定性：
+   旧写法让每张卡片都淡入 + 平移 12px，且延迟随索引线性增长（最多 24×26ms ≈ 0.6s），
+   首屏看上去一直在"闪"，滚动到后面的分组还在陆续出现，观感像卡顿。
+   现在只让首屏前 6 张做一次短促的入场，其余卡片直接显示，避免额外的合成层与布局抖动。 */
 .site-card {
-    animation: card-enter 0.46s cubic-bezier(0.22, 1, 0.36, 1) both;
-    animation-delay: calc(var(--enter-index, 0) * 26ms);
+    animation: card-enter 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(min(var(--enter-index, 0), 6) * 22ms);
+}
+
+.site-card:nth-child(n + 7) {
+    animation: none;
 }
 
 @keyframes card-enter {
     from {
         opacity: 0;
-        translate: 0 12px;
+        translate: 0 8px;
     }
 
     to {
@@ -3574,13 +3582,22 @@ dialog.auth-modal::backdrop {
 /* 移动端：无 hover 能力时隐藏悬停操作条，星标常显，长按弹菜单 */
 @media (hover: none) and (pointer: coarse) {
     /* v2.14.0：手机端卡片保持干净，常驻操作按钮一律不显示；
-       紧凑模式 / 点击展开的 is-actions-open 状态同样强制隐藏，所有操作走长按菜单。 */
-    .card-actions {
+       紧凑模式 / 点击展开的 is-actions-open 状态同样强制隐藏，所有操作走长按菜单。
+       v2.16.0：补齐 .card-action 单体与 list/compact 视图，防止改版后某处漏掉又冒出来，
+       并彻底禁用指针事件，避免透明按钮仍然吃点击、造成误触。 */
+    .card-actions,
+    .site-card .card-actions,
+    .site-card.is-actions-open .card-actions,
+    .sites-list[data-view="list"] .card-actions,
+    .sites-list[data-view="compact"] .card-actions {
         display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
     }
 
-    .site-card.is-actions-open .card-actions {
+    .card-actions .card-action {
         display: none !important;
+        pointer-events: none !important;
     }
 
     .card-corner,
@@ -4948,6 +4965,11 @@ p,
 @media (prefers-reduced-motion: reduce) {
     .stream-char,
     .search-bar .ss-panel {
+        animation: none !important;
+    }
+
+    /* v2.16.0：系统开了「减少动态效果」时，卡片入场直接省略 */
+    .site-card {
         animation: none !important;
     }
 }

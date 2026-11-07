@@ -85,6 +85,50 @@
             typeof window.pinyinPro.pinyin === 'function';
     }
 
+    // v2.16.0 · 拼音库就绪监听：首次输入时拼音可能还没下载完，
+    // 此时搜索会静默降级为「只能打汉字」。这里把等待方登记起来，
+    // 库一到就通知（由 initIndexMode 注册重算回调，保证首屏结果不残缺）。
+    var pinyinListeners = [];
+
+    function onPinyinReady(callback) {
+        if (typeof callback !== 'function') {
+            return;
+        }
+
+        if (pinyinReady()) {
+            callback();
+
+            return;
+        }
+
+        pinyinListeners.push(callback);
+    }
+
+    function flushPinyin(str) {
+        pinyinCallbacks.forEach(function (callback) {
+            if (callback) {
+                callback();
+            }
+        });
+        pinyinCallbacks = [];
+        pinyinLoading = false;
+
+        if (!str || !pinyinListeners.length) {
+            return;
+        }
+
+        var fired = pinyinListeners;
+        pinyinListeners = [];
+
+        fired.forEach(function (callback) {
+            try {
+                callback(str);
+            } catch (error) {
+                /* 单个回调出错不影响其它回调 */
+            }
+        });
+    }
+
     function ensurePinyin(done) {
         if (pinyinReady()) {
             if (done) {
@@ -104,21 +148,36 @@
 
         pinyinLoading = true;
 
+        // v2.16.0：首页提供了统一的按需加载函数，复用它避免重复插入同一个脚本
+        if (typeof window.NAV_LOAD_PINYIN === 'function') {
+            window.NAV_LOAD_PINYIN();
+
+            // 轮询等待脚本就绪（最多 5 秒），就绪后回调
+            var waited = 0;
+            var timer = window.setInterval(function () {
+                waited += 100;
+
+                if (pinyinReady() || waited >= 5000) {
+                    window.clearInterval(timer);
+                    flushPinyin(pinyinReady() ? 'ready' : '');
+                }
+            }, 100);
+
+            return;
+        }
+
         var script = document.createElement('script');
         script.src = 'assets/js/pinyin-pro.min.js';
         script.async = true;
 
         script.onload = function () {
-            pinyinCallbacks.forEach(function (callback) {
-                if (callback) {
-                    callback();
-                }
-            });
-            pinyinCallbacks = [];
+            flushPinyin('ready');
         };
 
         script.onerror = function () {
             pinyinCallbacks = [];
+            pinyinLoading = false;
+            pinyinListeners = [];
         };
 
         document.head.appendChild(script);
@@ -1742,6 +1801,23 @@
         if (initIndexMode()) {
             initCardHighlight();
             ensurePinyin();
+
+            /* v2.16.0 · 拼音库异步到达：清掉 nav.js 缓存过的空拼音，
+               再触发一次输入事件，让首屏结果从「仅汉字」升级为「拼音也能搜」 */
+            onPinyinReady(function () {
+                toArray(document.querySelectorAll('.site-card')).forEach(function (card) {
+                    delete card.__pinyinCache;
+                });
+
+                window.dispatchEvent(new CustomEvent('xy:pinyin-ready'));
+
+                var input = document.getElementById('siteSearch');
+
+                if (input && input.value.trim()) {
+                    input.dispatchEvent(new Event('input'));
+                }
+            });
+
             return;
         }
 

@@ -66,7 +66,8 @@ CREATE TABLE IF NOT EXISTS `categories` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `parent_id` (`parent_id`),
-  KEY `idx_user_id` (`user_id`)
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_user_private` (`user_id`, `is_private`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 创建nav_links表（导航主表；user_id=0 公共导航）
@@ -95,7 +96,8 @@ CREATE TABLE IF NOT EXISTS `nav_links` (
   KEY `category_id` (`category_id`),
   KEY `idx_clicks` (`clicks`),
   KEY `idx_user_id` (`user_id`),
-  KEY `idx_deleted_at` (`deleted_at`)
+  KEY `idx_deleted_at` (`deleted_at`),
+  KEY `idx_user_deleted_active` (`user_id`, `deleted_at`, `is_active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 创建settings表（站点全局设置）

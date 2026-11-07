@@ -186,9 +186,128 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['token_action'])) {
     }
 }
 
+// ==========================================================================
+// v2.16.0 · 回收站（仅本人的网址）
+// 全部操作都带 user_id 条件，确保用户只能看到 / 恢复 / 删除自己的记录。
+// ==========================================================================
+$recycleMsg = '';
+$recycleError = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['recycle_action'])) {
+    $functions->requireSameOrigin();
+
+    $recycleAction = (string) $_POST['recycle_action'];
+
+    try {
+        if ($recycleAction === 'restore') {
+            $ids = array_map('intval', (array) ($_POST['recycle_ids'] ?? []));
+            $ids = array_values(array_filter($ids, function ($v) { return $v > 0; }));
+
+            if (!$ids) {
+                $recycleError = '请先选择要恢复的网址';
+            } else {
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $stmt = $db->prepare(
+                    "UPDATE nav_links SET deleted_at = NULL
+                     WHERE user_id = ? AND deleted_at IS NOT NULL AND id IN ($placeholders)"
+                );
+                $stmt->execute(array_merge([$userId], $ids));
+                $recycleMsg = '已恢复 ' . $stmt->rowCount() . ' 个网址';
+            }
+        } elseif ($recycleAction === 'purge') {
+            $ids = array_map('intval', (array) ($_POST['recycle_ids'] ?? []));
+            $ids = array_values(array_filter($ids, function ($v) { return $v > 0; }));
+
+            if (!$ids) {
+                $recycleError = '请先选择要彻底删除的网址';
+            } else {
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                // 先取 logo，彻底删除后一并清理本地图标文件
+                $logoStmt = $db->prepare(
+                    "SELECT logo FROM nav_links
+                     WHERE user_id = ? AND deleted_at IS NOT NULL AND id IN ($placeholders)"
+                );
+                $logoStmt->execute(array_merge([$userId], $ids));
+                $logos = $logoStmt->fetchAll(PDO::FETCH_COLUMN);
+
+                $stmt = $db->prepare(
+                    "DELETE FROM nav_links
+                     WHERE user_id = ? AND deleted_at IS NOT NULL AND id IN ($placeholders)"
+                );
+                $stmt->execute(array_merge([$userId], $ids));
+                $purged = $stmt->rowCount();
+
+                foreach ($logos as $logoPath) {
+                    if (!empty($logoPath)) {
+                        $functions->deleteLogoFile((string) $logoPath);
+                    }
+                }
+
+                $recycleMsg = '已彻底删除 ' . $purged . ' 个网址';
+            }
+        } elseif ($recycleAction === 'empty') {
+            $logoStmt = $db->prepare('SELECT logo FROM nav_links WHERE user_id = ? AND deleted_at IS NOT NULL');
+            $logoStmt->execute([$userId]);
+            $logos = $logoStmt->fetchAll(PDO::FETCH_COLUMN);
+
+            $stmt = $db->prepare('DELETE FROM nav_links WHERE user_id = ? AND deleted_at IS NOT NULL');
+            $stmt->execute([$userId]);
+            $purged = $stmt->rowCount();
+
+            foreach ($logos as $logoPath) {
+                if (!empty($logoPath)) {
+                    $functions->deleteLogoFile((string) $logoPath);
+                }
+            }
+
+            $recycleMsg = $purged > 0 ? '回收站已清空，共彻底删除 ' . $purged . ' 个网址' : '回收站已经是空的';
+        }
+    } catch (Throwable $e) {
+        $recycleError = '操作失败：数据库尚未升级到 v2 结构时回收站不可用';
+    }
+}
+
+/**
+ * 读取当前用户回收站里的网址（已软删除）。
+ */
+function myLoadRecycleItems($db, $userId)
+{
+    try {
+        $stmt = $db->prepare(
+            'SELECT nl.id, nl.name, nl.url, nl.logo, nl.description, nl.deleted_at, c.name AS category_name
+             FROM nav_links nl
+             LEFT JOIN categories c ON nl.category_id = c.id
+             WHERE nl.user_id = ? AND nl.deleted_at IS NOT NULL
+             ORDER BY nl.deleted_at DESC, nl.id DESC
+             LIMIT 500'
+        );
+        $stmt->execute([$userId]);
+        $rows = $stmt->fetchAll();
+    } catch (Throwable $e) {
+        return [];
+    }
+
+    $items = [];
+
+    foreach ($rows as $row) {
+        $host = parse_url((string) $row['url'], PHP_URL_HOST);
+        $items[] = [
+            'id' => (int) $row['id'],
+            'name' => (string) $row['name'],
+            'url' => (string) $row['url'],
+            'host' => $host ? preg_replace('/^www\./i', '', $host) : (string) $row['url'],
+            'category' => (string) ($row['category_name'] ?? ''),
+            'deleted_at' => (string) $row['deleted_at'],
+        ];
+    }
+
+    return $items;
+}
+
+$recycleItems = myLoadRecycleItems($db, $userId);
+
 // 读取当前用户的令牌列表（仅本人，看不到其他用户或管理员的令牌）
 $userTokens = [];
-
 try {
     $stmt = $db->prepare(
         'SELECT id, name, permissions, user_id, created_at, expires_at, last_used_at
@@ -237,8 +356,7 @@ try {
 
 /**
  * 取 favicon 兜底链。
- */
-$faviconFor = function ($logoPath, $url) use ($functions) {
+ */$faviconFor = function ($logoPath, $url) use ($functions) {
     $chain = [];
     $logoUrl = $functions->getLogoDisplayUrl((string) $logoPath);
 
@@ -372,9 +490,9 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.15.2">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.15.2">
-    <script src="assets/js/category-quick-add.js?v=2.15.2" defer></script>
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.16.0">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.16.0">
+    <script src="assets/js/category-quick-add.js?v=2.16.0" defer></script>
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -1853,6 +1971,110 @@ $hasLinks = $totalLinks > 0;
                 justify-content: space-between;
             }
         }
+
+        /* ===== v2.16.0 · 回收站 ===== */
+        .my-btn-badge {
+            margin-left: 4px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            border-radius: 9px;
+            background: var(--my-danger, #ef4444);
+            color: #fff;
+            font-size: 11px;
+            line-height: 18px;
+            text-align: center;
+        }
+        .my-recycle-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--my-border, #e5e7eb);
+            margin-bottom: 10px;
+        }
+        .my-recycle-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .my-recycle-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            max-height: 46vh;
+            overflow-y: auto;
+        }
+        .my-recycle-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 4px;
+            border-bottom: 1px dashed var(--my-border, #e5e7eb);
+        }
+        .my-recycle-main {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .my-recycle-name {
+            font-weight: 600;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .my-recycle-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+            margin-top: 3px;
+            font-size: 12px;
+            color: var(--my-muted, #6b7280);
+        }
+        .my-recycle-host {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 220px;
+            white-space: nowrap;
+        }
+        .my-recycle-tag {
+            padding: 0 6px;
+            border-radius: 6px;
+            background: rgba(99, 102, 241, .12);
+            color: #4f46e5;
+        }
+        .my-recycle-item-actions {
+            display: flex;
+            gap: 6px;
+            flex: 0 0 auto;
+        }
+        .my-empty.is-compact {
+            padding: 28px 16px;
+        }
+        .my-empty.is-compact h3 {
+            font-size: 15px;
+            margin: 0 0 6px;
+        }
+        @media (max-width: 575.98px) {
+            .my-recycle-item {
+                flex-wrap: wrap;
+            }
+            .my-recycle-main {
+                flex: 1 1 calc(100% - 40px);
+            }
+            .my-recycle-item-actions {
+                flex: 1 1 100%;
+                justify-content: flex-end;
+            }
+            .my-recycle-host {
+                max-width: 160px;
+            }
+            .my-recycle-actions .my-btn {
+                flex: 1 1 auto;
+            }
+        }
     </style>
 </head>
 <body data-picking="0" data-organize="0">
@@ -1989,6 +2211,18 @@ $hasLinks = $totalLinks > 0;
                             <path d="M5 21c0-3.5 3.1-6 7-6s7 2.5 7 6"></path>
                         </svg>
                         <span class="my-btn-label">账号</span>
+                    </button>
+                    <button type="button" class="my-btn is-ghost" id="recycleBtn" title="回收站">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 6h18"></path>
+                            <path d="M8 6V4h8v2"></path>
+                            <path d="M19 6l-1 14H6L5 6"></path>
+                            <path d="M10 11v6M14 11v6"></path>
+                        </svg>
+                        <span class="my-btn-label">回收站</span>
+                        <?php if (!empty($recycleItems)): ?>
+                            <span class="my-btn-badge"><?php echo count($recycleItems); ?></span>
+                        <?php endif; ?>
                     </button>
                     <button type="button" class="my-btn is-ghost" id="apiTokenBtn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2800,6 +3034,76 @@ DELETE /api/sites.php       删除网址</code></pre>
         </div>
     </dialog>
 
+    <!-- v2.16.0 · 回收站：列出本人已删除的网址，可恢复 / 彻底删除 / 一键清空 -->
+    <dialog class="my-dialog" id="recycleDialog">
+        <form method="dialog" class="my-dialog-head">
+            <h2>回收站</h2>
+            <button type="button" class="my-dialog-close" data-close aria-label="关闭">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+            </button>
+        </form>
+
+        <div class="my-dialog-body">
+            <?php if ($recycleMsg !== ''): ?>
+                <p class="my-msg is-ok" role="status"><?php echo $functions->escape($recycleMsg); ?></p>
+            <?php endif; ?>
+            <?php if ($recycleError !== ''): ?>
+                <p class="my-msg is-error" role="alert"><?php echo $functions->escape($recycleError); ?></p>
+            <?php endif; ?>
+
+            <?php if (empty($recycleItems)): ?>
+                <div class="my-empty is-compact">
+                    <h3>回收站是空的</h3>
+                    <p>删除的网址会先放到这里，可随时恢复。</p>
+                </div>
+            <?php else: ?>
+                <div class="my-recycle-toolbar">
+                    <label class="my-check">
+                        <input type="checkbox" id="recycleSelectAll">
+                        <span>全选（<span id="recycleCount"><?php echo count($recycleItems); ?></span> 项）</span>
+                    </label>
+                    <div class="my-recycle-actions">
+                        <button type="button" class="my-btn is-small is-primary" id="recycleRestoreBtn">恢复所选</button>
+                        <button type="button" class="my-btn is-small is-danger" id="recyclePurgeBtn">彻底删除所选</button>
+                        <button type="button" class="my-btn is-small is-danger" id="recycleEmptyBtn">一键清空</button>
+                    </div>
+                </div>
+
+                <ul class="my-recycle-list" id="recycleList">
+                    <?php foreach ($recycleItems as $item): ?>
+                        <li class="my-recycle-item">
+                            <label class="my-picker">
+                                <input type="checkbox" class="recycle-check" value="<?php echo (int) $item['id']; ?>" aria-label="选择 <?php echo $functions->escape($item['name']); ?>">
+                            </label>
+                            <div class="my-recycle-main">
+                                <div class="my-recycle-name"><?php echo $functions->escape($item['name']); ?></div>
+                                <div class="my-recycle-meta">
+                                    <span class="my-recycle-host"><?php echo $functions->escape($item['host']); ?></span>
+                                    <?php if ($item['category'] !== ''): ?>
+                                        <span class="my-recycle-tag"><?php echo $functions->escape($item['category']); ?></span>
+                                    <?php endif; ?>
+                                    <span class="my-recycle-time">删除于 <?php echo $functions->escape(date('Y-m-d H:i', strtotime($item['deleted_at']))); ?></span>
+                                </div>
+                            </div>
+                            <div class="my-recycle-item-actions">
+                                <button type="button" class="my-btn is-small" data-recycle-restore="<?php echo (int) $item['id']; ?>">恢复</button>
+                                <button type="button" class="my-btn is-small is-danger" data-recycle-purge="<?php echo (int) $item['id']; ?>">彻底删除</button>
+                            </div>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+
+                <p class="my-note">彻底删除后不可恢复。回收站最多显示最近 500 条。</p>
+            <?php endif; ?>
+        </div>
+
+        <!-- 回收站表单：所有操作都通过 POST 提交并带 user_id 校验 -->
+        <form method="POST" id="recycleForm" hidden>
+            <input type="hidden" name="recycle_action" id="recycleActionInput" value="">
+            <div id="recycleIdsHolder"></div>
+        </form>
+    </dialog>
+
     <!-- 卡片右键 / 长按菜单。
          v2.11.0：必须放在下方主交互脚本之前。此前它挂在 </body> 前，
          脚本同步执行时该节点尚未解析，qs('#cardContextMenu') 恒为 null，
@@ -3144,6 +3448,120 @@ DELETE /api/sites.php       删除网址</code></pre>
                             });
                         } else {
                             window.prompt('复制下面的 Token：', text);
+                        }
+                    });
+                }
+            })();
+
+            // v2.16.0 · 回收站：恢复 / 彻底删除 / 清空
+            (function () {
+                var dialog = qs('#recycleDialog');
+                var openBtn = qs('#recycleBtn');
+                var form = qs('#recycleForm');
+                var actionInput = qs('#recycleActionInput');
+                var holder = qs('#recycleIdsHolder');
+                var selectAll = qs('#recycleSelectAll');
+
+                if (openBtn && dialog) {
+                    openBtn.addEventListener('click', function () {
+                        if (typeof dialog.showModal === 'function') {
+                            dialog.showModal();
+                        } else {
+                            dialog.setAttribute('open', 'open');
+                        }
+                    });
+                }
+
+                if (dialog) {
+                    var closeBtn = dialog.querySelector('[data-close]');
+                    if (closeBtn) {
+                        closeBtn.addEventListener('click', function () {
+                            if (typeof dialog.close === 'function') { dialog.close(); }
+                            else { dialog.removeAttribute('open'); }
+                        });
+                    }
+                    // 操作完成后带 ?recycle=1 刷新回来，自动重新打开弹窗展示结果
+                    if (window.location.search.indexOf('recycle=1') !== -1 && typeof dialog.showModal === 'function') {
+                        dialog.showModal();
+                    }
+                }
+
+                function checkedIds() {
+                    var boxes = dialog ? dialog.querySelectorAll('.recycle-check') : [];
+                    var ids = [];
+                    for (var i = 0; i < boxes.length; i++) {
+                        if (boxes[i].checked) { ids.push(boxes[i].value); }
+                    }
+                    return ids;
+                }
+
+                if (selectAll) {
+                    selectAll.addEventListener('change', function () {
+                        var boxes = dialog ? dialog.querySelectorAll('.recycle-check') : [];
+                        for (var i = 0; i < boxes.length; i++) { boxes[i].checked = selectAll.checked; }
+                    });
+                }
+
+                function submit(action, ids) {
+                    if (!form || !actionInput || !holder) { return; }
+                    holder.innerHTML = '';
+                    ids = ids || [];
+                    for (var i = 0; i < ids.length; i++) {
+                        var input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'recycle_ids[]';
+                        input.value = ids[i];
+                        holder.appendChild(input);
+                    }
+                    actionInput.value = action;
+                    // 带上 recycle=1，服务端处理完跳回本页后自动重新打开弹窗展示结果
+                    form.action = 'my.php?recycle=1';
+                    form.submit();
+                }
+
+                // 单条恢复 / 彻底删除
+                if (dialog) {
+                    dialog.addEventListener('click', function (event) {
+                        var target = event.target;
+                        if (!target || !target.getAttribute) { return; }
+                        var restoreId = target.getAttribute('data-recycle-restore');
+                        var purgeId = target.getAttribute('data-recycle-purge');
+
+                        if (restoreId) {
+                            submit('restore', [restoreId]);
+                        } else if (purgeId) {
+                            if (confirm('彻底删除后不可恢复，确定继续吗？')) {
+                                submit('purge', [purgeId]);
+                            }
+                        }
+                    });
+                }
+
+                var restoreBtn = qs('#recycleRestoreBtn');
+                if (restoreBtn) {
+                    restoreBtn.addEventListener('click', function () {
+                        var ids = checkedIds();
+                        if (!ids.length) { alert('请先勾选要恢复的网址'); return; }
+                        submit('restore', ids);
+                    });
+                }
+
+                var purgeBtn = qs('#recyclePurgeBtn');
+                if (purgeBtn) {
+                    purgeBtn.addEventListener('click', function () {
+                        var ids = checkedIds();
+                        if (!ids.length) { alert('请先勾选要彻底删除的网址'); return; }
+                        if (confirm('彻底删除所选 ' + ids.length + ' 个网址？此操作不可恢复。')) {
+                            submit('purge', ids);
+                        }
+                    });
+                }
+
+                var emptyBtn = qs('#recycleEmptyBtn');
+                if (emptyBtn) {
+                    emptyBtn.addEventListener('click', function () {
+                        if (confirm('确定清空回收站？站内所有已删除网址将被彻底删除，不可恢复。')) {
+                            submit('empty', []);
                         }
                     });
                 }
@@ -5871,6 +6289,6 @@ DELETE /api/sites.php       删除网址</code></pre>
         })();
     </script>
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.15.2" defer></script>
+<script src="assets/js/search.js?v=2.16.0" defer></script>
 </body>
 </html>

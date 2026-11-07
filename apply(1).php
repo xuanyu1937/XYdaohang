@@ -769,11 +769,102 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
             height: 20px;
             object-fit: contain;
         }
+
+        /* v2.16.0 · 手机端适配
+           ① 输入框默认 min-width:auto，在 flex 行里会被内容撑破容器（横向溢出 55px）；
+           ② 原生 <input type="file"> 的「Choose File」按钮在窄屏下过宽且不换行；
+           ③ 卡片内边距在手机上过大，挤压内容区。 */
+        .entry-card input,
+        .entry-card select,
+        .entry-card textarea {
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        .logo-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: .75rem;
+        }
+        .logo-row .logo-file {
+            flex: 1 1 220px;
+            min-width: 0;
+            width: 100%;
+            padding: .55rem .75rem;
+            font-size: .875rem;
+            line-height: 1.4;
+            color: #4b5563;
+            background: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: .5rem;
+        }
+        .logo-row .logo-file::file-selector-button {
+            margin-right: .625rem;
+            padding: .35rem .75rem;
+            border: 0;
+            border-radius: .375rem;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: .8125rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .logo-row .logo-auto {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            min-height: 32px;
+        }
+        .entry-card .url-input-wrapper input {
+            padding-right: 118px;
+        }
+
+        @media (max-width: 575.98px) {
+            .entry-card {
+                padding: 1.25rem !important;
+                border-radius: .75rem !important;
+            }
+            .entry-card h1 {
+                font-size: 1.4rem !important;
+                line-height: 1.35;
+                word-break: break-word;
+            }
+            .entry-card .url-input-wrapper input {
+                padding-right: 96px;
+            }
+            .entry-card .fetch-btn {
+                padding: .25rem .5rem !important;
+                font-size: .75rem !important;
+            }
+            .entry-card .fetch-btn .fa-magic {
+                margin-right: 2px;
+            }
+            .logo-row .logo-file,
+            .logo-row .logo-auto {
+                flex: 1 1 100%;
+            }
+            .logo-row .logo-auto {
+                min-height: 36px;
+            }
+            .entry-card .entry-actions {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+            .entry-card .entry-actions .btn,
+            .entry-card .entry-actions a,
+            .entry-card .entry-actions button {
+                width: 100%;
+                min-height: 44px;
+                justify-content: center;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
     <div class="container mx-auto px-4 py-12 max-w-4xl">
-        <div class="bg-white rounded-xl shadow-lg p-8">
+        <div class="entry-card bg-white rounded-xl shadow-lg p-8">
             <div class="text-center mb-8">
                 <h1 class="text-3xl font-bold text-gray-800 mb-2">申请网站收录</h1>
                 <p class="text-gray-600">提交您的网站，审核通过后将会展示在导航页中</p>
@@ -847,13 +938,13 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
                     <label class="block text-gray-700 mb-2 font-medium">
                         <i class="fas fa-image mr-2"></i>网站Logo
                     </label>
-                    <div class="flex items-center space-x-4">
+                    <div class="logo-row">
                         <input type="file" 
                                name="site_logo" 
                                id="site_logo"
                                accept="image/*"
-                               class="flex-1 px-4 py-3 border border-gray-300 rounded-lg">
-                        <label class="flex items-center cursor-pointer">
+                               class="logo-file">
+                        <label class="logo-auto">
                             <input type="checkbox" id="autoFetchLogoCheck" class="mr-2">
                             <span class="text-sm text-gray-600">自动获取网站图标</span>
                         </label>
@@ -915,7 +1006,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
             </div>
             
             <div class="mt-6 text-center">
-                <a href="index.php" class="text-blue-600 hover:text-blue-800">
+                <a href="index.php" class="entry-back text-blue-600 hover:text-blue-800 inline-flex items-center justify-center">
                     <i class="fas fa-arrow-left mr-2"></i>返回首页
                 </a>
             </div>
