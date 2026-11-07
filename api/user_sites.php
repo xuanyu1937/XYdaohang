@@ -932,6 +932,307 @@ switch ($action) {
         $functions->jsonResponse(['ok' => true]);
         break;
 
+    case 'ai_categorize_preview':
+        // v2.16.2：AI 一键分类 · 分析阶段
+        // 前端按批调用（默认 20 条/批），避免单个请求跑太久、也让进度条有反馈。
+        // AI 未启用时自动降级为本地关键词规则，功能不至于直接不可用。
+        $scope = strtolower(trim((string) ($_POST['scope'] ?? 'ungrouped')));
+
+        if (!in_array($scope, ['ungrouped', 'all'], true)) {
+            $scope = 'ungrouped';
+        }
+
+        $limit = (int) ($_POST['limit'] ?? 20);
+        $limit = max(5, min(30, $limit));
+        $offset = max(0, (int) ($_POST['offset'] ?? 0));
+
+        $engine = new CategoryEngine($functions);
+        $engine->setUserId($userId);
+        $categories = userSiteCategories($engine, $userId);
+
+        // 名字 → 分类 id：只取第一个同名的，用于判断 AI 建议是否已有对应分组
+        // 注意 id 列表必须单独收集，不能从 nameToId 反推 —— 分类允许重名，
+        // 反推会漏掉重名的那几个 id，导致它们的链接被误判成「未分类」
+        $nameToId = [];
+        $visibleNames = [];
+        $visibleIds = [];
+        $classifiedIds = [];
+
+        foreach ($categories as $category) {
+            $categoryName = (string) $category['name'];
+            $categoryId = (int) $category['id'];
+
+            $visibleIds[] = $categoryId;
+
+            if (!isset($nameToId[$categoryName])) {
+                $nameToId[$categoryName] = $categoryId;
+                $visibleNames[] = $categoryName;
+            }
+
+            // 「未分类」这个分组本身就是待整理容器，不算已归类
+            $trimmed = trim($categoryName);
+
+            if ($trimmed !== '' && $trimmed !== '未分类') {
+                $classifiedIds[] = $categoryId;
+            }
+        }
+
+        $where = 'user_id = ? AND deleted_at IS NULL AND is_active = 1';
+        $params = [$userId];
+
+        // 「未分类」的口径：category_id 为 0，或指向一个自己看不到 / 不存在的分类
+        if ($scope === 'ungrouped') {
+            if ($classifiedIds) {
+                $placeholders = implode(',', array_fill(0, count($classifiedIds), '?'));
+                $where .= " AND (category_id = 0 OR category_id NOT IN ($placeholders))";
+
+                foreach ($classifiedIds as $cid) {
+                    $params[] = $cid;
+                }
+            }
+            // 没有任何真实分类时，全部链接都算待整理，不加额外条件
+        }
+
+        $countStmt = $db->prepare("SELECT COUNT(*) AS total FROM nav_links WHERE $where");
+        $countStmt->execute($params);
+        $total = (int) ($countStmt->fetch()['total'] ?? 0);
+
+        if ($total === 0) {
+            $functions->jsonResponse([
+                'ok' => true,
+                'ai' => false,
+                'items' => [],
+                'categories' => $categories,
+                'total' => 0,
+                'offset' => 0,
+                'next' => 0,
+                'done' => true,
+            ]);
+        }
+
+        $sql = "SELECT id, name, url, description, category_id FROM nav_links WHERE $where"
+            . " ORDER BY id DESC LIMIT $limit OFFSET $offset";
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        $batch = $stmt->fetchAll();
+
+        $groupNames = [];
+
+        foreach ($categories as $category) {
+            $groupNames[(int) $category['id']] = (string) $category['name'];
+        }
+
+        $ai = new AiService($functions);
+        $aiEnabled = $ai->enabled();
+        $suggestMap = [];
+        $source = 'local';
+
+        if ($aiEnabled) {
+            $result = $ai->categorizeBatch($batch, $visibleNames);
+
+            if (!empty($result['ok']) && !empty($result['map'])) {
+                $suggestMap = $result['map'];
+                $source = 'ai';
+            }
+        }
+
+        // AI 未启用 / 调用失败 / 有漏项 → 本地关键词规则兜底补齐
+        foreach ($batch as $row) {
+            $id = (int) $row['id'];
+
+            if (isset($suggestMap[$id])) {
+                continue;
+            }
+
+            $text = trim((string) $row['name'] . ' ' . (string) $row['description'] . ' ' . (string) $row['url']);
+            $suggest = userSiteSuggestCategory($engine, $categories, $text);
+
+            if (!empty($suggest['name'])) {
+                $suggestMap[$id] = (string) $suggest['name'];
+            }
+        }
+
+        $items = [];
+
+        foreach ($batch as $row) {
+            $id = (int) $row['id'];
+            $categoryId = (int) $row['category_id'];
+            $currentName = isset($groupNames[$categoryId]) ? $groupNames[$categoryId] : '未分类';
+            $suggestName = isset($suggestMap[$id]) ? (string) $suggestMap[$id] : '';
+
+            $items[] = [
+                'id' => $id,
+                'name' => (string) $row['name'],
+                'url' => (string) $row['url'],
+                'current_category_id' => $categoryId,
+                'current_category_name' => $currentName,
+                'suggest_name' => $suggestName,
+                'suggest_id' => isset($nameToId[$suggestName]) ? $nameToId[$suggestName] : 0,
+                'is_new' => $suggestName !== '' && !isset($nameToId[$suggestName]),
+                'changed' => $suggestName !== '' && $suggestName !== $currentName,
+            ];
+        }
+
+        $next = $offset + count($batch);
+
+        $functions->jsonResponse([
+            'ok' => true,
+            'ai' => $source === 'ai',
+            'items' => $items,
+            'categories' => $categories,
+            'total' => $total,
+            'offset' => $offset,
+            'next' => $next,
+            'done' => $next >= $total,
+        ]);
+        break;
+
+    case 'ai_categorize_apply':
+        // v2.16.2：AI 一键分类 · 落库阶段
+        // 前端把用户确认过的 [{id, category}] 整体发过来，一次事务写完。
+        $raw = (string) ($_POST['payload'] ?? '');
+        $rows = json_decode($raw, true);
+
+        if (!is_array($rows) || !$rows) {
+            $functions->jsonResponse(['ok' => false, 'error' => '没有可应用的分类结果'], 400);
+        }
+
+        // 单次上限，防止一次改动过大
+        $rows = array_slice($rows, 0, 300);
+
+        $pairs = [];
+        $idList = [];
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $id = (int) ($row['id'] ?? 0);
+            $name = trim((string) ($row['category'] ?? ''));
+
+            if ($id <= 0 || $name === '') {
+                continue;
+            }
+
+            $name = preg_replace('/["\'「」《》。，,、:：\r\n]+/u', '', $name);
+            $name = trim((string) $name);
+
+            if ($name === '') {
+                continue;
+            }
+
+            $pairs[$id] = mb_substr($name, 0, 30, 'UTF-8');
+            $idList[] = $id;
+        }
+
+        if (!$pairs) {
+            $functions->jsonResponse(['ok' => false, 'error' => '分类结果为空'], 400);
+        }
+
+        // 校验归属：一个都不能越权
+        $placeholders = implode(',', array_fill(0, count($idList), '?'));
+        $checkStmt = $db->prepare("SELECT COUNT(*) AS total FROM nav_links WHERE id IN ($placeholders) AND user_id = ? AND deleted_at IS NULL");
+        $checkParams = array_merge($idList, [$userId]);
+        $checkStmt->execute($checkParams);
+        $owned = (int) ($checkStmt->fetch()['total'] ?? 0);
+
+        if ($owned !== count($idList)) {
+            $functions->jsonResponse(['ok' => false, 'error' => '部分网址无权操作'], 403);
+        }
+
+        // 名字 → 分类 id：优先匹配自己名下的，其次公共的，都没有才新建
+        $catStmt = $db->prepare(
+            'SELECT id, name, user_id FROM categories'
+            . ' WHERE (user_id = 0 AND is_private = 0) OR user_id = ?'
+            . ' ORDER BY user_id DESC, sort_order, id'
+        );
+        $catStmt->execute([$userId]);
+        $nameToId = [];
+
+        foreach ($catStmt->fetchAll() as $category) {
+            $categoryName = (string) $category['name'];
+
+            if (!isset($nameToId[$categoryName])) {
+                $nameToId[$categoryName] = (int) $category['id'];
+            }
+        }
+
+        // 当前分类快照，用于判断「哪些是真新建的」
+        $beforeIds = array_values($nameToId);
+
+        $engine = new CategoryEngine($functions);
+        $engine->setUserId($userId);
+
+        $moved = 0;
+        $created = [];
+        $failed = 0;
+
+        try {
+            $db->beginTransaction();
+
+            $updateStmt = $db->prepare('UPDATE nav_links SET category_id = ?, updated_at = NOW() WHERE id = ? AND user_id = ?');
+            $currentStmt = $db->prepare('SELECT category_id FROM nav_links WHERE id = ? AND user_id = ? LIMIT 1');
+
+            foreach ($pairs as $id => $name) {
+                if (!isset($nameToId[$name])) {
+                    $nameToId[$name] = $engine->ensure($name, 'bi-collection', null, $userId);
+                    $created[] = $name;
+                }
+
+                $targetId = $nameToId[$name];
+
+                if ($targetId <= 0) {
+                    $failed++;
+                    continue;
+                }
+
+                // 已经在目标分类里的就跳过，别刷 updated_at
+                $currentStmt->execute([$id, $userId]);
+                $current = $currentStmt->fetch();
+
+                if ($current && (int) $current['category_id'] === $targetId) {
+                    continue;
+                }
+
+                $updateStmt->execute([$targetId, $id, $userId]);
+
+                if ($updateStmt->rowCount() > 0) {
+                    $moved++;
+                } else {
+                    $failed++;
+                }
+            }
+
+            $db->commit();
+        } catch (Throwable $error) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+
+            $functions->jsonResponse(['ok' => false, 'error' => '应用分类失败：' . $error->getMessage()], 500);
+        }
+
+        // 只回报真正新建的分类
+        $createdNames = [];
+
+        foreach ($created as $name) {
+            if (!in_array($nameToId[$name] ?? 0, $beforeIds, true)) {
+                $createdNames[] = $name;
+            }
+        }
+
+        $functions->jsonResponse([
+            'ok' => true,
+            'moved' => $moved,
+            'skipped' => count($pairs) - $moved - $failed,
+            'failed' => $failed,
+            'created' => array_values(array_unique($createdNames)),
+            'total' => count($pairs),
+        ]);
+        break;
+
     case 'batch_move':
         $ids = $_POST['ids'] ?? [];
 

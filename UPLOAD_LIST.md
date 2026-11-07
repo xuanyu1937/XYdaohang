@@ -1,33 +1,34 @@
-# 轩宇-导航 部署清单（当前版本 v2.16.1）
+# 轩宇-导航 部署清单（当前版本 v2.16.2）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.16.1
+当前版本：v2.16.2
 
-> **手机端彻底移除卡片悬停操作条**。v2.16.0 只靠 CSS 媒体查询 `(hover: none) and (pointer: coarse)` 隐藏，在微信 / UC / QQ 内置浏览器（`pointer` 报成 `fine`）和 iPadOS 桌面版 UA（`hover: hover`）上失效，卡片右侧那排小按钮仍然挂着。本版改为「多信号判定 + 直接删 DOM + CSS 绝对兜底」三层防护，这些设备上按钮彻底不存在；桌面端行为完全不变。顺带修复 API 文档页手机端 16px 横向溢出。**无数据库结构变更，无需执行 SQL，覆盖文件即可。**
+> **AI 一键分类**。「我的导航」工具栏新增「AI 分类」按钮：AI 读一遍每条网址的名称、域名、描述，批量判断该归到哪个分组——已有分组装得下就复用、装不下才新建。**先预览、逐条可勾选、确认后才落库**，分析阶段不动任何数据。AI 未配置或调用失败会自动降级为本地关键词规则，功能不会整个失效。顺带修掉重名分组导致「未分类」误判的缺陷。**无数据库结构变更，无需执行 SQL，覆盖文件即可。**
 
-## ⚠️ 升级须知（两步，比上一版更简单）
+## ⚠️ 升级须知（两步）
 
 1. **上传并覆盖**全部文件（列表见下）。
-2. **清一次浏览器缓存**（或强刷 Ctrl+F5）。本版改了 `nav.css`、`nav.js`、`index.php`、`api/index.php`，资源版本号已同步到 `?v=2.16.1`，正常情况会自动刷新。
+2. **清一次浏览器缓存**（或强刷 Ctrl+F5）。本版改了 `my.php`、`api/user_sites.php`、`includes/Services.php`，资源版本号已同步到 `?v=2.16.2`，正常情况会自动刷新。
 
-**验证是否生效**：`/api/index.php` 徽章显示 `v2.16.1`；手机端（或微信内置浏览器）打开首页，卡片右侧只剩星标，**看不到编辑 / 复制 / 二维码 / 移动 / 删除**那排按钮；长按卡片弹出 7 项菜单。
+**验证是否生效**：`/api/index.php` 徽章显示 `v2.16.2`；登录后进「我的导航」，工具栏能看到「AI 分类」按钮，点开弹窗选范围后「开始分析」，能出结果列表并应用。
 
-> **已经在 v2.16.0 的站点不需要再执行 `upgrade_v2.16.0.sql`** —— 索引在上一版已建好，本版无数据库变更。如果是从 v2.15.2 或更早直接跳到 v2.16.1，仍需执行一次 `upgrade_v2.16.0.sql`（幂等）。
+> **已经在 v2.16.0 / v2.16.1 的站点不需要再执行 `upgrade_v2.16.0.sql`** —— 索引早已建好，本版无数据库变更。如果是从 v2.15.2 或更早直接跳到 v2.16.2，仍需执行一次 `upgrade_v2.16.0.sql`（幂等）。
+>
+> **AI 分类依赖后台「AI 设置」**（服务商 / API 地址 / Key / 模型）。未配置也能用，只是降级为本地关键词规则，准确率明显低一些。
 
-## 本次 v2.16.1 变动文件
+## 本次 v2.16.2 变动文件
 
 | 文件 | 说明 |
 | --- | --- |
-| `assets/js/nav.js` | 新增 `isTouchUI()` 多信号触屏判定、`purgeCardActions()` 直接删 DOM、`MutationObserver` 补删；紧凑模式点击跳转跳过触屏设备 |
-| `assets/css/nav.css` | 文件末尾新增最高优先级强制隐藏块（放宽媒体查询 + `html.is-touch-ui` 兜底），覆盖 hover / focus-within / is-actions-open / 三视图全部状态 |
-| `index.php` | `<head>` 新增触屏同步预判脚本，CSS 落地前写入 `is-touch-ui`，避免首帧闪出按钮 |
-| `api/index.php` | 行内 `<code>` 补 `overflow-wrap: anywhere`，修复手机端 16px 横向溢出；fallback 版本号 2.16.1 |
-| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.16.1 |
-| 全部 PHP 页面（31 处） | 资源参数 `?v=2.16.1` |
+| `my.php` | 新增「AI 分类」按钮 + 三步式弹窗（选范围 / 进度条 / 结果确认）与配套 CSS、JS；补 `.my-dialog-actions` 右对齐样式；`is-new` 标记、列表底部渐隐、全选半选态同步、汇总文案 |
+| `api/user_sites.php` | 新增 `ai_categorize_preview`（分页分析，AI 漏答走本地兜底）与 `ai_categorize_apply`（事务落库、越权 403、自动建分组归属调用者、单次上限 300 条）；修复重名分组导致「未分类」误判 |
+| `includes/Services.php` | `AiService` 新增 `categorizeBatch()`：一次请求返回 `id → 分类名` 数组映射，兼容 ```` ```json ```` 包裹与多余文字 |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.16.2 |
+| 全部 PHP 页面（31 处） | 资源参数 `?v=2.16.2` |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
 
-**本版没有新增文件**，全部为既有文件修改，直接覆盖即可。
+**本版没有新增文件、没有 SQL**，全部为既有文件修改，直接覆盖即可。
 
 ## 上一版 v2.16.0 变动文件（供从 v2.15.2 跳版本时参考）
 

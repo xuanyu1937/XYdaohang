@@ -490,9 +490,9 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.16.1">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.16.1">
-    <script src="assets/js/category-quick-add.js?v=2.16.1" defer></script>
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.16.2">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.16.2">
+    <script src="assets/js/category-quick-add.js?v=2.16.2" defer></script>
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -1269,6 +1269,15 @@ $hasLinks = $totalLinks > 0;
             font-weight: 700;
         }
 
+        /* 弹窗底部按钮栏：统一右对齐，主按钮在最右 */
+        .my-dialog-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+        }
+
         .my-dialog-body {
             padding: 20px;
             max-height: min(70vh, 560px);
@@ -1972,6 +1981,184 @@ $hasLinks = $totalLinks > 0;
             }
         }
 
+        /* ===== v2.16.2 · AI 一键分类 ===== */
+        dialog.my-dialog-wide { width: min(640px, calc(100vw - 32px)); }
+
+        .ai-cat-intro { margin: 0 0 14px; line-height: 1.65; }
+
+        .ai-cat-scope { display: grid; gap: 8px; margin-bottom: 14px; }
+
+        .ai-cat-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 11px 13px;
+            border: 1px solid var(--my-border, #e5e7eb);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: border-color .16s ease, background .16s ease;
+        }
+
+        .ai-cat-option:hover { border-color: var(--my-primary-border, #bfdbfe); }
+
+        .ai-cat-option:has(input:checked) {
+            border-color: var(--my-primary, #2563eb);
+            background: var(--my-primary-soft, #eff6ff);
+        }
+
+        .ai-cat-option input { margin: 3px 0 0; flex: none; }
+
+        .ai-cat-option-body { display: flex; flex-direction: column; gap: 3px; }
+
+        .ai-cat-option-body strong { font-size: 13.5px; font-weight: 600; }
+
+        .ai-cat-option-body em {
+            font-size: 12px;
+            font-style: normal;
+            color: var(--my-muted, #6b7280);
+        }
+
+        .ai-cat-progress {
+            height: 8px;
+            border-radius: 4px;
+            background: var(--my-border, #e5e7eb);
+            overflow: hidden;
+        }
+
+        .ai-cat-progress span {
+            display: block;
+            width: 0;
+            height: 100%;
+            background: var(--my-primary, #2563eb);
+            transition: width .25s ease;
+        }
+
+        .ai-cat-progress-text { margin: 10px 0 0; }
+
+        .ai-cat-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 10px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--my-border, #e5e7eb);
+        }
+
+        .ai-cat-list {
+            display: grid;
+            gap: 6px;
+            max-height: min(52vh, 420px);
+            overflow-y: auto;
+            /* 滚动时给上下留一点呼吸，避免首尾行贴着边框被切 */
+            padding: 2px 2px 6px;
+            margin: -2px -2px 0;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+        }
+
+        .ai-cat-list::-webkit-scrollbar { width: 8px; }
+        .ai-cat-list::-webkit-scrollbar-thumb {
+            background: var(--my-border, #d1d5db);
+            border-radius: 999px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+
+        .ai-cat-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 11px;
+            border-radius: 9px;
+            background: var(--my-soft, #f9fafb);
+            font-size: 13px;
+        }
+
+        .ai-cat-row input { flex: none; }
+
+        /* AI 认为无需调整的行：复选框禁用 + 整行淡化，避免误操作 */
+        .ai-cat-row:has(input:disabled) {
+            opacity: .62;
+            background: transparent;
+            box-shadow: inset 0 0 0 1px var(--my-border, #e5e7eb);
+        }
+
+        .ai-cat-row:has(input:disabled) .ai-cat-row-name { font-weight: 500; }
+
+        .ai-cat-row-main {
+            display: flex;
+            flex: 1;
+            min-width: 0;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .ai-cat-row-name {
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ai-cat-row-path {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--my-muted, #6b7280);
+        }
+
+        .ai-cat-tag {
+            display: inline-flex;
+            align-items: center;
+            max-width: 46%;
+            padding: 1px 7px;
+            border-radius: 5px;
+            background: var(--my-border, #e5e7eb);
+            color: var(--my-text-2, #374151);
+            font-size: 11.5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ai-cat-tag.is-new {
+            background: rgba(37, 99, 235, .12);
+            color: var(--my-primary, #2563eb);
+        }
+
+        .ai-cat-arrow { flex: none; color: var(--my-muted, #9ca3af); }
+
+        /* 列表滚动区与底部按钮之间加一道分隔，滚动时不会糊在一起 */
+        .ai-cat-actions {
+            padding-top: 12px;
+            margin-top: 10px;
+            border-top: 1px solid var(--my-border, #e5e7eb);
+        }
+
+        /* 列表底部渐隐：提示「下面还有」，避免半截行被硬切出条状残影 */
+        .ai-cat-list {
+            -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent 100%);
+            mask-image: linear-gradient(to bottom, #000 calc(100% - 22px), transparent 100%);
+        }
+
+        /* 内容没超出时不需要渐隐，交给 JS 打标记关掉 */
+        .ai-cat-list.is-short {
+            -webkit-mask-image: none;
+            mask-image: none;
+        }
+
+        @media (max-width: 575.98px) {
+            .ai-cat-list { max-height: 46vh; }
+            .ai-cat-row { padding: 8px 9px; }
+            .ai-cat-row-path { font-size: 11.5px; }
+            .ai-cat-tag { max-width: 100%; }
+            .ai-cat-option { padding: 10px 11px; }
+        }
+
         /* ===== v2.16.0 · 回收站 ===== */
         .my-btn-badge {
             margin-left: 4px;
@@ -2177,6 +2364,14 @@ $hasLinks = $totalLinks > 0;
                             <path d="M9 6l3-3 3 3M9 18l3 3 3-3"></path>
                         </svg>
                         <span class="my-btn-label" id="organizeBtnLabel">整理</span>
+                    </button>
+                    <!-- v2.16.2：AI 一键分类。先分析出建议，确认后再改数据 -->
+                    <button type="button" class="my-btn" id="aiCategorizeBtn" <?php echo $hasLinks ? '' : 'aria-disabled="true"'; ?> title="AI 按网址内容自动归类，可先预览再确认">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="m12 3 1.9 4.6 4.6 1.9-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9Z"></path>
+                            <path d="M18.5 15.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9Z"></path>
+                        </svg>
+                        <span class="my-btn-label">AI 分类</span>
                     </button>
                     <button type="button" class="my-btn" id="pickBtn" <?php echo $hasLinks ? '' : 'aria-disabled="true"'; ?>>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -3035,10 +3230,75 @@ DELETE /api/sites.php       删除网址</code></pre>
     </dialog>
 
     <!-- v2.16.0 · 回收站：列出本人已删除的网址，可恢复 / 彻底删除 / 一键清空 -->
+    <!-- v2.16.2：AI 一键分类 -->
+    <dialog class="my-dialog my-dialog-wide" id="aiCategorizeDialog">
+        <form method="dialog" class="my-dialog-head">
+            <h2>AI 智能分类</h2>
+            <button type="button" class="my-iconbtn" data-close aria-label="关闭">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+            </button>
+        </form>
+
+        <div class="my-dialog-body">
+            <div id="aiCatSetup">
+                <p class="my-hint ai-cat-intro">AI 会读取每条网址的名称、地址和描述，判断它该放进哪个分组。分组不存在时自动新建，归属你自己，不会动公共分组。</p>
+
+                <div class="ai-cat-scope">
+                    <label class="ai-cat-option">
+                        <input type="radio" name="aiCatScope" value="ungrouped" checked>
+                        <span class="ai-cat-option-body">
+                            <strong>只整理未分类</strong>
+                            <em>已有分组的保持不动，最安全</em>
+                        </span>
+                    </label>
+                    <label class="ai-cat-option">
+                        <input type="radio" name="aiCatScope" value="all">
+                        <span class="ai-cat-option-body">
+                            <strong>整理全部网址</strong>
+                            <em>已分组的也可能被重新归类</em>
+                        </span>
+                    </label>
+                </div>
+
+                <p class="my-msg is-error" id="aiCatSetupError" hidden></p>
+
+                <div class="my-dialog-actions">
+                    <button type="button" class="my-btn is-ghost" data-close>取消</button>
+                    <button type="button" class="my-btn is-primary" id="aiCatStartBtn">开始分析</button>
+                </div>
+            </div>
+
+            <div id="aiCatProgress" hidden>
+                <div class="ai-cat-progress"><span id="aiCatProgressBar"></span></div>
+                <p class="my-hint ai-cat-progress-text" id="aiCatProgressText">正在分析…</p>
+                <div class="my-dialog-actions">
+                    <button type="button" class="my-btn is-ghost" id="aiCatCancelBtn">中断</button>
+                </div>
+            </div>
+
+            <div id="aiCatResult" hidden>
+                <div class="ai-cat-toolbar">
+                    <label class="my-check">
+                        <input type="checkbox" id="aiCatSelectAll" checked>
+                        <span>全选（已选 <span id="aiCatCount">0</span> / 共 <span id="aiCatCountAll">0</span> 项）</span>
+                    </label>
+                    <span class="my-hint" id="aiCatSummary"></span>
+                </div>
+
+                <div class="ai-cat-list" id="aiCatList"></div>
+
+                <div class="my-dialog-actions ai-cat-actions">
+                    <button type="button" class="my-btn is-ghost" id="aiCatBackBtn">重新分析</button>
+                    <button type="button" class="my-btn is-primary" id="aiCatApplyBtn">应用分类</button>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
     <dialog class="my-dialog" id="recycleDialog">
         <form method="dialog" class="my-dialog-head">
             <h2>回收站</h2>
-            <button type="button" class="my-dialog-close" data-close aria-label="关闭">
+            <button type="button" class="my-iconbtn" data-close aria-label="关闭">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
             </button>
         </form>
@@ -3565,6 +3825,374 @@ DELETE /api/sites.php       删除网址</code></pre>
                         }
                     });
                 }
+            })();
+
+            // v2.16.2 · AI 一键分类：分批分析 → 预览清单 → 确认后落库
+            (function () {
+                var dialog = qs('#aiCategorizeDialog');
+                var openBtn = qs('#aiCategorizeBtn');
+
+                if (!dialog || !openBtn) { return; }
+
+                var BATCH = 20;
+
+                var setup = qs('#aiCatSetup');
+                var progress = qs('#aiCatProgress');
+                var resultBox = qs('#aiCatResult');
+                var progressBar = qs('#aiCatProgressBar');
+                var progressText = qs('#aiCatProgressText');
+                var setupError = qs('#aiCatSetupError');
+                var listBox = qs('#aiCatList');
+                var countEl = qs('#aiCatCount');
+                var countAllEl = qs('#aiCatCountAll');
+                var summaryEl = qs('#aiCatSummary');
+                var selectAll = qs('#aiCatSelectAll');
+                var startBtn = qs('#aiCatStartBtn');
+                var cancelBtn = qs('#aiCatCancelBtn');
+                var backBtn = qs('#aiCatBackBtn');
+                var applyBtn = qs('#aiCatApplyBtn');
+
+                var rows = [];
+                var aborted = false;
+                var started = false;
+
+                function showModal() {
+                    if (typeof dialog.showModal === 'function') {
+                        dialog.showModal();
+                    } else {
+                        dialog.setAttribute('open', 'open');
+                    }
+                }
+
+                function hideModal() {
+                    if (typeof dialog.close === 'function') {
+                        dialog.close();
+                    } else {
+                        dialog.removeAttribute('open');
+                    }
+                }
+
+                function resetUI() {
+                    aborted = true;
+                    started = false;
+                    rows = [];
+                    setup.hidden = false;
+                    progress.hidden = true;
+                    resultBox.hidden = true;
+                    setupError.hidden = true;
+                    setupError.textContent = '';
+                    progressBar.style.width = '0%';
+                    progressText.textContent = '正在分析…';
+                    listBox.innerHTML = '';
+                    countEl.textContent = '0';
+                    if (countAllEl) { countAllEl.textContent = '0'; }
+                    summaryEl.textContent = '';
+                    applyBtn.disabled = false;
+                    applyBtn.textContent = '应用分类';
+                    startBtn.disabled = false;
+                    startBtn.textContent = '开始分析';
+                }
+
+                function currentScope() {
+                    var checked = dialog.querySelector('input[name="aiCatScope"]:checked');
+                    return checked ? checked.value : 'ungrouped';
+                }
+
+                function fail(message) {
+                    progress.hidden = true;
+                    setup.hidden = false;
+                    setupError.textContent = message;
+                    setupError.hidden = false;
+                }
+
+                if (openBtn.getAttribute('aria-disabled') === 'true') {
+                    openBtn.addEventListener('click', function () {
+                        alert('还没有收藏任何网址，先添加几条再来分类吧');
+                    });
+                    return;
+                }
+
+                openBtn.addEventListener('click', function () {
+                    resetUI();
+                    showModal();
+                });
+
+                qsa('[data-close]', dialog).forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        aborted = true;
+                        hideModal();
+                    });
+                });
+
+                // Esc 关闭时也要把状态复位，否则下次打开会停在半截
+                dialog.addEventListener('close', function () {
+                    aborted = true;
+                });
+
+                startBtn.addEventListener('click', function () {
+                    if (started) { return; }
+
+                    started = true;
+                    aborted = false;
+                    rows = [];
+
+                    var scopeValue = currentScope();
+                    var offset = 0;
+                    var total = 0;
+
+                    setup.hidden = true;
+                    setupError.hidden = true;
+                    resultBox.hidden = true;
+                    progress.hidden = false;
+                    progressBar.style.width = '0%';
+                    progressText.textContent = '正在分析…';
+                    startBtn.disabled = true;
+
+                    function step() {
+                        if (aborted) { return Promise.resolve(false); }
+
+                        return postForm(API_SITES, {
+                            action: 'ai_categorize_preview',
+                            scope: scopeValue,
+                            offset: offset,
+                            limit: BATCH
+                        }).then(function (data) {
+                            if (aborted) { return false; }
+
+                            if (!data || !data.ok) {
+                                throw new Error((data && data.error) || '分析失败，请稍后重试');
+                            }
+
+                            total = data.total || 0;
+
+                            if (!data.items || !data.items.length) { return false; }
+
+                            rows = rows.concat(data.items);
+                            offset = data.next || (offset + data.items.length);
+
+                            var pct = total > 0 ? Math.min(100, Math.round(offset / total * 100)) : 100;
+                            progressBar.style.width = pct + '%';
+                            progressText.textContent = '已分析 ' + offset + ' / ' + total + ' 条…';
+
+                            if (data.done || offset >= total) { return false; }
+
+                            return step();
+                        });
+                    }
+
+                    step().then(function () {
+                        started = false;
+                        startBtn.disabled = false;
+
+                        if (aborted) { return; }
+
+                        progress.hidden = true;
+
+                        if (!rows.length) {
+                            fail(scopeValue === 'ungrouped'
+                                ? '没有未分类的网址，已经很整齐了'
+                                : '没有可分析的网址');
+                            return;
+                        }
+
+                        render();
+                    }).catch(function (error) {
+                        started = false;
+                        startBtn.disabled = false;
+
+                        if (aborted) { return; }
+
+                        fail(error && error.message ? error.message : '分析失败，请稍后重试');
+                    });
+                });
+
+                cancelBtn.addEventListener('click', function () {
+                    aborted = true;
+                    started = false;
+                    startBtn.disabled = false;
+                    resetUI();
+                });
+
+                backBtn.addEventListener('click', function () {
+                    resetUI();
+                });
+
+                // 勾选状态变了就同步三处：已选计数、全选框、应用按钮可用性
+                function syncSelection() {
+                    var boxes = qsa('.ai-cat-check', dialog).filter(function (box) {
+                        return !box.disabled;
+                    });
+                    var checked = boxes.filter(function (box) {
+                        return box.checked;
+                    }).length;
+
+                    countEl.textContent = String(checked);
+
+                    if (!boxes.length) {
+                        selectAll.checked = false;
+                        selectAll.indeterminate = false;
+                        selectAll.disabled = true;
+                    } else {
+                        selectAll.disabled = false;
+                        selectAll.checked = checked === boxes.length;
+                        selectAll.indeterminate = checked > 0 && checked < boxes.length;
+                    }
+
+                    applyBtn.disabled = checked === 0;
+                }
+
+                selectAll.addEventListener('change', function () {
+                    qsa('.ai-cat-check', dialog).forEach(function (box) {
+                        if (!box.disabled) { box.checked = selectAll.checked; }
+                    });
+                    syncSelection();
+                });
+
+                // 单条勾选：事件委托到列表容器，省得每次渲染都重绑
+                listBox.addEventListener('change', function (event) {
+                    var target = event.target;
+                    if (!target || target.className.indexOf('ai-cat-check') === -1) { return; }
+                    syncSelection();
+                });
+
+                function render() {
+                    listBox.innerHTML = '';
+
+                    var changeable = 0;
+                    var newGroups = {};
+                    var shown = 0;
+
+                    rows.forEach(function (item, index) {
+                        if (!item.changed && !item.suggest_name) { return; }
+
+                        shown++;
+
+                        if (item.changed) {
+                            changeable++;
+                            if (item.is_new) { newGroups[item.suggest_name] = true; }
+                        }
+
+                        var row = document.createElement('label');
+                        row.className = 'ai-cat-row';
+
+                        var box = document.createElement('input');
+                        box.type = 'checkbox';
+                        box.className = 'ai-cat-check';
+                        box.checked = !!item.changed;
+                        box.disabled = !item.changed;
+                        box.setAttribute('data-index', String(index));
+                        row.appendChild(box);
+
+                        var main = document.createElement('span');
+                        main.className = 'ai-cat-row-main';
+
+                        var name = document.createElement('span');
+                        name.className = 'ai-cat-row-name';
+                        name.textContent = item.name || item.url;
+                        name.title = item.name || item.url;
+                        main.appendChild(name);
+
+                        var path = document.createElement('span');
+                        path.className = 'ai-cat-row-path';
+
+                        var from = document.createElement('span');
+                        from.className = 'ai-cat-tag';
+                        from.textContent = item.current_category_name || '未分类';
+                        path.appendChild(from);
+
+                        var arrow = document.createElement('span');
+                        arrow.className = 'ai-cat-arrow';
+                        arrow.textContent = '→';
+                        path.appendChild(arrow);
+
+                        var to = document.createElement('span');
+                        to.className = 'ai-cat-tag' + (item.is_new ? ' is-new' : '');
+                        to.textContent = item.suggest_name || '保持不变';
+                        if (item.is_new) { to.title = '该分组不存在，应用后会新建'; }
+                        path.appendChild(to);
+
+                        main.appendChild(path);
+                        row.appendChild(main);
+                        listBox.appendChild(row);
+                    });
+
+                    resultBox.hidden = false;
+
+                    var newCount = Object.keys(newGroups).length;
+
+                    if (countAllEl) { countAllEl.textContent = String(changeable); }
+                    summaryEl.textContent = changeable > 0
+                        ? '共 ' + shown + ' 条，'
+                            + changeable + ' 条建议调整'
+                            + (newCount > 0 ? '，将新建 ' + newCount + ' 个分组' : '')
+                        : 'AI 认为当前分类已经合理，无需调整';
+
+                    syncSelection();
+                    syncFade();
+                }
+
+                // 列表没溢出或已滚到底时，不需要底部渐隐
+                function syncFade() {
+                    if (!listBox) { return; }
+                    var remains = listBox.scrollHeight - listBox.scrollTop - listBox.clientHeight;
+                    listBox.classList.toggle('is-short', remains <= 2);
+                }
+
+                listBox.addEventListener('scroll', syncFade);
+
+                applyBtn.addEventListener('click', function () {
+                    var payload = [];
+
+                    qsa('.ai-cat-check', dialog).forEach(function (box) {
+                        if (!box.checked || box.disabled) { return; }
+
+                        var index = parseInt(box.getAttribute('data-index'), 10);
+                        var item = rows[index];
+
+                        if (!item || !item.suggest_name) { return; }
+
+                        payload.push({ id: item.id, category: item.suggest_name });
+                    });
+
+                    if (!payload.length) {
+                        alert('请先勾选要应用的分类');
+                        return;
+                    }
+
+                    applyBtn.disabled = true;
+                    applyBtn.textContent = '应用中…';
+
+                    postForm(API_SITES, {
+                        action: 'ai_categorize_apply',
+                        payload: JSON.stringify(payload)
+                    }).then(function (data) {
+                        if (!data || !data.ok) {
+                            throw new Error((data && data.error) || '应用失败，请稍后重试');
+                        }
+
+                        var parts = ['分类成功：已调整 ' + (data.moved || 0) + ' 条网址'];
+
+                        if (data.created && data.created.length) {
+                            parts.push('新建分组 ' + data.created.length + ' 个：' + data.created.join('、'));
+                        }
+
+                        if (data.failed) {
+                            parts.push(data.failed + ' 条未能更新');
+                        }
+
+                        if (data.skipped) {
+                            parts.push(data.skipped + ' 条已在目标分组，已跳过');
+                        }
+
+                        applyBtn.textContent = '完成';
+                        alert(parts.join('\n'));
+                        window.location.reload();
+                    }).catch(function (error) {
+                        applyBtn.disabled = false;
+                        applyBtn.textContent = '应用分类';
+                        alert(error && error.message ? error.message : '应用失败，请稍后重试');
+                    });
+                });
             })();
 
             var fetchBtn = qs('#fetchBtn');
@@ -6289,6 +6917,6 @@ DELETE /api/sites.php       删除网址</code></pre>
         })();
     </script>
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.16.1" defer></script>
+<script src="assets/js/search.js?v=2.16.2" defer></script>
 </body>
 </html>

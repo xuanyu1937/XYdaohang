@@ -1880,6 +1880,159 @@ class AiService extends BaseService
     }
 
     /**
+     * 批量分类：一次请求给多条网址分配分类，返回 id → 分类名 的映射。
+     *
+     * 逐条调 AI 太慢（50 条要 50 次往返，两三分钟起步），所以把整批发过去，
+     * 让模型直接吐一个 JSON 数组回来。调用方负责切批（建议 20~25 条一批）。
+     *
+     * @param array $items      [['id'=>1,'name'=>'GitHub','url'=>'https://github.com','description'=>'代码托管'], ...]
+     * @param array $categories 已有分类名列表，模型优先从中选
+     * @return array ['ok'=>bool,'source'=>'ai','map'=>[id=>分类名],'missing'=>[id...],'error'=>string]
+     */
+    public function categorizeBatch(array $items, array $categories)
+    {
+        $items = array_values(array_filter($items, static function ($item) {
+            return is_array($item) && isset($item['id']) && (int) $item['id'] > 0;
+        }));
+
+        if (!$items) {
+            return ['ok' => false, 'source' => 'none', 'error' => 'empty_input', 'map' => [], 'missing' => []];
+        }
+
+        if (!$this->enabled()) {
+            return ['ok' => false, 'source' => 'none', 'error' => 'ai_disabled', 'map' => [], 'missing' => array_map('intval', array_column($items, 'id'))];
+        }
+
+        $url = $this->setting('ai_api_url');
+        $key = $this->setting('ai_api_key');
+        $model = $this->setting('ai_model', 'gpt-4o-mini');
+
+        if (strpos($url, 'http') !== 0) {
+            return ['ok' => false, 'source' => 'ai', 'error' => 'invalid_api_url', 'map' => [], 'missing' => []];
+        }
+
+        $url = $this->chatEndpoint($url);
+
+        // 精简输入：只发模型需要判断的字段，描述截断，控制 token
+        $payload = [];
+
+        foreach ($items as $item) {
+            $row = [
+                'id' => (int) $item['id'],
+                'name' => $this->textCut(trim((string) ($item['name'] ?? '')), 60),
+                'url' => $this->textCut(trim((string) ($item['url'] ?? '')), 120),
+            ];
+
+            $desc = trim((string) ($item['description'] ?? ''));
+
+            if ($desc !== '') {
+                $row['desc'] = $this->textCut($desc, 80);
+            }
+
+            $payload[] = $row;
+        }
+
+        $list = $categories ? implode('、', array_map(static function ($name) {
+            return (string) $name;
+        }, $categories)) : '（暂无分类）';
+
+        $prompt = "已有分类：{$list}\n\n"
+            . "待分类网址（JSON 数组）：\n" . json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n\n"
+            . "请为每一条分配一个分类，规则：\n"
+            . "1. 优先使用「已有分类」里最合适的一个，名字必须与已有分类完全一致；\n"
+            . "2. 已有分类都不合适时，给出一个新分类名（2-6 个汉字，如「AI 工具」「设计素材」）；\n"
+            . "3. 同一批里相似性质的网址尽量归到同一个分类，不要制造大量近似分类；\n"
+            . "4. 必须覆盖输入的每一个 id，一条不漏；\n"
+            . "5. 只输出 JSON 数组，不要任何解释文字。\n\n"
+            . '输出格式：[{"id":1,"category":"开发工具"},{"id":2,"category":"设计素材"}]';
+
+        $body = json_encode([
+            'model' => $model,
+            'messages' => [
+                ['role' => 'system', 'content' => '你是网站分类助手，只输出合法的 JSON 数组，不加代码块标记。'],
+                ['role' => 'user', 'content' => $prompt],
+            ],
+            'temperature' => 0.2,
+            'max_tokens' => min(4000, 120 + count($payload) * 40),
+        ], JSON_UNESCAPED_UNICODE);
+
+        $response = $this->postJson($url, $body, $key, 40);
+
+        if (!$response['ok']) {
+            $this->log('AI 批量分类失败: ' . ($response['error'] ?? 'unknown'), 'WARNING');
+
+            return ['ok' => false, 'source' => 'ai', 'error' => $response['error'], 'map' => [], 'missing' => []];
+        }
+
+        $data = json_decode((string) $response['body'], true);
+        $content = '';
+
+        if (is_array($data) && isset($data['choices'][0]['message']['content'])) {
+            $content = (string) $data['choices'][0]['message']['content'];
+        }
+
+        // 去掉 ```json 包裹
+        $content = trim($content);
+        $content = preg_replace('/^```(?:json)?\s*/i', '', $content);
+        $content = preg_replace('/\s*```$/', '', (string) $content);
+        $content = trim((string) $content);
+
+        // 模型偶尔会带前缀说明，截取第一个 [ 到最后一个 ]
+        $start = strpos($content, '[');
+        $end = strrpos($content, ']');
+
+        if ($start !== false && $end !== false && $end > $start) {
+            $content = substr($content, $start, $end - $start + 1);
+        }
+
+        $rows = json_decode((string) $content, true);
+
+        if (!is_array($rows)) {
+            $this->log('AI 批量分类返回无法解析: ' . $this->textCut((string) $content, 200), 'WARNING');
+
+            return ['ok' => false, 'source' => 'ai', 'error' => 'bad_json', 'map' => [], 'missing' => []];
+        }
+
+        $validIds = array_flip(array_map('intval', array_column($items, 'id')));
+        $map = [];
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $id = (int) ($row['id'] ?? 0);
+            $name = trim((string) ($row['category'] ?? $row['name'] ?? ''));
+
+            if ($id <= 0 || !isset($validIds[$id]) || $name === '') {
+                continue;
+            }
+
+            $name = preg_replace('/["\'「」《》。，,、:：\r\n]+/u', '', $name);
+            $name = $this->textCut(trim((string) $name), 30);
+
+            if ($name === '' || $name === '无') {
+                continue;
+            }
+
+            $map[$id] = $name;
+        }
+
+        $missing = array_values(array_diff(array_keys($validIds), array_keys($map)));
+
+        if (!$map) {
+            return ['ok' => false, 'source' => 'ai', 'error' => 'no_match', 'map' => [], 'missing' => $missing];
+        }
+
+        return [
+            'ok' => true,
+            'source' => 'ai',
+            'map' => $map,
+            'missing' => $missing,
+        ];
+    }
+
+    /**
      * 调用 OpenAI 兼容的 chat completions 接口。
      */
     protected function askModel($name, $description, array $categories)
