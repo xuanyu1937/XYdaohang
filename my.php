@@ -439,6 +439,10 @@ foreach ($rawLinks as $row) {
         'initial' => $initial,
         'description' => (string) ($row['description'] ?? ''),
         'category_id' => $categoryId,
+        // v2.16.3：logo 原值必须单独带上——列表的 data-logo 靠它回填编辑弹窗。
+        // 此前只给了 favicons（渲染用的兜底链），data-logo 一直是空串，
+        // 导致「打开编辑 → 不改图标 → 保存」会把已有的图标覆盖成空。
+        'logo' => (string) ($row['logo'] ?? ''),
         'favicons' => $faviconFor($row['logo'] ?? '', $url),
         'tags' => (string) ($row['tags'] ?? ''),
         'alias' => (string) ($row['alias'] ?? ''),
@@ -490,9 +494,9 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.16.2">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.16.2">
-    <script src="assets/js/category-quick-add.js?v=2.16.2" defer></script>
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.16.3">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.16.3">
+    <script src="assets/js/category-quick-add.js?v=2.16.3" defer></script>
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -1471,6 +1475,161 @@ $hasLinks = $totalLinks > 0;
             box-shadow: 0 0 0 3px var(--primary-soft);
         }
 
+        /* ===== v2.16.3 · 网址图标编辑 ===== */
+        .my-icon-editor {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--surface-2);
+        }
+
+        .my-icon-preview {
+            position: relative;
+            display: inline-flex;
+            flex: none;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--surface);
+            box-shadow: inset 0 0 0 1px var(--border);
+            overflow: hidden;
+        }
+
+        /* 图标本身常是正方形，内留 6px 让它在框里不至于顶满 */
+        .my-icon-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 6px;
+            border-radius: 12px;
+            background: transparent;
+        }
+
+        .my-icon-preview-letter {
+            font-size: 19px;
+            font-weight: 700;
+            color: var(--muted);
+            line-height: 1;
+        }
+
+        /* 上传中：预览框蒙一层 + 转圈，避免用户以为没反应 */
+        .my-icon-preview.is-busy::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: var(--surface-2);
+            opacity: .78;
+        }
+
+        .my-icon-preview.is-busy::before {
+            content: '';
+            position: absolute;
+            z-index: 1;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border-strong);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: my-icon-spin 0.7s linear infinite;
+        }
+
+        @keyframes my-icon-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .my-icon-preview.is-busy::before { animation-duration: 2s; }
+        }
+
+        .my-icon-editor-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .my-icon-editor-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* 按钮文字一律不折行，窄屏下宁可整行换掉 */
+        .my-icon-editor-actions .my-btn,
+        .my-icon-url-row .my-btn {
+            white-space: nowrap;
+        }
+
+        .my-icon-url-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 9px;
+        }
+
+        .my-icon-url-row input {
+            flex: 1;
+            min-width: 0;
+            padding: 7px 11px;
+            font-size: 13px;
+        }
+
+        .my-icon-url-row .my-btn {
+            flex: none;
+            height: 34px;
+        }
+
+        .my-icon-note {
+            margin-top: 9px;
+        }
+
+        .my-icon-note.is-error {
+            color: var(--danger, #dc2626);
+        }
+
+        .my-icon-note.is-ok {
+            color: var(--success, #16a34a);
+        }
+
+        @media (max-width: 575.98px) {
+            /* 窄屏改成上下结构：预览在上、按钮铺满一行，避免预览框被挤成窄条 */
+            .my-icon-editor {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+                padding: 11px;
+            }
+
+            .my-icon-preview {
+                width: 48px;
+                height: 48px;
+            }
+
+            .my-icon-editor-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .my-icon-editor-actions .my-btn {
+                width: 100%;
+                justify-content: center;
+                min-height: 36px;
+            }
+
+            /* 「恢复默认」独占一行，不做成半个按钮 */
+            .my-icon-editor-actions .my-btn.is-ghost {
+                grid-column: 1 / -1;
+            }
+
+            .my-icon-url-row .my-btn {
+                min-height: 36px;
+            }
+        }
+
         /* 批量导入 · 校对列表 */
         .bp-hint {
             margin: 6px 0 0;
@@ -1790,6 +1949,9 @@ $hasLinks = $totalLinks > 0;
         /* 抓取按钮：主色渐变实心 + 白图标，悬浮上浮、点击下压，进行中图标旋转 */
         #fetchBtn {
             position: relative;
+            /* v2.16.3：按钮不许被输入框挤窄，否则「抓取」两个字会折成两行 */
+            flex: none;
+            white-space: nowrap;
             border-color: transparent;
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-filled-hover) 100%);
             color: var(--primary-contrast);
@@ -2687,6 +2849,53 @@ $hasLinks = $totalLinks > 0;
                     <p class="my-note">留空名称时，保存会自动抓取网站标题。</p>
                 </div>
 
+                <!-- v2.16.3：网站图标编辑区。放在「名称」上方，视觉上先看到站点样子 -->
+                <div class="my-field my-icon-field">
+                    <label>网站图标</label>
+
+                    <div class="my-icon-editor">
+                        <span class="my-icon-preview" id="linkIconPreview" aria-hidden="true">
+                            <span class="my-icon-preview-letter" id="linkIconLetter">?</span>
+                            <img id="linkIconImg" alt="" width="48" height="48" hidden referrerpolicy="no-referrer" decoding="async">
+                        </span>
+
+                        <div class="my-icon-editor-main">
+                            <div class="my-icon-editor-actions">
+                                <button type="button" class="my-btn is-small" id="linkIconUploadBtn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path>
+                                        <path d="M20 16v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2"></path>
+                                    </svg>
+                                    <span class="my-btn-label">上传图标</span>
+                                </button>
+
+                                <button type="button" class="my-btn is-small" id="linkIconUrlBtn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"></path>
+                                        <path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"></path>
+                                    </svg>
+                                    <span class="my-btn-label">输入图标URL</span>
+                                </button>
+
+                                <button type="button" class="my-btn is-small is-ghost" id="linkIconResetBtn" hidden>恢复默认</button>
+                            </div>
+
+                            <input type="file" id="linkIconFile" accept=".png,.jpg,.jpeg,.svg,.ico,image/png,image/jpeg,image/svg+xml,image/x-icon,image/vnd.microsoft.icon" hidden>
+
+                            <!-- 输入 URL 时就地展开，比再弹一层弹窗更轻 -->
+                            <div class="my-icon-url-row" id="linkIconUrlRow" hidden>
+                                <input type="url" id="linkIconUrlInput" maxlength="500" autocomplete="off" spellcheck="false" placeholder="https://example.com/icon.png">
+                                <button type="button" class="my-btn is-small is-primary" id="linkIconUrlOk">确定</button>
+                            </div>
+
+                            <p class="my-note my-icon-note" id="linkIconNote" aria-live="polite">支持 PNG / JPG / SVG / ICO，超过 256px 会自动压缩。留空则自动抓取网站图标。</p>
+                        </div>
+                    </div>
+
+                    <!-- 真正提交的字段：图标路径或外链 URL -->
+                    <input type="hidden" id="linkLogo" name="logo" value="">
+                </div>
+
                 <div class="my-field">
                     <label for="linkName">名称</label>
                     <input type="text" id="linkName" name="name" maxlength="100" autocomplete="off" placeholder="例如：GitHub">
@@ -2708,11 +2917,6 @@ $hasLinks = $totalLinks > 0;
                 <div class="my-field">
                     <label for="linkDescription">备注</label>
                     <textarea id="linkDescription" name="description" maxlength="200" autocomplete="off" placeholder="可留空"></textarea>
-                </div>
-
-                <div class="my-field">
-                    <label for="linkLogo">图标地址</label>
-                    <input type="url" id="linkLogo" name="logo" maxlength="500" autocomplete="off" spellcheck="false" placeholder="可留空，自动使用网站图标">
                 </div>
 
                 <div class="my-field">
@@ -2768,6 +2972,51 @@ $hasLinks = $totalLinks > 0;
                         <option value="<?php echo (int) $group['id']; ?>"><?php echo $functions->escape(($group['is_private'] ? '🔒 ' : '') . $group['name']); ?></option>
                     <?php endforeach; ?>
                 </select>
+            </div>
+
+            <!-- v2.16.3：与编辑弹窗保持一致的图标编辑区 -->
+            <div class="my-field my-icon-field">
+                <label>网站图标</label>
+
+                <div class="my-icon-editor">
+                    <span class="my-icon-preview" id="qaIconPreview" aria-hidden="true">
+                        <span class="my-icon-preview-letter" id="qaIconLetter">?</span>
+                        <img id="qaIconImg" alt="" width="48" height="48" hidden referrerpolicy="no-referrer" decoding="async">
+                    </span>
+
+                    <div class="my-icon-editor-main">
+                        <div class="my-icon-editor-actions">
+                            <button type="button" class="my-btn is-small" id="qaIconUploadBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path>
+                                    <path d="M20 16v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2"></path>
+                                </svg>
+                                <span class="my-btn-label">上传图标</span>
+                            </button>
+
+                            <button type="button" class="my-btn is-small" id="qaIconUrlBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"></path>
+                                </svg>
+                                <span class="my-btn-label">输入图标URL</span>
+                            </button>
+
+                            <button type="button" class="my-btn is-small is-ghost" id="qaIconResetBtn" hidden>恢复默认</button>
+                        </div>
+
+                        <input type="file" id="qaIconFile" accept=".png,.jpg,.jpeg,.svg,.ico,image/png,image/jpeg,image/svg+xml,image/x-icon,image/vnd.microsoft.icon" hidden>
+
+                        <div class="my-icon-url-row" id="qaIconUrlRow" hidden>
+                            <input type="url" id="qaIconUrlInput" maxlength="500" autocomplete="off" spellcheck="false" placeholder="https://example.com/icon.png">
+                            <button type="button" class="my-btn is-small is-primary" id="qaIconUrlOk">确定</button>
+                        </div>
+
+                        <p class="my-note my-icon-note" id="qaIconNote" aria-live="polite">支持 PNG / JPG / SVG / ICO，超过 256px 会自动压缩。留空则自动抓取网站图标。</p>
+                    </div>
+                </div>
+
+                <input type="hidden" id="qaLogo" value="">
             </div>
         </div>
         <div class="my-dialog-foot">
@@ -3469,6 +3718,292 @@ DELETE /api/sites.php       删除网址</code></pre>
                 button.classList.remove('is-busy');
             }
 
+            /* ------------------------- v2.16.3 · 网址图标编辑 -------------------------
+             * 弹窗里的图标区只管「当前选中了什么图标」，真正的落库完全交给保存时提交的
+             * 隐藏字段（linkLogo / qaLogo）：
+             *   ''                      → 不设图标，保存后由后端自动抓取
+             *   uploads/logos/xxx.png   → 本地上传的图标
+             *   https://...             → 外链图标
+             * 用户没动过图标时保持原值，所以「编辑时不改图标 = 图标不变」是天然的。
+             *
+             * 做成工厂是因为编辑弹窗和快捷收藏弹窗各有一套，逻辑完全一样。
+             */
+            function createIconEditor(prefix, options) {
+                options = options || {};
+
+                var box = qs('#' + prefix + 'Preview');
+                var img = qs('#' + prefix + 'Img');
+                var letter = qs('#' + prefix + 'Letter');
+                var fileInput = qs('#' + prefix + 'File');
+                var uploadBtn = qs('#' + prefix + 'UploadBtn');
+                var urlBtn = qs('#' + prefix + 'UrlBtn');
+                var urlRow = qs('#' + prefix + 'UrlRow');
+                var urlInput = qs('#' + prefix + 'UrlInput');
+                var urlOk = qs('#' + prefix + 'UrlOk');
+                var resetBtn = qs('#' + prefix + 'ResetBtn');
+                var note = qs('#' + prefix + 'Note');
+                var hidden = options.hiddenField ? qs(options.hiddenField) : null;
+                var hint = note ? note.textContent : '';
+
+                if (!box || !img) {
+                    return null;
+                }
+
+                // 本次会话里上传但还没保存成功的临时文件，换图 / 关闭弹窗时要清掉
+                var pendingUpload = '';
+                var value = '';
+                var uploading = false;
+                var currentUrl = '';
+
+                function setNote(text, type) {
+                    if (!note) { return; }
+
+                    note.textContent = text || hint;
+                    note.className = 'my-note my-icon-note' + (type ? ' is-' + type : '');
+                }
+
+                function showImage(src) {
+                    img.onerror = null;
+                    img.hidden = false;
+                    img.src = src;
+
+                    if (letter) { letter.style.display = 'none'; }
+                }
+
+                function showLetter(text) {
+                    img.hidden = true;
+                    img.removeAttribute('src');
+
+                    if (letter) {
+                        letter.style.display = '';
+                        letter.textContent = text || '?';
+                    }
+                }
+
+                function guessIconSrc(logo) {
+                    // 上传接口返回的是绝对地址；从列表数据回填时才需要补根路径
+                    if (/^(https?:)?\/\//i.test(logo) || logo.charAt(0) === '/') {
+                        return logo;
+                    }
+
+                    return '/' + logo;
+                }
+
+                function initialOf(url) {
+                    var text = String(url || '').replace(/^https?:\/\//i, '').replace(/^www\./i, '');
+
+                    if (!text) { return '?'; }
+
+                    return text.charAt(0).toUpperCase();
+                }
+
+                function setValue(next) {
+                    value = next || '';
+
+                    if (hidden) { hidden.value = value; }
+
+                    if (resetBtn) { resetBtn.hidden = value === ''; }
+                }
+
+                function busy(on, text) {
+                    uploading = on;
+                    box.classList.toggle('is-busy', on);
+
+                    if (uploadBtn) { uploadBtn.disabled = on; }
+                    if (urlBtn) { urlBtn.disabled = on; }
+                    if (urlOk) { urlOk.disabled = on; }
+
+                    if (text) { setNote(text); }
+                }
+
+                /** 丢弃上一次未保存的上传文件（失败静默，不打断主流程） */
+                function discardPending() {
+                    if (!pendingUpload) { return; }
+
+                    var target = pendingUpload;
+                    pendingUpload = '';
+
+                    postForm(API_SITES, { action: 'upload_logo', discard: target });
+                }
+
+                /**
+                 * 根据 logo 值渲染预览。
+                 * @param {string} logo       图标路径 / 外链 / 空
+                 * @param {string} siteUrl    网址，决定占位字母
+                 * @param {string} [renderedSrc] 列表里已渲染好的图标地址（编辑时复用）
+                 */
+                function preview(logo, siteUrl, renderedSrc) {
+                    if (logo) {
+                        var src = renderedSrc || guessIconSrc(logo);
+                        showImage(src);
+                        img.onerror = function () {
+                            img.onerror = null;
+                            showLetter(initialOf(siteUrl));
+                        };
+                        return;
+                    }
+
+                    showLetter(initialOf(siteUrl));
+                }
+
+                /** 打开弹窗时重置到初始状态 */
+                function reset(logo, siteUrl, renderedSrc) {
+                    discardPending();
+                    currentUrl = siteUrl || '';
+
+                    if (urlRow) { urlRow.hidden = true; }
+                    if (urlInput) { urlInput.value = ''; }
+
+                    setNote('');
+                    busy(false);
+                    setValue(logo || '');
+                    preview(value, currentUrl, renderedSrc);
+                }
+
+                if (uploadBtn && fileInput) {
+                    uploadBtn.addEventListener('click', function () {
+                        if (uploading) { return; }
+                        fileInput.value = '';
+                        fileInput.click();
+                    });
+
+                    fileInput.addEventListener('change', function () {
+                        var file = fileInput.files && fileInput.files[0];
+
+                        if (!file) { return; }
+
+                        var name = (file.name || '').toLowerCase();
+
+                        if (!/\.(png|jpe?g|svg|ico|webp)$/.test(name)) {
+                            setNote('只支持 PNG / JPG / SVG / ICO 格式', 'error');
+                            return;
+                        }
+
+                        if (file.size > 2 * 1024 * 1024) {
+                            setNote('图标不能超过 2MB', 'error');
+                            return;
+                        }
+
+                        busy(true, '正在上传…');
+
+                        var body = new FormData();
+                        body.append('action', 'upload_logo');
+                        body.append('logo', file);
+
+                        if (pendingUpload) {
+                            body.append('discard', pendingUpload);
+                            pendingUpload = '';
+                        }
+
+                        fetch(API_SITES, {
+                            method: 'POST',
+                            body: body,
+                            credentials: 'same-origin',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        }).then(function (response) {
+                            return response.json().catch(function () {
+                                return { ok: false, error: '服务器返回异常' };
+                            });
+                        }).then(function (result) {
+                            busy(false);
+
+                            if (!result || !result.ok) {
+                                setNote((result && result.error) || '上传失败，请重试', 'error');
+                                preview(value, currentUrl);
+                                return;
+                            }
+
+                            pendingUpload = result.path;
+                            setValue(result.path);
+                            showImage(result.url || guessIconSrc(result.path));
+
+                            var size = result.bytes ? Math.max(1, Math.round(result.bytes / 1024)) : 0;
+                            setNote('图标已上传' + (size ? '（' + size + 'KB）' : '') + '，保存后生效', 'ok');
+                        }).catch(function () {
+                            busy(false);
+                            setNote('网络异常，上传失败', 'error');
+                        });
+                    });
+                }
+
+                if (urlBtn && urlRow) {
+                    urlBtn.addEventListener('click', function () {
+                        var willOpen = urlRow.hidden;
+                        urlRow.hidden = !willOpen;
+
+                        if (willOpen && urlInput) {
+                            urlInput.value = /^https?:\/\//i.test(value) ? value : '';
+                            window.setTimeout(function () { urlInput.focus(); }, 40);
+                        }
+                    });
+                }
+
+                function applyUrl() {
+                    if (!urlInput) { return; }
+
+                    var url = urlInput.value.trim();
+
+                    if (url === '') {
+                        setNote('请填写图标 URL', 'error');
+                        urlInput.focus();
+                        return;
+                    }
+
+                    if (!/^https:\/\//i.test(url)) {
+                        setNote('图标 URL 需要以 https:// 开头', 'error');
+                        urlInput.focus();
+                        return;
+                    }
+
+                    discardPending();
+                    setValue(url);
+                    showImage(url);
+                    img.onerror = function () {
+                        img.onerror = null;
+                        showLetter(initialOf(currentUrl));
+                        setNote('这个地址加载不出图片，请检查链接', 'error');
+                    };
+                    setNote('已使用外链图标，保存后生效', 'ok');
+
+                    if (urlRow) { urlRow.hidden = true; }
+                }
+
+                if (urlOk) { urlOk.addEventListener('click', applyUrl); }
+
+                if (urlInput) {
+                    urlInput.addEventListener('keydown', function (event) {
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                            applyUrl();
+                        }
+                    });
+                }
+
+                if (resetBtn) {
+                    resetBtn.addEventListener('click', function () {
+                        discardPending();
+                        setValue('');
+                        preview('', currentUrl);
+                        setNote('已恢复默认，保存后自动抓取网站图标', 'ok');
+                    });
+                }
+
+                return {
+                    reset: reset,
+                    value: function () { return value; },
+                    discardPending: discardPending,
+                    setSiteUrl: function (url) { currentUrl = url || ''; },
+                    /** 外部（比如「抓取」拿到站点图标后）直接设定图标 */
+                    set: function (logo) {
+                        setValue(logo || '');
+                        preview(value, currentUrl);
+                    }
+                };
+            }
+
+            var linkIcon = createIconEditor('linkIcon', { hiddenField: '#linkLogo' });
+            var quickIcon = createIconEditor('qaIcon', { hiddenField: '#qaLogo' });
+
             function toTop() {
                 var button = qs('#toTop');
 
@@ -3515,6 +4050,12 @@ DELETE /api/sites.php       删除网址</code></pre>
             function openLinkDialog(item) {
                 showMsg(linkMsg, '');
 
+                var sourceItem = null;
+
+                if (item && item.id) {
+                    sourceItem = document.querySelector('.my-item[data-id="' + item.id + '"]');
+                }
+
                 if (item) {
                     linkDialogTitle.textContent = '编辑网址';
                     linkId.value = item.id;
@@ -3540,6 +4081,41 @@ DELETE /api/sites.php       删除网址</code></pre>
                     }
                 }
 
+                // 图标区跟着本次打开的数据重置；编辑时复用列表里已渲染好的图标
+                if (linkIcon) {
+                    var renderedIcon = null;
+
+                    if (sourceItem) {
+                        var renderedImg = sourceItem.querySelector('.my-icon img');
+
+                        if (renderedImg) {
+                            renderedIcon = renderedImg.getAttribute('src') || null;
+                        }
+                    }
+
+                    linkIcon.reset(item ? (item.logo || '') : '', linkUrl.value, renderedIcon);
+
+                    if (item && !item.logo && sourceItem) {
+                        var previewImg = qs('#linkIconImg');
+                        var previewLetter = qs('#linkIconLetter');
+
+                        // 没设 logo 时列表用的是站点 favicon，这里沿用同一张图更贴近「当前样子」
+                        if (renderedIcon && previewImg) {
+                            previewImg.hidden = false;
+                            previewImg.src = renderedIcon;
+                            previewImg.onerror = function () {
+                                previewImg.onerror = null;
+                                previewImg.hidden = true;
+                                if (previewLetter) {
+                                    previewLetter.style.display = '';
+                                    previewLetter.textContent = String(item.name || item.url || '?').charAt(0).toUpperCase();
+                                }
+                            };
+                            if (previewLetter) { previewLetter.style.display = 'none'; }
+                        }
+                    }
+                }
+
                 if (typeof linkDialog.showModal === 'function') {
                     linkDialog.showModal();
                 } else {
@@ -3550,12 +4126,20 @@ DELETE /api/sites.php       删除网址</code></pre>
             }
 
             function closeLinkDialog() {
+                // 换了图标又取消：把还没落库的临时文件删掉，别在 uploads 里留孤儿
+                if (linkIcon) { linkIcon.discardPending(); }
+
                 if (typeof linkDialog.close === 'function') {
                     linkDialog.close();
                 } else {
                     linkDialog.removeAttribute('open');
                 }
             }
+
+            // Esc 关闭走的是原生 dialog 事件，不经过 closeLinkDialog，这里补一次清理
+            linkDialog && linkDialog.addEventListener('close', function () {
+                if (linkIcon) { linkIcon.discardPending(); }
+            });
 
             qs('#addBtn') && qs('#addBtn').addEventListener('click', function () { openLinkDialog(null); });
             qs('#emptyAddBtn') && qs('#emptyAddBtn').addEventListener('click', function () { openLinkDialog(null); });
@@ -4228,7 +4812,11 @@ DELETE /api/sites.php       删除网址</code></pre>
                         }
 
                         if (meta.icons && meta.icons.length && linkLogo.value.trim() === '') {
-                            linkLogo.value = meta.icons[0];
+                            if (linkIcon) {
+                                linkIcon.set(meta.icons[0]);
+                            } else {
+                                linkLogo.value = meta.icons[0];
+                            }
                         }
 
                         if (linkUrl.value.trim() !== '' && !/^https?:\/\//i.test(linkUrl.value.trim())) {
@@ -4261,7 +4849,8 @@ DELETE /api/sites.php       删除网址</code></pre>
                     name: linkName.value.trim(),
                     category_id: linkCategory.value,
                     description: linkDescription.value.trim(),
-                    logo: linkLogo.value.trim(),
+                    // 图标取自图标区的当前值；用户没动过就是原值，保存后保持不变
+                    logo: linkIcon ? linkIcon.value() : linkLogo.value.trim(),
                     tags: (qs('#linkTags') ? qs('#linkTags').value.trim() : ''),
                     alias: (qs('#linkAlias') ? qs('#linkAlias').value.trim() : '')
                 };
@@ -6432,8 +7021,18 @@ DELETE /api/sites.php       删除网址</code></pre>
                     if (quickAddPreview) { quickAddPreview.hidden = true; }
                     if (quickAddMsg) { showMsg(quickAddMsg, '', ''); }
 
+                    // 每次打开都清空图标，避免沿用上一轮的临时上传
+                    if (quickIcon) { quickIcon.reset('', ''); }
+
                     openDialog2(quickAddDialog);
                     setTimeout(function () { if (quickAddUrl) { quickAddUrl.focus(); } }, 50);
+                });
+            }
+
+            // Esc / 关闭按钮关掉时，清掉还没保存的临时图标文件
+            if (quickAddDialog) {
+                quickAddDialog.addEventListener('close', function () {
+                    if (quickIcon) { quickIcon.discardPending(); }
                 });
             }
 
@@ -6450,7 +7049,9 @@ DELETE /api/sites.php       删除网址</code></pre>
                 postForm(API_SITES, {
                     action: 'quick_add',
                     url: url,
-                    category_id: quickAddCategory ? quickAddCategory.value : 0
+                    category_id: quickAddCategory ? quickAddCategory.value : 0,
+                    // v2.16.3：用户手动指定的图标（上传 / 外链）；没指定就留空由后端抓取
+                    logo: quickIcon ? quickIcon.value() : ''
                 }).then(function (result) {
                     if (!result.ok) {
                         showMsg(quickAddMsg, result.error || '收藏失败');
@@ -6501,6 +7102,17 @@ DELETE /api/sites.php       删除网址</code></pre>
                         if (e.key === 'Enter') {
                             e.preventDefault();
                             doQuickAdd();
+                        }
+                    });
+
+                    // 换了网址，占位字母跟着变，预览框不至于一直挂着上一个站点的首字母
+                    quickAddUrl.addEventListener('input', function () {
+                        if (quickIcon) {
+                            quickIcon.setSiteUrl(quickAddUrl.value.trim());
+
+                            if (!quickIcon.value()) {
+                                quickIcon.reset('', quickAddUrl.value.trim());
+                            }
                         }
                     });
                 }
@@ -6917,6 +7529,6 @@ DELETE /api/sites.php       删除网址</code></pre>
         })();
     </script>
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.16.2" defer></script>
+<script src="assets/js/search.js?v=2.16.3" defer></script>
 </body>
 </html>

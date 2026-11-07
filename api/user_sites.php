@@ -109,6 +109,296 @@ function userSiteTrim($value, $limit)
 }
 
 /**
+ * 网址图标上传（v2.16.3）。
+ *
+ * 与后台 uploadLogo() 的差别：
+ *   1. 支持 SVG——但不是原样落盘，而是先把脚本、事件属性、外链引用全部剥掉再存，
+ *      避免「图片目录里躺着一个可执行的 SVG」；
+ *   2. 位图统一压成 PNG 并限制到 256×256：图标框最大也才显示 48px，
+ *      动辄 500KB 的 PNG / 5MB 的 JPG 压完通常只剩几 KB，列表一屏几十张也不卡；
+ *   3. 带文件头魔数校验，不只信 $_FILES['type']（那个字段由客户端随便填）。
+ *
+ * @param Functions $functions
+ * @param array     $file  $_FILES 里的单个文件项
+ * @return array ['success'=>bool,'error'=>string,'relativePath'=>string,...]
+ */
+function userSiteUploadIcon(Functions $functions, array $file)
+{
+    if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
+        $messages = [
+            UPLOAD_ERR_INI_SIZE => '文件超过服务器允许的大小',
+            UPLOAD_ERR_FORM_SIZE => '文件超过允许的大小',
+            UPLOAD_ERR_PARTIAL => '文件只上传了一部分，请重试',
+            UPLOAD_ERR_NO_FILE => '没有选择文件',
+            UPLOAD_ERR_NO_TMP_DIR => '服务器缺少临时目录',
+            UPLOAD_ERR_CANT_WRITE => '服务器写入失败',
+            UPLOAD_ERR_EXTENSION => '上传被服务器扩展中断',
+        ];
+
+        return ['success' => false, 'error' => $messages[(int) $file['error']] ?? '上传失败'];
+    }
+
+    $maxSize = 2 * 1024 * 1024;
+
+    if ((int) ($file['size'] ?? 0) > $maxSize) {
+        return ['success' => false, 'error' => '图标不能超过 2MB'];
+    }
+
+    if ((int) ($file['size'] ?? 0) <= 0) {
+        return ['success' => false, 'error' => '文件是空的'];
+    }
+
+    $tmpPath = (string) ($file['tmp_name'] ?? '');
+
+    if ($tmpPath === '' || !is_uploaded_file($tmpPath)) {
+        return ['success' => false, 'error' => '非法上传'];
+    }
+
+    $uploadDir = dirname(__DIR__) . '/uploads/logos';
+
+    if (!is_dir($uploadDir) && !@mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+        return ['success' => false, 'error' => '上传目录不可写'];
+    }
+
+    $head = (string) @file_get_contents($tmpPath, false, null, 0, 1024);
+    $isSvg = (strpos(ltrim($head), '<') === 0)
+        && (stripos($head, '<svg') !== false || stripos($head, '<?xml') !== false)
+        && stripos($head, '<svg') !== false;
+
+    try {
+        $baseName = bin2hex(random_bytes(8));
+    } catch (Throwable $error) {
+        $baseName = uniqid('icon', true);
+    }
+
+    if ($isSvg) {
+        $cleaned = userSiteCleanSvg($tmpPath);
+
+        if ($cleaned === '') {
+            return ['success' => false, 'error' => 'SVG 内容为空或无法解析'];
+        }
+
+        $fileName = 'icon_' . $baseName . '.svg';
+        $target = $uploadDir . '/' . $fileName;
+
+        if (@file_put_contents($target, $cleaned) === false) {
+            return ['success' => false, 'error' => '文件保存失败'];
+        }
+
+        @chmod($target, 0644);
+
+        return [
+            'success' => true,
+            'relativePath' => 'uploads/logos/' . $fileName,
+            'width' => 0,
+            'height' => 0,
+            'bytes' => strlen($cleaned),
+        ];
+    }
+
+    // ---- 位图：识别格式 → 缩放 → 转 PNG ----
+    $info = @getimagesize($tmpPath);
+    $mime = is_array($info) && !empty($info['mime']) ? (string) $info['mime'] : '';
+
+    $allowed = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/bmp'];
+
+    if ($mime === '' || !in_array($mime, $allowed, true)) {
+        return ['success' => false, 'error' => '仅支持 PNG / JPG / SVG / ICO / WebP 格式'];
+    }
+
+    $pngData = userSiteIconToPng($tmpPath, $mime);
+
+    if ($pngData === '') {
+        // GD 不可用或解码失败时退回原文件落盘，至少功能不中断
+        $extMap = [
+            'image/png' => 'png', 'image/jpeg' => 'jpg', 'image/gif' => 'gif',
+            'image/webp' => 'webp', 'image/bmp' => 'bmp',
+        ];
+        $fileName = 'icon_' . $baseName . '.' . $extMap[$mime];
+        $target = $uploadDir . '/' . $fileName;
+
+        if (!@move_uploaded_file($tmpPath, $target)) {
+            return ['success' => false, 'error' => '文件保存失败'];
+        }
+
+        @chmod($target, 0644);
+
+        return [
+            'success' => true,
+            'relativePath' => 'uploads/logos/' . $fileName,
+            'width' => (int) ($info[0] ?? 0),
+            'height' => (int) ($info[1] ?? 0),
+            'bytes' => (int) ($file['size'] ?? 0),
+        ];
+    }
+
+    $fileName = 'icon_' . $baseName . '.png';
+    $target = $uploadDir . '/' . $fileName;
+
+    if (@file_put_contents($target, $pngData) === false) {
+        return ['success' => false, 'error' => '文件保存失败'];
+    }
+
+    @chmod($target, 0644);
+
+    return [
+        'success' => true,
+        'relativePath' => 'uploads/logos/' . $fileName,
+        'width' => 256,
+        'height' => 256,
+        'bytes' => strlen($pngData),
+    ];
+}
+
+/**
+ * 位图转 256×256 的 PNG（等比缩放到框内，居中，透明底）。
+ * 返回空字符串表示无法处理，调用方应退回原文件。
+ */
+function userSiteIconToPng($path, $mime)
+{
+    if (!extension_loaded('gd') || !function_exists('imagecreatefromstring')) {
+        return '';
+    }
+
+    $raw = @file_get_contents($path);
+
+    if (!is_string($raw) || $raw === '') {
+        return '';
+    }
+
+    $src = @imagecreatefromstring($raw);
+
+    if (!$src) {
+        return '';
+    }
+
+    $srcW = imagesx($src);
+    $srcH = imagesy($src);
+
+    if ($srcW <= 0 || $srcH <= 0) {
+        imagedestroy($src);
+        return '';
+    }
+
+    $box = 256;
+    $scale = min($box / $srcW, $box / $srcH);
+
+    // 小图不放大，免得糊成一团
+    if ($scale > 1) {
+        $scale = 1;
+    }
+
+    $dstW = max(1, (int) round($srcW * $scale));
+    $dstH = max(1, (int) round($srcH * $scale));
+
+    $canvas = imagecreatetruecolor($box, $box);
+
+    if (!$canvas) {
+        imagedestroy($src);
+        return '';
+    }
+
+    imagealphablending($canvas, false);
+    imagesavealpha($canvas, true);
+    $transparent = imagecolorallocatealpha($canvas, 0, 0, 0, 127);
+    imagefilledrectangle($canvas, 0, 0, $box, $box, $transparent);
+
+    imagealphablending($canvas, true);
+
+    $dstX = (int) (($box - $dstW) / 2);
+    $dstY = (int) (($box - $dstH) / 2);
+
+    imagecopyresampled($canvas, $src, $dstX, $dstY, 0, 0, $dstW, $dstH, $srcW, $srcH);
+    imagedestroy($src);
+
+    ob_start();
+    imagepng($canvas, null, 9);
+    $png = (string) ob_get_clean();
+    imagedestroy($canvas);
+
+    return $png;
+}
+
+/**
+ * 清洗 SVG：去掉 script / foreignObject / iframe，去掉 on* 事件属性、
+ * javascript: 协议、外链 <image> / <use> 引用与 <style> 内的 @import / url()。
+ *
+ * 只做字符串级清洗，不引入 DOMDocument（部分环境没装 libxml 的 XML 支持，
+ * 且这条路径只处理用户自己上传的图标，风险面本来就小）。清洗后仍作为 <img> 引用，
+ * <img> 加载的 SVG 浏览器本身就不会执行脚本，这里是第二道保险。
+ */
+function userSiteCleanSvg($path)
+{
+    $svg = @file_get_contents($path, false, null, 0, 512 * 1024);
+
+    if (!is_string($svg) || trim($svg) === '') {
+        return '';
+    }
+
+    // 必须真的是 SVG 根节点
+    if (stripos($svg, '<svg') === false) {
+        return '';
+    }
+
+    // 去掉 XML 声明里的 encoding 之外的杂项，以及 DOCTYPE / ENTITY（XXE 入口）
+    $svg = preg_replace('/<!DOCTYPE[^>]*>/is', '', $svg);
+    $svg = preg_replace('/<\?xml[^>]*\?>/is', '', $svg);
+
+    // 危险容器整块删除（含内容）
+    $svg = preg_replace('#<script\b[^>]*>.*?</script>#is', '', $svg);
+    $svg = preg_replace('#<foreignObject\b[^>]*>.*?</foreignObject>#is', '', $svg);
+    $svg = preg_replace('#<(iframe|object|embed)\b[^>]*>.*?</\1>#is', '', $svg);
+    $svg = preg_replace('#<(iframe|object|embed)\b[^>]*/?>#is', '', $svg);
+
+    // on* 事件属性
+    $svg = preg_replace('/\son[a-z]+\s*=\s*"[^"]*"/i', '', $svg);
+    $svg = preg_replace("/\\son[a-z]+\\s*=\\s*'[^']*'/i", '', $svg);
+    $svg = preg_replace('/\son[a-z]+\s*=\s*[^\s>]+/i', '', $svg);
+
+    // javascript: / data:text/html 协议
+    $svg = preg_replace('/\b(href|xlink:href|src)\s*=\s*(["\'])\s*(javascript|data:text\/html)[^"\']*\2/i', '', $svg);
+
+    // <style> 里也藏得下 @import 和 url(javascript:)
+    $svg = preg_replace('/@import[^;]*;/i', '', $svg);
+    $svg = preg_replace('/url\(\s*["\']?\s*javascript:[^)]*\)/i', '', $svg);
+
+    // 外链 <image> / <use>：图标不需要，直接剥掉属性避免回连第三方
+    $svg = preg_replace('/\s(xlink:)?href\s*=\s*(["\'])\s*https?:\/\/[^"\']*\2/i', '', $svg);
+
+    // 折叠成单行，便于存储与调试（不破坏任何标签结构）
+    $svg = preg_replace('/>\s+</', '><', trim($svg));
+
+    return trim($svg);
+}
+
+/**
+ * 删除本次会话里刚上传、但最终没有保存的临时图标。
+ * 只允许删 uploads/logos 下 icon_ 开头的文件，杜绝借接口删任意文件。
+ */
+function userSiteDiscardUpload($relativePath)
+{
+    $relativePath = str_replace('\\', '/', trim((string) $relativePath));
+
+    if (strpos($relativePath, 'uploads/logos/icon_') !== 0) {
+        return false;
+    }
+
+    $name = basename($relativePath);
+
+    if ($name === '' || strpos($name, 'icon_') !== 0) {
+        return false;
+    }
+
+    if (!preg_match('/^icon_[A-Za-z0-9._-]+$/', $name)) {
+        return false;
+    }
+
+    $full = dirname(__DIR__) . '/uploads/logos/' . $name;
+
+    return is_file($full) ? @unlink($full) : false;
+}
+
+/**
  * 校验分类存在且属于当前用户（分组完全私有化，不允许归入他人/公共分组）。
  */
 function userSiteCategoryId($db, $value, $userId)
@@ -1247,6 +1537,37 @@ switch ($action) {
             'failed' => $failed,
             'created' => array_values(array_unique($createdNames)),
             'total' => count($pairs),
+        ]);
+        break;
+
+    case 'upload_logo':
+        // v2.16.3：编辑网址弹窗里的「上传图标」。
+        // 只落盘、不写库——返回相对路径给前端预览，用户点保存时才随 logo 字段一并提交。
+        $file = $_FILES['logo'] ?? ($_FILES['file'] ?? null);
+
+        // 换图标 / 取消弹窗时把上一次刚上传、还没落库的临时文件删掉，避免攒垃圾。
+        // 必须放在「有没有新文件」判断之前：只带 discard、不带文件的请求也要生效。
+        if (!empty($_POST['discard'])) {
+            userSiteDiscardUpload((string) $_POST['discard']);
+        }
+
+        if (!is_array($file)) {
+            $functions->jsonResponse(['ok' => false, 'error' => '没有收到文件'], 400);
+        }
+
+        $result = userSiteUploadIcon($functions, $file);
+
+        if (empty($result['success'])) {
+            $functions->jsonResponse(['ok' => false, 'error' => $result['error'] ?? '上传失败'], 400);
+        }
+
+        $functions->jsonResponse([
+            'ok' => true,
+            'path' => $result['relativePath'],
+            'url' => $functions->getLogoDisplayUrl($result['relativePath']),
+            'width' => $result['width'] ?? 0,
+            'height' => $result['height'] ?? 0,
+            'bytes' => $result['bytes'] ?? 0,
         ]);
         break;
 

@@ -1,11 +1,24 @@
-# 上传目录：只允许图片访问，禁止脚本与 SVG 直接执行。
-<FilesMatch "\.(php|phtml|phar|asp|aspx|cgi|pl|py|sh|svg)$">
+# 上传目录：只允许图片访问，禁止脚本执行。
+#
+# v2.16.3：svg 从禁止列表移出——用户上传的网站图标可以是 SVG，落盘前已在
+# userSiteCleanSvg() 里剥掉 script / 事件属性 / 外链引用，且只作 <img> 引用，
+# 浏览器不会执行其中的脚本。其余可执行后缀仍然一律拒绝。
+<FilesMatch "\.(php|phtml|phar|asp|aspx|cgi|pl|py|sh)$">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>
     <IfModule !mod_authz_core.c>
         Order Allow,Deny
         Deny from all
+    </IfModule>
+</FilesMatch>
+
+# SVG 只允许当图片用：加 nosniff + CSP，即使被直接打开也不会执行内联脚本
+<FilesMatch "\.svg$">
+    ForceType image/svg+xml
+    <IfModule mod_headers.c>
+        Header set X-Content-Type-Options "nosniff"
+        Header set Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; sandbox"
     </IfModule>
 </FilesMatch>
 
