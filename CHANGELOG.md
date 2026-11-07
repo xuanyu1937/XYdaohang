@@ -1,5 +1,31 @@
 # 轩宇-导航 · 版本记录
 
+## v2.14.1（2026-11-07）
+
+> **开放 API 列表接口新增 `categories` 字段**。GET `/api/sites.php` 列表响应除 `items` 外，额外返回当前令牌可见的全部分类分组（含尚未挂任何网址的空分组），开发者无需再单独轮询分类，新建分组也能即时在列表响应里看到。**无数据库结构变更、无新增文件、无 `web.config` / `.htaccess` 改动，对外 API 契约向后兼容。**
+
+### 改动文件
+
+| 文件 | 说明 |
+| --- | --- |
+| `api/sites.php` | GET 列表返回新增 `categories` 数组；新增 `navApiVisibleCategories()` 按令牌范围返回分类：`read`/`write` 管理级返回全部分类；用户级返回「公共分类 + 自己的分类（含私密）」；均按 `sort_order` 排序；老库缺列时安全降级返回全部 |
+| `api/index.php` | API 文档新增 `categories` 响应示例与字段说明 |
+| 版本文件 | `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` 同步至 `2.14.1`，静态资源 `?v=2.14.1` |
+
+### 返回结构
+
+```json
+{
+  "ok": true, "page": 1, "size": 20, "total": 32, "pages": 2,
+  "items": [ ... ],
+  "categories": [
+    {"id": 1,  "name": "全部网站", "is_private": 0},
+    {"id": 5,  "name": "我的收藏", "is_private": 0},
+    {"id": 12, "name": "工作分组", "is_private": 1}
+  ]
+}
+```
+
 ## v2.14.0（2026-11-07）
 
 > **分组归属隔离 + 我的导航分组同步 + 手机端卡片操作精简**。修复一条会让「用户新建的分组变成公共分类」的归属判定缺陷，补齐 `my.php` 全部 5 个分组下拉与顶部分类 tab 的即时同步，并按需求精简手机端卡片、把收藏移入长按菜单。**无数据库结构变更、无新增文件、无新增依赖、无 `web.config` / `.htaccess` 改动，对外 API 契约向后兼容。**

@@ -9,7 +9,7 @@
  * 本页只输出静态说明，不读取也不展示任何令牌。
  */
 
-$version = '2.14.0';
+$version = '2.14.1';
 $versionFile = __DIR__ . '/../VERSION';
 
 if (is_readable($versionFile)) {
@@ -384,6 +384,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
                     </tbody>
                 </table>
             </div>
+            <div class="callout">列表响应除 <code>items</code> 外，还额外返回 <code>categories</code> 数组：当前令牌可见的全部分类分组（含尚未挂任何网址的空分组），结构为 <code>{"id","name","is_private"}</code>。管理级令牌返回全部分类，用户级令牌返回「公共分类 + 自己的分类（含私密）」，均按 <code>sort_order</code> 排序。从此不必单独轮询分类，新建分组也会即时出现在列表响应里。</div>
             <h3>新建 / 更新（POST、PUT、PATCH）</h3>
             <div class="table-wrap">
                 <table>
@@ -475,6 +476,11 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
       <span class="c-key">"latency_ms"</span>: 86,
       <span class="c-key">"created_at"</span>: <span class="c-str">"2026-11-06 12:00:00"</span>
     }
+  ],
+  <span class="c-key">"categories"</span>: [
+    { <span class="c-key">"id"</span>: 1,  <span class="c-key">"name"</span>: <span class="c-str">"全部网站"</span>, <span class="c-key">"is_private"</span>: 0 },
+    { <span class="c-key">"id"</span>: 5,  <span class="c-key">"name"</span>: <span class="c-str">"我的收藏"</span>, <span class="c-key">"is_private"</span>: 0 },
+    { <span class="c-key">"id"</span>: 12, <span class="c-key">"name"</span>: <span class="c-str">"工作分组"</span>, <span class="c-key">"is_private"</span>: 1 }
   ]
 }</pre>
             </div>

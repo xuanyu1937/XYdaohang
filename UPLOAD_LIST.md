@@ -1,12 +1,24 @@
-# 轩宇-导航 部署清单（当前版本 v2.14.0）
+# 轩宇-导航 部署清单（当前版本 v2.14.1）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.14.0
+当前版本：v2.14.1
 
-> **分组归属隔离 + 我的导航分组同步 + 手机端卡片操作精简版**。修复前台新建分组被写成公共分类的归属缺陷，补齐 `my.php` 5 个分组下拉与顶部 tab 的即时同步。**无数据库结构变更、无新增文件、无新增依赖、无 `web.config` / `.htaccess` 改动，对外 API 契约向后兼容**。v2.14.0 专项回归 **60/60**，v2.13.0 API 回归 **106/106**，v2.12.0 存量 **73/73**，v2.11.0 存量 **49/49**，脚本级 JS 错误 **0**。完整根因见 [CHANGELOG.md](CHANGELOG.md)。
+> **开放 API 列表接口新增 `categories` 字段**：GET `/api/sites.php` 除 `items` 外额外返回当前令牌可见的全部分类分组（含空分组），开发者无需单独轮询分类，新建分组即时可见。**无数据库结构变更、无新增文件、无 `web.config` / `.htaccess` 改动，对外 API 契约向后兼容**。完整根因见 [CHANGELOG.md](CHANGELOG.md)。
 
-## 本次 v2.14.0 变动文件
+## 本次 v2.14.1 变动文件
+
+| 文件 | 说明 |
+| --- | --- |
+| `api/sites.php` | GET 列表返回新增 `categories` 数组；新增 `navApiVisibleCategories()` 按令牌范围返回分类（管理级全量、用户级「公共 + 自己」），按 `sort_order` 排序，老库安全降级 |
+| `api/index.php` | API 文档新增 `categories` 响应示例与字段说明；fallback 版本 2.14.1 |
+| 全部 PHP 页面（30 处） | 资源参数 `?v=2.14.1` |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.14.1 |
+| `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
+
+**本版没有新增文件**，全部为既有文件修改，直接覆盖即可。
+
+## 历史：v2.14.0 变动文件（回顾）
 
 | 文件 | 说明 |
 | --- | --- |

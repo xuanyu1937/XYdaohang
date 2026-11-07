@@ -166,6 +166,45 @@ function navApiCategoryAllowed($db, $categoryId, $tokenUserId, $isAdminScope)
     }
 }
 
+/**
+ * 返回当前令牌可见的全部分类分组列表（不随列表筛选条件变化）。
+ * - 管理级令牌：全部分类（含所有用户的分类）
+ * - 用户级令牌：公共分类（user_id=0 且 is_private=0）+ 自己的分类（含私密）
+ * 按 sort_order 排序；老库缺少 user_id / is_private 列时退化为返回全部分类。
+ */
+function navApiVisibleCategories($db, $tokenUserId, $isAdminScope)
+{
+    if ($isAdminScope) {
+        $sql = 'SELECT id, name, is_private FROM categories ORDER BY sort_order ASC, id ASC';
+        $params = [];
+    } else {
+        $sql = 'SELECT id, name, is_private FROM categories WHERE (user_id = 0 AND is_private = 0) OR user_id = ? ORDER BY sort_order ASC, id ASC';
+        $params = [$tokenUserId];
+    }
+
+    try {
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+    } catch (Throwable $error) {
+        // 老库（未执行 upgrade_v2.1.0.sql）缺少 categories.user_id / is_private 列时，
+        // 不做归属过滤，直接返回全部分类，避免误伤既有数据。
+        $stmt = $db->prepare('SELECT id, name, is_private FROM categories ORDER BY sort_order ASC, id ASC');
+        $stmt->execute();
+    }
+
+    $categories = [];
+
+    foreach ($stmt->fetchAll() as $cat) {
+        $categories[] = [
+            'id' => (int) $cat['id'],
+            'name' => (string) $cat['name'],
+            'is_private' => ((int) ($cat['is_private'] ?? 0) === 1) ? 1 : 0,
+        ];
+    }
+
+    return $categories;
+}
+
 function navApiNormalizeUrl($url)
 {
     $url = trim((string) $url);
@@ -408,6 +447,7 @@ switch ($method) {
             'total' => $total,
             'pages' => (int) ceil($total / $size),
             'items' => $items,
+            'categories' => navApiVisibleCategories($db, $tokenUserId, $isAdminScope),
         ]);
         break;
 

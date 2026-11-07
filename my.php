@@ -262,9 +262,9 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.14.0">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.14.0">
-    <script src="assets/js/category-quick-add.js?v=2.14.0" defer></script>
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.14.1">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.14.1">
+    <script src="assets/js/category-quick-add.js?v=2.14.1" defer></script>
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -5464,6 +5464,6 @@ $hasLinks = $totalLinks > 0;
         })();
     </script>
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.14.0" defer></script>
+<script src="assets/js/search.js?v=2.14.1" defer></script>
 </body>
 </html>
