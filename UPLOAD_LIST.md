@@ -1,20 +1,20 @@
-# 轩宇-导航 部署清单（当前版本 v2.15.1）
+# 轩宇-导航 部署清单（当前版本 v2.15.2）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.15.1
+当前版本：v2.15.2
 
 > **AI 测试连接 TLS 修复 + 前台用户自助管理 API 令牌**。关闭 `includes/Services.php` 全部 HTTPS 请求的严格 SSL 证书校验，未配置 CA 证书包时 deepseek 等接口不再报 TLS 错误；前台「我的导航」新增登录用户可见的 **API 令牌** 管理区块（生成 / 列表 / 删除 / 重置 / 切换权限，明文仅显示一次，仅本人可见）。**无数据库结构变更、无新增文件、无 `web.config` / `.htaccess` 改动，对外 API 契约向后兼容**。完整根因见 [CHANGELOG.md](CHANGELOG.md)。
 
-## 本次 v2.15.1 变动文件
+## 本次 v2.15.2 变动文件
 
 | 文件 | 说明 |
 | --- | --- |
 | `includes/Services.php` | `postJson`、站点健康检测（HEAD/GET）、站点下载重试统一 `CURLOPT_SSL_VERIFYPEER=false` / `CURLOPT_SSL_VERIFYHOST=0`，与站点抓取一致 |
 | `my.php` | 新增前台用户 API 令牌管理：顶部「API 令牌」按钮 + 弹窗；后端创建/切换权限/删除/重置，复用 `api_tokens` 表、绑定 `user_id`；明文仅显示一次、库内存 SHA-256；列表/操作/过期选项/API 说明/复制按钮 |
-| `api/index.php` | API 文档 fallback 版本 2.15.1 |
-| 全部 PHP 页面（30 处） | 资源参数 `?v=2.15.1` |
-| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.15.1 |
+| `api/index.php` | API 文档 fallback 版本 2.15.2 |
+| 全部 PHP 页面（30 处） | 资源参数 `?v=2.15.2` |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.15.2 |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
 
 **本版没有新增文件**，全部为既有文件修改，直接覆盖即可。

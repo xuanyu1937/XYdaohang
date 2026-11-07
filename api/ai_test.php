@@ -12,8 +12,11 @@
  *   - 仅管理员可调用，且做同源校验与轻量 SSRF 拦截。
  *
  * POST: api_url, model, api_key(可选), use_saved_key(可选)
- * 返回成功: {ok:true, message, reply?, warning?, http_code?, latency_ms?, model?}
- * 返回失败: {ok:false, error, message, detail?, http_code?, latency_ms?, model?}
+ *       api_url 可填 base URL（如 https://api.openai.com/v1/），系统会自动补全
+ *       /chat/completions；已填完整地址时原样使用。
+ * 返回成功: {ok:true, message, reply?, warning?, http_code?, latency_ms?, model?, request_url?}
+ * 返回失败: {ok:false, error, message, detail?, http_code?, latency_ms?, model?, request_url?}
+ *          request_url 为本次实际请求的完整地址，便于用户排查配置。
  *          error 为稳定机器码（unauthorized / invalid_api_url / upstream_error …），
  *          参数错误 400、未登录 401、方法错误 405、上游失败 400。
  */
@@ -121,9 +124,20 @@ $body = json_encode([
 
 $ai = new AiService($functions);
 
+// v2.15.2：用户允许只填 base URL（如 https://api.openai.com/v1/），
+// 这里统一补全为完整的 .../chat/completions 再请求，避免直接 POST base URL 得到 404。
+// 返回体里带 request_url，方便用户在测试结果里核对实际请求地址。
+$requestUrl = $ai->chatEndpoint($url);
+
 $startedAt = microtime(true);
-$response = $ai->postJson($url, $body, $key, 15);
+$response = $ai->postJson($requestUrl, $body, $key, 15);
 $latencyMs = (int) round((microtime(true) - $startedAt) * 1000);
+
+$debug = [
+    'request_url' => $requestUrl,
+    'latency_ms' => $latencyMs,
+    'model' => $model,
+];
 
 /**
  * 把 curl / HTTP 错误翻成能直接照着改配置的人话。
@@ -156,7 +170,7 @@ function xyAiTestFriendlyError($error, $rawBody, $httpCode)
         'http_400' => '接口拒绝了请求（400）：请检查模型名称与该接口是否支持 chat/completions',
         'http_401' => '接口密钥无效或已过期（401）',
         'http_403' => '密钥无权限访问该模型或接口（403）',
-        'http_404' => '接口地址不存在（404）：请填写包含 /chat/completions 的完整地址',
+        'http_404' => '接口地址不存在（404）：请对照下方「实际请求地址」，确认基础地址是否正确（系统已自动补全 /chat/completions）',
         'http_408' => '接口响应超时（408）',
         'http_422' => '请求参数不被接受（422）：请检查模型名称',
         'http_429' => '触发限流或额度不足（429）',
@@ -211,12 +225,10 @@ if (empty($response['ok'])) {
         $httpCode = (int) $m[1];
     }
 
-    xyAiTestFail($functions, 'upstream_error', $message, 400, [
+    xyAiTestFail($functions, 'upstream_error', $message, 400, array_merge($debug, [
         'detail' => $detail,
         'http_code' => $httpCode,
-        'latency_ms' => $latencyMs,
-        'model' => $model,
-    ]);
+    ]));
 }
 
 $raw = (string) ($response['body'] ?? '');
@@ -234,12 +246,10 @@ if (is_array($data)) {
     // 兼容接口把错误放进 200 响应体的情况
     if ($reply === '' && isset($data['error']['message'])) {
         [$message, $detail] = xyAiTestFriendlyError('', (string) $data['error']['message'], 200);
-        xyAiTestFail($functions, 'upstream_error', '接口返回错误：' . (string) $data['error']['message'], 400, [
+        xyAiTestFail($functions, 'upstream_error', '接口返回错误：' . (string) $data['error']['message'], 400, array_merge($debug, [
             'detail' => $detail,
             'http_code' => (int) ($response['code'] ?? 200),
-            'latency_ms' => $latencyMs,
-            'model' => $model,
-        ]);
+        ]));
     }
 } else {
     $warning = '接口响应不是标准 JSON，可能不是 chat/completions 地址';
@@ -256,12 +266,10 @@ if ($reply === '' && $warning === '') {
     $warning = '接口已连通，但没有返回模型文本内容，请确认模型名称是否正确';
 }
 
-$functions->jsonResponse([
+$functions->jsonResponse(array_merge($debug, [
     'ok' => true,
     'message' => '连接成功，接口配置可用',
     'reply' => $reply,
     'warning' => $warning,
     'http_code' => (int) ($response['code'] ?? 200),
-    'latency_ms' => $latencyMs,
-    'model' => $model,
-]);
+]));

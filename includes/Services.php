@@ -1804,6 +1804,9 @@ class AiService extends BaseService
             return ['ok' => false, 'source' => 'ai', 'error' => 'invalid_api_url'];
         }
 
+        // 用户可能只填了 base URL，这里统一补全成 .../chat/completions 再请求
+        $url = $this->chatEndpoint($url);
+
         $list = implode('、', $categories);
         $prompt = "站点名称：{$name}\n站点描述：{$description}\n\n"
             . "请从下面的分类中选出最合适的一个，只回复分类名本身，不要任何解释：\n{$list}\n\n"
@@ -1856,6 +1859,70 @@ class AiService extends BaseService
         }
 
         return ['ok' => false, 'source' => 'ai', 'error' => 'unexpected_answer'];
+    }
+
+    /**
+     * 把用户填写的接口地址规范成完整的 chat/completions 请求地址。
+     *
+     * 用户经常只填 base URL（如 https://api.openai.com/v1/、
+     * https://open.bigmodel.cn/api/paas/v4/），直接 POST 这个地址必然 404。
+     * 规则：
+     *   1) 已以 /chat/completions 结尾 → 原样使用（大小写、多余斜杠做归一）；
+     *   2) 其余（以 / 结尾或干脆不带斜杠）→ 去掉尾部斜杠后拼接 /chat/completions；
+     *   3) 合并路径中出现的重复斜杠，避免 https://host//v1//chat/completions；
+     *   4) 查询串与锚点原样保留在末尾（如 ?api-version=xxx），不参与拼接。
+     *
+     * @param string $url 用户填写的接口地址
+     * @return string 实际应当请求的完整地址
+     */
+    public function chatEndpoint($url)
+    {
+        $url = trim((string) $url);
+
+        if ($url === '') {
+            return '';
+        }
+
+        // 拆出 scheme://host 之后的部分，只对路径做拼接与归一，
+        // 避免正则的「重复斜杠」误伤 https:// 中的双斜杠。
+        $suffix = '';   // 查询串 + 锚点
+        $fragmentPos = strpos($url, '#');
+
+        if ($fragmentPos !== false) {
+            $suffix = substr($url, $fragmentPos);
+            $url = substr($url, 0, $fragmentPos);
+        }
+
+        $queryPos = strpos($url, '?');
+
+        if ($queryPos !== false) {
+            $suffix = substr($url, $queryPos) . $suffix;
+            $url = substr($url, 0, $queryPos);
+        }
+
+        if (!preg_match('#^([a-z][a-z0-9+.\-]*://[^/]*)(/.*)?$#i', $url, $match)) {
+            // 不是标准 http(s) 地址时不猜测，交由调用方做合法性校验
+            return $url . $suffix;
+        }
+
+        $origin = $match[1];
+        $path = isset($match[2]) ? $match[2] : '';
+
+        // 合并路径中的重复斜杠：/v1//chat → /v1/chat
+        $path = preg_replace('#/{2,}#', '/', $path);
+        // 去掉尾部斜杠，统一再拼接
+        $path = rtrim($path, '/');
+
+        if ($path === '' || strtolower($path) === '/') {
+            $path = '';
+        }
+
+        if (!preg_match('#/chat/completions$#i', $path)) {
+            $path .= '/chat/completions';
+        }
+
+        // 归一后确保只有单个前导斜杠
+        return $origin . '/' . ltrim($path, '/') . $suffix;
     }
 
     /**

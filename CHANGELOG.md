@@ -1,5 +1,23 @@
 # 轩宇-导航 · 版本记录
 
+## v2.15.2（2026-11-07）
+
+> **AI 接口地址自动补全 `/chat/completions`**。此前用户在「AI 分类推荐」里填 base URL（如 `https://open.bigmodel.cn/api/paas/v4/`）时，测试连接和业务推荐都会直接 POST 这个地址，必定 404。现在会自动补全为完整端点，并在测试结果里显示**实际请求地址**，方便排查。**无数据库结构变更、无新增文件、无 `web.config` / `.htaccess` 改动。**
+
+### 改动文件
+
+| 文件 | 说明 |
+| --- | --- |
+| `includes/Services.php` | `AiService` 新增 `chatEndpoint($url)`：已以 `/chat/completions` 结尾则原样使用，否则去掉尾部斜杠拼接 `/chat/completions`；合并路径中的重复斜杠（`//v1//` → `/v1/`）；保留查询串（如 Azure 的 `?api-version=`）与端口。`askModel()` 改为先补全再请求，AI 分类推荐同样受益 |
+| `api/ai_test.php` | 请求前调用 `chatEndpoint()`；成功与失败响应均新增 `request_url` 字段；404 提示改为引导用户对照「实际请求地址」 |
+| `admin/settings.php` | 输入框 placeholder 改为 base URL 示例，提示文字改为「请填写接口基础地址（如 https://api.openai.com/v1），系统会自动拼接 /chat/completions；也可以直接填写完整地址。」；测试结果新增「实际请求地址」行；标签列改为 `min-width` + 不折行，避免长标签换行挤压 |
+| 版本文件 | `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` 同步至 `2.15.2`，静态资源 `?v=2.15.2` |
+
+### 验证结果
+- `chatEndpoint()` 单测 **16/16**：带/不带尾斜杠、已含后缀（含大小写与尾斜杠）、双斜杠脏地址、带端口、带查询串、前后空格、空值。
+- 真实 HTTP 端到端（4 种地址形态）：均补全为 `.../chat/completions`，智谱返回「令牌已过期」401、DeepSeek 返回 key 无效 401，**不再出现 404**；`request_url` 正确回传。
+- 浏览器交互（Playwright）**6/6**：提示文案、placeholder、结果面板「实际请求地址」渲染、无双斜杠、错误可读。
+
 ## v2.15.1（2026-11-07）
 
 > **开放 API 新增 POST + `_method` 方法伪装，绕开 IIS WebDAV 对原生 PUT/DELETE 的拦截**。部分 IIS 环境会直接以 405 拦截原生 PUT/DELETE 请求（web.config 放行也不生效），导致开放 API 的更新 / 删除接口无法调用。现在允许用 `POST + _method=PUT/PATCH/DELETE`（JSON 请求体、表单字段或 URL 查询参数均可）伪装成对应方法，后续更新 / 删除分支逻辑完全不变；原生 PUT/DELETE 在正常环境下依旧优先。**无数据库结构变更、无新增文件、无 `web.config` / `.htaccess` 改动，对外 API 契约向后兼容。**
@@ -9,7 +27,7 @@
 | 文件 | 说明 |
 | --- | --- |
 | `api/sites.php` | 新增 `navApiResolveMethod()`：原始方法为 POST 时，从 JSON 请求体（`{"_method":"DELETE"}`）、表单字段（`_method=DELETE`）或 URL 查询参数（`?_method=DELETE`）读取 `_method`，值为 PUT / PATCH / DELETE 时替换最终方法；新增 `navApiRawBody()` 缓存 `php://input`，避免方法解析与参数解析重复读流；`switch($method)` 各分支逻辑不变 |
-| 版本文件 | `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` 同步至 `2.15.1`，静态资源 `?v=2.15.1` |
+| 版本文件 | `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` 同步至 `2.15.2`，静态资源 `?v=2.15.2` |
 
 ### 兼容性说明
 - 仅 `api/sites.php` 使用 HTTP 方法路由；`api/user_sites.php` 等其余接口均为 `POST + action=` 路由，本身不经过 PUT/DELETE，不受 IIS 拦截影响，无需改动。

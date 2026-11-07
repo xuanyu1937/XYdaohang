@@ -193,7 +193,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
     <link href="../assets/sweetalert2/sweetalert2.min.css" rel="stylesheet">
-    <link href="../assets/css/admin.css?v=2.15.1" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.15.2" rel="stylesheet">
     <style>
         /* ==================================================================
            系统设置页（仅本页使用，颜色与间距统一取自 admin.css 变量）
@@ -606,7 +606,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
         .ai-test-result[hidden] { display: none; }
         .ai-test-head { font-weight: 600; margin-bottom: 4px; }
         .ai-test-line { display: flex; gap: 10px; align-items: baseline; }
-        .ai-test-k { flex: 0 0 72px; opacity: .72; }
+        .ai-test-k { flex: 0 0 auto; min-width: 72px; white-space: nowrap; opacity: .72; }
         .ai-test-v { flex: 1 1 auto; min-width: 0; word-break: break-all; }
 
         .ai-test-result.is-info {
@@ -1373,8 +1373,8 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
                                    class="form-control"
                                    value="<?php echo $functions->escape($aiApiUrl); ?>"
                                    maxlength="300"
-                                   placeholder="https://api.openai.com/v1/chat/completions">
-                            <span class="form-text">需为兼容 /chat/completions 的完整地址</span>
+                                   placeholder="https://api.openai.com/v1">
+                            <span class="form-text">请填写接口基础地址（如 https://api.openai.com/v1），系统会自动拼接 /chat/completions；也可以直接填写完整地址。</span>
                         </div>
 
                         <div class="field">
@@ -1937,6 +1937,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
 
                 render(state, function () {
                     head(result.message || (result.ok ? '连接成功' : '连接失败'));
+                    line('实际请求地址', result.request_url || apiUrl);
                     line('模型', result.model || model);
                     if (typeof result.latency_ms === 'number') {
                         line('耗时', result.latency_ms + ' ms');
