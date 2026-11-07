@@ -1,5 +1,20 @@
 # 轩宇-导航 · 版本记录
 
+## v2.15.1（2026-11-07）
+
+> **开放 API 新增 POST + `_method` 方法伪装，绕开 IIS WebDAV 对原生 PUT/DELETE 的拦截**。部分 IIS 环境会直接以 405 拦截原生 PUT/DELETE 请求（web.config 放行也不生效），导致开放 API 的更新 / 删除接口无法调用。现在允许用 `POST + _method=PUT/PATCH/DELETE`（JSON 请求体、表单字段或 URL 查询参数均可）伪装成对应方法，后续更新 / 删除分支逻辑完全不变；原生 PUT/DELETE 在正常环境下依旧优先。**无数据库结构变更、无新增文件、无 `web.config` / `.htaccess` 改动，对外 API 契约向后兼容。**
+
+### 改动文件
+
+| 文件 | 说明 |
+| --- | --- |
+| `api/sites.php` | 新增 `navApiResolveMethod()`：原始方法为 POST 时，从 JSON 请求体（`{"_method":"DELETE"}`）、表单字段（`_method=DELETE`）或 URL 查询参数（`?_method=DELETE`）读取 `_method`，值为 PUT / PATCH / DELETE 时替换最终方法；新增 `navApiRawBody()` 缓存 `php://input`，避免方法解析与参数解析重复读流；`switch($method)` 各分支逻辑不变 |
+| 版本文件 | `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` 同步至 `2.15.1`，静态资源 `?v=2.15.1` |
+
+### 兼容性说明
+- 仅 `api/sites.php` 使用 HTTP 方法路由；`api/user_sites.php` 等其余接口均为 `POST + action=` 路由，本身不经过 PUT/DELETE，不受 IIS 拦截影响，无需改动。
+- `_method` 仅在原始方法为 POST 且值为 PUT / PATCH / DELETE 时生效，其他值（含 GET）一律忽略，不改变原有语义。
+
 ## v2.15.0（2026-11-07）
 
 > **AI 测试连接 TLS 修复 + 前台用户自助管理 API 令牌**。① 关闭 `includes/Services.php` 内所有 HTTPS 请求的严格 SSL 证书校验（与站点抓取 / 健康检测一致），服务器未配置 CA 证书包时 deepseek 等 HTTPS 接口不再报 TLS 错误；② 前台「我的导航」新增登录用户可见的 **API 令牌** 管理区块，可自助生成 / 列表 / 删除 / 重置 / 切换权限，明文仅显示一次，库内存 SHA-256 摘要，且仅能看到和管理自己的令牌。**无数据库结构变更、无新增文件、无 `web.config` / `.htaccess` 改动，对外 API 契约向后兼容。**

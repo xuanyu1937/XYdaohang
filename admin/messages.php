@@ -82,7 +82,7 @@ try {
     <title>留言管理 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
-    <link href="../assets/css/admin.css?v=2.15.0" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.15.1" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>

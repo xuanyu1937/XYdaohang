@@ -10,6 +10,10 @@
  *   PUT    更新（body: id + 字段）               需 write
  *   DELETE ?id= （或 body: id）                  需 write
  *
+ * 方法兼容：当服务器（如 IIS WebDAV）拦截原生 PUT/DELETE 时，可用 POST + _method 字段伪装：
+ *   POST  {"_method":"PUT",    ...}  /  POST _method=PUT    /  POST ?_method=PUT
+ *   等效于对应的 PUT / PATCH / DELETE，后续分支逻辑不变。
+ *
  * 权限范围：api_tokens.user_id = 0 表示管理级（可操作公共与全部条目）；
  *          > 0 时仅能读写该用户自己的条目，且只能使用自己名下的分类。
  *
@@ -98,12 +102,79 @@ function navApiToken()
 /**
  * 读取请求体（支持 JSON 与表单编码；PUT/DELETE 只能走这里）。
  */
+/**
+ * 读取并缓存请求体原始内容。
+ * php://input 在部分环境下只能读取一次，这里缓存结果，供「方法解析」与「参数解析」复用，
+ * 避免先为 _method 覆盖读一次、再为参数解析读一次把流读空。
+ */
+function navApiRawBody()
+{
+    static $raw = null;
+    static $loaded = false;
+
+    if ($loaded) {
+        return $raw;
+    }
+
+    $loaded = true;
+    $raw = (string) @file_get_contents('php://input');
+
+    return $raw;
+}
+
+/**
+ * 解析最终生效的请求方法，兼容「用 POST + _method 伪装 PUT/DELETE/PATCH」的写法。
+ *
+ * 部分服务器（如 IIS 的 WebDAV 模块）会拦截原生 PUT/DELETE 请求，
+ * 即便 web.config 已放行也无法生效，导致 REST 的更新 / 删除接口无法调用。
+ * 为保持接口可用，约定：原始方法为 POST 时，允许通过以下任一位置携带 _method
+ * 字段把方法「升级」为 PUT / PATCH / DELETE：
+ *   - JSON 请求体： {"_method":"DELETE", ...}
+ *   - 表单字段：     _method=DELETE
+ *   - URL 查询参数： ?_method=DELETE
+ * 其余情况（非 POST，或 _method 不是上述值）保持原始方法不变。
+ *
+ * @return string 最终生效的请求方法（大写）
+ */
+function navApiResolveMethod()
+{
+    $rawMethod = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+
+    if ($rawMethod !== 'POST') {
+        return $rawMethod;
+    }
+
+    $override = null;
+    $contentType = strtolower((string) ($_SERVER['CONTENT_TYPE'] ?? ''));
+
+    if (strpos($contentType, 'application/json') !== false) {
+        // JSON 请求体：解析一次取 _method，复用已缓存的原始内容
+        $decoded = json_decode(navApiRawBody(), true);
+        if (is_array($decoded) && isset($decoded['_method'])) {
+            $override = strtoupper((string) $decoded['_method']);
+        }
+    } elseif (isset($_POST['_method'])) {
+        $override = strtoupper((string) $_POST['_method']);
+    }
+
+    // URL 上的 ?_method 作为兜底（JSON / 表单都没有时）
+    if ($override === null && isset($_GET['_method'])) {
+        $override = strtoupper((string) $_GET['_method']);
+    }
+
+    if (in_array($override, ['PUT', 'PATCH', 'DELETE'], true)) {
+        return $override;
+    }
+
+    return $rawMethod;
+}
+
 function navApiInput()
 {
     $ctype = strtolower((string) ($_SERVER['CONTENT_TYPE'] ?? ''));
 
     if (strpos($ctype, 'application/json') !== false) {
-        $raw = file_get_contents('php://input');
+        $raw = navApiRawBody();
         $decoded = is_string($raw) ? json_decode($raw, true) : null;
 
         // 参数表必须是 JSON 对象；数组 / 标量 / 语法错误都视为非法请求体。
@@ -127,7 +198,7 @@ function navApiInput()
         return $_POST;
     }
 
-    $raw = file_get_contents('php://input');
+    $raw = navApiRawBody();
 
     if (is_string($raw) && $raw !== '') {
         $parsed = [];
@@ -279,7 +350,9 @@ try {
     // 忽略
 }
 
-$method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+// 解析最终请求方法：原始方法是 POST 时，允许用 _method 字段伪装成 PUT / PATCH / DELETE，
+// 绕开 IIS WebDAV 等环境对原生 PUT/DELETE 的拦截（详见 navApiResolveMethod()）。
+$method = navApiResolveMethod();
 $input = in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true) ? navApiInput() : [];
 
 if ($input === null) {
