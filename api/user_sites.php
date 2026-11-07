@@ -1032,8 +1032,18 @@ switch ($action) {
             $result = $ai->categorizeBatch($batch, $visibleNames);
 
             if (!empty($result['ok']) && !empty($result['map'])) {
-                $suggestMap = $result['map'];
-                $source = 'ai';
+                // AI 偶尔会把「未分类」当成一个正经分组名返回，等同于没给建议，剔掉
+                foreach ($result['map'] as $mapId => $mapName) {
+                    if (trim((string) $mapName) === '' || (string) $mapName === '未分类') {
+                        continue;
+                    }
+
+                    $suggestMap[(int) $mapId] = (string) $mapName;
+                }
+
+                if ($suggestMap) {
+                    $source = 'ai';
+                }
             }
         }
 
@@ -1048,7 +1058,14 @@ switch ($action) {
             $text = trim((string) $row['name'] . ' ' . (string) $row['description'] . ' ' . (string) $row['url']);
             $suggest = userSiteSuggestCategory($engine, $categories, $text);
 
-            if (!empty($suggest['name'])) {
+            // v2.16.2 修复：userSiteSuggestCategory() 在关键词匹配不上时会退回「未分类」
+            // 或列表第一个分组（那是给「快捷收录时给个默认值」用的）。
+            // 放到「整理」场景里就成了无意义建议——「AI → 未分类」等于什么都没说，
+            // 「AI → 第一个分组」更是瞎猜。这里只采纳真正命中关键词的结果（reason=keyword），
+            // 其余留空，前端会显示为「保持不变」且不可勾选。
+            if (!empty($suggest['name'])
+                && (string) $suggest['name'] !== '未分类'
+                && (string) ($suggest['reason'] ?? '') === 'keyword') {
                 $suggestMap[$id] = (string) $suggest['name'];
             }
         }

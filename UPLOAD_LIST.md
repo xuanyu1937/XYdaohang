@@ -22,7 +22,7 @@
 | 文件 | 说明 |
 | --- | --- |
 | `my.php` | 新增「AI 分类」按钮 + 三步式弹窗（选范围 / 进度条 / 结果确认）与配套 CSS、JS；补 `.my-dialog-actions` 右对齐样式；`is-new` 标记、列表底部渐隐、全选半选态同步、汇总文案 |
-| `api/user_sites.php` | 新增 `ai_categorize_preview`（分页分析，AI 漏答走本地兜底）与 `ai_categorize_apply`（事务落库、越权 403、自动建分组归属调用者、单次上限 300 条）；修复重名分组导致「未分类」误判 |
+| `api/user_sites.php` | 新增 `ai_categorize_preview`（分页分析，AI 漏答走本地关键词兜底）与 `ai_categorize_apply`（事务落库、越权 403、自动建分组归属调用者、单次上限 300 条）；修复重名分组导致「未分类」误判；兜底建议只采纳真正命中关键词的结果，避免「AI → 未分类」这类空建议 |
 | `includes/Services.php` | `AiService` 新增 `categorizeBatch()`：一次请求返回 `id → 分类名` 数组映射，兼容 ```` ```json ```` 包裹与多余文字 |
 | `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.16.2 |
 | 全部 PHP 页面（31 处） | 资源参数 `?v=2.16.2` |
