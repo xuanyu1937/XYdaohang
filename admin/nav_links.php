@@ -766,7 +766,8 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
             gap: .5rem;
         }
     </style>
-    <link href="../assets/css/admin.css?v=2.11.0" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.12.0" rel="stylesheet">
+    <link href="../assets/css/category-quick-add.css?v=2.12.0" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -928,8 +929,14 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                         <?php endif; ?>
                                         
                                         <div class="mb-3">
-                                            <label class="form-label">所属分类 *</label>
-                                            <select name="category_id" id="navCategorySelect" class="form-select" required>
+                                            <label class="form-label d-flex align-items-center justify-content-between" for="navCategorySelect">
+                                                <span>所属分类 *</span>
+                                                <button type="button" class="xycq-trigger xycq-trigger-compact js-category-create"
+                                                        title="不离开当前页面，快速新建一个分类">
+                                                    <i class="fas fa-plus" aria-hidden="true"></i>新建分类
+                                                </button>
+                                            </label>
+                                            <select name="category_id" id="navCategorySelect" class="form-select" data-category-options required>
                                                 <option value="">请选择分类</option>
                                                 <?php foreach ($categories as $category): ?>
                                                     <option value="<?php echo $category['id']; ?>"
@@ -1025,16 +1032,22 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                                    placeholder="搜索名称、网址或描述..." 
                                                    value="<?php echo $functions->escape($search); ?>">
                                         </div>
-                                        <div class="col-md-2">
-                                            <select name="category" class="form-select">
-                                                <option value="all">所有分类</option>
-                                                <?php foreach ($categories as $category): ?>
-                                                    <option value="<?php echo $category['id']; ?>"
-                                                            <?php echo $categoryFilter == $category['id'] ? 'selected' : ''; ?>>
-                                                        <?php echo $functions->escape($category['display_name'] ?? $category['name']); ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
+                                        <div class="col-md-3">
+                                            <div class="d-flex align-items-stretch gap-1">
+                                                <select name="category" class="form-select" data-category-options>
+                                                    <option value="all">所有分类</option>
+                                                    <?php foreach ($categories as $category): ?>
+                                                        <option value="<?php echo $category['id']; ?>"
+                                                                <?php echo $categoryFilter == $category['id'] ? 'selected' : ''; ?>>
+                                                            <?php echo $functions->escape($category['display_name'] ?? $category['name']); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                                <button type="button" class="xycq-trigger xycq-trigger-compact js-category-create"
+                                                        title="添加分类（与分类管理使用同一套字段和校验规则）">
+                                                    <i class="fas fa-plus" aria-hidden="true"></i>添加分类
+                                                </button>
+                                            </div>
                                         </div>
                                         <div class="col-md-2">
                                             <select name="status" class="form-select">
@@ -1057,7 +1070,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                             </select>
                                         </div>
                                         <?php endif; ?>
-                                        <div class="col-md-<?php echo $hasUserId ? '3' : '5'; ?>">
+                                        <div class="col-md-<?php echo $hasUserId ? '2' : '4'; ?>">
                                             <button type="submit" class="btn btn-primary w-100">
                                                 <i class="fas fa-search me-2"></i>筛选
                                             </button>
@@ -1237,7 +1250,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                                         <i class="fas fa-check-square me-1"></i>已选 <span id="selectedCount">0</span> 项
                                                     </div>
                                                     <div class="d-flex flex-wrap align-items-center gap-2">
-                                                        <select name="batch_category_id" class="form-select form-select-sm" style="width:auto;">
+                                                        <select name="batch_category_id" class="form-select form-select-sm" data-category-options style="width:auto;">
                                                             <option value="">移动到分类…</option>
                                                             <?php foreach ($categories as $category): ?>
                                                                 <option value="<?php echo $category['id']; ?>"><?php echo $functions->escape($category['display_name'] ?? $category['name']); ?></option>
@@ -1908,6 +1921,78 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                 handle.focus();
             });
         })();
+    })();
+    </script>
+
+    <script src="../assets/js/category-quick-add.js?v=2.12.0"></script>
+    <script>
+    /* v2.12.0 · 导航管理页「添加分类」：与分类管理用同一个组件、同一套字段和校验 */
+    (function () {
+        'use strict';
+
+        var parents = <?php
+            $quickAddParents = [];
+            foreach ($categories as $quickAddCategory) {
+                if ((int) ($quickAddCategory['parent_id'] ?? 0) === 0) {
+                    $quickAddParents[] = [
+                        'id' => (int) $quickAddCategory['id'],
+                        'name' => (string) ($quickAddCategory['display_name'] ?? $quickAddCategory['name']),
+                    ];
+                }
+            }
+            echo json_encode($quickAddParents, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        ?>;
+
+        var users = <?php
+            $quickAddUsers = [];
+            foreach ($userOptions as $quickAddUser) {
+                $quickAddUsers[] = [
+                    'id' => (int) $quickAddUser['id'],
+                    'username' => (string) $quickAddUser['username'],
+                ];
+            }
+            echo json_encode($quickAddUsers, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        ?>;
+
+        document.addEventListener('click', function (event) {
+            var target = event.target;
+            var btn = target && target.closest ? target.closest('.js-category-create') : null;
+
+            if (!btn || !window.XYCategoryQuickAdd) {
+                return;
+            }
+
+            XYCategoryQuickAdd.open({
+                mode: 'admin',
+                term: '分类',
+                title: '新建分类',
+                apiUrl: '../api/category_create.php',
+                parents: parents,
+                users: users,
+                onCreated: function (item) {
+                    /* 不刷新页面，直接把新分类补进本页所有分类下拉，保留当前筛选与滚动位置 */
+                    Array.prototype.forEach.call(
+                        document.querySelectorAll('select[data-category-options]'),
+                        function (select) {
+                            if (select.querySelector('option[value="' + item.id + '"]')) {
+                                return;
+                            }
+
+                            var option = document.createElement('option');
+                            option.value = String(item.id);
+                            option.textContent = item.label || item.name;
+
+                            var first = select.options[0];
+                            if (first && (first.value === '' || first.value === 'all') && first.nextSibling) {
+                                select.insertBefore(option, first.nextSibling);
+                            } else {
+                                select.appendChild(option);
+                            }
+                        }
+                    );
+                }
+            });
+        });
     })();
     </script>
 </body>

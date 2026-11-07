@@ -5,6 +5,7 @@
 require_once __DIR__ . '/includes/bootstrap.php';
 require_once 'includes/functions.php';
 require_once 'includes/TemplateParser.php';
+require_once __DIR__ . '/includes/site_links.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
@@ -917,6 +918,10 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
                 <a href="index.php" class="text-blue-600 hover:text-blue-800">
                     <i class="fas fa-arrow-left mr-2"></i>返回首页
                 </a>
+            </div>
+
+            <div class="mt-8 pt-5 border-t border-gray-200 text-sm text-gray-500">
+                <?php echo siteQuickLinksHtml(); ?>
             </div>
         </div>
     </div>

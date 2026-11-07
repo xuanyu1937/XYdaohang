@@ -193,7 +193,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
     <link href="../assets/sweetalert2/sweetalert2.min.css" rel="stylesheet">
-    <link href="../assets/css/admin.css?v=2.11.0" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.12.0" rel="stylesheet">
     <style>
         /* ==================================================================
            系统设置页（仅本页使用，颜色与间距统一取自 admin.css 变量）
@@ -591,6 +591,41 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
             color: var(--admin-muted);
             font-size: 11.5px;
         }
+
+        /* v2.12.0 · AI 测试连接结果：绿色成功 / 红色失败，深浅色主题都可读 */
+        .ai-test-result {
+            margin-top: 18px;
+            padding: 12px 14px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font-size: 12.5px;
+            line-height: 1.7;
+            word-break: break-word;
+        }
+
+        .ai-test-result[hidden] { display: none; }
+        .ai-test-head { font-weight: 600; margin-bottom: 4px; }
+        .ai-test-line { display: flex; gap: 10px; align-items: baseline; }
+        .ai-test-k { flex: 0 0 72px; opacity: .72; }
+        .ai-test-v { flex: 1 1 auto; min-width: 0; word-break: break-all; }
+
+        .ai-test-result.is-info {
+            background: var(--admin-surface-2, rgba(127, 127, 127, .08));
+            border-color: var(--admin-border-soft, rgba(127, 127, 127, .25));
+            color: var(--admin-text, inherit);
+        }
+        .ai-test-result.is-ok {
+            background: rgba(22, 163, 74, .10);
+            border-color: rgba(22, 163, 74, .38);
+            color: #15803d;
+        }
+        .ai-test-result.is-err {
+            background: rgba(220, 38, 38, .10);
+            border-color: rgba(220, 38, 38, .38);
+            color: #b91c1c;
+        }
+        html[data-theme="dark"] .ai-test-result.is-ok { color: #4ade80; }
+        html[data-theme="dark"] .ai-test-result.is-err { color: #fca5a5; }
 
         /* 设置说明 */
         .help-note {
@@ -1367,9 +1402,18 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
                             </span>
                         </div>
 
+                        <!-- v2.12.0：测试连接只拿当前表单值发一次真实请求，不提交、不保存配置 -->
+                        <div class="ai-test-result" id="aiTestResult" role="status" aria-live="polite" hidden></div>
+
                         <div class="form-actions">
-                            <span class="form-actions-note">AI 接口密钥不会写入备份文件，导出备份时可以放心分享给协作者排查问题。</span>
+                            <span class="form-actions-note">「测试连接」只验证当前填写的参数，不会保存配置；密钥也不会写入备份文件。</span>
                             <span class="spacer"></span>
+                            <button type="button" id="aiTestBtn" class="btn btn-outline-secondary px-4"
+                                    data-has-saved-key="<?php echo $hasAiKey ? '1' : '0'; ?>"
+                                    title="用上方当前填写的接口地址、模型和密钥发起一次真实测试请求，不会保存配置">
+                                <i class="fas fa-plug" id="aiTestIcon" aria-hidden="true"></i>
+                                <span id="aiTestLabel">测试连接</span>
+                            </button>
                             <button type="submit" name="save_ai" class="btn btn-primary px-4">
                                 <i class="fas fa-floppy-disk"></i>保存 AI 设置
                             </button>
@@ -1777,6 +1821,151 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
             });
         }
     });
+    </script>
+
+    <script>
+    /* v2.12.0 · AI 分类推荐「测试连接」
+       只读取当前表单值发一次真实请求，绝不调用 form.submit()，
+       因此测试不会把未确认的配置写进数据库。 */
+    (function () {
+        'use strict';
+
+        var btn = document.getElementById('aiTestBtn');
+        var box = document.getElementById('aiTestResult');
+        var label = document.getElementById('aiTestLabel');
+        var icon = document.getElementById('aiTestIcon');
+        var urlInput = document.getElementById('ai_api_url');
+        var modelInput = document.getElementById('ai_model');
+        var keyInput = document.getElementById('ai_api_key');
+
+        if (!btn || !box || !label || !urlInput || !modelInput || !keyInput) {
+            return;
+        }
+
+        function head(text) {
+            var el = document.createElement('div');
+            el.className = 'ai-test-head';
+            el.textContent = text;
+            box.appendChild(el);
+        }
+
+        function line(key, value) {
+            if (!value) { return; }
+            var row = document.createElement('div');
+            row.className = 'ai-test-line';
+            var k = document.createElement('span');
+            k.className = 'ai-test-k';
+            k.textContent = key;
+            var v = document.createElement('span');
+            v.className = 'ai-test-v';
+            v.textContent = String(value);
+            row.appendChild(k);
+            row.appendChild(v);
+            box.appendChild(row);
+        }
+
+        function render(state, build) {
+            box.hidden = false;
+            box.className = 'ai-test-result ' + (state === 'ok' ? 'is-ok' : state === 'err' ? 'is-err' : 'is-info');
+            box.innerHTML = '';
+            build();
+        }
+
+        function setBusy(busy) {
+            btn.disabled = busy;
+            label.textContent = busy ? '测试中…' : '测试连接';
+            if (icon) {
+                icon.className = busy ? 'fas fa-spinner fa-spin' : 'fas fa-plug';
+            }
+        }
+
+        btn.addEventListener('click', function () {
+            var apiUrl = urlInput.value.trim();
+            var model = modelInput.value.trim();
+            var apiKey = keyInput.value.trim();
+
+            if (!apiUrl) {
+                render('err', function () {
+                    head('请先填写接口地址，再测试连接。');
+                });
+                urlInput.focus();
+                return;
+            }
+
+            if (!model) {
+                render('err', function () {
+                    head('请先填写模型名称，再测试连接。');
+                });
+                modelInput.focus();
+                return;
+            }
+
+            if (!apiKey && btn.getAttribute('data-has-saved-key') !== '1') {
+                render('err', function () {
+                    head('请先填写接口密钥，再测试连接。');
+                });
+                keyInput.focus();
+                return;
+            }
+
+            setBusy(true);
+            render('info', function () {
+                head('正在向接口发起测试请求…');
+                line('接口地址', apiUrl);
+                line('模型', model);
+                line('密钥', apiKey ? '使用当前输入框中的密钥' : '使用已保存的密钥');
+            });
+
+            var form = new FormData();
+            form.append('api_url', apiUrl);
+            form.append('model', model);
+            form.append('api_key', apiKey);
+            form.append('use_saved_key', apiKey === '' ? '1' : '0');
+
+            fetch('../api/ai_test.php', {
+                method: 'POST',
+                body: form,
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(function (res) {
+                return res.json().catch(function () {
+                    throw new Error('接口返回的不是有效 JSON（HTTP ' + res.status + '）');
+                });
+            }).then(function (result) {
+                setBusy(false);
+                var state = result.ok ? 'ok' : 'err';
+
+                render(state, function () {
+                    head(result.message || (result.ok ? '连接成功' : '连接失败'));
+                    line('模型', result.model || model);
+                    if (typeof result.latency_ms === 'number') {
+                        line('耗时', result.latency_ms + ' ms');
+                    }
+                    if (result.http_code) {
+                        line('HTTP', result.http_code);
+                    }
+                    if (result.reply) {
+                        line('模型回复', result.reply);
+                    }
+                    if (result.warning) {
+                        line('提示', result.warning);
+                    }
+                    if (result.detail) {
+                        line('接口返回', result.detail);
+                    }
+                    if (result.ok) {
+                        line('说明', '本次测试未保存任何配置。确认无误后，点击「保存 AI 设置」生效。');
+                    }
+                });
+            }).catch(function (error) {
+                setBusy(false);
+                render('err', function () {
+                    head('测试请求失败：' + (error && error.message ? error.message : '网络异常'));
+                    line('建议', '检查后台是否可访问 api/ai_test.php，以及浏览器控制台的具体报错');
+                });
+            });
+        });
+    })();
     </script>
 </body>
 </html>

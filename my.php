@@ -5,6 +5,7 @@
 require_once __DIR__ . '/includes/bootstrap.php';
 require_once 'includes/functions.php';
 require_once 'includes/Services.php';
+require_once __DIR__ . '/includes/site_links.php';
 
 $functions = new Functions();
 $users = new UserService($functions);
@@ -261,7 +262,9 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.11.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.12.0">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.12.0">
+    <script src="assets/js/category-quick-add.js?v=2.12.0" defer></script>
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -1641,6 +1644,13 @@ $hasLinks = $totalLinks > 0;
                         </svg>
                         <span class="my-btn-label">我的分享</span>
                     </button>
+                    <!-- v2.12.0：一级「新建分组」入口，与后台/首页共用同一组件和接口 -->
+                    <button type="button" class="my-btn is-ghost js-category-create" id="quickGroupBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M12 5v14M5 12h14"></path>
+                        </svg>
+                        <span class="my-btn-label">新建分组</span>
+                    </button>
                     <button type="button" class="my-btn is-ghost" id="groupManageBtn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                             <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
@@ -1775,7 +1785,8 @@ $hasLinks = $totalLinks > 0;
         </main>
 
         <footer class="site-footer">
-            <p class="copyright"><?php echo $functions->escape($functions->footerCopyrightText((string) ($user['footer_copyright'] ?? ''), $brandName)); ?> · 我的导航</p>
+            <p class="copyright"><?php echo $functions->escape($functions->footerCopyrightText((string) ($user['footer_copyright'] ?? ''), $brandName)); ?> · 我的导航 · v<?php echo $functions->escape(defined('APP_VERSION') ? APP_VERSION : '0.0.0'); ?></p>
+            <?php echo siteQuickLinksHtml(); ?>
         </footer>
     </div>
 
@@ -2371,6 +2382,8 @@ $hasLinks = $totalLinks > 0;
             var API_SHARE = 'api/share.php';
             var API_BOOKMARK = 'api/bookmark_import.php';
             var API_CATEGORIES = 'api/user_categories.php';
+            // v2.12.0：全站统一的新建分类/分组接口（后台、首页、分组管理弹窗共用）
+            var API_CATEGORY_CREATE = 'api/category_create.php';
             var OWN_GROUPS = <?php echo json_encode(array_values($ownGroups), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 
             function qs(selector, scope) {
@@ -3914,18 +3927,21 @@ $hasLinks = $totalLinks > 0;
 
             if (groupCreateBtn) {
                 groupCreateBtn.addEventListener('click', function () {
-                    var name = groupNameNew.value.trim();
+                    /* v2.12.0：改用全站统一的名称清洗/校验规则 + 统一创建接口，
+                       与后台分类管理、导航管理、首页分类栏完全一致。 */
+                    var checked = window.XYCategoryQuickAdd && window.XYCategoryQuickAdd.validateName
+                        ? window.XYCategoryQuickAdd.validateName(groupNameNew.value)
+                        : { ok: false, value: groupNameNew.value.trim(), error: '统一分类组件未加载，请刷新页面重试' };
 
-                    if (name === '') {
-                        showMsg(groupMsg, '请输入分组名称');
+                    if (!checked.ok) {
+                        showMsg(groupMsg, checked.error);
                         return;
                     }
 
                     setBusy(groupCreateBtn, true, '创建中…');
 
-                    postForm(API_CATEGORIES, {
-                        action: 'create',
-                        name: name,
+                    postForm(API_CATEGORY_CREATE, {
+                        name: checked.value,
                         is_private: groupPrivateNew.checked ? '1' : '0'
                     }).then(function (result) {
                         setBusy(groupCreateBtn, false);
@@ -5081,9 +5097,33 @@ $hasLinks = $totalLinks > 0;
                     });
                 }
             }
+
+            /* ------------------- v2.12.0 统一的「新建分组」弹窗入口 ------------------- */
+            document.addEventListener('click', function (event) {
+                var target = event.target;
+                var btn = target && target.closest ? target.closest('.js-category-create') : null;
+
+                if (!btn || !window.XYCategoryQuickAdd) {
+                    return;
+                }
+
+                XYCategoryQuickAdd.open({
+                    mode: 'front',
+                    term: '分组',
+                    title: '新建分组',
+                    apiUrl: API_CATEGORY_CREATE,
+                    onCreated: function (item) {
+                        if (!item.reused) {
+                            OWN_GROUPS.push({ id: item.id, name: item.name, is_private: item.is_private ? 1 : 0 });
+                            renderGroupList();
+                            refreshCategorySelects();
+                        }
+                    }
+                });
+            });
         })();
     </script>
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.11.0" defer></script>
+<script src="assets/js/search.js?v=2.12.0" defer></script>
 </body>
 </html>

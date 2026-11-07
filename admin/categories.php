@@ -512,7 +512,8 @@ if (isset($_GET['edit'])) {
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
     <link href="../assets/css/dataTables.bootstrap5.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css';">
-    <link href="../assets/css/admin.css?v=2.11.0" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.12.0" rel="stylesheet">
+    <link href="../assets/css/category-quick-add.css?v=2.12.0" rel="stylesheet">
     <style>
         /* 二级分类行的缩进与连接线，让层级关系一眼可见 */
         .cell-tree {
@@ -585,11 +586,16 @@ if (isset($_GET['edit'])) {
                 </h1>
                 <p class="page-subtitle">管理导航分类与排序，支持两级分类、图标与备注，让站点内容结构更加清晰有序。</p>
             </div>
-            <div class="page-header-meta">
+            <div class="page-header-meta d-flex align-items-center gap-2 flex-wrap">
                 <span class="meta-pill">
                     <i class="fas fa-layer-group"></i>
                     共 <?php echo count($categories); ?> 个分类
                 </span>
+                <!-- v2.12.0：与导航管理、前台分组共用同一套新建分类组件 -->
+                <button type="button" class="xycq-trigger js-category-create"
+                        title="快速新建分类；图标、排序、备注等详细属性可在下方表单中补充">
+                    <i class="fas fa-plus" aria-hidden="true"></i>快速添加分类
+                </button>
             </div>
         </header>
                 
@@ -897,6 +903,60 @@ if (isset($_GET['edit'])) {
             window.location.href = 'categories.php?delete=' + id;
         }
     }
+    </script>
+
+    <script src="../assets/js/category-quick-add.js?v=2.12.0"></script>
+    <script>
+    /* v2.12.0 · 分类管理页「快速添加分类」：与导航管理、前台分组共用同一组件 */
+    (function () {
+        'use strict';
+
+        var parents = <?php
+            $quickAddParents = [];
+            foreach ($categories as $quickAddCategory) {
+                if ((int) ($quickAddCategory['parent_id'] ?? 0) === 0) {
+                    $quickAddParents[] = [
+                        'id' => (int) $quickAddCategory['id'],
+                        'name' => (string) $quickAddCategory['name'],
+                    ];
+                }
+            }
+            echo json_encode($quickAddParents, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        ?>;
+
+        var users = <?php
+            $quickAddUsers = [];
+            foreach ($userList as $quickAddUser) {
+                $quickAddUsers[] = [
+                    'id' => (int) $quickAddUser['id'],
+                    'username' => (string) $quickAddUser['username'],
+                ];
+            }
+            echo json_encode($quickAddUsers, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        ?>;
+
+        document.addEventListener('click', function (event) {
+            var target = event.target;
+            var btn = target && target.closest ? target.closest('.js-category-create') : null;
+
+            if (!btn || !window.XYCategoryQuickAdd) {
+                return;
+            }
+
+            XYCategoryQuickAdd.open({
+                mode: 'admin',
+                term: '分类',
+                title: '快速添加分类',
+                apiUrl: '../api/category_create.php',
+                parents: parents,
+                users: users,
+                onCreated: function () {
+                    // 列表是服务端渲染的，刷新后新分类立刻出现在树中，排序也由后端统一给出
+                    window.setTimeout(function () { window.location.reload(); }, 700);
+                }
+            });
+        });
+    })();
     </script>
 </body>
 </html>

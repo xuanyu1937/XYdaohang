@@ -1,55 +1,67 @@
-# 轩宇-导航 v2.11.0 部署清单
+# 轩宇-导航 v2.12.0 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.11.0
+当前版本：v2.12.0
 
-> **体验修复版 · 无数据库变更、无 API 契约变更、无新增依赖**。按线上真实检测出的 17 项问题逐项修复并回归，完整根因见 [CHANGELOG.md](CHANGELOG.md)。本地全量回归 **49/49 通过，脚本级 JS 错误 0**。
+> **功能补齐版 · 无数据库变更、无 API 契约变更、无新增依赖、无 `web.config` / `.htaccess` 改动**。按用户清单完成「AI 分类配置测试连接」「全站统一添加分类入口」「全站底部入口统一并暴露 API 说明」。本地 Playwright 全量回归 **73/73 通过**，v2.11.0 存量回归 **49/49 通过**，脚本级 JS 错误 **0**。完整根因见 [CHANGELOG.md](CHANGELOG.md)。
 
-## 本次 v2.11.0 变动文件
+## 本次 v2.12.0 新增文件
 
 | 文件 | 说明 |
 | --- | --- |
-| `my.php` | **菜单 DOM 移到主脚本之前**（修好右键/长按菜单）；列表操作按钮改 hover 显示、触屏隐藏；长按/短按重写；删除二次确认；分组管理弹窗；账号设置（`?open=account`、昵称） |
-| `assets/js/search.js` | 最近搜索即时落库、互为前缀去重、清空前补记 |
-| `assets/js/nav.js` | 筛选栏只留一个清除按钮、搜索时隐藏总标题、favicon 1×1 透明图识别 |
-| `assets/css/nav.css`、`assets/css/admin.css` | favicon 首字母兜底；后台深色主题变量化与完整暗色块 |
-| `admin/categories.php` | `navCategoryIconHtml()`：`bi-*` → FontAwesome `<i>`，不再显示 class 文本 |
-| `admin/nav_links.php` | 分类下拉同名加归属后缀；健康状态细分「状态码异常 / 超时无响应」 |
-| `admin/sidebar.php` | 前后台主题共用 `xy-nav-theme`、独立深色开关、移动端抽屉增强 |
-| `admin/index.php` | 仪表盘日期改纯中文星期 |
-| `admin/settings.php` | 公告「已填未启用」醒目提示 |
-| `includes/Services.php` | `UserService::updateUsername()`（复用 `username`，无 DB 变更） |
-| `includes/functions.php` | `{year}{site}` 紧凑模板渲染时补 `© ` 与空格 |
-| `api/auth.php` | `update_profile` 按 `array_key_exists()` 只处理提交的字段 |
-| 全部 PHP 页面（22 处） | 资源参数 `?v=2.11.0` |
-| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` | 版本号升至 2.11.0（共同步 27 处） |
+| `api/ai_test.php` | AI 配置真实连接测试：仅管理员 + POST + 同源校验，用当前表单值发真实 `/chat/completions` 请求；密钥留空可复用已保存密钥，密钥不回显；curl / HTTP 错误中文化 |
+| `api/category_create.php` | 全站统一「新建分类 / 新建分组」接口：字段与校验的唯一真相源、同名复用、兼容老库、前台强制归属本人 |
+| `includes/site_links.php` | 全站统一快捷入口组件 `siteQuickLinksHtml()`：关于本站 / 联系管理员 / 申请收录 / API 说明；样式内联一次输出，不依赖页面 CSS |
+| `assets/js/category-quick-add.js` | 统一新建分类弹窗组件 `XYCategoryQuickAdd`：`open()` / `validateName()`，前端校验与后端逐条一致 |
+| `assets/css/category-quick-add.css` | 统一弹窗样式：自带配色（含深色主题）、移动端贴底、不依赖 Bootstrap / Tailwind |
+
+## 本次 v2.12.0 变动文件
+
+| 文件 | 说明 |
+| --- | --- |
+| `admin/settings.php` | AI 分类推荐区新增「测试连接」按钮（`type="button"`，不保存配置）+ 绿色/红色结果区 + `.ai-test-result` 深浅色样式 |
+| `admin/nav_links.php` | 筛选下拉旁、编辑表单「所属分类」旁新增「添加分类」；三个分类下拉加 `data-category-options`；创建后不刷新页面直接补选项 |
+| `admin/categories.php` | 页头新增「快速添加分类」按钮 |
+| `admin/sidebar.php` | 侧栏底部新增后台版快捷入口（含「查看 API 文档」） |
+| `assets/css/admin.css` | 侧栏快捷入口样式、折叠态缩写为 `API`、深色主题适配 |
+| `index.php` | 分类索引标题栏 + 移动端 tab 栏新增登录可见的「新建分组」；**本人空分组不再被索引过滤掉**；页脚换统一组件 |
+| `my.php` | 工具栏新增一级「新建分组」；分组管理弹窗创建切到统一接口与共享校验；页脚补一行小字号快捷入口与版本号 |
+| `about.php`、`contact.php`、`apply(1).php`、`share.php` | 页脚接入统一快捷入口（申请页为 Tailwind 版，单独补一个底部区块） |
+| 全部 PHP 页面（22 处） | 资源参数 `?v=2.12.0` |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` | 版本号升至 2.12.0（共同步 27 处） |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
 
-## 本次修复的 17 项（线上检测清单）
+## 本次交付的三项需求
 
-- **P0 严重**：① 网址行常驻按钮误触 + 长按菜单/短按打开网址 + 删除二次确认与撤销；② 移动端名称/域名被压到 16px；③ 分类图标显示 `bi-folder` 文本；④ 添加导航分类下拉同名无法区分。
-- **P1 中等**：⑤ 搜索清除按钮与结果标题冗余；⑥ 最近搜索不保存；⑦ favicon 失败空白；⑧ 健康状态「失效 110ms」矛盾；⑨ 前后台主题不统一；⑩ 公告栏未显示；⑪ 左侧分类索引重名。
-- **P2 细节**：⑫ 后台移动端抽屉菜单；⑬ 仪表盘 `Friday` 中英混排；⑭ 移动端工具栏文字标签；⑮ 分组管理弹窗简化；⑯ 页脚版权黏连；⑰ 头像下拉「账号设置」入口与昵称修改。
+- **① AI 测试连接**：用当前填写的地址 / 模型 / 密钥发真实请求，绿色成功（含耗时、HTTP、模型回复）/ 红色失败（401 / 404 / 429 / 超时 / DNS / TLS 中文化）；测试按钮不提交表单、不写数据库；密钥不回显。
+- **② 统一添加分类入口**：后台分类管理、后台导航管理筛选下拉、前台首页分类 tab / 抽屉、我的导航页分组管理弹窗，全部复用同一套字段、校验规则与 `api/category_create.php`；前台未登录不显示入口；前台用户无法越权建公共分类。
+- **③ 全站底部入口统一**：首页、我的导航、关于、联系、申请收录、分享页、后台 11 个页面统一提供「关于本站 / 联系管理员 / 申请收录 / API 说明」（后台文案为「查看 API 文档」）；`my.php` 底部补小字号一行；移动端底部居中显示、不隐藏。
 
 ## 升级要点
 
 1. **直接覆盖代码文件即可**，不需要执行任何 SQL，不需要改 `web.config` / `.htaccess`。
-2. 覆盖后清理 `cache/` 目录，前台强制刷新（Ctrl+F5）——本版改动集中在 CSS/JS，`?v=` 已升至 2.11.0，正常会自然刷新，但清缓存最稳妥。
-3. **推荐用后台「系统工具 → 在线更新」上传整包**：接口会跳过 `config/database.php`、`config/smtp.php`、`config/config.php`、`install/install.lock`、`.env` 及 `backups/`、`cache/`、`uploads/` 等目录，并自动备份被覆盖的原文件。
-4. 最快验证：访问 `/api/index.php`（零依赖，永远可用），徽章应显示 `v2.11.0`；首页资源参数应为 `?v=2.11.0`。
-5. 带令牌的请求仍发到 `api/sites.php`，**不是**文档页；`/api/sites.php` 返回 401 是正确行为（缺令牌）。
+2. 覆盖后清理 `cache/` 目录，前台强制刷新（Ctrl+F5）——本版新增 2 个 CSS/JS 文件并改了 22 处 `?v=`，清缓存最稳妥。
+3. **务必把 5 个新增文件一起上传**：`api/ai_test.php`、`api/category_create.php`、`includes/site_links.php`、`assets/js/category-quick-add.js`、`assets/css/category-quick-add.css`。缺 `site_links.php` 会让所有前台页与后台侧栏直接 500（函数未定义）。
+4. **推荐用后台「系统工具 → 在线更新」上传整包**：接口会跳过 `config/database.php`、`config/smtp.php`、`config/config.php`、`install/install.lock`、`.env` 及 `backups/`、`cache/`、`uploads/` 等目录，并自动备份被覆盖的原文件。
+5. 最快验证：访问 `/api/index.php`（零依赖，永远可用），徽章应显示 `v2.12.0`；首页资源参数应为 `?v=2.12.0`；任一前台页页脚应出现「API 说明」。
+6. AI 测试连接会向管理员填写的地址发一次**真实**请求（消耗极少量 token）；若线上服务器禁止访问外网，请用「保存 AI 设置」后在「一键添加」里验证。
 
 ## 验证记录
 
 | 项目 | 结果 |
 | --- | --- |
-| Playwright 本地全量回归 | 49/49 通过 |
+| v2.12.0 Playwright 全量回归 | 73/73 通过 |
+| v2.11.0 存量回归（无回退） | 49/49 通过 |
 | 脚本级 JS 错误 | 0 |
-| 移动端 390px 名称/域名宽度 | 16px → 287px |
-| 长按 500ms / 短按 | 菜单弹出、新标签打开网址、滚动不误触 |
-| 搜索历史 | 输入即写入，清空不丢，面板可见 |
-| `php -l` / `node --check` / 内联 JS | 全部通过 |
+| AI 成功 / 401 / 404 / 空地址 / 不保存配置 / 复用已保存密钥 | 全部通过（本地 mock 接口真实请求） |
+| 四类分类入口 + 越权防护 + 同名复用 | 全部通过 |
+| 六页页脚 + 后台侧栏 + 390px 移动端居中可见 | 全部通过 |
+| `php -l`（12 文件）/ `node --check`（独立 JS + 20 个内联脚本块） | 全部通过 |
+
+## v2.11.0 回顾
+
+按线上真实检测结果完成 17 项体验修复（P0 严重 1–4、P1 中等 5–11、P2 细节 12–17），并修掉一个隐藏 Bug：`#cardContextMenu` DOM 挂在主交互脚本之后，导致右键 / 长按菜单从未真正可用。本地回归 49/49 通过。无数据库变更。
 
 ## v2.10.9 回顾
 

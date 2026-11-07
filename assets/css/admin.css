@@ -3304,3 +3304,31 @@ html[data-theme="dark"] .char-count { color: var(--admin-muted) !important; }
 .admin-theme-toggle i { width: 16px; text-align: center; }
 .sidebar.collapsed .admin-theme-toggle { justify-content: center; padding: 9px 0; }
 .sidebar.collapsed .admin-theme-toggle span { display: none; }
+
+/* --------------------------------------------------------------------------
+   v2.12.0 · 侧栏统一快捷入口（关于本站 / 联系管理员 / 申请收录 / 查看 API 文档）
+   组件样式自带在 includes/site_links.php，这里只处理侧栏折叠与深色主题。
+   -------------------------------------------------------------------------- */
+.sidebar-footer .site-quick-links.is-admin {
+    color: var(--admin-muted, #8a8a86);
+    margin: 12px 0 2px;
+    padding: 12px 4px 0;
+}
+.sidebar-footer .site-quick-links.is-admin a { color: inherit; }
+.sidebar-footer .site-quick-links.is-admin a:hover,
+.sidebar-footer .site-quick-links.is-admin a:focus-visible { color: var(--admin-primary, #3d6bff); }
+html[data-theme="dark"] .sidebar-footer .site-quick-links.is-admin { color: #9aa0a6; }
+
+/* 折叠态只有 ~70px 宽：只保留「查看 API 文档」，缩写为 API，仍然可点 */
+.sidebar.collapsed .sidebar-footer .site-quick-links.is-admin {
+    padding: 10px 0 0;
+    border-top-color: rgba(127, 127, 127, .18);
+}
+.sidebar.collapsed .sidebar-footer .site-quick-links.is-admin .footer-sep,
+.sidebar.collapsed .sidebar-footer .site-quick-links.is-admin a:not(:last-of-type) { display: none; }
+.sidebar.collapsed .sidebar-footer .site-quick-links.is-admin a:last-of-type { font-size: 0; padding: 4px; }
+.sidebar.collapsed .sidebar-footer .site-quick-links.is-admin a:last-of-type::after {
+    content: 'API';
+    font-size: 11px;
+    letter-spacing: .3px;
+}

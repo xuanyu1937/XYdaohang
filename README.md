@@ -72,11 +72,11 @@
 - `upgrade_*.sql` 全部幂等，重复执行不报错
 - v2.9.0 之后（含全部 v2.10.x）**无数据库变更**，无需执行任何 SQL
 
-### 从 v2.9.x / v2.10.x 升级到 v2.11.0
+### 从 v2.9.x / v2.10.x / v2.11.x 升级到 v2.12.0
 
-覆盖代码文件，清理 `cache/`，前台强制刷新（Ctrl+F5）即可。v2.10.0 ~ v2.11.0 均无数据库结构变更，无需执行任何 SQL。
+覆盖代码文件，清理 `cache/`，前台强制刷新（Ctrl+F5）即可。v2.10.0 ~ v2.12.0 均无数据库结构变更，无需执行任何 SQL。
 
-> v2.11.0 是按线上真实检测结果做的 17 项体验修复（列表操作按钮、长按/短按、分类图标与重名、搜索历史、健康状态、前后台主题、公告栏、分组管理、账号设置等），完整清单见 [CHANGELOG.md](CHANGELOG.md) 与 [UPLOAD_LIST.md](UPLOAD_LIST.md)。
+> v2.12.0 新增后台 AI 配置「测试连接」（真实请求、成功/失败提示、不保存配置）、全站统一的「添加分类 / 新建分组」入口与接口、全站底部快捷入口（含 `/api/` 的「API 说明」）。v2.11.0 是按线上真实检测结果做的 17 项体验修复。完整清单见 [CHANGELOG.md](CHANGELOG.md) 与 [UPLOAD_LIST.md](UPLOAD_LIST.md)。
 
 ### 从 v2.8.x 升级到 v2.9.0
 
@@ -188,7 +188,7 @@
 - 完整变更记录见 [CHANGELOG.md](CHANGELOG.md)
 - 版本发布与安装包下载见 [Releases](https://github.com/xuanyu1937/XYdaohang/releases)
 
-当前版本：`VERSION` / `config/version.php` = **2.11.0**（2026-11-06）
+当前版本：`VERSION` / `config/version.php` = **2.12.0**（2026-11-07）
 
 ## 📄 许可证
 

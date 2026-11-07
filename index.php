@@ -6,6 +6,7 @@
 require_once __DIR__ . '/includes/bootstrap.php';
 require_once 'includes/functions.php';
 require_once 'includes/Services.php';
+require_once __DIR__ . '/includes/site_links.php';
 
 $functions = new Functions();
 $users = new UserService($functions);
@@ -314,7 +315,8 @@ foreach ($rawLinks as $row) {
 
 $totalSites = count($links);
 
-// 分类树：只保留有链接的分类，父分类计数含子分类。
+// 分类树：默认只保留有链接的分类，父分类计数含子分类；
+// 当前登录用户自己新建的空分组是例外（v2.12.0）。
 $categoryRows = $engine->all();
 $categoryById = [];
 
@@ -358,7 +360,13 @@ foreach ($categoryRows as $category) {
 
     $ownCount = (int) ($totalCount[$id] ?? 0);
 
-    if ($ownCount <= 0 && !$children) {
+    /* v2.12.0：本人刚新建、还没放网址的分组也要在分类索引里露出来。
+       否则从分类栏点「新建分组」后刷新页面看不到任何变化，会误以为创建失败。
+       公共空分类仍然隐藏，避免把索引撑成一长串无内容的条目。 */
+    $isOwnEmptyGroup = $currentUser
+        && (int) ($category['user_id'] ?? 0) === (int) $currentUser['id'];
+
+    if ($ownCount <= 0 && !$children && !$isOwnEmptyGroup) {
         continue;
     }
 
@@ -531,11 +539,13 @@ if ($bgImage !== '') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.11.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.12.0">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.12.0">
     <script src="assets/js/pinyin-pro.min.js" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.12.0" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.11.0" defer></script>
-    <script src="assets/js/search.js?v=2.11.0" defer></script>
+    <script src="assets/js/nav.js?v=2.12.0" defer></script>
+    <script src="assets/js/search.js?v=2.12.0" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -843,9 +853,18 @@ if ($bgImage !== '') {
             <aside class="category-rail" id="categoryRail" aria-label="网站分类">
                 <div class="rail-title">
                     <span>分类索引</span>
-                    <button type="button" class="rail-close" id="railClose" aria-label="收起分类">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
-                    </button>
+                    <div class="rail-title-actions">
+                        <?php if ($currentUser): ?>
+                            <!-- v2.12.0：登录用户可在分类抽屉里直接新建分组，与我的导航页共用同一接口 -->
+                            <button type="button" class="rail-add xycq-trigger js-category-create"
+                                    title="新建分组（与「我的导航」使用同一套字段和校验规则）">
+                                <span aria-hidden="true">+</span> 新建分组
+                            </button>
+                        <?php endif; ?>
+                        <button type="button" class="rail-close" id="railClose" aria-label="收起分类">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+                        </button>
+                    </div>
                 </div>
 
                 <nav class="rail-nav" id="railNav">
@@ -907,6 +926,15 @@ if ($bgImage !== '') {
                             </button>
                         <?php endforeach; ?>
                     </div>
+                    <?php if ($currentUser): ?>
+                        <!-- v2.12.0：分类 tab 栏上的新建分组入口，未登录访客不显示 -->
+                        <button type="button" class="mobile-cats-add xycq-trigger js-category-create"
+                                aria-label="新建分组" title="新建分组">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                <path d="M12 5v14M5 12h14"></path>
+                            </svg>
+                        </button>
+                    <?php endif; ?>
                     <button type="button" class="mobile-cats-more" id="mobileCatsMore" aria-label="查看全部分类">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                             <path d="M4 6h16M4 12h16M4 18h16"></path>
@@ -1270,14 +1298,9 @@ if ($bgImage !== '') {
             <p class="copyright">
                 <?php echo $functions->escape($footerCopyrightText); ?>
                 <span class="footer-sep">·</span>
-                <a href="about.php">关于</a>
-                <span class="footer-sep">·</span>
-                <a href="contact.php">联系管理员</a>
-                <span class="footer-sep">·</span>
-                <a href="apply.php">申请收录</a>
-                <span class="footer-sep">·</span>
                 <span class="footer-version">v<?php echo $functions->escape(defined('APP_VERSION') ? APP_VERSION : '0.0.0'); ?></span>
             </p>
+            <?php echo siteQuickLinksHtml(); ?>
         </footer>
     </div>
 
@@ -1514,5 +1537,32 @@ if ($bgImage !== '') {
         <button type="button" class="ccm-item ccm-owner" data-action="move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14M5 12h14M5 20h14"></path><path d="M9 8l3-3 3 3M9 16l3 3 3-3"></path></svg>移动分组</button>
         <button type="button" class="ccm-item ccm-owner ccm-danger" data-action="delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg>删除</button>
     </div>
+
+    <script>
+    /* v2.12.0 · 首页分类栏「新建分组」：登录用户可见，与我的导航页共用同一组件与接口 */
+    (function () {
+        'use strict';
+
+        document.addEventListener('click', function (event) {
+            var target = event.target;
+            var btn = target && target.closest ? target.closest('.js-category-create') : null;
+
+            if (!btn || !window.XYCategoryQuickAdd) {
+                return;
+            }
+
+            XYCategoryQuickAdd.open({
+                mode: 'front',
+                term: '分组',
+                title: '新建分组',
+                apiUrl: 'api/category_create.php',
+                onCreated: function () {
+                    // 分类栏由服务端渲染，刷新后新分组立即出现在索引中
+                    window.setTimeout(function () { window.location.reload(); }, 700);
+                }
+            });
+        });
+    })();
+    </script>
 </body>
 </html>

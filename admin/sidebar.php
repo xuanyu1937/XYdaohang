@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/site_links.php';
 $functions = new Functions();
 $db = Database::getInstance()->getConnection();
 $pendingApplications = $db->query("SELECT COUNT(*) as count FROM applications WHERE status = 'pending'")->fetch()['count'];
@@ -540,6 +541,8 @@ try {
                 </div>
             </div>
         </div>
+        <!-- v2.12.0：后台统一快捷入口，含「查看 API 文档」 -->
+        <?php echo siteQuickLinksHtml('..', 'admin'); ?>
     </div>
 </div>
 

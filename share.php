@@ -6,6 +6,7 @@
 require_once __DIR__ . '/includes/bootstrap.php';
 require_once 'includes/functions.php';
 require_once 'includes/Services.php';
+require_once __DIR__ . '/includes/site_links.php';
 
 $functions = new Functions();
 $users = new UserService($functions);
@@ -97,7 +98,7 @@ $tokenParam = rawurlencode($token);
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.11.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.12.0">
     <link rel="stylesheet" href="assets/css/page.css">
 </head>
 <body data-monitor="0">
@@ -239,10 +240,9 @@ $tokenParam = rawurlencode($token);
             <p class="copyright">
                 &copy; <?php echo date('Y'); ?> <?php echo $functions->escape($brandName); ?>
                 <span class="footer-sep">·</span>
-                <a href="about.php">关于</a>
-                <span class="footer-sep">·</span>
-                <a href="contact.php">联系管理员</a>
+                <span class="footer-version">v<?php echo $functions->escape(defined('APP_VERSION') ? APP_VERSION : '0.0.0'); ?></span>
             </p>
+            <?php echo siteQuickLinksHtml(); ?>
         </footer>
     </div>
 
@@ -311,6 +311,6 @@ $tokenParam = rawurlencode($token);
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.11.0" defer></script>
+<script src="assets/js/search.js?v=2.12.0" defer></script>
 </body>
 </html>

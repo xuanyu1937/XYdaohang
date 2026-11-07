@@ -6,6 +6,7 @@
 require_once __DIR__ . '/includes/bootstrap.php';
 require_once 'includes/functions.php';
 require_once 'includes/Services.php';
+require_once __DIR__ . '/includes/site_links.php';
 
 $functions = new Functions();
 $users = new UserService($functions);
@@ -111,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.11.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.12.0">
     <link rel="stylesheet" href="assets/css/page.css">
 </head>
 <body data-monitor="0">
@@ -235,8 +236,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <span class="footer-sep">·</span>
                 <a href="index.php">首页</a>
                 <span class="footer-sep">·</span>
-                <a href="about.php">关于本站</a>
+                <span class="footer-version">v<?php echo $functions->escape(defined('APP_VERSION') ? APP_VERSION : '0.0.0'); ?></span>
             </p>
+            <?php echo siteQuickLinksHtml(); ?>
         </footer>
     </div>
 
@@ -312,6 +314,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.11.0" defer></script>
+<script src="assets/js/search.js?v=2.12.0" defer></script>
 </body>
 </html>
