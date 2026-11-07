@@ -1,23 +1,37 @@
-# 轩宇-导航 部署清单（当前版本 v2.16.3）
+# 轩宇-导航 部署清单（当前版本 v2.16.4）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.16.3
+当前版本：v2.16.4
 
-> **网址图标可视化编辑**。编辑 / 添加网址弹窗里，原来的纯文本「图标地址」输入框换成了图示化的网站图标区：左边 48×48 预览，右边「上传图标」「输入图标URL」「恢复默认」。上传的图片自动压到 256px 以内转 PNG，SVG 先剥掉脚本再存。同时修掉一个影响面更大的缺陷——列表项漏了 `logo` 原值，导致保存时可能把已有图标静默清空。**无数据库结构变更，无需执行 SQL，覆盖文件即可。**
+> **线上兼容性修复**。v2.16.3 的图标上传在部分虚拟主机上返回 500（`disable_functions` 含 `chmod`），且「在线更新」永远跳过了 `uploads/` 目录的安全配置，导致 SVG 图标被旧规则拦成 403。**无数据库结构变更，无需执行 SQL，覆盖文件即可。**
 
 ## ⚠️ 升级须知（两步）
 
-1. **上传并覆盖**全部文件（列表见下）。
-2. **清一次浏览器缓存**（或强刷 Ctrl+F5）。本版改了 `my.php`、`api/user_sites.php`、`uploads/.htaccess`、`uploads/web.config`，资源版本号已同步到 `?v=2.16.3`。
+1. **推荐用后台「系统工具 → 在线更新」上传整包**：本版已让更新器精确放行 `uploads/.htaccess` 与 `uploads/web.config`，会一并覆盖（旧版更新器跳过整个 `uploads/`，只能 FTP 手动传）。
+2. **清一次浏览器缓存**（或强刷 Ctrl+F5）。资源版本号已同步到 `?v=2.16.4`。
 
-**验证是否生效**：`/api/index.php` 徽章显示 `v2.16.3`；登录后进「我的导航」，点任一网址的「编辑」，名称上方能看到「网站图标」区，预览框 + 两个按钮都在；上传一张图，预览立刻变化，保存后列表卡片图标跟着变。
+**验证是否生效**：`/api/index.php` 徽章显示 `v2.16.4`；登录后进「我的导航」→ 编辑任一网址 → 上传一张图，预览立刻变化且**不再报上传失败**；IIS 主机直接访问上传的 `.svg` 图标应返回 200 而不是 403。
 
-> **已经在 v2.16.0 / v2.16.1 / v2.16.2 的站点不需要再执行 `upgrade_v2.16.0.sql`** —— 索引早已建好，本版无数据库变更。如果是从 v2.15.2 或更早直接跳到 v2.16.3，仍需执行一次 `upgrade_v2.16.0.sql`（幂等）。
+> **手动 FTP 部署**必须覆盖 `uploads/.htaccess`（Apache）与 `uploads/web.config`（IIS）。这两个文件本版内容与 v2.16.3 相同（放行已清洗的 SVG），只是以前在线更新传不上去。
 >
-> **两个上传目录配置必须一起覆盖**：`uploads/.htaccess`（Apache）与 `uploads/web.config`（IIS）。本版把 `.svg` 从禁止列表移出，否则 SVG 图标会 403。如果服务器是 IIS 且站点的 `web.config` 继承有冲突，删掉 `uploads/web.config` 里的 `staticContent` 节点也能工作。
+> **已经在 v2.16.0 及之后的站点不需要再执行 `upgrade_v2.16.0.sql`** —— 索引早已建好。从 v2.15.2 或更早直接跳到 v2.16.4 仍需执行一次（幂等）。
 
-## 本次 v2.16.3 变动文件
+## 本次 v2.16.4 变动文件
+
+| 文件 | 说明 |
+| --- | --- |
+| `api/user_sites.php` | 新增 `userSiteTryChmod()`；三处 `@chmod($target, 0644)` 改为先判 `function_exists('chmod')`，修复受限主机上「文件已落盘但接口返回 500」 |
+| `admin/tools.php` | `$neverOverwriteDirs` 移除 `uploads/`，改为精确放行 `uploads/.htaccess` / `uploads/web.config`，其余用户上传文件继续保留；同步修正页面说明文案 |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.16.4 |
+| `api/index.php` | 文档页版本徽章 2.16.4 |
+| 全部 PHP 页面（31 处） | 资源参数 `?v=2.16.4` |
+| `uploads/.htaccess`、`uploads/web.config` | 内容与 v2.16.3 相同，但**必须随本包重新覆盖一次** |
+| `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
+
+**本版没有新增文件、没有 SQL**，全部为既有文件修改，直接覆盖即可。
+
+## 上一版 v2.16.3 变动文件（供跳版本参考）
 
 | 文件 | 说明 |
 | --- | --- |

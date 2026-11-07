@@ -43,7 +43,7 @@ class ConfigManager {
         return [
             'system' => [
                 'name' => '轩宇-导航',
-                'version' => '2.16.3',
+                'version' => '2.16.4',
                 'debug' => false,
                 'maintenance' => false,
                 'timezone' => 'Asia/Shanghai',

@@ -122,6 +122,20 @@ function userSiteTrim($value, $limit)
  * @param array     $file  $_FILES 里的单个文件项
  * @return array ['success'=>bool,'error'=>string,'relativePath'=>string,...]
  */
+
+/**
+ * v2.16.4：部分 Windows 虚拟主机把 chmod 列入 disable_functions。
+ * 直接调用未定义的函数会抛 Error（@ 只能压 warning，压不住异常），
+ * 结果是文件已经落盘、接口却在最后一行崩成 500 空响应。
+ * 这里先判存在；chmod 失败本身也不影响图标能否被 Web 服务器读取。
+ */
+function userSiteTryChmod($path)
+{
+    if (function_exists('chmod')) {
+        @chmod($path, 0644);
+    }
+}
+
 function userSiteUploadIcon(Functions $functions, array $file)
 {
     if (!isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
@@ -185,7 +199,7 @@ function userSiteUploadIcon(Functions $functions, array $file)
             return ['success' => false, 'error' => '文件保存失败'];
         }
 
-        @chmod($target, 0644);
+        userSiteTryChmod($target);
 
         return [
             'success' => true,
@@ -221,7 +235,7 @@ function userSiteUploadIcon(Functions $functions, array $file)
             return ['success' => false, 'error' => '文件保存失败'];
         }
 
-        @chmod($target, 0644);
+        userSiteTryChmod($target);
 
         return [
             'success' => true,
@@ -239,7 +253,7 @@ function userSiteUploadIcon(Functions $functions, array $file)
         return ['success' => false, 'error' => '文件保存失败'];
     }
 
-    @chmod($target, 0644);
+    userSiteTryChmod($target);
 
     return [
         'success' => true,

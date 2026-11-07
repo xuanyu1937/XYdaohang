@@ -1,5 +1,29 @@
 # 轩宇-导航 · 版本记录
 
+## v2.16.4（2026-11-07）
+
+> **线上兼容性修复**。v2.16.3 的图标上传在部分虚拟主机上返回 500，且「在线更新」永远跳过了 `uploads/` 目录的安全配置，导致 SVG 图标被旧规则拦成 403。两个问题都由真实线上环境（IIS 10 + PHP 8.1.33 + `disable_functions` 含 `chmod`）暴露，本地 PHP 8.3 测不出来。**无数据库变更，覆盖文件即可。**
+
+### 修复
+
+- **图标上传 HTTP 500（P0）**：`api/user_sites.php` 三处 `@chmod($target, 0644)` 在 `disable_functions` 含 `chmod` 的主机上抛 `Error: Call to undefined function chmod()`。`@` 只能压 warning，压不住「未定义函数」异常——文件其实已经落盘，接口却在最后一行崩成 500 空响应，前端只提示「上传失败」。改为统一的 `userSiteTryChmod()`，先判 `function_exists('chmod')` 再调用，与 `includes/functions.php` 里头像上传的既有写法保持一致。
+- **在线更新跳过 `uploads/` 安全配置（P1）**：`admin/tools.php` 的 `$neverOverwriteDirs` 原先把整个 `uploads/` 排除，导致 `uploads/.htaccess` 与 `uploads/web.config` **从未被任何一次在线更新覆盖**，线上 IIS 仍执行 v2.16.2 的旧规则（禁止 `.svg`），SVG 图标 403。现在保留「用户上传文件永不覆盖」的原则，只精确放行这两个目录级安全配置文件，并同步修正页面说明文案。
+
+### 部署
+
+- 推荐后台「系统工具 → 在线更新」上传 `XYdaohang-2.16.4.zip`：本版会自动把两个 `uploads/` 配置同步过去；旧版需 FTP 手动覆盖。
+- 无 SQL；资源版本号 `?v=2.16.4`，覆盖后清缓存 / 强刷。
+
+### 验证
+
+| 场景 | 结果 |
+|---|---|
+| 本地 `php -d disable_functions=chmod` 图标上传接口 | **26/26 通过** |
+| 本地桌面 UI / 手机端 / 全站回归 | 全部通过 |
+| 线上 `upload_logo`（PNG / SVG） | HTTP 200 |
+| 线上 SVG 静态访问 | HTTP 200 + `image/svg+xml` |
+| 线上版本 / 图标编辑区 / 手机端 / AI 分类回归 | 全部通过 |
+
 ## v2.16.3（2026-11-07）
 
 > **网址图标可视化编辑**。编辑 / 添加网址弹窗里，把原来那个纯文本「图标地址」输入框换成了图示化的**网站图标区**：左边 48×48 预览，右边「上传图标」「输入图标URL」「恢复默认」三个按钮。上传的图片自动压到 256px 以内并转 PNG（几 MB 的图压完通常只剩几 KB），SVG 会先剥掉脚本再存。**无数据库变更，覆盖文件即可。**

@@ -157,7 +157,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'install/install.lock',
                             '.env',
                         ];
-                        $neverOverwriteDirs = ['.git/', 'backups/', 'cache/', 'uploads/', 'node_modules/', 'vendor/'];
+                        $neverOverwriteDirs = ['.git/', 'backups/', 'cache/', 'node_modules/', 'vendor/'];
+
+                        // v2.16.4：uploads/ 下绝大多数是用户上传的内容，必须原样保留；
+                        // 但目录级的访问安全配置需要随版本同步，否则新版放行的图片格式
+                        // （v2.16.3 起允许的 SVG 网站图标）仍会被旧规则拦成 403。
+                        $uploadsConfigAllow = ['uploads/.htaccess', 'uploads/web.config'];
 
                         $rootPath = dirname(__DIR__);
                         $backupDir = $rootPath . '/backups/update-v' . $packageVersion . '-' . date('Ymd-His');
@@ -192,6 +197,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         break;
                                     }
                                 }
+                            }
+
+                            // uploads/ 的用户文件永不覆盖，只放行上面两个安全配置文件
+                            if (strpos($name, 'uploads/') === 0
+                                && !in_array($name, $uploadsConfigAllow, true)) {
+                                $blocked = true;
                             }
 
                             if ($blocked) {
@@ -678,7 +689,7 @@ $tableLabels = [
     <title>系统工具 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
-    <link href="../assets/css/admin.css?v=2.16.3" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.16.4" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -1636,7 +1647,7 @@ $tableLabels = [
                                     <i class="fas fa-circle-info me-1"></i>更新流程：从
                                     <a href="https://github.com/xuanyu1937/XYdaohang/releases" target="_blank" rel="noopener">Releases 页面</a>
                                     下载新版 Source code (zip) → 在下方上传 → 系统自动校验版本、备份被覆盖的原文件到 <code>backups/</code> 并解压覆盖。
-                                    <br><i class="fas fa-shield-halved me-1"></i>数据库配置（config/database.php）、SMTP 配置、本地配置、uploads/、backups/ 等本地文件永远不会被更新包覆盖。
+                                    <br><i class="fas fa-shield-halved me-1"></i>数据库配置（config/database.php）、SMTP 配置、本地配置、backups/、uploads/ 下的用户文件永远不会被更新包覆盖；仅 uploads/.htaccess 与 uploads/web.config 会随版本同步。
                                 </div>
                             </div>
                             <form method="post" enctype="multipart/form-data" onsubmit="return confirm('确认上传并执行更新？被覆盖的原文件会自动备份到 backups/ 目录。');">
