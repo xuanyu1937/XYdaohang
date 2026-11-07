@@ -57,6 +57,93 @@
     var MODES = ['grid', 'list', 'compact'];
     var SKINS = ['default', 'purple', 'orange', 'mint'];
 
+    /* ----------------------------------------------------------------------
+       v2.16.1：手机端彻底移除卡片悬停操作条
+
+       背景：只靠 CSS 的 @media (hover: none) and (pointer: coarse) 在部分环境
+       会失效——微信 / UC / QQ 内置浏览器常把 pointer 报成 fine，iPadOS 桌面版
+       UA 更是 hover: hover。这些设备上卡片右侧那排小按钮会一直挂在外面。
+
+       做法：多信号判定，命中后直接把 .card-actions 从 DOM 删掉，任何 CSS
+       覆盖都救不回来；后续若视图切换重建卡片，用 MutationObserver 补刀。
+       星标 .card-star 是状态标识而非操作按钮，必须保留，不在移除范围内。
+       ---------------------------------------------------------------------- */
+
+    function hasTouchInput() {
+        return ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0;
+    }
+
+    function isTouchUI() {
+        var mq = window.matchMedia;
+
+        if (mq && (mq('(pointer: coarse)').matches || mq('(hover: none)').matches)) {
+            return true;
+        }
+
+        /* 兜底：能触摸 + 窄视口。阈值放宽到 1180，覆盖 iPad 竖屏 / 横屏；
+           带触屏的笔记本（1366 以上、hover 可用）不会命中，操作条照常保留。 */
+        return hasTouchInput() && window.innerWidth <= 1180;
+    }
+
+    function purgeCardActions() {
+        var nodes = document.querySelectorAll('.card-actions');
+        var i;
+
+        for (i = nodes.length - 1; i >= 0; i--) {
+            if (nodes[i].parentNode) {
+                nodes[i].parentNode.removeChild(nodes[i]);
+            }
+        }
+
+        return nodes.length;
+    }
+
+    (function initTouchUI() {
+        if (!isTouchUI()) {
+            return;
+        }
+
+        root.classList.add('is-touch-ui');
+        purgeCardActions();
+
+        /* 视图切换 / 搜索过滤若重建卡片，补一刀 */
+        if (!window.MutationObserver || !document.body) {
+            return;
+        }
+
+        var observer = new MutationObserver(function (records) {
+            var need = false;
+            var i;
+            var j;
+            var added;
+            var node;
+
+            for (i = 0; i < records.length && !need; i++) {
+                added = records[i].addedNodes;
+
+                for (j = 0; j < added.length; j++) {
+                    node = added[j];
+
+                    if (node.nodeType !== 1) {
+                        continue;
+                    }
+
+                    if ((node.classList && node.classList.contains('card-actions'))
+                        || (node.querySelector && node.querySelector('.card-actions'))) {
+                        need = true;
+                        break;
+                    }
+                }
+            }
+
+            if (need) {
+                purgeCardActions();
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+    })();
+
     // 默认搜索引擎（兜底，API 加载失败时使用）
     var SEARCH_ENGINES = {
         site:   { label: '站内', placeholder: '搜索网站或粘贴网址', url: '' },
@@ -3344,7 +3431,7 @@
             /* 紧凑模式（v2.10.5）：卡片只有 42px 高，操作条比卡片还宽，
                悬停浮出会直接盖住标题。改为「第一次点击先展开操作条，
                第二次点击才跳转」，触屏与鼠标行为一致。 */
-            if (isCompactMode()) {
+            if (isCompactMode() && !isTouchUI()) {
                 if (card.classList.contains('is-actions-open')) {
                     card.classList.remove('is-actions-open');
                 } else {

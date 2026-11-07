@@ -1,5 +1,44 @@
 # 轩宇-导航 · 版本记录
 
+## v2.16.1（2026-11-07）
+
+> **手机端彻底移除卡片悬停操作条**。v2.16.0 的隐藏规则只依赖 CSS 媒体查询 `(hover: none) and (pointer: coarse)`，在**微信 / UC / QQ 内置浏览器**（把 `pointer` 报成 `fine`）和 **iPadOS 桌面版 UA**（`hover: hover`）上会失效，卡片右侧那排小按钮照旧挂着。本版改成「多信号判定 + 直接删 DOM + CSS 绝对兜底」三层防护，这些设备上按钮彻底不存在；桌面端行为完全不变。**无数据库变更，覆盖文件即可。**
+
+### 修复
+
+- **手机端常驻操作按钮未隐藏（核心修复）**
+  - 新增触屏判定 `isTouchUI()`：`(pointer: coarse)` 或 `(hover: none)` 任一命中即判定为触屏；再补一条兜底——`ontouchstart` / `maxTouchPoints > 0` 且视口 ≤ 1180px，覆盖 iPad 全系与模拟桌面 UA 的国产浏览器。带触屏的 Windows 笔记本（宽屏 + `hover: hover`）不会被误判，操作条照常保留。
+  - 命中后直接把 `.card-actions` 从 DOM 里 `remove`，不只是 `display: none`——任何后置 CSS 都无法再把它显示出来。同时给 `<html>` 打上 `is-touch-ui` 标记。
+  - `MutationObserver` 监听后续节点插入，视图切换 / 搜索过滤若重建卡片会立刻补删，不会漏。
+  - `index.php` 的 `<head>` 加了一段同步预判脚本，在 CSS 落地前就写入标记，避免首帧闪出按钮。
+- **CSS 兜底置于 `nav.css` 文件末尾**
+  - 媒体查询放宽为 `@media (hover: none), (pointer: coarse)`（任一命中），并补齐 `:hover` / `:focus-within` / `.is-actions-open` / list / compact / grid 全部状态组合。
+  - 另加 `html.is-touch-ui` 一组规则，特异性压过 `html[data-mode="compact"] .site-card.is-actions-open .card-actions`，即使将来再引入新的展开状态也不会穿透。
+  - 隐藏时同时清零 `width` / `height` / `padding` / `border` 并设 `pointer-events: none`，防止透明按钮继续吃点击造成误触。
+- **紧凑模式下点击卡片不再需要点两次**
+  - 原逻辑「第一次点击展开操作条、第二次才跳转」在手机端已无意义（操作条没了）。触屏设备上直接跳过该分支，一次点击即跳转。
+- **星标保留**：`.card-star` 属于状态标识，不在移除范围，触屏端依旧常显、可点、可切换收藏。
+
+### 顺带修复
+
+- **API 文档页手机端横向溢出 16px**：`.callout` 里含有长 JSON 的行内 `<code>` 撑破了容器，补 `overflow-wrap: anywhere` 后横向溢出归零。
+
+### 验证
+
+| 场景 | 结果 |
+|---|---|
+| 标准手机（Chromium 移动模拟） | `.card-actions` 数量 **0**，星标 48 个全部可见 |
+| 模拟媒体查询失效（`pointer: coarse` / `hover: none` 强制返回 false） | 仍为 **0**，兜底分支生效 |
+| 手机 grid / list / compact 三视图 | 三种视图均 **0** 个操作条元素 |
+| 桌面端 | 48 个容器 / 240 个按钮保留，hover 浮出 5 个正常 |
+| 动态插入 `.card-actions` | 400ms 内被 `MutationObserver` 删除 |
+| 长按菜单 | 新标签打开 / 复制链接 / 二维码 / 收藏 / 编辑 / 移动分组 / 删除，**7 项齐全** |
+| 长按菜单动作 | 「编辑」→ `editLinkDialog`、「移动分组」→ `moveDialog`、「二维码」→ `qrDialog` 均正常打开 |
+| 手机端点击星标 | `data-starred` 由 1 → 0，收藏切换成功 |
+| 紧凑模式单击卡片 | 不再展开操作条，直接跳转 |
+
+---
+
 ## v2.16.0（2026-11-07）
 
 > **批量归属管理 + 回收站 + 首页提速 + 快捷收录智能分组 + 开放 API 自动建分类**。这是一次覆盖面较大的版本：后台导航管理支持勾选后**批量转移 / 批量复制归属**，前后台双双上线**回收站**（软删除、恢复、彻底删除、一键清空）；前台「我的导航」与后台登录态**打通**，管理员前台登录后点「管理后台」直达；首页首屏少下载 **316KB**、响应体 gzip 后缩到 **7%**、新增 2 个复合索引；首页搜索框收藏网址支持**新建分组**，AI 推荐的新分组只在采纳后创建；开放 API 的 POST 新增 `category_name` 与 `ai_recommend`，可自动建分类并回传 `category_id`。**本次有数据库索引变更，需执行 `upgrade_v2.16.0.sql`（幂等，重复执行安全）。**

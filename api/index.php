@@ -9,7 +9,7 @@
  * 本页只输出静态说明，不读取也不展示任何令牌。
  */
 
-$version = '2.16.0';
+$version = '2.16.1';
 $versionFile = __DIR__ . '/../VERSION';
 
 if (is_readable($versionFile)) {
@@ -227,6 +227,13 @@ td code { font-size: 12.5px; color: var(--primary); white-space: nowrap; }
 .c-cmd { color: #fcd34d; }
 
 .callout { border-left: 3px solid var(--primary); background: var(--surface); border-radius: 0 var(--radius) var(--radius) 0; padding: 12px 16px; font-size: 13.5px; color: var(--muted); margin: 16px 0; }
+/* v2.16.1：行内 code 里的长 JSON / URL 强制断行，避免撑破手机端布局 */
+.callout code,
+p code,
+li code,
+dd code,
+td code,
+th code { word-break: break-word; overflow-wrap: anywhere; }
 .callout strong { color: var(--text); }
 ul { padding-left: 20px; margin: 10px 0; }
 li { margin: 5px 0; color: var(--muted); font-size: 14px; }

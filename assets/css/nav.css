@@ -6589,3 +6589,73 @@ html[data-theme="dark"] .site-header .brand-subtitle {
     content: "";
     transform: translate(-50%, -50%);
 }
+
+/* ==========================================================================
+   v2.16.1 手机端彻底移除卡片悬停操作条（最高优先级，置于文件末尾压过一切）
+   --------------------------------------------------------------------------
+   触发失效的典型环境：微信 / UC / QQ 内置浏览器把 pointer 报成 fine；
+   iPadOS 桌面版 UA 报 hover: hover；部分安卓 ROM 浏览器干脆不实现这两个特性。
+   因此除了 media query 放宽为「任一命中」，再加 html.is-touch-ui 这层
+   JS 写入的标记做绝对兜底。两条路任一生效，按钮都不会出现。
+   注意：星标 .card-star 是状态标识，不在此列，继续保持常显。
+   ========================================================================== */
+
+@media (hover: none), (pointer: coarse) {
+    .card-actions,
+    .site-card .card-actions,
+    .site-card:hover .card-actions,
+    .site-card:focus-within .card-actions,
+    .site-card.is-actions-open .card-actions,
+    .sites-list .card-actions,
+    .sites-list[data-view="grid"] .card-actions,
+    .sites-list[data-view="list"] .card-actions,
+    .sites-list[data-view="compact"] .card-actions,
+    html[data-mode="compact"] .site-card:hover .card-actions,
+    html[data-mode="compact"] .site-card:focus-within .card-actions,
+    html[data-mode="compact"] .site-card.is-actions-open .card-actions {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+    }
+
+    .card-actions .card-action {
+        display: none !important;
+        pointer-events: none !important;
+    }
+}
+
+html.is-touch-ui .card-actions,
+html.is-touch-ui .site-card .card-actions,
+html.is-touch-ui .site-card:hover .card-actions,
+html.is-touch-ui .site-card:focus-within .card-actions,
+html.is-touch-ui .site-card.is-actions-open .card-actions,
+html.is-touch-ui .sites-list .card-actions,
+html.is-touch-ui .sites-list[data-view="grid"] .card-actions,
+html.is-touch-ui .sites-list[data-view="list"] .card-actions,
+html.is-touch-ui .sites-list[data-view="compact"] .card-actions,
+html.is-touch-ui[data-mode="compact"] .site-card.is-actions-open .card-actions {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+}
+
+html.is-touch-ui .card-actions .card-action {
+    display: none !important;
+    pointer-events: none !important;
+}

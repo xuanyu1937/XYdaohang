@@ -539,8 +539,27 @@ if ($bgImage !== '') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.16.0">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.16.0">
+    <!-- v2.16.1 · 手机端操作条预判：在 CSS 落地前就打上标记，避免首帧闪出按钮。
+         判定逻辑与 assets/js/nav.js 里的 isTouchUI() 保持一致。 -->
+    <script>
+        (function () {
+            var mq = window.matchMedia;
+            var touch = false;
+
+            if (mq && (mq('(pointer: coarse)').matches || mq('(hover: none)').matches)) {
+                touch = true;
+            } else if (('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0) {
+                touch = window.innerWidth <= 1180;
+            }
+
+            if (touch) {
+                document.documentElement.classList.add('is-touch-ui');
+            }
+        })();
+    </script>
+
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.16.1">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.16.1">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -552,7 +571,7 @@ if ($bgImage !== '') {
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.16.0';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.16.1';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -572,10 +591,10 @@ if ($bgImage !== '') {
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.16.0" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.16.1" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.16.0" defer></script>
-    <script src="assets/js/search.js?v=2.16.0" defer></script>
+    <script src="assets/js/nav.js?v=2.16.1" defer></script>
+    <script src="assets/js/search.js?v=2.16.1" defer></script>
     <noscript>
         <style>
             .site-status,
