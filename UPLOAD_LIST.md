@@ -1,63 +1,71 @@
-# 轩宇-导航 v2.12.0 部署清单
+# 轩宇-导航 v2.13.0 部署清单
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.12.0
+当前版本：v2.13.0
 
-> **功能补齐版 · 无数据库变更、无 API 契约变更、无新增依赖、无 `web.config` / `.htaccess` 改动**。按用户清单完成「AI 分类配置测试连接」「全站统一添加分类入口」「全站底部入口统一并暴露 API 说明」。本地 Playwright 全量回归 **73/73 通过**，v2.11.0 存量回归 **49/49 通过**，脚本级 JS 错误 **0**。完整根因见 [CHANGELOG.md](CHANGELOG.md)。
+> **API 可用性实测与逻辑加固版**。对 `api/` 全部 20 个端点做真实 HTTP 审计，修复 9 个真实缺陷。**无数据库结构变更、无新增依赖、无 `web.config` / `.htaccess` 改动、对外 API 契约向后兼容**。API 专项回归 **106/106 通过**，v2.12.0 存量回归 **73/73**，v2.11.0 存量回归 **49/49**，脚本级 JS 错误 **0**。完整根因见 [CHANGELOG.md](CHANGELOG.md)，逐项测试结果见 `API_TEST_REPORT.md`。
 
-## 本次 v2.12.0 新增文件
-
-| 文件 | 说明 |
-| --- | --- |
-| `api/ai_test.php` | AI 配置真实连接测试：仅管理员 + POST + 同源校验，用当前表单值发真实 `/chat/completions` 请求；密钥留空可复用已保存密钥，密钥不回显；curl / HTTP 错误中文化 |
-| `api/category_create.php` | 全站统一「新建分类 / 新建分组」接口：字段与校验的唯一真相源、同名复用、兼容老库、前台强制归属本人 |
-| `includes/site_links.php` | 全站统一快捷入口组件 `siteQuickLinksHtml()`：关于本站 / 联系管理员 / 申请收录 / API 说明；样式内联一次输出，不依赖页面 CSS |
-| `assets/js/category-quick-add.js` | 统一新建分类弹窗组件 `XYCategoryQuickAdd`：`open()` / `validateName()`，前端校验与后端逐条一致 |
-| `assets/css/category-quick-add.css` | 统一弹窗样式：自带配色（含深色主题）、移动端贴底、不依赖 Bootstrap / Tailwind |
-
-## 本次 v2.12.0 变动文件
+## 本次 v2.13.0 变动文件
 
 | 文件 | 说明 |
 | --- | --- |
-| `admin/settings.php` | AI 分类推荐区新增「测试连接」按钮（`type="button"`，不保存配置）+ 绿色/红色结果区 + `.ai-test-result` 深浅色样式 |
-| `admin/nav_links.php` | 筛选下拉旁、编辑表单「所属分类」旁新增「添加分类」；三个分类下拉加 `data-category-options`；创建后不刷新页面直接补选项 |
-| `admin/categories.php` | 页头新增「快速添加分类」按钮 |
-| `admin/sidebar.php` | 侧栏底部新增后台版快捷入口（含「查看 API 文档」） |
-| `assets/css/admin.css` | 侧栏快捷入口样式、折叠态缩写为 `API`、深色主题适配 |
-| `index.php` | 分类索引标题栏 + 移动端 tab 栏新增登录可见的「新建分组」；**本人空分组不再被索引过滤掉**；页脚换统一组件 |
-| `my.php` | 工具栏新增一级「新建分组」；分组管理弹窗创建切到统一接口与共享校验；页脚补一行小字号快捷入口与版本号 |
-| `about.php`、`contact.php`、`apply(1).php`、`share.php` | 页脚接入统一快捷入口（申请页为 Tailwind 版，单独补一个底部区块） |
-| 全部 PHP 页面（22 处） | 资源参数 `?v=2.12.0` |
-| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` | 版本号升至 2.12.0（共同步 27 处） |
+| `api/sites.php` | 跨域预检与 CORS、令牌摘要校验（兼容明文）、DELETE 不再异常硬删、`user_id` 存在性校验、分类归属校验、LIKE 通配符转义、非法 JSON `invalid_json`、权限值与过期时间健壮性 |
+| `admin/tools.php` | 新建令牌只存 SHA-256 摘要；列表显示摘要前缀；过期判断不再误判脏数据 |
+| `api/check_update.php` | CORS 由「反射任意 Origin + Credentials」改为同主机白名单 |
+| `api/stats.php` | 仅允许 GET，其余 405 |
+| `api/ai_test.php` | 失败响应统一 `{ok,error,message}` 与合理 HTTP 状态码 |
+| `includes/functions.php` | 新增 `mergeJsonBody()`，站内 POST 接口统一支持 JSON 请求体 |
+| `api/track_click.php` | 同源校验 + 同会话 2 秒去重 |
+| `api/site_meta.php` | 同源校验，防止被当作第三方抓取代理 |
+| `api/share.php` | 浏览量按访客 60 秒去重 |
+| `api/ai_suggest.php`、`api/auth.php`、`api/bookmark_import.php`、`api/category_create.php`、`api/health_check.php`、`api/user_categories.php`、`api/user_search_engines.php` | 接入统一 JSON 请求体解析 |
+| `api/index.php` | 文档新增「跨域与预检」「站内接口一览」，补错误码与注意事项；fallback 版本 2.13.0 |
+| 全部 PHP 页面（30 处） | 资源参数 `?v=2.13.0` |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.13.0 |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
 
-## 本次交付的三项需求
+**本版没有新增文件**，全部是对既有文件的修改，直接覆盖即可。
 
-- **① AI 测试连接**：用当前填写的地址 / 模型 / 密钥发真实请求，绿色成功（含耗时、HTTP、模型回复）/ 红色失败（401 / 404 / 429 / 超时 / DNS / TLS 中文化）；测试按钮不提交表单、不写数据库；密钥不回显。
-- **② 统一添加分类入口**：后台分类管理、后台导航管理筛选下拉、前台首页分类 tab / 抽屉、我的导航页分组管理弹窗，全部复用同一套字段、校验规则与 `api/category_create.php`；前台未登录不显示入口；前台用户无法越权建公共分类。
-- **③ 全站底部入口统一**：首页、我的导航、关于、联系、申请收录、分享页、后台 11 个页面统一提供「关于本站 / 联系管理员 / 申请收录 / API 说明」（后台文案为「查看 API 文档」）；`my.php` 底部补小字号一行；移动端底部居中显示、不隐藏。
+## 修复的 9 个真实缺陷
+
+| # | 缺陷 | 影响 |
+| --- | --- | --- |
+| 1 | `OPTIONS` 预检返回 405 | 浏览器跨域调用 API 直接不可用 |
+| 2 | `DELETE` 任何异常都退化为 `DELETE FROM` | 数据库抖动会永久删除本应可恢复的数据 |
+| 3 | 管理级令牌可写任意 `user_id` | 产生永远查不到的孤儿数据 |
+| 4 | 用户级令牌可挂到公共/他人分类 | 越权关联，详情接口会带出分类名 |
+| 5 | `check_update.php` 反射任意 Origin + Credentials | 任意第三方站点可带管理员会话读取结果 |
+| 6 | `q` 中 `%` / `_` 未转义 | `q=%` 返回全部记录，搜索结果失真 |
+| 7 | 非法 JSON 静默当空参数 | 报错「url 不能为空」，排查方向跑偏 |
+| 8 | `ai_test.php` 失败只回 `message` 且 HTTP 200 | 无稳定机器码，调用方只能匹配文案 |
+| 9 | `track_click` / `site_meta` 无来源校验、浏览量无去重 | 可被跨站刷点击量、当免费抓取代理、刷分享浏览量 |
+
+另修：令牌明文存库（改摘要）、`stats.php` 不校验方法、`permissions` 未白名单、`strtotime` 脏数据误判过期。
 
 ## 升级要点
 
 1. **直接覆盖代码文件即可**，不需要执行任何 SQL，不需要改 `web.config` / `.htaccess`。
-2. 覆盖后清理 `cache/` 目录，前台强制刷新（Ctrl+F5）——本版新增 2 个 CSS/JS 文件并改了 22 处 `?v=`，清缓存最稳妥。
-3. **务必把 5 个新增文件一起上传**：`api/ai_test.php`、`api/category_create.php`、`includes/site_links.php`、`assets/js/category-quick-add.js`、`assets/css/category-quick-add.css`。缺 `site_links.php` 会让所有前台页与后台侧栏直接 500（函数未定义）。
+2. `api_tokens` 表结构不变：**旧版明文令牌继续可用**，新版创建的令牌只存摘要。数据库/备份泄漏不再直接暴露可用令牌。
+3. 覆盖后清理 `cache/` 目录，前台强制刷新（Ctrl+F5）——本版改了 30 处 `?v=`。
 4. **推荐用后台「系统工具 → 在线更新」上传整包**：接口会跳过 `config/database.php`、`config/smtp.php`、`config/config.php`、`install/install.lock`、`.env` 及 `backups/`、`cache/`、`uploads/` 等目录，并自动备份被覆盖的原文件。
-5. 最快验证：访问 `/api/index.php`（零依赖，永远可用），徽章应显示 `v2.12.0`；首页资源参数应为 `?v=2.12.0`；任一前台页页脚应出现「API 说明」。
-6. AI 测试连接会向管理员填写的地址发一次**真实**请求（消耗极少量 token）；若线上服务器禁止访问外网，请用「保存 AI 设置」后在「一键添加」里验证。
+5. 最快验证：访问 `/api/index.php`（零依赖，永远可用），徽章应显示 `v2.13.0`；`curl -X OPTIONS -i /api/sites.php` 应返回 `204` 且带 `Access-Control-Allow-Origin`；`sites.php` 无令牌仍返回 `401 unauthorized`。
+6. 若线上有第三方前端跨域调用，现在可直连，无需代理；令牌仍须由调用方自己保管。
 
 ## 验证记录
 
 | 项目 | 结果 |
 | --- | --- |
-| v2.12.0 Playwright 全量回归 | 73/73 通过 |
-| v2.11.0 存量回归（无回退） | 49/49 通过 |
-| 脚本级 JS 错误 | 0 |
-| AI 成功 / 401 / 404 / 空地址 / 不保存配置 / 复用已保存密钥 | 全部通过（本地 mock 接口真实请求） |
-| 四类分类入口 + 越权防护 + 同名复用 | 全部通过 |
-| 六页页脚 + 后台侧栏 + 390px 移动端居中可见 | 全部通过 |
-| `php -l`（12 文件）/ `node --check`（独立 JS + 20 个内联脚本块） | 全部通过 |
+| API 专项审计（本地 20 端点 + 线上只读） | 106/106 通过 |
+| v2.12.0 存量回归 | 73/73 通过 |
+| v2.11.0 存量回归 | 49/49 通过 |
+| 完整 REST CRUD（表单 + JSON、GET/POST/PUT/PATCH/DELETE） | 全部通过 |
+| 越权 / 非法参数 / 非法 JSON / 过期令牌 / CORS 预检 | 全部通过 |
+| `php -l` 全项目 / 内联 JS `node --check` | 全部通过，脚本级 JS 错误 0 |
+
+## v2.12.0 回顾
+
+三项功能补齐 + 一处体验修正：AI 分类配置「测试连接」、全站统一「添加分类 / 新建分组」入口、全站底部快捷入口与 API 说明；顺带修复首页分类索引过滤掉本人空分组的问题。本地回归 73/73。无数据库变更。
 
 ## v2.11.0 回顾
 

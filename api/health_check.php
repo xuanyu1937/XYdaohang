@@ -22,6 +22,11 @@ header('X-Robots-Tag: noindex, nofollow');
 @set_time_limit(600);
 
 $functions = new Functions();
+// 统一支持 application/json：非法 JSON 返回明确的 400，而不是静默当成「没传参数」。
+if (!$functions->mergeJsonBody()) {
+    $functions->jsonResponse(['ok' => false, 'error' => 'invalid_json', 'message' => '请求体不是合法的 JSON'], 400);
+}
+
 
 if (!$functions->isLoggedIn()) {
     $functions->jsonResponse(['ok' => false, 'error' => '请先登录后台'], 401);

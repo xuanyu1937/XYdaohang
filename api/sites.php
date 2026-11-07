@@ -11,7 +11,11 @@
  *   DELETE ?id= （或 body: id）                  需 write
  *
  * 权限范围：api_tokens.user_id = 0 表示管理级（可操作公共与全部条目）；
- *          > 0 时仅能读写该用户自己的条目。
+ *          > 0 时仅能读写该用户自己的条目，且只能使用自己名下的分类。
+ *
+ * v2.13.0：令牌在库里以 SHA-256 摘要保存（兼容旧明文行）；支持 OPTIONS 预检
+ *          与无凭证 CORS；LIKE 通配符转义；非法 JSON 明确报错；DELETE 不再
+ *          因任何异常退化为硬删除。
  */
 
 require_once __DIR__ . '/../includes/bootstrap.php';
@@ -23,6 +27,22 @@ header('Cache-Control: no-store, max-age=0');
 header('X-Content-Type-Options: nosniff');
 header('X-Robots-Tag: noindex, nofollow');
 @ini_set('display_errors', '0');
+
+/**
+ * 跨域支持（v2.13.0）：对外 API 用 Bearer 令牌鉴权，不依赖 Cookie，
+ * 因此允许任意来源携带自己持有的令牌调用，但绝不发送 Allow-Credentials。
+ * 预检必须在令牌校验之前返回 204，否则浏览器拿不到 2xx，
+ * 前端跨域调用会在真正发请求之前就被拦下，表现为「API 不可用」。
+ */
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Authorization, X-Api-Token, Content-Type, Accept, X-Requested-With');
+header('Access-Control-Max-Age: 600');
+
+if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
 
 $functions = new Functions();
 $db = Database::getInstance()->getConnection();
@@ -86,11 +106,21 @@ function navApiInput()
         $raw = file_get_contents('php://input');
         $decoded = is_string($raw) ? json_decode($raw, true) : null;
 
+        // 参数表必须是 JSON 对象；数组 / 标量 / 语法错误都视为非法请求体。
+        // 否则 [1,2,3] 会被当成空参数表，返回误导性的「url 不能为空」。
         if (is_array($decoded)) {
-            return $decoded;
+            $isList = $decoded === [] ? false : (
+                function_exists('array_is_list')
+                    ? array_is_list($decoded)
+                    : array_keys($decoded) === range(0, count($decoded) - 1)
+            );
+
+            if (!$isList) {
+                return $decoded;
+            }
         }
 
-        return [];
+        return null;
     }
 
     if ($_POST) {
@@ -112,6 +142,28 @@ function navApiInput()
 function navApiFail($functions, $message, $status = 400, $code = 'bad_request')
 {
     $functions->jsonResponse(['ok' => false, 'error' => $code, 'message' => $message], $status);
+}
+
+/**
+ * 分类归属校验：管理级令牌可用任意存在的分类；用户级令牌只能使用自己名下的分类。
+ * 规则与站内 api/user_sites.php 的 userSiteCategoryId() 保持一致，
+ * 避免开放 API 出现「用户级令牌把条目挂到他人私有分类」的越权关联。
+ */
+function navApiCategoryAllowed($db, $categoryId, $tokenUserId, $isAdminScope)
+{
+    if ($categoryId <= 0 || $isAdminScope) {
+        return true;
+    }
+
+    try {
+        $stmt = $db->prepare('SELECT id FROM categories WHERE id = ? AND user_id = ? LIMIT 1');
+        $stmt->execute([(int) $categoryId, (int) $tokenUserId]);
+
+        return (bool) $stmt->fetch();
+    } catch (Throwable $error) {
+        // 老库没有 categories.user_id 列时不做归属判断，避免误伤既有数据
+        return true;
+    }
 }
 
 function navApiNormalizeUrl($url)
@@ -149,21 +201,37 @@ if (!preg_match('/^[A-Za-z0-9]{16,64}$/', $token)) {
     navApiFail($functions, '令牌格式不正确', 401, 'unauthorized');
 }
 
-$stmt = $db->prepare('SELECT id, name, permissions, user_id, expires_at FROM api_tokens WHERE token = ? LIMIT 1');
-$stmt->execute([$token]);
+// v2.13.0 起令牌在库里以 SHA-256 摘要保存，数据库泄漏也不会直接暴露令牌。
+// 同时兼容旧版明文存储的令牌：分别用摘要与明文各查一次，平滑升级、无需改表。
+$stmt = $db->prepare(
+    'SELECT id, name, permissions, user_id, expires_at FROM api_tokens
+     WHERE token = ? OR token = ? LIMIT 1'
+);
+$stmt->execute([hash('sha256', $token), $token]);
 $tokenRow = $stmt->fetch();
 
 if (!$tokenRow) {
     navApiFail($functions, '令牌无效', 401, 'unauthorized');
 }
 
-if (!empty($tokenRow['expires_at']) && strtotime((string) $tokenRow['expires_at']) < time()) {
-    navApiFail($functions, '令牌已过期', 401, 'token_expired');
+if (!empty($tokenRow['expires_at'])) {
+    $expiresTs = strtotime((string) $tokenRow['expires_at']);
+
+    // strtotime 对 '0000-00-00' 等脏数据返回 false，旧写法 false < time() 为真会误判过期
+    if ($expiresTs !== false && $expiresTs < time()) {
+        navApiFail($functions, '令牌已过期', 401, 'token_expired');
+    }
+}
+
+$scope = strtolower(trim((string) $tokenRow['permissions']));
+
+if (!in_array($scope, ['read', 'write'], true)) {
+    navApiFail($functions, '令牌权限配置无效，请在后台重新生成令牌', 403, 'forbidden');
 }
 
 $tokenUserId = (int) $tokenRow['user_id'];
 $isAdminScope = $tokenUserId === 0;
-$canWrite = strtolower((string) $tokenRow['permissions']) === 'write';
+$canWrite = $scope === 'write';
 
 // 记录最近使用时间（失败不影响主流程）
 try {
@@ -174,6 +242,10 @@ try {
 
 $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
 $input = in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true) ? navApiInput() : [];
+
+if ($input === null) {
+    navApiFail($functions, '请求体不是合法的 JSON，请检查 Content-Type 与内容', 400, 'invalid_json');
+}
 
 if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true) && !$canWrite) {
     navApiFail($functions, '当前令牌只有只读权限', 403, 'forbidden');
@@ -277,10 +349,13 @@ switch ($method) {
         }
 
         if ($keyword !== '') {
-            $conditions[] = '(nl.name LIKE ? OR nl.url LIKE ? OR nl.description LIKE ?)';
-            $params[] = '%' . $keyword . '%';
-            $params[] = '%' . $keyword . '%';
-            $params[] = '%' . $keyword . '%';
+            // 转义 LIKE 通配符：否则 q=% 会匹配全部记录，q=_ 会匹配任意单字符，
+            // 搜索结果与用户输入完全不符。用 ESCAPE '!' 避免 MySQL 反斜杠转义的歧义。
+            $like = '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $keyword) . '%';
+            $conditions[] = "(nl.name LIKE ? ESCAPE '!' OR nl.url LIKE ? ESCAPE '!' OR nl.description LIKE ? ESCAPE '!')";
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
         }
 
         $where = ' WHERE ' . implode(' AND ', $conditions);
@@ -368,6 +443,10 @@ switch ($method) {
             if (!$check->fetch()) {
                 navApiFail($functions, 'category_id 不存在');
             }
+
+            if (!navApiCategoryAllowed($db, $categoryId, $tokenUserId, $isAdminScope)) {
+                navApiFail($functions, '无权使用该分类，请改用自己名下的分类', 403, 'forbidden');
+            }
         } else {
             $engine = new CategoryEngine($functions);
             $categoryId = $engine->ensure('未分类', 'bi-collection');
@@ -375,6 +454,16 @@ switch ($method) {
 
         // 管理级令牌默认写入公共导航；用户级令牌写入自己名下
         $owner = $isAdminScope ? (int) ($input['user_id'] ?? 0) : $tokenUserId;
+
+        if ($owner > 0) {
+            // 旧实现直接把任意 user_id 写进 nav_links，不存在的用户会产生永远查不到的孤儿数据。
+            $ownerCheck = $db->prepare('SELECT id FROM users WHERE id = ? LIMIT 1');
+            $ownerCheck->execute([$owner]);
+
+            if (!$ownerCheck->fetch()) {
+                navApiFail($functions, 'user_id 对应的用户不存在');
+            }
+        }
 
         $logo = trim((string) ($input['logo'] ?? ''));
 
@@ -468,6 +557,10 @@ switch ($method) {
                 if (!$check->fetch()) {
                     navApiFail($functions, 'category_id 不存在');
                 }
+
+                if (!navApiCategoryAllowed($db, $categoryId, $tokenUserId, $isAdminScope)) {
+                    navApiFail($functions, '无权把条目改到该分类下', 403, 'forbidden');
+                }
             } else {
                 $engine = new CategoryEngine($functions);
                 $categoryId = $engine->ensure('未分类', 'bi-collection');
@@ -516,22 +609,41 @@ switch ($method) {
             navApiFail($functions, '无权删除该记录', 403, 'forbidden');
         }
 
-        // 与后台一致：移入回收站（deleted_at），可在后台恢复
+        // 与后台一致：移入回收站（deleted_at），可在后台恢复。
+        // 旧实现把 try 里的任何异常都 catch 成 DELETE FROM：一次锁等待、连接抖动
+        // 甚至 rowCount()==0 都会把数据永久删除，与「可恢复」的承诺完全相反。
+        // 现在先确认库结构，只有确实没有 deleted_at 列的老库才退化硬删除。
+        $hasSoftDelete = false;
+
         try {
-            $stmt = $db->prepare('UPDATE nav_links SET deleted_at = NOW(), is_active = 0 WHERE id = ?');
-            $stmt->execute([$id]);
-
-            if ($stmt->rowCount() === 0) {
-                throw new RuntimeException('soft delete failed');
-            }
-
-            $functions->jsonResponse(['ok' => true, 'message' => '已移入回收站', 'id' => $id]);
+            $colCheck = $db->query(
+                "SELECT COUNT(*) AS total FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'nav_links' AND COLUMN_NAME = 'deleted_at'"
+            );
+            $hasSoftDelete = $colCheck && (int) ($colCheck->fetch()['total'] ?? 0) > 0;
         } catch (Throwable $error) {
-            // 老库没有 deleted_at 列时退化为直接删除
-            $db->prepare('DELETE FROM nav_links WHERE id = ?')->execute([$id]);
-
-            $functions->jsonResponse(['ok' => true, 'message' => '删除成功', 'id' => $id]);
+            $hasSoftDelete = false;
         }
+
+        if (!$hasSoftDelete) {
+            $db->prepare('DELETE FROM nav_links WHERE id = ?')->execute([$id]);
+            $functions->jsonResponse([
+                'ok' => true,
+                'message' => '删除成功（当前数据库不支持回收站）',
+                'id' => $id,
+            ]);
+        }
+
+        try {
+            $stmt = $db->prepare(
+                'UPDATE nav_links SET deleted_at = NOW(), is_active = 0 WHERE id = ? AND deleted_at IS NULL'
+            );
+            $stmt->execute([$id]);
+        } catch (Throwable $error) {
+            navApiFail($functions, '删除失败，请稍后重试（数据未被删除）', 500, 'server_error');
+        }
+
+        $functions->jsonResponse(['ok' => true, 'message' => '已移入回收站', 'id' => $id]);
         break;
 
     default:

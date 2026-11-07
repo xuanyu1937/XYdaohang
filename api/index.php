@@ -9,7 +9,7 @@
  * 本页只输出静态说明，不读取也不展示任何令牌。
  */
 
-$version = '2.12.0';
+$version = '2.13.0';
 $versionFile = __DIR__ . '/../VERSION';
 
 if (is_readable($versionFile)) {
@@ -278,6 +278,8 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
         <a href="#examples">调用示例</a>
         <a href="#response">响应格式</a>
         <a href="#errors">错误码</a>
+        <a href="#cors">跨域与预检</a>
+        <a href="#internal">站内接口</a>
         <a href="#notes">注意事项</a>
     </nav>
 
@@ -315,7 +317,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
                 <div class="step">
                     <div class="step-num">3</div>
                     <h4>读取 JSON</h4>
-                    <p>成功返回 <code>{"ok":true,…}</code>；失败返回 <code>{"ok":false,…}</code> 及对应状态码，<code>message</code> 是中文说明。</p>
+                    <p>成功返回 <code>{"ok":true,…}</code>；失败返回 <code>{"ok":false,…}</code> 及对应状态码，<code>error</code> 是机器码、<code>message</code> 是中文说明。</p>
                 </div>
             </div>
         </section>
@@ -363,7 +365,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
                     </tbody>
                 </table>
             </div>
-            <p class="sec-desc">其他 HTTP 方法返回 <code>405 method_not_allowed</code>。</p>
+            <p class="sec-desc">其他 HTTP 方法返回 <code>405 method_not_allowed</code>。<code>OPTIONS</code> 预检例外，见<a href="#cors">跨域与预检</a>。</p>
         </section>
 
         <section id="params">
@@ -391,10 +393,10 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
                         <tr><td><code>url</code></td><td>string</td><td><strong>新建必填</strong>，http/https；省略协议时自动补 https</td></tr>
                         <tr><td><code>description</code></td><td>string</td><td>介绍，最长 200 字</td></tr>
                         <tr><td><code>logo</code></td><td>string</td><td>图标地址，最长 500 字</td></tr>
-                        <tr><td><code>category_id</code></td><td>int</td><td>分类 ID；传 0 或省略时归入「未分类」</td></tr>
+                        <tr><td><code>category_id</code></td><td>int</td><td>分类 ID；传 0 或省略时归入「未分类」。<strong>用户级令牌只能传自己名下的分类</strong>，否则 403</td></tr>
                         <tr><td><code>is_active</code></td><td>bool</td><td>是否启用，默认 true</td></tr>
                         <tr><td><code>sort_order</code></td><td>int</td><td>排序值（仅更新时有效）</td></tr>
-                        <tr><td><code>user_id</code></td><td>int</td><td>归属用户，<strong>仅管理级令牌</strong>创建时可指定</td></tr>
+                        <tr><td><code>user_id</code></td><td>int</td><td>归属用户，<strong>仅管理级令牌</strong>创建时可指定，且用户必须存在（否则 400）</td></tr>
                         <tr><td><code>id</code></td><td>int</td><td><strong>更新 / 删除必填</strong>，可放 body 或 URL</td></tr>
                     </tbody>
                 </table>
@@ -491,10 +493,59 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
                         <tr><td>403</td><td><code>forbidden</code></td><td>只读令牌做了写操作，或访问了他人条目</td></tr>
                         <tr><td>404</td><td><code>not_found</code></td><td>记录不存在或已进回收站</td></tr>
                         <tr><td>405</td><td><code>method_not_allowed</code></td><td>用了不支持的 HTTP 方法</td></tr>
+                        <tr><td>400</td><td><code>invalid_json</code></td><td>声明了 <code>Content-Type: application/json</code>，但请求体不是合法 JSON</td></tr>
+                        <tr><td>403</td><td><code>forbidden</code></td><td>用户级令牌使用了不属于自己的分类，或令牌权限值非法</td></tr>
+                        <tr><td>500</td><td><code>server_error</code></td><td>服务端写入失败；数据不会被删除，可稍后重试</td></tr>
                     </tbody>
                 </table>
             </div>
             <div class="callout">错误响应里 <code>error</code> 是稳定的机器可读标识，<code>message</code> 是给人看的中文说明。<strong>判断失败请先看 HTTP 码和 error，别去匹配 message 文案。</strong></div>
+        </section>
+
+        <section id="cors">
+            <h2>跨域与预检</h2>
+            <p class="sec-desc">浏览器里的第三方客户端可以直接调用本站 API，不需要自建代理。</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>项目</th><th>值 / 行为</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>OPTIONS</code> 预检</td><td>返回 <strong>204</strong>，在令牌校验之前完成，不需要带令牌</td></tr>
+                        <tr><td><code>Access-Control-Allow-Origin</code></td><td><code>*</code></td></tr>
+                        <tr><td><code>Access-Control-Allow-Methods</code></td><td><code>GET, POST, PUT, PATCH, DELETE, OPTIONS</code></td></tr>
+                        <tr><td><code>Access-Control-Allow-Headers</code></td><td><code>Authorization, X-Api-Token, Content-Type, Accept, X-Requested-With</code></td></tr>
+                        <tr><td><code>Access-Control-Allow-Credentials</code></td><td><strong>不发送</strong>。鉴权靠请求头里的令牌，不依赖 Cookie，因此不会造成跨站带上登录态</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="callout"><strong>令牌由调用方自己保管。</strong>允许跨域不等于允许匿名访问：没有有效令牌，任何来源都只会拿到 <code>401 unauthorized</code>。请勿把令牌写进公开的前端代码或公开仓库。</div>
+        </section>
+
+        <section id="internal">
+            <h2>站内接口一览</h2>
+            <p class="sec-desc">下列接口供本站页面使用，<strong>不接受开放令牌</strong>，靠浏览器会话鉴权，并做同源校验。它们不是对外 REST API，响应结构随各自业务而定，但失败时统一带 <code>ok:false</code> 与 <code>error</code>。</p>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>端点</th><th>鉴权</th><th>用途</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>auth.php</code></td><td>公开 / 前台会话</td><td>登录、注册、退出、当前用户、资料修改</td></tr>
+                        <tr><td><code>search_index.php</code></td><td>公开</td><td>首页搜索索引（站点 + 分类）</td></tr>
+                        <tr><td><code>site_meta.php?url=</code></td><td>公开 + 同源</td><td>抓取站点标题 / 描述 / 图标，带 SSRF 防护与缓存</td></tr>
+                        <tr><td><code>track_click.php</code></td><td>公开 + 同源</td><td>点击量统计，同会话 2 秒内重复上报去重</td></tr>
+                        <tr><td><code>contact.php</code></td><td>公开 + 同源</td><td>在线留言，受后台开关与频率限制约束</td></tr>
+                        <tr><td><code>share.php</code></td><td>公开读取 / 登录写入</td><td>分享创建、导入、读取，浏览量按访客 60 秒去重</td></tr>
+                        <tr><td><code>user_sites.php</code></td><td>前台登录</td><td>我的导航增删改查、批量识别与批量导入</td></tr>
+                        <tr><td><code>user_categories.php</code></td><td>前台登录</td><td>我的分组创建 / 改名 / 私密 / 排序 / 删除</td></tr>
+                        <tr><td><code>user_search_engines.php</code></td><td>前台登录</td><td>自定义搜索引擎管理</td></tr>
+                        <tr><td><code>bookmark_import.php</code></td><td>前台登录</td><td>浏览器书签文件导入</td></tr>
+                        <tr><td><code>category_create.php</code></td><td>前台登录或后台登录</td><td>全站统一新建分类 / 分组接口</td></tr>
+                        <tr><td><code>ai_suggest.php</code>、<code>ai_test.php</code></td><td>后台登录</td><td>AI 分类推荐、AI 配置测试连接</td></tr>
+                        <tr><td><code>health_check.php</code>、<code>stats.php</code></td><td>后台登录</td><td>链接健康检测、仪表盘统计</td></tr>
+                        <tr><td><code>check_update.php</code></td><td>后台登录</td><td>版本检测（服务端抓取 GitHub，带 10 分钟缓存）</td></tr>
+                        <tr><td><code>clear_cache.php</code>、<code>get_cache_status.php</code></td><td>—</td><td><strong>已下线</strong>，固定返回 <code>410 update_removed</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="callout">站内 POST 接口统一接受 <code>application/x-www-form-urlencoded</code> 与 <code>application/json</code>；JSON 非法时返回 <code>400 invalid_json</code>，不会再被静默当成「没传参数」。</div>
         </section>
 
         <section id="notes">
@@ -504,6 +555,11 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
                 <li><strong>令牌等同密码。</strong>不要写进前端代码、公开仓库或截图；优先用请求头传递，避免 <code>?token=</code> 留在访问日志里。</li>
                 <li><strong>DELETE 是软删除</strong>，条目进回收站且停用，可在后台「导航管理 → 回收站」恢复。</li>
                 <li><strong>写入会自动归一化网址</strong>：缺协议补 <code>https://</code>，非法地址直接拒绝。</li>
+                <li><strong>令牌在数据库里只存 SHA-256 摘要</strong>，完整明文仅在创建时显示一次；备份文件泄漏也不会直接交出可用令牌。旧版本创建的明文令牌仍可正常使用。</li>
+                <li><strong>列表的 <code>q</code> 按字面匹配</strong>：<code>%</code> 和 <code>_</code> 不再被当作 SQL 通配符，搜索结果与你输入的关键词一致。</li>
+                <li><strong>写入会校验归属</strong>：管理级令牌指定 <code>user_id</code> 时用户必须存在；用户级令牌的 <code>category_id</code> 只能是自己名下的分类，越权返回 403。</li>
+                <li><strong>DELETE 只在老库确实缺少 <code>deleted_at</code> 列时才退化为硬删除</strong>；数据库异常会返回 500 而不是把数据永久删掉。</li>
+                <li><strong>统计类接口有去重</strong>：点击量按会话 2 秒去重，分享浏览量按访客 60 秒去重；<code>track_click.php</code> / <code>site_meta.php</code> 只接受同源请求。</li>
                 <li>响应带 <code>Cache-Control: no-store</code> 与 <code>noindex</code>，不会被搜索引擎收录。</li>
                 <li>若 <code>/api/</code> 仍显示 403，说明主机默认文档里缺少 <code>index.php</code>，请到<strong>主机面板</strong>添加。不要在 <code>web.config</code> 里重复 <code>&lt;add value="index.php" /&gt;</code> —— 多数 PHP 主机全局已配置，重复声明会触发 500.19 导致全站不可用。Apache 的 <code>.htaccess</code> 已配置 <code>DirectoryIndex</code>。<strong>直接访问 <code>/api/index.php</code> 永远可用。</strong></li>
             </ul>

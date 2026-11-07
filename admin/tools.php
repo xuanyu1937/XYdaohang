@@ -533,10 +533,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($error === '') {
                 try {
-                    $token = bin2hex(random_bytes(32));
+                    $plainToken = bin2hex(random_bytes(32));
                 } catch (Throwable $e) {
-                    $token = md5(uniqid('', true)) . md5(uniqid('', true));
+                    $plainToken = md5(uniqid('', true)) . md5(uniqid('', true));
                 }
+
+                // v2.13.0：库里只存 SHA-256 摘要，明文仅在本次响应里完整显示一次。
+                // 数据库 / 备份文件泄漏时不会连带泄漏可用令牌；sites.php 同时兼容旧版明文行。
+                $tokenDigest = hash('sha256', $plainToken);
 
                 // user_id = 0 表示管理级令牌。
                 $stmt = $db->prepare(
@@ -545,8 +549,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
 
                 try {
-                    $stmt->execute([$token, $name, $permissions, $expiresValue]);
-                    $newTokenPlain = $token;
+                    $stmt->execute([$tokenDigest, $name, $permissions, $expiresValue]);
+                    $newTokenPlain = $plainToken;
                     $activeTab = 'api';
                     $message = '令牌创建成功，请立即复制保存（明文仅本次显示）';
                 } catch (Throwable $e) {
@@ -674,7 +678,7 @@ $tableLabels = [
     <title>系统工具 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
-    <link href="../assets/css/admin.css?v=2.12.0" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.13.0" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -1043,13 +1047,14 @@ $tableLabels = [
                                                             ? '管理级'
                                                             : (($row['username'] ?? '') !== '' ? $row['username'] : '用户#' . $rowUserId);
                                                         $rowPerm = strtolower((string) $row['permissions']) === 'write' ? 'write' : 'read';
-                                                        $expired = !empty($row['expires_at']) && strtotime((string) $row['expires_at']) < time();
+                                                        $expiresTs = !empty($row['expires_at']) ? strtotime((string) $row['expires_at']) : false;
+                                                        $expired = $expiresTs !== false && $expiresTs < time();
                                                     ?>
                                                     <tr>
                                                         <td><span class="cell-id"><?php echo (int) $row['id']; ?></span></td>
                                                         <td>
                                                             <div class="cell-title"><?php echo $functions->escape($row['name']); ?></div>
-                                                            <code class="small"><?php echo $functions->escape(substr((string) $row['token'], 0, 8)); ?>…</code>
+                                                            <code class="small" title="令牌摘要前缀，仅用于识别；完整令牌只在创建时显示一次"><?php echo $functions->escape(substr(hash('sha256', (string) $row['token']), 0, 8)); ?>…</code>
                                                         </td>
                                                         <td>
                                                             <span class="badge <?php echo $rowPerm === 'write' ? 'bg-success' : 'bg-info'; ?>">

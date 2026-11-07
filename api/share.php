@@ -20,6 +20,11 @@ header('X-Robots-Tag: noindex, nofollow');
 @ini_set('display_errors', '0');
 
 $functions = new Functions();
+// 统一支持 application/json：非法 JSON 返回明确的 400，而不是静默当成「没传参数」。
+if (!$functions->mergeJsonBody()) {
+    $functions->jsonResponse(['ok' => false, 'error' => 'invalid_json', 'message' => '请求体不是合法的 JSON'], 400);
+}
+
 $users = new UserService($functions);
 $shares = new ShareService($functions);
 
@@ -35,13 +40,34 @@ if ($method === 'GET') {
             $functions->jsonResponse(['ok' => false, 'error' => '分享不存在或已失效'], 404);
         }
 
-        $shares->incrementViews((int) $share['id']);
+        // 浏览量按「同一访客 + 同一分享」60 秒去重：
+        // 旧实现每次 GET 都 +1，刷新页面或脚本轮询就能刷出任意浏览量。
+        $now = time();
+        $viewKey = md5($token . '|' . (string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+
+        if (!isset($_SESSION['share_views']) || !is_array($_SESSION['share_views'])) {
+            $_SESSION['share_views'] = [];
+        } else {
+            foreach ($_SESSION['share_views'] as $key => $ts) {
+                if ($now - (int) $ts > 60) {
+                    unset($_SESSION['share_views'][$key]);
+                }
+            }
+        }
+
+        $countView = !isset($_SESSION['share_views'][$viewKey]);
+
+        if ($countView) {
+            $shares->incrementViews((int) $share['id']);
+            $_SESSION['share_views'][$viewKey] = $now;
+        }
+
         $sites = $shares->sitesOf($share);
 
         $functions->jsonResponse([
             'ok' => true,
             'title' => (string) $share['title'],
-            'views' => (int) $share['views'] + 1,
+            'views' => (int) $share['views'] + ($countView ? 1 : 0),
             'created_at' => (string) $share['created_at'],
             'total' => count($sites),
             'sites' => array_map(function ($site) use ($functions) {

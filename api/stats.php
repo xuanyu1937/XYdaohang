@@ -25,6 +25,11 @@ if (!$functions->isLoggedIn()) {
     $functions->jsonResponse(['ok' => false, 'error' => '请先登录后台'], 401);
 }
 
+// 统计是纯只读接口，任意方法都返回数据会让方法语义失效，也不利于审计。
+if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET') {
+    $functions->jsonResponse(['ok' => false, 'error' => 'method_not_allowed', 'message' => '统计接口仅支持 GET'], 405);
+}
+
 $db = Database::getInstance()->getConnection();
 $users = new UserService($functions);
 $health = new HealthCheckService($functions);

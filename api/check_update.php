@@ -30,9 +30,30 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, max-age=0');
 header('X-Content-Type-Options: nosniff');
 header('X-Robots-Tag: noindex, nofollow');
-// 跨域兼容：同源部署不受影响；管理后台与 API 分离部署时允许携带凭证访问
-header('Access-Control-Allow-Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? '*'));
-header('Access-Control-Allow-Credentials: true');
+/**
+ * 跨域兼容（v2.13.0 修正）：只信任与本站同主机、或反向代理显式声明的主机。
+ * 旧实现无条件反射任意 Origin 并同时发送 Allow-Credentials: true，
+ * 等于允许任意第三方站点携带管理员会话读取本接口结果，属于典型的 CORS 配置错误。
+ * 同源部署时浏览器不触发 CORS，完全不受影响。
+ */
+$requestOrigin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
+
+if (preg_match('#^https?://[A-Za-z0-9.\-]+(:\d{1,5})?$#', $requestOrigin)) {
+    $allowedHosts = [
+        strtolower(preg_replace('/:\d+$/', '', (string) ($_SERVER['HTTP_HOST'] ?? ''))),
+        strtolower((string) ($_SERVER['SERVER_NAME'] ?? '')),
+        strtolower(trim((string) (explode(',', (string) ($_SERVER['HTTP_X_FORWARDED_HOST'] ?? ''))[0] ?? ''))),
+    ];
+    $allowedHosts = array_values(array_filter(array_unique($allowedHosts)));
+    $originHost = strtolower((string) parse_url($requestOrigin, PHP_URL_HOST));
+
+    if ($originHost !== '' && in_array($originHost, $allowedHosts, true)) {
+        header('Access-Control-Allow-Origin: ' . $requestOrigin);
+        header('Access-Control-Allow-Credentials: true');
+        header('Vary: Origin');
+    }
+}
+
 header('Access-Control-Allow-Methods: GET, OPTIONS');
 header('Access-Control-Allow-Headers: Accept, Content-Type');
 @ini_set('display_errors', '0');

@@ -27,13 +27,22 @@ function navMetaResponse($data, $status = 200)
     exit;
 }
 
+// 只对来自本站页面的请求开放：本接口会代用户抓取任意公网地址，
+// 不校验来源就等于给第三方站点提供了一个免费的抓取代理。
+// 站内调用都由 fetch(..., {credentials:'same-origin'}) 发出，会带同源标记；
+// 服务端 / 命令行调用没有这些头，按 isSameOriginRequest() 的既有规则放行。
+$functions = new Functions();
+
+if (!$functions->isSameOriginRequest()) {
+    navMetaResponse(['ok' => false, 'error' => 'forbidden', 'message' => '非法来源请求'], 403);
+}
+
 $url = isset($_GET['url']) && is_string($_GET['url']) ? trim($_GET['url']) : '';
 
 if ($url === '' || strlen($url) > 2048) {
-    navMetaResponse(['ok' => false, 'error' => 'invalid_url'], 400);
+    navMetaResponse(['ok' => false, 'error' => 'invalid_url', 'message' => '请提供合法的 url 参数'], 400);
 }
 
-$functions = new Functions();
 $siteInfo = new SiteInfoService($functions);
 
 $result = $siteInfo->fetch($url);

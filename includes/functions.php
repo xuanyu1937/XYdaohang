@@ -312,6 +312,57 @@ class Functions {
             exit('非法请求');
         }
     }
+
+    /**
+     * 统一解析 API 请求体（v2.13.0）。
+     *
+     * PHP 只会把 application/x-www-form-urlencoded / multipart 填进 $_POST，
+     * 声明 application/json 时 $_POST 是空的。此前 user_sites.php、contact.php、
+     * sites.php 各写了一份兼容代码，其余接口则完全不支持 JSON，行为不一致。
+     *
+     * 这里直接把 JSON 键合并进 $_POST，调用方无需改动任何业务代码：
+     *   true  = 解析成功或不是 JSON 请求
+     *   false = 声明为 JSON 但内容非法，调用方应返回 400 invalid_json
+     */
+    public function mergeJsonBody() {
+        $contentType = strtolower((string) ($_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? ''));
+
+        if (strpos($contentType, 'application/json') === false) {
+            return true;
+        }
+
+        $raw = @file_get_contents('php://input');
+
+        if (!is_string($raw) || trim($raw) === '') {
+            return true;
+        }
+
+        $decoded = json_decode($raw, true);
+
+        if (!is_array($decoded)) {
+            return false;
+        }
+
+        // 只接受 JSON 对象；把 [1,2,3] 合并进 $_POST 没有意义，还会让错误原因变得难查
+        $isList = $decoded === [] ? false : (
+            function_exists('array_is_list')
+                ? array_is_list($decoded)
+                : array_keys($decoded) === range(0, count($decoded) - 1)
+        );
+
+        if ($isList) {
+            return false;
+        }
+
+        foreach ($decoded as $key => $value) {
+            // 表单里已有同名参数时以表单为准，避免 JSON 覆盖 URL 上的 action
+            if (!array_key_exists($key, $_POST)) {
+                $_POST[$key] = $value;
+            }
+        }
+
+        return true;
+    }
     
     public function redirect($url) {
         header('Location: ' . $url);
