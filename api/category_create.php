@@ -10,8 +10,12 @@
  *     归属用户留空表示公共分类。
  *   - 前台登录用户：强制归属本人、不允许指定上级分类，保证不能越权建公共分组。
  *
- * POST: name, parent_id(可选), user_id(可选), is_private(可选)
+ * POST: name, scope(admin|front), parent_id(可选), user_id(可选), is_private(可选)
  * 返回: {ok, id, name, label, parent_id, user_id, is_private, reused}
+ *
+ * v2.14.0：管理员身份必须由调用来源显式声明（scope=admin，仅后台组件发送）。
+ * 站长常同时登录后台与前台，旧逻辑只看 $_SESSION['admin_id']，导致前台「新建分组」
+ * 误走管理员分支、user_id 落成 0，分组变成所有人可见的公共分类。
  */
 
 require_once __DIR__ . '/../includes/bootstrap.php';
@@ -38,7 +42,15 @@ if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
 
 $functions->requireSameOrigin();
 
-$isAdmin = $functions->isLoggedIn();
+$scope = strtolower(trim((string) ($_POST['scope'] ?? '')));
+$referer = (string) ($_SERVER['HTTP_REFERER'] ?? '');
+
+// scope 缺失时兼容旧缓存的后台脚本：Referer 指向 /admin/ 才算后台上下文。
+// 即使伪造 scope，也仍需真实后台会话才会进入管理员分支，前台用户无法借此越权。
+$adminContext = $scope === 'admin'
+    || ($scope === '' && strpos($referer, '/admin/') !== false);
+
+$isAdmin = $functions->isLoggedIn() && $adminContext;
 $frontUser = $users->currentUser();
 
 if (!$isAdmin && !$frontUser) {

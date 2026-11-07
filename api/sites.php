@@ -449,6 +449,8 @@ switch ($method) {
             }
         } else {
             $engine = new CategoryEngine($functions);
+            // v2.14.0：用户级令牌补建的分组归属令牌对应用户；管理级令牌仍建公共分组
+            $engine->setUserId($isAdminScope ? 0 : $tokenUserId);
             $categoryId = $engine->ensure('未分类', 'bi-collection');
         }
 

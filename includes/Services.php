@@ -2609,6 +2609,8 @@ class BookmarkService extends BaseService
         }
 
         $engine = new CategoryEngine($this->functions);
+        // v2.14.0：导入书签 / 导入分享时自动创建的分组必须归属导入者
+        $engine->setUserId($userId);
         $nameToId = $engine->nameToId();
 
         // 已有 URL 去重
@@ -2855,6 +2857,8 @@ class ShareService extends BaseService
         }
 
         $engine = new CategoryEngine($this->functions);
+        // v2.14.0：导入书签 / 导入分享时自动创建的分组必须归属导入者
+        $engine->setUserId($userId);
         $nameToId = $engine->nameToId();
 
         $stmt = $this->db->prepare('SELECT url FROM nav_links WHERE user_id = ?');

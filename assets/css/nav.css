@@ -3573,7 +3573,13 @@ dialog.auth-modal::backdrop {
 
 /* 移动端：无 hover 能力时隐藏悬停操作条，星标常显，长按弹菜单 */
 @media (hover: none) and (pointer: coarse) {
+    /* v2.14.0：手机端卡片保持干净，常驻操作按钮一律不显示；
+       紧凑模式 / 点击展开的 is-actions-open 状态同样强制隐藏，所有操作走长按菜单。 */
     .card-actions {
+        display: none !important;
+    }
+
+    .site-card.is-actions-open .card-actions {
         display: none !important;
     }
 

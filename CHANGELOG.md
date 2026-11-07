@@ -1,5 +1,58 @@
 # 轩宇-导航 · 版本记录
 
+## v2.14.0（2026-11-07）
+
+> **分组归属隔离 + 我的导航分组同步 + 手机端卡片操作精简**。修复一条会让「用户新建的分组变成公共分类」的归属判定缺陷，补齐 `my.php` 全部 5 个分组下拉与顶部分类 tab 的即时同步，并按需求精简手机端卡片、把收藏移入长按菜单。**无数据库结构变更、无新增文件、无新增依赖、无 `web.config` / `.htaccess` 改动，对外 API 契约向后兼容。**
+
+### 实测结论
+
+| 阶段 | 用例数 | 通过 |
+| --- | --- | --- |
+| v2.14.0 专项回归（分组归属 / 下拉同步 / 手机端） | **60** | **60** |
+| v2.13.0 API 专项回归 | 106 | 106 |
+| v2.12.0 存量回归 | 73 | 73 |
+| v2.11.0 存量回归 | 49 | 49 |
+| 全项目 `php -l` / 内联 JS `node --check` | — | 全过，脚本级 JS 错误 0 |
+
+### 1. 用户新建的分组不再变成公共分类（数据隔离）
+
+**根因**：`api/category_create.php` 用 `$functions->isLoggedIn()` 判断调用来源，而这个方法只看后台 `$_SESSION['admin_id']`。站长常常同时登录后台与前台，此时在前台点「新建分组」会误走管理员分支，`user_id` 落成 `0`，分组因而出现在所有访客都能看到的公共分类栏里，且不归属任何用户。此外 `api/user_sites.php`、`includes/Services.php`、`api/sites.php` 共 10 处 `CategoryEngine` 实例没有 `setUserId()`，自动补建的「未分类」以及书签 / 分享导入时新建的分组同样是公共分类。
+
+| 修复 | 说明 |
+| --- | --- |
+| `api/category_create.php` | 新增 `scope=admin\|front`：管理员分支必须**同时**具备真实后台会话与后台来源；`scope` 缺失时按 Referer 兼容旧缓存脚本。前台一律强制 `user_id = 当前用户`、`parent_id = 0`，忽略前端传入的 `user_id` |
+| `assets/js/category-quick-add.js` | 提交时按 `mode` 自动携带 `scope`（后台 `admin`、前台 `front`）；`my.php` 分组管理弹窗也显式传 `front` |
+| `api/user_sites.php`（6 处） | 自动补建「未分类」前 `setUserId($userId)` |
+| `includes/Services.php`（2 处） | 书签导入、分享导入按导入者归属 |
+| `api/sites.php`（2 处） | 用户级令牌补建的分类归属令牌对应用户；管理级令牌仍建公共分类 |
+
+后台「分类管理 / 导航管理」仍可正常创建公共分类或指定归属用户（显式 `scope=admin`），行为不变；前台伪造 `scope=admin` 或 `user_id=0` 均无效（已实测）。
+
+> **历史数据**：本版只修代码，**不自动改动已有分类记录**。此前误建为公共的分组，请在后台「分类管理 → 编辑 → 归属用户」逐条改回对应用户，避免误伤站长的公共分类。
+
+### 2. 我的导航页（my.php）分组即时同步
+
+| 需求 | 修复 |
+| --- | --- |
+| 5 个下拉只刷新 `#linkCategory` | `refreshCategorySelects()` 改为遍历 `#linkCategory`、`#moveCategory`、`#batchMoveCategory`、`#quickAddCategory`、`#batchPasteCategory`，每个都按 `OWN_GROUPS` 当前顺序重建、保留仍存在的选中值；批量粘贴「逐条校对」的运行时下拉做增量同步 |
+| 顶部 tab 不显示新分组 | `my.php` 顶部新增分组 tab 栏（全部网站 / 各分组 / 未分类，点击滚动定位）；服务端首屏渲染，前端变更后 `renderGroupTabs()` 即时重建 |
+| 新建 / 改名 / 私密 / 删除只刷一处 | 统一 `syncGroupUI()`：一次刷新弹窗列表、5 个下拉、页面分组区块、顶部 tab；关闭分组管理弹窗时整页刷新，作为最终一致性兜底 |
+| `#groupList` 新建后不够直观 | `renderGroupList(highlightId)` 高亮并滚动到新项；补空列表提示的空指针保护；`OWN_GROUPS` 统一为数字 id，避免字符串 id 让改名 / 私密 / 删除的严格比较失效 |
+
+### 3. 手机端卡片操作
+
+- `assets/css/nav.css`：在 `@media (hover: none) and (pointer: coarse)` 中，`.card-actions` 与 `.site-card.is-actions-open .card-actions` 均为 `display: none !important`，紧凑模式点击展开也不会再冒出操作条；卡片保持干净。
+- `index.php`：长按菜单在「二维码」之后新增**非 `ccm-owner`** 的「收藏」按钮（所有访客可见）。
+- `assets/js/nav.js`：`openCtxMenu()` 按 `data-starred` 把文案切成「收藏 / 取消收藏」，点击复用既有 `handleAction('star') → toggleStar()`；桌面端 hover 操作条不受影响。
+
+### 4. 升级要点
+
+- 覆盖代码文件 → 清理 `cache/` → 前台强制刷新（Ctrl+F5）；30 处资源参数已同步为 `?v=2.14.0`。**不需要执行任何 SQL。**
+- 若浏览器仍缓存旧版 `category-quick-add.js`，强制刷新一次即可；接口对不带 `scope` 的旧前台脚本保留了兼容兜底。
+- 可用后台「系统工具 → 在线更新」直接上传 `XYdaohang-2.14.0.zip`（自动备份被覆盖文件）。
+
+---
+
 ## v2.13.0（2026-11-07）
 
 > **API 可用性实测与逻辑加固版**。对 `api/` 下全部 20 个端点做真实 HTTP 请求审计（鉴权、方法、参数、越权、错误码、文档一致性），修复 9 个真实缺陷，并补齐跨域、输入解析与防刷逻辑。**无数据库结构变更、无新增依赖、无 `web.config` / `.htaccess` 改动、对外 API 契约向后兼容**。

@@ -3136,6 +3136,13 @@
                 item.hidden = !data.owner;
             });
 
+            // v2.14.0：长按菜单里的收藏按钮按当前卡片状态切换文案，
+            // 点击后走既有的 handleAction('star') → toggleStar(card)。
+            var starBtn = ctxMenu.querySelector('#ctxMenuStar span');
+            if (starBtn) {
+                starBtn.textContent = data.starred ? '取消收藏' : '收藏';
+            }
+
             ctxMenu.hidden = false;
 
             var rect = ctxMenu.getBoundingClientRect();

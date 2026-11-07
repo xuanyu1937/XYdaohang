@@ -17,6 +17,9 @@
  *   });
  *
  *   XYCategoryQuickAdd.validateName(raw) → {ok, value, error}
+ *
+ * v2.14.0：提交时会按 mode 自动带上 scope=front|admin。前台页面即使同时存在
+ * 后台管理员会话，接口也会把新建分类强制归属当前前台用户，不会落成公共分类。
  */
 (function (window, document) {
     'use strict';
@@ -302,6 +305,8 @@
 
         var form = new FormData();
         form.append('name', checked.value);
+        // v2.14.0：显式声明调用来源。前台页面即使同时存在后台会话，也必须建成本人分组。
+        form.append('scope', config.mode === 'admin' ? 'admin' : 'front');
         form.append('parent_id', els.Parent && !els.ParentField.hidden ? (els.Parent.value || '0') : '0');
         form.append('user_id', els.Owner && !els.OwnerField.hidden ? (els.Owner.value || '0') : '0');
         form.append('is_private', els.Private.checked ? '1' : '0');

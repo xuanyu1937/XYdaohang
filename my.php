@@ -262,9 +262,9 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.13.0">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.13.0">
-    <script src="assets/js/category-quick-add.js?v=2.13.0" defer></script>
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.14.0">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.14.0">
+    <script src="assets/js/category-quick-add.js?v=2.14.0" defer></script>
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -310,6 +310,75 @@ $hasLinks = $totalLinks > 0;
         .my-head-count {
             color: var(--muted);
             font-size: 12px;
+        }
+
+        /* v2.14.0 · 顶部分组 tab 栏：与分组管理弹窗、5 个分组下拉共用 OWN_GROUPS 数据源，
+           新建 / 重命名 / 私密 / 删除 / 排序后即时重建，不再需要手动刷新页面。 */
+        .my-group-tabs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: -4px 0 20px;
+            min-width: 0;
+        }
+
+        .my-group-tabs-track {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow-x: auto;
+            padding: 3px 2px 6px;
+            scrollbar-width: none;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .my-group-tabs-track::-webkit-scrollbar { display: none; }
+
+        .my-group-tab {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 32px;
+            padding: 0 13px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-pill);
+            background: var(--tab-bg);
+            color: var(--muted);
+            font-size: 12.5px;
+            line-height: 1;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background .16s ease, color .16s ease, border-color .16s ease;
+        }
+
+        .my-group-tab:hover { background: var(--tab-bg-hover); color: var(--text); }
+
+        .my-group-tab:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+        .my-group-tab.is-active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: var(--primary-contrast);
+            font-weight: 600;
+        }
+
+        .my-group-tab .mgt-count {
+            font-size: 11px;
+            opacity: .75;
+        }
+
+        .my-group-tabs-hint {
+            flex: 0 0 auto;
+            color: var(--muted);
+            font-size: 11.5px;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 720px) {
+            .my-group-tabs { margin-bottom: 14px; }
+            .my-group-tabs-hint { display: none; }
         }
 
         .my-actions {
@@ -1235,6 +1304,15 @@ $hasLinks = $totalLinks > 0;
 
         .my-group-item.is-dragging { opacity: 0.5; }
         .my-group-item.is-drop-target { border-color: var(--primary); background: var(--primary-soft); }
+        /* v2.14.0：新建成功的分组项短暂高亮，立即显示且肉眼可辨 */
+        .my-group-item.is-new { animation: myGroupFlash 1.4s ease-out; }
+        @keyframes myGroupFlash {
+            0%, 55% { background: var(--primary-soft); border-color: var(--primary); }
+            100% { background: transparent; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .my-group-item.is-new { animation: none; }
+        }
 
         /* 名称平时像纯文本，聚焦或悬浮才显示输入态，改完失焦自动保存 */
         .my-group-item .my-group-name {
@@ -1667,6 +1745,19 @@ $hasLinks = $totalLinks > 0;
                     </button>
                 </div>
             </div>
+
+            <!-- v2.14.0：顶部分组 tab 栏。服务端首屏渲染，前端分组变更后由 renderGroupTabs() 即时重建。 -->
+            <nav class="my-group-tabs" aria-label="分组导航">
+                <div class="my-group-tabs-track" id="groupTabsTrack" role="tablist">
+                    <button type="button" class="my-group-tab is-active" data-group="all" role="tab" aria-selected="true">全部网站</button>
+                    <?php foreach ($ownGroups as $group): ?>
+                        <?php $tabCount = isset($groups[(int) $group['id']]['items']) ? count($groups[(int) $group['id']]['items']) : 0; ?>
+                        <button type="button" class="my-group-tab" data-group="<?php echo (int) $group['id']; ?>" role="tab" aria-selected="false"><?php echo $functions->escape(($group['is_private'] ? '🔒 ' : '') . $group['name']); ?><span class="mgt-count"><?php echo (int) $tabCount; ?></span></button>
+                    <?php endforeach; ?>
+                    <button type="button" class="my-group-tab" data-group="0" role="tab" aria-selected="false">未分类<span class="mgt-count"><?php echo count($ungrouped['items']); ?></span></button>
+                </div>
+                <span class="my-group-tabs-hint">点击分组快速定位</span>
+            </nav>
 
             <?php if (!$hasLinks): ?>
                 <div class="my-empty">
@@ -3812,22 +3903,229 @@ $hasLinks = $totalLinks > 0;
             var groupNameNew = qs('#groupNameNew');
             var groupPrivateNew = qs('#groupPrivateNew');
             var groupCreateBtn = qs('#groupCreateBtn');
-            // 分组顺序在弹窗内被调整过：关闭弹窗时刷新页面，让前台分组顺序即时同步
-            var groupOrderDirty = false;
+            var groupTabsTrack = qs('#groupTabsTrack');
+            // 分组结构在弹窗内被改动过（新建 / 重命名 / 私密 / 删除 / 排序）：关闭弹窗时刷新页面，
+            // 让服务端重新渲染 tab、分组区块与计数，作为前端即时同步之外的最终一致性兜底。
+            var groupStructureDirty = false;
 
-            function renderGroupList() {
+            /* v2.14.0：页面上所有需要跟随 OWN_GROUPS 变化的分组下拉。
+               以前只重建 #linkCategory，导致新建分组后其余 4 个弹窗仍是旧列表。 */
+            var CATEGORY_SELECT_IDS = [
+                '#linkCategory',       // 添加网址
+                '#moveCategory',       // 单个移动
+                '#batchMoveCategory',  // 批量移动
+                '#quickAddCategory',   // 快捷收藏
+                '#batchPasteCategory'  // 批量粘贴默认分组
+            ];
+
+            function normalizeGroup(raw) {
+                return {
+                    id: parseInt(raw && raw.id, 10) || 0,
+                    name: String((raw && raw.name) || ''),
+                    is_private: raw && raw.is_private ? 1 : 0
+                };
+            }
+
+            // 统一 id 为数字：避免接口返回字符串 id 时，重命名 / 私密 / 删除里的 === 比较全部落空。
+            OWN_GROUPS = OWN_GROUPS.map(normalizeGroup).filter(function (group) { return group.id > 0; });
+
+            function groupTabLabel(group) {
+                return (group.is_private ? '\ud83d\udd12 ' : '') + group.name;
+            }
+
+            function groupSectionCount(id) {
+                var count = qs('.my-group[data-group="' + id + '"] .my-group-count');
+                return count ? (count.textContent || '0').trim() : '0';
+            }
+
+            /**
+             * 重建顶部 tab 栏里的本人分组按钮。
+             * 「全部网站」「未分类」由服务端渲染且保持不变，这里只重建中间的动态项，
+             * 保证新建 / 重命名 / 私密切换 / 删除 / 排序后 tab 与 OWN_GROUPS 完全一致。
+             */
+            function renderGroupTabs(activeId) {
+                if (!groupTabsTrack) { return; }
+
+                var track = groupTabsTrack;
+                var active = activeId === undefined || activeId === null
+                    ? (function () {
+                        var current = qs('.my-group-tab.is-active', track);
+                        return current ? current.getAttribute('data-group') : 'all';
+                    })()
+                    : String(activeId);
+
+                qsa('.my-group-tab[data-group]', track).forEach(function (tab) {
+                    var id = tab.getAttribute('data-group');
+                    if (id !== 'all' && id !== '0') { tab.remove(); }
+                });
+
+                var ungroupedTab = qs('.my-group-tab[data-group="0"]', track);
+
+                OWN_GROUPS.forEach(function (group) {
+                    var tab = document.createElement('button');
+                    tab.type = 'button';
+                    tab.className = 'my-group-tab';
+                    tab.setAttribute('data-group', String(group.id));
+                    tab.setAttribute('role', 'tab');
+                    tab.setAttribute('aria-selected', 'false');
+                    tab.textContent = groupTabLabel(group);
+
+                    var count = document.createElement('span');
+                    count.className = 'mgt-count';
+                    count.textContent = groupSectionCount(group.id);
+                    tab.appendChild(count);
+
+                    track.insertBefore(tab, ungroupedTab || null);
+                });
+
+                var activeTab = null;
+                qsa('.my-group-tab', track).forEach(function (tab) {
+                    if (tab.getAttribute('data-group') === active) { activeTab = tab; }
+                });
+
+                if (!activeTab) { activeTab = qs('.my-group-tab[data-group="all"]', track); }
+
+                qsa('.my-group-tab', track).forEach(function (tab) {
+                    var on = tab === activeTab;
+                    tab.classList.toggle('is-active', on);
+                    tab.setAttribute('aria-selected', on ? 'true' : 'false');
+                });
+            }
+
+            // tab 点击：事件委托，重建按钮后无需重新绑定
+            if (groupTabsTrack) {
+                groupTabsTrack.addEventListener('click', function (event) {
+                    var tab = event.target.closest ? event.target.closest('.my-group-tab') : null;
+                    if (!tab) { return; }
+
+                    qsa('.my-group-tab', groupTabsTrack).forEach(function (node) {
+                        var on = node === tab;
+                        node.classList.toggle('is-active', on);
+                        node.setAttribute('aria-selected', on ? 'true' : 'false');
+                    });
+
+                    var id = tab.getAttribute('data-group');
+                    if (id === 'all') {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        return;
+                    }
+
+                    var section = null;
+                    qsa('.my-group').forEach(function (node) {
+                        if (node.getAttribute('data-group') === id) { section = node; }
+                    });
+
+                    if (section && section.scrollIntoView) {
+                        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+
+                // 首屏也按 OWN_GROUPS 校准一次，保证服务端渲染与前端重建结果完全一致
+                renderGroupTabs('all');
+            }
+
+            /**
+             * 同步页面主体里的分组区块：新建的空分组立刻出现，重命名 / 私密改标题与锁标，
+             * 删除时先把该组网址挪回「未分类」再移除空壳（800ms 后的整页刷新会做最终对齐）。
+             */
+            function syncGroupSections() {
+                var container = qs('#myMain');
+                if (!container) { return; }
+
+                var sections = qsa('.my-group', container);
+                var lastSection = sections.length ? sections[sections.length - 1] : null;
+                var ungroupedSection = null;
+
+                sections.forEach(function (section) {
+                    if (section.getAttribute('data-group') === '0') { ungroupedSection = section; }
+                });
+
+                var known = {};
+                OWN_GROUPS.forEach(function (group) { known[group.id] = group; });
+
+                sections.forEach(function (section) {
+                    var id = parseInt(section.getAttribute('data-group'), 10) || 0;
+                    if (id === 0 || known[id]) { return; }
+
+                    var list = qs('.my-list', section);
+                    var target = ungroupedSection ? qs('.my-list', ungroupedSection) : null;
+
+                    if (list && target) {
+                        while (list.firstChild) { target.appendChild(list.firstChild); }
+                    }
+
+                    section.remove();
+                });
+
+                OWN_GROUPS.forEach(function (group) {
+                    var section = null;
+                    qsa('.my-group', container).forEach(function (node) {
+                        if (parseInt(node.getAttribute('data-group'), 10) === group.id) { section = node; }
+                    });
+
+                    if (!section) {
+                        section = document.createElement('section');
+                        section.className = 'my-group';
+                        section.setAttribute('data-group', String(group.id));
+                        section.innerHTML = '<div class="my-group-head"><h3></h3>' +
+                            '<span class="my-group-count">0</span></div>' +
+                            '<div class="my-list" data-sortable="1"></div>';
+
+                        if (lastSection && lastSection.parentNode) {
+                            lastSection.parentNode.insertBefore(section, lastSection.nextSibling);
+                        } else {
+                            var tabs = qs('.my-group-tabs');
+                            if (tabs && tabs.parentNode) {
+                                tabs.parentNode.insertBefore(section, tabs.nextSibling);
+                            } else {
+                                container.appendChild(section);
+                            }
+                        }
+
+                        lastSection = section;
+                    }
+
+                    var head = qs('.my-group-head h3', section);
+                    if (!head) { return; }
+
+                    head.textContent = group.name;
+
+                    var privacy = qs('.my-group-privacy', head);
+                    if (group.is_private && !privacy) {
+                        privacy = document.createElement('span');
+                        privacy.className = 'my-group-privacy';
+                        privacy.title = '私密分组：仅本人可见';
+                        privacy.textContent = '\ud83d\udd12';
+                        head.appendChild(privacy);
+                    } else if (!group.is_private && privacy) {
+                        privacy.remove();
+                    }
+                });
+            }
+
+            /** 分组数据变化后的唯一同步入口：下拉、弹窗列表、主体区块、顶部 tab 一次补齐。 */
+            function syncGroupUI(options) {
+                var opts = options || {};
+                renderGroupList(opts.highlightId || 0);
+                refreshCategorySelects();
+                syncGroupSections();
+                renderGroupTabs(opts.activeId);
+                groupStructureDirty = true;
+            }
+
+            function renderGroupList(highlightId) {
                 if (!groupList) { return; }
 
                 groupList.innerHTML = '';
 
                 if (!OWN_GROUPS.length) {
-                    groupListEmpty.hidden = false;
+                    if (groupListEmpty) { groupListEmpty.hidden = false; }
                     return;
                 }
 
-                groupListEmpty.hidden = true;
+                if (groupListEmpty) { groupListEmpty.hidden = true; }
 
-                OWN_GROUPS.forEach(function (group, index) {
+                OWN_GROUPS.forEach(function (group) {
                     var li = document.createElement('li');
                     li.className = 'my-group-item';
                     li.setAttribute('data-id', group.id);
@@ -3856,33 +4154,70 @@ $hasLinks = $totalLinks > 0;
                             '<button type="button" class="my-group-menu-item is-danger my-group-del">删除分组</button>' +
                         '</div>';
 
+                    // 新建成功的项做一次短暂高亮，确保「立即显示」肉眼可见
+                    if (highlightId && group.id === highlightId) {
+                        li.classList.add('is-new');
+                    }
+
                     groupList.appendChild(li);
                 });
+
+                // 分组多时新项可能落在滚动区外，主动滚进可视范围
+                var fresh = highlightId
+                    ? groupList.querySelector('.my-group-item[data-id="' + highlightId + '"]')
+                    : null;
+                if (fresh && fresh.scrollIntoView) {
+                    fresh.scrollIntoView({ block: 'nearest' });
+                }
             }
 
             function refreshCategorySelects() {
-                // 按当前顺序重建「添加网址」弹窗的分组下拉，保证与分组管理一致
-                var select = qs('#linkCategory');
+                // v2.14.0：5 个下拉全部按 OWN_GROUPS 当前顺序重建，各自保留仍存在的选中值
+                CATEGORY_SELECT_IDS.forEach(function (selector) {
+                    var select = qs(selector);
+                    if (!select) { return; }
 
-                if (!select) { return; }
+                    var current = select.value;
+                    select.innerHTML = '';
 
-                var current = select.value;
-                select.innerHTML = '';
+                    var emptyOpt = document.createElement('option');
+                    emptyOpt.value = '0';
+                    emptyOpt.textContent = '未分类';
+                    select.appendChild(emptyOpt);
 
-                var emptyOpt = document.createElement('option');
-                emptyOpt.value = '0';
-                emptyOpt.textContent = '未分类';
-                select.appendChild(emptyOpt);
+                    OWN_GROUPS.forEach(function (group) {
+                        var opt = document.createElement('option');
+                        opt.value = String(group.id);
+                        opt.textContent = groupTabLabel(group);
+                        select.appendChild(opt);
+                    });
 
-                OWN_GROUPS.forEach(function (group) {
-                    var opt = document.createElement('option');
-                    opt.value = group.id;
-                    opt.textContent = (group.is_private ? '\ud83d\udd12 ' : '') + group.name;
-                    select.appendChild(opt);
+                    // 原选项仍存在则保持选中，否则回落到「未分类」
+                    select.value = Array.prototype.some.call(select.options, function (opt) {
+                        return opt.value === current;
+                    }) ? current : '0';
                 });
 
-                // 原选项仍存在则保持选中，否则回落到「未分类」
-                select.value = Array.prototype.some.call(select.options, function (opt) { return opt.value === current; }) ? current : '0';
+                /* 批量粘贴「逐条校对」里的下拉是运行时生成的，做增量同步：
+                   只补新增分组、更新已有本人分组文案，不动接口返回的公共分类选项。
+                   删除的分组会在 800ms 后整页刷新时由服务端重新下发候选列表。 */
+                qsa('.bp-item select[aria-label="保存到分组"]').forEach(function (select) {
+                    var current = select.value;
+
+                    OWN_GROUPS.forEach(function (group) {
+                        var opt = qs('option[value="' + group.id + '"]', select);
+                        if (!opt) {
+                            opt = document.createElement('option');
+                            opt.value = String(group.id);
+                            select.appendChild(opt);
+                        }
+                        opt.textContent = groupTabLabel(group);
+                    });
+
+                    if (current && qs('option[value="' + current + '"]', select)) {
+                        select.value = current;
+                    }
+                });
             }
 
             function submitGroupOrder() {
@@ -3894,7 +4229,7 @@ $hasLinks = $totalLinks > 0;
                         return;
                     }
 
-                    groupOrderDirty = true;
+                    groupStructureDirty = true;
                     showMsg(groupMsg, '分组顺序已保存', 'success');
                 });
             }
@@ -3916,10 +4251,11 @@ $hasLinks = $totalLinks > 0;
                 qs('#groupDialogClose').addEventListener('click', function () { groupDialog.close(); });
             }
 
-            // 调整过顺序后关闭弹窗时刷新页面，前台分组展示顺序即时同步
+            // 分组结构有变动后，关闭弹窗时整页刷新：服务端重新渲染 tab / 分组区块 / 计数，
+            // 这是前端即时同步之外的最终一致性兜底（也是需求里允许的 reload 方案）。
             if (groupDialog) {
                 groupDialog.addEventListener('close', function () {
-                    if (groupOrderDirty) {
+                    if (groupStructureDirty) {
                         window.location.reload();
                     }
                 });
@@ -3941,6 +4277,7 @@ $hasLinks = $totalLinks > 0;
                     setBusy(groupCreateBtn, true, '创建中…');
 
                     postForm(API_CATEGORY_CREATE, {
+                        scope: 'front', // v2.14.0：前台入口永远建成本人分组，即使同时登录了后台
                         name: checked.value,
                         is_private: groupPrivateNew.checked ? '1' : '0'
                     }).then(function (result) {
@@ -3951,15 +4288,17 @@ $hasLinks = $totalLinks > 0;
                             return;
                         }
 
+                        var created = normalizeGroup(result);
+
                         if (!result.reused) {
-                            OWN_GROUPS.push({ id: result.id, name: result.name, is_private: result.is_private ? 1 : 0 });
+                            OWN_GROUPS.push(created);
                         }
 
                         showMsg(groupMsg, result.reused ? '已存在同名分组，直接复用' : '分组已创建', 'success');
                         groupNameNew.value = '';
                         groupPrivateNew.checked = false;
-                        renderGroupList();
-                        refreshCategorySelects();
+                        // 列表、5 个下拉、页面 tab、分组区块一次同步
+                        syncGroupUI({ highlightId: created.id });
                     });
                 });
             }
@@ -3979,8 +4318,7 @@ $hasLinks = $totalLinks > 0;
                     var moved = OWN_GROUPS.splice(from, 1)[0];
                     OWN_GROUPS.splice(to, 0, moved);
 
-                    renderGroupList();
-                    refreshCategorySelects();
+                    syncGroupUI();
                     submitGroupOrder();
 
                     var handle = groupList.querySelector('.my-group-handle[data-id="' + id + '"]');
@@ -4008,8 +4346,7 @@ $hasLinks = $totalLinks > 0;
                         }
 
                         OWN_GROUPS.forEach(function (group) { if (group.id === id) { group.name = name; } });
-                        renderGroupList();
-                        refreshCategorySelects();
+                        syncGroupUI();
                         showMsg(groupMsg, '分组名称已保存', 'success');
                     });
                 }
@@ -4023,6 +4360,8 @@ $hasLinks = $totalLinks > 0;
                             return;
                         }
 
+                        OWN_GROUPS = OWN_GROUPS.filter(function (group) { return group.id !== id; });
+                        syncGroupUI();
                         showMsg(groupMsg, '分组已删除', 'success');
                         window.setTimeout(function () { window.location.reload(); }, 800);
                     });
@@ -4150,8 +4489,7 @@ $hasLinks = $totalLinks > 0;
                         }
 
                         OWN_GROUPS.forEach(function (group) { if (group.id === id) { group.is_private = event.target.checked ? 1 : 0; } });
-                        renderGroupList();
-                        refreshCategorySelects();
+                        syncGroupUI();
                         showMsg(groupMsg, event.target.checked ? '已设为私密分组' : '已取消私密', 'success');
                     });
                 });
@@ -5113,17 +5451,19 @@ $hasLinks = $totalLinks > 0;
                     title: '新建分组',
                     apiUrl: API_CATEGORY_CREATE,
                     onCreated: function (item) {
+                        var created = normalizeGroup(item);
+
                         if (!item.reused) {
-                            OWN_GROUPS.push({ id: item.id, name: item.name, is_private: item.is_private ? 1 : 0 });
-                            renderGroupList();
-                            refreshCategorySelects();
+                            OWN_GROUPS.push(created);
                         }
+
+                        syncGroupUI({ highlightId: created.id });
                     }
                 });
             });
         })();
     </script>
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.13.0" defer></script>
+<script src="assets/js/search.js?v=2.14.0" defer></script>
 </body>
 </html>

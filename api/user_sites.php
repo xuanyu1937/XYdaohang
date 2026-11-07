@@ -421,6 +421,8 @@ switch ($action) {
 
         if ($categoryId <= 0) {
             $engine = new CategoryEngine($functions);
+            // v2.14.0：自动补建的「未分类」也必须归属当前用户，不能落成公共分类
+            $engine->setUserId($userId);
             $categoryId = $engine->ensure('未分类', 'bi-collection');
         }
 
@@ -471,6 +473,8 @@ switch ($action) {
 
         if ($categoryId <= 0) {
             $engine = new CategoryEngine($functions);
+            // v2.14.0：自动补建的「未分类」也必须归属当前用户，不能落成公共分类
+            $engine->setUserId($userId);
             $categoryId = $engine->ensure('未分类', 'bi-collection');
         }
 
@@ -664,6 +668,8 @@ switch ($action) {
 
         if ($categoryId <= 0) {
             $engine = new CategoryEngine($functions);
+            // v2.14.0：自动补建的「未分类」也必须归属当前用户，不能落成公共分类
+            $engine->setUserId($userId);
             $categoryId = $engine->ensure('未分类', 'bi-collection');
         }
 
@@ -833,6 +839,8 @@ switch ($action) {
 
         if ($categoryId <= 0) {
             $engine = new CategoryEngine($functions);
+            // v2.14.0：自动补建的「未分类」也必须归属当前用户，不能落成公共分类
+            $engine->setUserId($userId);
             $categoryId = $engine->ensure('未分类', 'bi-collection');
         }
 
@@ -898,6 +906,8 @@ switch ($action) {
 
         if ($categoryId <= 0) {
             $engine = new CategoryEngine($functions);
+            // v2.14.0：自动补建的「未分类」也必须归属当前用户，不能落成公共分类
+            $engine->setUserId($userId);
             $categoryId = $engine->ensure('未分类', 'bi-collection');
         }
 
@@ -1074,6 +1084,8 @@ switch ($action) {
         }
 
         $engine = new CategoryEngine($functions);
+        // v2.14.0：书签批量导入时补建的分组归属当前用户
+        $engine->setUserId($userId);
 
         if ($defaultCategoryId <= 0) {
             $defaultCategoryId = $engine->ensure('未分类', 'bi-collection');

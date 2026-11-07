@@ -1,12 +1,53 @@
-# 轩宇-导航 v2.13.0 部署清单
+# 轩宇-导航 部署清单（当前版本 v2.14.0）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.13.0
+当前版本：v2.14.0
 
-> **API 可用性实测与逻辑加固版**。对 `api/` 全部 20 个端点做真实 HTTP 审计，修复 9 个真实缺陷。**无数据库结构变更、无新增依赖、无 `web.config` / `.htaccess` 改动、对外 API 契约向后兼容**。API 专项回归 **106/106 通过**，v2.12.0 存量回归 **73/73**，v2.11.0 存量回归 **49/49**，脚本级 JS 错误 **0**。完整根因见 [CHANGELOG.md](CHANGELOG.md)，逐项测试结果见 `API_TEST_REPORT.md`。
+> **分组归属隔离 + 我的导航分组同步 + 手机端卡片操作精简版**。修复前台新建分组被写成公共分类的归属缺陷，补齐 `my.php` 5 个分组下拉与顶部 tab 的即时同步。**无数据库结构变更、无新增文件、无新增依赖、无 `web.config` / `.htaccess` 改动，对外 API 契约向后兼容**。v2.14.0 专项回归 **60/60**，v2.13.0 API 回归 **106/106**，v2.12.0 存量 **73/73**，v2.11.0 存量 **49/49**，脚本级 JS 错误 **0**。完整根因见 [CHANGELOG.md](CHANGELOG.md)。
 
-## 本次 v2.13.0 变动文件
+## 本次 v2.14.0 变动文件
+
+| 文件 | 说明 |
+| --- | --- |
+| `api/category_create.php` | 新增 `scope=admin\|front`；前台强制归属当前用户、忽略传入 `user_id`；管理员分支需后台会话 + 后台来源；兼容不带 `scope` 的旧脚本 |
+| `assets/js/category-quick-add.js` | 提交按 `mode` 自动携带 `scope` |
+| `api/user_sites.php`（6 处） | 自动补建分组前 `setUserId($userId)` |
+| `includes/Services.php`（2 处） | 书签导入 / 分享导入按导入者归属 |
+| `api/sites.php`（2 处） | 用户级令牌补建分类归属令牌用户 |
+| `my.php` | `refreshCategorySelects()` 覆盖 5 个下拉；新增顶部分组 tab 栏与 `syncGroupUI()`；`renderGroupList()` 高亮新项；数字 id 归一化；弹窗显式 `scope=front` |
+| `assets/css/nav.css` | 手机端 `.card-actions` / `.site-card.is-actions-open .card-actions` 强制隐藏 |
+| `index.php` | 长按菜单新增非 `ccm-owner` 的「收藏」按钮 |
+| `assets/js/nav.js` | `openCtxMenu()` 按 `data-starred` 切换收藏文案 |
+| `api/index.php` | 文档补 `scope` 说明；fallback 版本 2.14.0 |
+| 全部 PHP 页面（30 处） | 资源参数 `?v=2.14.0` |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.14.0 |
+| `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
+
+**本版没有新增文件**，全部为既有文件修改，直接覆盖即可。
+
+### v2.14.0 升级要点
+
+1. 覆盖代码文件 → 清理 `cache/` → 前台强制刷新（Ctrl+F5）；**不需要执行任何 SQL**。
+2. 推荐用后台「系统工具 → 在线更新」上传 `XYdaohang-2.14.0.zip`（自动备份被覆盖文件，跳过数据库配置 / uploads / cache / backups）。
+3. **历史误建为公共的分组需手动修正**：后台 → 分类管理 → 编辑 → 「归属用户」改回对应用户。本版不会自动改动已有分类数据。
+4. 最快验证：`/api/index.php` 徽章显示 `v2.14.0`；前台登录后在「我的导航」新建分组，确认 5 个弹窗下拉与顶部 tab 立即出现该分组；手机端长按卡片菜单含「收藏 / 取消收藏」且卡片无常驻操作条。
+
+### v2.14.0 验证记录
+
+| 项目 | 结果 |
+| --- | --- |
+| 分组归属隔离（双会话 / 伪造 scope / 自动补建 / 书签导入） | 12/12 通过 |
+| `my.php` 5 个下拉 + tab + 列表 + 分组区即时同步 | 全通过（含新建 / 改名 / 私密 / 删除 / 快捷入口） |
+| 手机端操作条隐藏 + 长按菜单星标 + 桌面端 hover 回归 | 全通过 |
+| v2.13.0 / v2.12.0 / v2.11.0 存量回归 | 106 / 73 / 49 全通过 |
+| `php -l` 全项目 / 内联 JS `node --check` | 全部通过 |
+
+---
+
+## v2.13.0 回顾（以下为历史部署清单）
+
+### v2.13.0 变动文件
 
 | 文件 | 说明 |
 | --- | --- |

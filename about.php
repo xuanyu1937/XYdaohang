@@ -146,7 +146,7 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.13.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.14.0">
     <link rel="stylesheet" href="assets/css/page.css">
 </head>
 <body data-monitor="0">
@@ -296,6 +296,6 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.13.0" defer></script>
+<script src="assets/js/search.js?v=2.14.0" defer></script>
 </body>
 </html>

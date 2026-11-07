@@ -9,7 +9,7 @@
  * 本页只输出静态说明，不读取也不展示任何令牌。
  */
 
-$version = '2.13.0';
+$version = '2.14.0';
 $versionFile = __DIR__ . '/../VERSION';
 
 if (is_readable($versionFile)) {
@@ -538,7 +538,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
                         <tr><td><code>user_categories.php</code></td><td>前台登录</td><td>我的分组创建 / 改名 / 私密 / 排序 / 删除</td></tr>
                         <tr><td><code>user_search_engines.php</code></td><td>前台登录</td><td>自定义搜索引擎管理</td></tr>
                         <tr><td><code>bookmark_import.php</code></td><td>前台登录</td><td>浏览器书签文件导入</td></tr>
-                        <tr><td><code>category_create.php</code></td><td>前台登录或后台登录</td><td>全站统一新建分类 / 分组接口</td></tr>
+                        <tr><td><code>category_create.php</code></td><td>前台登录或后台登录</td><td>全站统一新建分类 / 分组接口。<strong>v2.14.0 起需带 <code>scope=front|admin</code></strong>：前台调用强制归属当前登录用户、忽略传入的 <code>user_id</code>；只有后台会话 + <code>scope=admin</code> 才能创建公共分类或指定归属用户</td></tr>
                         <tr><td><code>ai_suggest.php</code>、<code>ai_test.php</code></td><td>后台登录</td><td>AI 分类推荐、AI 配置测试连接</td></tr>
                         <tr><td><code>health_check.php</code>、<code>stats.php</code></td><td>后台登录</td><td>链接健康检测、仪表盘统计</td></tr>
                         <tr><td><code>check_update.php</code></td><td>后台登录</td><td>版本检测（服务端抓取 GitHub，带 10 分钟缓存）</td></tr>
