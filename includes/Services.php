@@ -1880,6 +1880,155 @@ class AiService extends BaseService
     }
 
     /**
+     * v2.16.5 · 为收录的网站生成标签。
+     *
+     * 分类是单选，标签是多值且更细（「开源」「代码托管」「AI」），用于检索与聚合。
+     * AI 不可用或答非所问时退回本地关键词规则，保证收录流程不被标签卡住。
+     *
+     * @return array{ok:bool,source:string,tags:string[],error?:string}
+     */
+    public function suggestTags($name, $url = '', $description = '')
+    {
+        $name = trim((string) $name);
+        $description = trim((string) $description);
+        $host = (string) parse_url((string) $url, PHP_URL_HOST);
+        $host = $host !== '' ? (string) preg_replace('/^www\./i', '', $host) : '';
+
+        if ($name === '' && $description === '' && $host === '') {
+            return ['ok' => false, 'source' => 'none', 'tags' => [], 'error' => '缺少网站信息'];
+        }
+
+        if ($this->enabled()) {
+            $tags = $this->askModelForTags($name, $host, $description);
+
+            if ($tags) {
+                return ['ok' => true, 'source' => 'ai', 'tags' => $tags];
+            }
+        }
+
+        $engine = new CategoryEngine($this->functions);
+        $tags = $engine->keywordTags($name . ' ' . $description . ' ' . $host, 4);
+
+        if ($tags) {
+            return ['ok' => true, 'source' => 'rules', 'tags' => $tags];
+        }
+
+        return [
+            'ok' => false,
+            'source' => 'none',
+            'tags' => [],
+            'error' => '暂时没想出合适的标签，可手动填写',
+        ];
+    }
+
+    /**
+     * 让模型吐一串逗号分隔的标签，解析失败返回空数组（由调用方兜底）。
+     *
+     * @return string[]
+     */
+    protected function askModelForTags($name, $host, $description)
+    {
+        $url = $this->setting('ai_api_url');
+        $key = $this->setting('ai_api_key');
+        $model = $this->setting('ai_model', 'gpt-4o-mini');
+
+        if (strpos($url, 'http') !== 0) {
+            return [];
+        }
+
+        $url = $this->chatEndpoint($url);
+
+        $lines = [];
+        $lines[] = '站点名称：' . ($name !== '' ? $name : '（未知）');
+
+        if ($host !== '') {
+            $lines[] = '站点域名：' . $host;
+        }
+
+        if ($description !== '') {
+            $lines[] = '站点描述：' . $this->textCut($description, 200);
+        }
+
+        $prompt = implode("\n", $lines) . "\n\n"
+            . "请给出 2-5 个中文标签，用于网站导航的检索与聚合。规则：\n"
+            . "1. 每个标签 2-6 个字，优先短词（如「开源」「代码托管」「AI」）；\n"
+            . "2. 不要带 #、引号、序号，不要解释；\n"
+            . "3. 只输出标签本身，用英文逗号分隔。";
+
+        $body = json_encode([
+            'model' => $model,
+            'messages' => [
+                ['role' => 'system', 'content' => '你是网站标签助手，只输出逗号分隔的短标签。'],
+                ['role' => 'user', 'content' => $prompt],
+            ],
+            'temperature' => 0.3,
+            'max_tokens' => 48,
+        ], JSON_UNESCAPED_UNICODE);
+
+        $response = $this->postJson($url, $body, $key);
+
+        if (!$response['ok']) {
+            $this->log('AI 标签生成失败: ' . ($response['error'] ?? 'unknown'), 'WARNING');
+
+            return [];
+        }
+
+        $data = json_decode((string) $response['body'], true);
+        $content = '';
+
+        if (is_array($data) && isset($data['choices'][0]['message']['content'])) {
+            $content = (string) $data['choices'][0]['message']['content'];
+        }
+
+        if ($content === '') {
+            return [];
+        }
+
+        // 去掉 ``` 包裹与常见前缀，再按中英文逗号/顿号/换行切
+        $content = (string) preg_replace('/```[a-zA-Z]*/', '', $content);
+        $content = (string) preg_replace('/^(标签|tags)[:：]?/iu', '', trim($content));
+        $parts = preg_split('/[,，、;；\n\r]+/u', $content) ?: [];
+
+        $tags = [];
+        $seen = [];
+
+        foreach ($parts as $part) {
+            $tag = trim((string) $part);
+
+            // 注意：这里不能用 trim($tag, "#-·…")。
+            // PHP 的 trim 字符列表支持 a..z 范围语法，`#-·` 会被当成
+            // 从 # 到 · 的一个范围，中文 UTF-8 字节正好落在里面，
+            // 于是「开源」被整段削空、只留下「代码托管」。改用正则逐个剥离。
+            $tag = (string) preg_replace('/^[\s#\-·"\'「」《》【】]+/u', '', $tag);
+            $tag = (string) preg_replace('/[\s#\-·"\'「」《》【】]+$/u', '', $tag);
+            $tag = (string) preg_replace('/^\d+[.、)]\s*/u', '', $tag);
+
+            if ($tag === '' || $tag === '无') {
+                continue;
+            }
+
+            if (function_exists('mb_strlen') ? mb_strlen($tag, 'UTF-8') > 8 : strlen($tag) > 24) {
+                continue;
+            }
+
+            $key2 = function_exists('mb_strtolower') ? mb_strtolower($tag, 'UTF-8') : strtolower($tag);
+
+            if (isset($seen[$key2])) {
+                continue;
+            }
+
+            $seen[$key2] = 1;
+            $tags[] = $tag;
+
+            if (count($tags) >= 5) {
+                break;
+            }
+        }
+
+        return $tags;
+    }
+
+    /**
      * 批量分类：一次请求给多条网址分配分类，返回 id → 分类名 的映射。
      *
      * 逐条调 AI 太慢（50 条要 50 次往返，两三分钟起步），所以把整批发过去，
@@ -2438,6 +2587,69 @@ class CategoryEngine extends BaseService
         }
 
         return null;
+    }
+
+    /**
+     * v2.16.5 · 按关键词规则生成标签（AI 不可用时的兜底）。
+     *
+     * 与 matchName 的差别：分类是单选，标签是多值，所以这里把命中的所有
+     * 规则都收上来。短英文词（ai / ui）必须按词边界判断，否则 dom-ai-n
+     * 这类域名会让每条网址都带上「AI」标签。
+     *
+     * @return string[]
+     */
+    public function keywordTags($text, $limit = 4)
+    {
+        $text = $this->textLower($text);
+
+        if ($text === '') {
+            return [];
+        }
+
+        // 规则键偏长（AI工具 / 影音娱乐），标签场景需要更短的词
+        $shortNames = [
+            '开发' => '开发',
+            '设计' => '设计',
+            'AI工具' => 'AI',
+            '影音娱乐' => '影音',
+            '学习教育' => '学习',
+            '购物' => '购物',
+            '资讯' => '资讯',
+            '社交' => '社交',
+            '效率工具' => '效率',
+            '金融财经' => '金融',
+            '生活服务' => '生活',
+            '游戏' => '游戏',
+        ];
+
+        $tags = [];
+
+        foreach ($this->rules as $category => $keywords) {
+            $tag = $shortNames[$category] ?? $category;
+
+            if (in_array($tag, $tags, true)) {
+                continue;
+            }
+
+            foreach ($keywords as $keyword) {
+                $keyword = (string) $keyword;
+                $isShortLatin = strlen($keyword) <= 4 && preg_match('/^[a-z0-9]+$/', $keyword);
+                $hit = $isShortLatin
+                    ? (bool) preg_match('/(?<![a-z0-9])' . preg_quote($keyword, '/') . '/', $text)
+                    : $this->textHas($text, $keyword);
+
+                if ($hit) {
+                    $tags[] = $tag;
+                    break;
+                }
+            }
+
+            if (count($tags) >= $limit) {
+                break;
+            }
+        }
+
+        return array_slice($tags, 0, $limit);
     }
 
     /**

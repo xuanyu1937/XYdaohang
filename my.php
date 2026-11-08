@@ -494,9 +494,9 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.16.4">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.16.4">
-    <script src="assets/js/category-quick-add.js?v=2.16.4" defer></script>
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.16.5">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.16.5">
+    <script src="assets/js/category-quick-add.js?v=2.16.5" defer></script>
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -1473,161 +1473,6 @@ $hasLinks = $totalLinks > 0;
             border-color: var(--primary);
             background: var(--surface);
             box-shadow: 0 0 0 3px var(--primary-soft);
-        }
-
-        /* ===== v2.16.3 · 网址图标编辑 ===== */
-        .my-icon-editor {
-            display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            background: var(--surface-2);
-        }
-
-        .my-icon-preview {
-            position: relative;
-            display: inline-flex;
-            flex: none;
-            align-items: center;
-            justify-content: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            background: var(--surface);
-            box-shadow: inset 0 0 0 1px var(--border);
-            overflow: hidden;
-        }
-
-        /* 图标本身常是正方形，内留 6px 让它在框里不至于顶满 */
-        .my-icon-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            padding: 6px;
-            border-radius: 12px;
-            background: transparent;
-        }
-
-        .my-icon-preview-letter {
-            font-size: 19px;
-            font-weight: 700;
-            color: var(--muted);
-            line-height: 1;
-        }
-
-        /* 上传中：预览框蒙一层 + 转圈，避免用户以为没反应 */
-        .my-icon-preview.is-busy::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            background: var(--surface-2);
-            opacity: .78;
-        }
-
-        .my-icon-preview.is-busy::before {
-            content: '';
-            position: absolute;
-            z-index: 1;
-            width: 16px;
-            height: 16px;
-            border: 2px solid var(--border-strong);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: my-icon-spin 0.7s linear infinite;
-        }
-
-        @keyframes my-icon-spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .my-icon-preview.is-busy::before { animation-duration: 2s; }
-        }
-
-        .my-icon-editor-main {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .my-icon-editor-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        /* 按钮文字一律不折行，窄屏下宁可整行换掉 */
-        .my-icon-editor-actions .my-btn,
-        .my-icon-url-row .my-btn {
-            white-space: nowrap;
-        }
-
-        .my-icon-url-row {
-            display: flex;
-            gap: 8px;
-            margin-top: 9px;
-        }
-
-        .my-icon-url-row input {
-            flex: 1;
-            min-width: 0;
-            padding: 7px 11px;
-            font-size: 13px;
-        }
-
-        .my-icon-url-row .my-btn {
-            flex: none;
-            height: 34px;
-        }
-
-        .my-icon-note {
-            margin-top: 9px;
-        }
-
-        .my-icon-note.is-error {
-            color: var(--danger, #dc2626);
-        }
-
-        .my-icon-note.is-ok {
-            color: var(--success, #16a34a);
-        }
-
-        @media (max-width: 575.98px) {
-            /* 窄屏改成上下结构：预览在上、按钮铺满一行，避免预览框被挤成窄条 */
-            .my-icon-editor {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-                padding: 11px;
-            }
-
-            .my-icon-preview {
-                width: 48px;
-                height: 48px;
-            }
-
-            .my-icon-editor-actions {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-            }
-
-            .my-icon-editor-actions .my-btn {
-                width: 100%;
-                justify-content: center;
-                min-height: 36px;
-            }
-
-            /* 「恢复默认」独占一行，不做成半个按钮 */
-            .my-icon-editor-actions .my-btn.is-ghost {
-                grid-column: 1 / -1;
-            }
-
-            .my-icon-url-row .my-btn {
-                min-height: 36px;
-            }
         }
 
         /* 批量导入 · 校对列表 */
@@ -2853,14 +2698,14 @@ $hasLinks = $totalLinks > 0;
                 <div class="my-field my-icon-field">
                     <label>网站图标</label>
 
-                    <div class="my-icon-editor">
-                        <span class="my-icon-preview" id="linkIconPreview" aria-hidden="true">
-                            <span class="my-icon-preview-letter" id="linkIconLetter">?</span>
+                    <div class="icon-editor">
+                        <span class="icon-preview" id="linkIconPreview" aria-hidden="true">
+                            <span class="icon-preview-letter" id="linkIconLetter">?</span>
                             <img id="linkIconImg" alt="" width="48" height="48" hidden referrerpolicy="no-referrer" decoding="async">
                         </span>
 
-                        <div class="my-icon-editor-main">
-                            <div class="my-icon-editor-actions">
+                        <div class="icon-editor-main">
+                            <div class="icon-editor-actions">
                                 <button type="button" class="my-btn is-small" id="linkIconUploadBtn">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path>
@@ -2883,12 +2728,12 @@ $hasLinks = $totalLinks > 0;
                             <input type="file" id="linkIconFile" accept=".png,.jpg,.jpeg,.svg,.ico,image/png,image/jpeg,image/svg+xml,image/x-icon,image/vnd.microsoft.icon" hidden>
 
                             <!-- 输入 URL 时就地展开，比再弹一层弹窗更轻 -->
-                            <div class="my-icon-url-row" id="linkIconUrlRow" hidden>
+                            <div class="icon-url-row" id="linkIconUrlRow" hidden>
                                 <input type="url" id="linkIconUrlInput" maxlength="500" autocomplete="off" spellcheck="false" placeholder="https://example.com/icon.png">
                                 <button type="button" class="my-btn is-small is-primary" id="linkIconUrlOk">确定</button>
                             </div>
 
-                            <p class="my-note my-icon-note" id="linkIconNote" aria-live="polite">支持 PNG / JPG / SVG / ICO，超过 256px 会自动压缩。留空则自动抓取网站图标。</p>
+                            <p class="my-note icon-note" id="linkIconNote" aria-live="polite">支持 PNG / JPG / SVG / ICO，超过 256px 会自动压缩。留空则自动抓取网站图标。</p>
                         </div>
                     </div>
 
@@ -2978,14 +2823,14 @@ $hasLinks = $totalLinks > 0;
             <div class="my-field my-icon-field">
                 <label>网站图标</label>
 
-                <div class="my-icon-editor">
-                    <span class="my-icon-preview" id="qaIconPreview" aria-hidden="true">
-                        <span class="my-icon-preview-letter" id="qaIconLetter">?</span>
+                <div class="icon-editor">
+                    <span class="icon-preview" id="qaIconPreview" aria-hidden="true">
+                        <span class="icon-preview-letter" id="qaIconLetter">?</span>
                         <img id="qaIconImg" alt="" width="48" height="48" hidden referrerpolicy="no-referrer" decoding="async">
                     </span>
 
-                    <div class="my-icon-editor-main">
-                        <div class="my-icon-editor-actions">
+                    <div class="icon-editor-main">
+                        <div class="icon-editor-actions">
                             <button type="button" class="my-btn is-small" id="qaIconUploadBtn">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path>
@@ -3007,16 +2852,27 @@ $hasLinks = $totalLinks > 0;
 
                         <input type="file" id="qaIconFile" accept=".png,.jpg,.jpeg,.svg,.ico,image/png,image/jpeg,image/svg+xml,image/x-icon,image/vnd.microsoft.icon" hidden>
 
-                        <div class="my-icon-url-row" id="qaIconUrlRow" hidden>
+                        <div class="icon-url-row" id="qaIconUrlRow" hidden>
                             <input type="url" id="qaIconUrlInput" maxlength="500" autocomplete="off" spellcheck="false" placeholder="https://example.com/icon.png">
                             <button type="button" class="my-btn is-small is-primary" id="qaIconUrlOk">确定</button>
                         </div>
 
-                        <p class="my-note my-icon-note" id="qaIconNote" aria-live="polite">支持 PNG / JPG / SVG / ICO，超过 256px 会自动压缩。留空则自动抓取网站图标。</p>
+                        <p class="my-note icon-note" id="qaIconNote" aria-live="polite">支持 PNG / JPG / SVG / ICO，超过 256px 会自动压缩。留空则自动抓取网站图标。</p>
                     </div>
                 </div>
 
                 <input type="hidden" id="qaLogo" value="">
+            </div>
+
+            <!-- v2.16.5：收录时可由 AI 生成标签，结果可改可清空 -->
+            <div class="my-field">
+                <label for="qaTags">标签</label>
+                <div class="tag-input-row">
+                    <input type="text" id="qaTags" maxlength="255" autocomplete="off" placeholder="如：AI 工具 效率">
+                    <button type="button" class="my-btn is-small" id="qaTagAiBtn">AI 生成</button>
+                </div>
+                <div class="tag-preview" id="qaTagPreview"></div>
+                <p class="my-note tag-note" id="qaTagNote">多个标签用空格分隔；留空也可。</p>
             </div>
         </div>
         <div class="my-dialog-foot">
@@ -3759,7 +3615,7 @@ DELETE /api/sites.php       删除网址</code></pre>
                     if (!note) { return; }
 
                     note.textContent = text || hint;
-                    note.className = 'my-note my-icon-note' + (type ? ' is-' + type : '');
+                    note.className = 'my-note icon-note' + (type ? ' is-' + type : '');
                 }
 
                 function showImage(src) {
@@ -4003,6 +3859,150 @@ DELETE /api/sites.php       删除网址</code></pre>
 
             var linkIcon = createIconEditor('linkIcon', { hiddenField: '#linkLogo' });
             var quickIcon = createIconEditor('qaIcon', { hiddenField: '#qaLogo' });
+
+            /* v2.16.5 · 标签编辑（收录弹窗）
+               与首页 index.php 同一套行为：AI 生成 → 预填成可改的文本，
+               用户清空即表示不要标签，绝不静默写库。 */
+            function parseTags(text) {
+                var raw = String(text || '').split(/[\s,，、;；]+/);
+                var seen = {};
+                var out = [];
+
+                raw.forEach(function (item) {
+                    var tag = String(item || '')
+                        .replace(/^#+/, '')
+                        .replace(/["'「」《》]/g, '')
+                        .trim();
+
+                    if (tag === '' || tag.length > 12) {
+                        return;
+                    }
+
+                    var key = tag.toLowerCase();
+
+                    if (seen[key]) {
+                        return;
+                    }
+
+                    seen[key] = 1;
+                    out.push(tag);
+                });
+
+                return out.slice(0, 8);
+            }
+
+            function createTagEditor(prefix, apiUrl) {
+                var input = qs('#' + prefix + 'Tags');
+                var wrap = qs('#' + prefix + 'TagPreview');
+                var note = qs('#' + prefix + 'TagNote');
+                var aiBtn = qs('#' + prefix + 'TagAiBtn');
+
+                if (!input) {
+                    return null;
+                }
+
+                var generating = false;
+
+                function setNote(html) {
+                    if (note) {
+                        note.innerHTML = html || '多个标签用空格分隔；留空也可。';
+                    }
+                }
+
+                function render() {
+                    var tags = parseTags(input.value);
+
+                    if (wrap) {
+                        wrap.innerHTML = '';
+
+                        tags.forEach(function (tag) {
+                            var chip = document.createElement('span');
+                            chip.className = 'tag-chip';
+                            chip.appendChild(document.createTextNode(tag));
+
+                            var del = document.createElement('button');
+                            del.type = 'button';
+                            del.setAttribute('aria-label', '移除标签 ' + tag);
+                            del.textContent = '×';
+                            del.addEventListener('click', function () {
+                                input.value = parseTags(input.value).filter(function (item) {
+                                    return item !== tag;
+                                }).join(' ');
+                                render();
+                            });
+
+                            chip.appendChild(del);
+                            wrap.appendChild(chip);
+                        });
+                    }
+
+                    return tags;
+                }
+
+                input.addEventListener('input', render);
+                input.addEventListener('blur', function () {
+                    input.value = parseTags(input.value).join(' ');
+                    render();
+                });
+
+                if (aiBtn) {
+                    aiBtn.addEventListener('click', function () {
+                        if (generating) {
+                            return;
+                        }
+
+                        var url = qs('#quickAddUrl') ? qs('#quickAddUrl').value.trim() : '';
+
+                        if (url === '') {
+                            setNote('先填写网址，AI 才知道该给什么标签。');
+                            return;
+                        }
+
+                        generating = true;
+                        aiBtn.textContent = '生成中…';
+                        aiBtn.disabled = true;
+
+                        postForm(apiUrl, {
+                            action: 'suggest_tags',
+                            url: url
+                        }).then(function (res) {
+                            generating = false;
+                            aiBtn.textContent = 'AI 生成';
+
+                            if (res && res.ok && res.tags && res.tags.length) {
+                                input.value = res.tags.join(' ');
+                                render();
+                                setNote('<span class="is-ai">'
+                                    + (res.source === 'ai' ? 'AI' : '规则')
+                                    + ' 建议</span>：可直接改用，也可自己增删。');
+                            } else {
+                                setNote((res && res.error) || '暂时没想出合适的标签，可手动填写。');
+                            }
+                        }).catch(function () {
+                            generating = false;
+                            aiBtn.textContent = 'AI 生成';
+                            setNote('网络错误，标签生成失败。');
+                        });
+                    });
+                }
+
+                return {
+                    reset: function () {
+                        input.value = '';
+                        setNote('');
+                        render();
+                    },
+                    set: function (tags) {
+                        input.value = parseTags(tags).join(' ');
+                        render();
+                    },
+                    value: function () {
+                        return parseTags(input.value).join(' ');
+                    }
+                };
+            }
+
+            var quickTags = createTagEditor('qa', API_SITES);
 
             function toTop() {
                 var button = qs('#toTop');
@@ -7024,6 +7024,8 @@ DELETE /api/sites.php       删除网址</code></pre>
                     // 每次打开都清空图标，避免沿用上一轮的临时上传
                     if (quickIcon) { quickIcon.reset('', ''); }
 
+                    if (quickTags) { quickTags.reset(); }
+
                     openDialog2(quickAddDialog);
                     setTimeout(function () { if (quickAddUrl) { quickAddUrl.focus(); } }, 50);
                 });
@@ -7051,7 +7053,9 @@ DELETE /api/sites.php       删除网址</code></pre>
                     url: url,
                     category_id: quickAddCategory ? quickAddCategory.value : 0,
                     // v2.16.3：用户手动指定的图标（上传 / 外链）；没指定就留空由后端抓取
-                    logo: quickIcon ? quickIcon.value() : ''
+                    logo: quickIcon ? quickIcon.value() : '',
+                    // v2.16.5：AI 生成或手填的标签
+                    tags: quickTags ? quickTags.value() : ''
                 }).then(function (result) {
                     if (!result.ok) {
                         showMsg(quickAddMsg, result.error || '收藏失败');
@@ -7529,6 +7533,6 @@ DELETE /api/sites.php       删除网址</code></pre>
         })();
     </script>
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.16.4" defer></script>
+<script src="assets/js/search.js?v=2.16.5" defer></script>
 </body>
 </html>

@@ -1,25 +1,42 @@
-# 轩宇-导航 部署清单（当前版本 v2.16.4）
+# 轩宇-导航 部署清单（当前版本 v2.16.5）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.16.4
+当前版本：v2.16.5
 
-> **线上兼容性修复**。v2.16.3 的图标上传在部分虚拟主机上返回 500（`disable_functions` 含 `chmod`），且「在线更新」永远跳过了 `uploads/` 目录的安全配置，导致 SVG 图标被旧规则拦成 403。**无数据库结构变更，无需执行 SQL，覆盖文件即可。**
+> **首页弹窗补齐 + 收录自动打标签**。`index.php` 的编辑 / 收录弹窗新增网站图标编辑区（与「我的导航」同款交互），收录时 AI 生成标签并预填为可改的预填值，AI 未配置降级为本地关键词规则。**无数据库变更，无需执行 SQL，覆盖文件即可。**
 
 ## ⚠️ 升级须知（两步）
 
 1. **推荐用后台「系统工具 → 在线更新」上传整包，并勾选「强制覆盖」**。本版已让更新器精确放行 `uploads/.htaccess` 与 `uploads/web.config`，会一并覆盖。
    - **从 v2.16.3 升级请连跑两次**：第一次执行的还是 v2.16.3 的旧更新器（仍会跳过整个 `uploads/`），代码会升到 2.16.4 但两个配置还是旧的；第二次跑新更新器才真正覆盖。实测第一次与第二次都显示「覆盖 134 个文件」，之后 SVG 静态访问才从 404 变 200。
    - 只跑一次也可以，随后用 FTP 手动覆盖这两个文件。
-2. **清一次浏览器缓存**（或强刷 Ctrl+F5）。资源版本号已同步到 `?v=2.16.4`。
+2. **清一次浏览器缓存**（或强刷 Ctrl+F5）。资源版本号已同步到 `?v=2.16.5`。
 
-**验证是否生效**：`/api/index.php` 徽章显示 `v2.16.4`；登录后进「我的导航」→ 编辑任一网址 → 上传一张图，预览立刻变化且**不再报上传失败**；IIS 主机直接访问上传的 `.svg` 图标应返回 200 + `Content-Type: image/svg+xml`，而不是 403/404。
+**验证是否生效**：`/api/index.php` 徽章显示 `v2.16.5`；登录后进「我的导航」→ 编辑任一网址 → 上传一张图，预览立刻变化且**不再报上传失败**；IIS 主机直接访问上传的 `.svg` 图标应返回 200 + `Content-Type: image/svg+xml`，而不是 403/404。
 
 > **手动 FTP 部署**必须覆盖 `uploads/.htaccess`（Apache）与 `uploads/web.config`（IIS）。这两个文件本版内容与 v2.16.3 相同（放行已清洗的 SVG），只是以前在线更新传不上去。
 >
-> **已经在 v2.16.0 及之后的站点不需要再执行 `upgrade_v2.16.0.sql`** —— 索引早已建好。从 v2.15.2 或更早直接跳到 v2.16.4 仍需执行一次（幂等）。
+> **已经在 v2.16.0 及之后的站点不需要再执行 `upgrade_v2.16.0.sql`** —— 索引早已建好。从 v2.15.2 或更早直接跳到 v2.16.5 仍需执行一次（幂等）。
 
-## 本次 v2.16.4 变动文件
+## 本次 v2.16.5 变动文件
+
+| 文件 | 说明 |
+| --- | --- |
+| `index.php` | 编辑 / 收录两个弹窗新增网站图标区与标签字段（图标区在名称上方）；卡片补 `data-logo` |
+| `assets/js/nav.js` | 新增 `createIconEditor()` / `createTagEditor()` / `parseTags()`；编辑与收录保存时带 `logo` / `tags`；关窗清理临时图标；AI 标签预填 |
+| `assets/css/nav.css` | 图标编辑区与标签样式从 `my.php` 内联抽到公共表（类名 `my-icon-*` → `icon-*`）；补 `.my-btn.is-small` / `.my-note` / `#editFetchBtn` 不折行 |
+| `my.php` | 删除内联图标样式（迁至 nav.css）；收录弹窗新增标签字段 + 「AI 生成」按钮，提交带 `tags` |
+| `includes/Services.php` | `AiService::suggestTags()`（AI 生成标签）与 `CategoryEngine::keywordTags()`（关键词兜底）；修复 trim 字符范围误伤中文标签 |
+| `api/user_sites.php` | 新增 `suggest_tags` 动作；`quick_preview` 返回 `suggested_tags` / `tag_source`；`quick_add` 支持 `tags` 落库 |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.16.5 |
+| `api/index.php` | 文档页版本徽章 2.16.5 |
+| 全部 PHP 页面（31 处） | 资源参数 `?v=2.16.5` |
+| `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
+
+**本版没有新增文件、没有 SQL**，全部为既有文件修改，直接覆盖即可。
+
+## 上一版 v2.16.4 变动文件（供跳版本参考）
 
 | 文件 | 说明 |
 | --- | --- |
@@ -27,7 +44,7 @@
 | `admin/tools.php` | `$neverOverwriteDirs` 移除 `uploads/`，改为精确放行 `uploads/.htaccess` / `uploads/web.config`，其余用户上传文件继续保留；同步修正页面说明文案 |
 | `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.16.4 |
 | `api/index.php` | 文档页版本徽章 2.16.4 |
-| 全部 PHP 页面（31 处） | 资源参数 `?v=2.16.4` |
+| 全部 PHP 页面（31 处） | 资源参数 `?v=2.16.5` |
 | `uploads/.htaccess`、`uploads/web.config` | 内容与 v2.16.3 相同，但**必须随本包重新覆盖一次** |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
 

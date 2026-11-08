@@ -558,8 +558,8 @@ if ($bgImage !== '') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.16.4">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.16.4">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.16.5">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.16.5">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -571,7 +571,7 @@ if ($bgImage !== '') {
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.16.4';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.16.5';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -591,10 +591,10 @@ if ($bgImage !== '') {
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.16.4" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.16.5" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.16.4" defer></script>
-    <script src="assets/js/search.js?v=2.16.4" defer></script>
+    <script src="assets/js/nav.js?v=2.16.5" defer></script>
+    <script src="assets/js/search.js?v=2.16.5" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -1094,6 +1094,7 @@ if ($bgImage !== '') {
                                            data-clicks="<?php echo $clicks; ?>"
                                            data-description="<?php echo $functions->escape((string) ($link['description'] ?? '')); ?>"
                                            data-tags="<?php echo $functions->escape((string) ($link['tags'] ?? '')); ?>"
+                                           data-logo="<?php echo $functions->escape((string) ($link['logo'] ?? '')); ?>"
                                            data-alias="<?php echo $functions->escape((string) ($link['alias'] ?? '')); ?>"
                                            data-starred="<?php echo !empty($link['is_starred']) ? '1' : '0'; ?>"
                                            data-owner="<?php echo $isOwner ? '1' : '0'; ?>">
@@ -1204,6 +1205,7 @@ if ($bgImage !== '') {
                                            data-clicks="<?php echo $clicks; ?>"
                                            data-description="<?php echo $functions->escape((string) ($link['description'] ?? '')); ?>"
                                            data-tags="<?php echo $functions->escape((string) ($link['tags'] ?? '')); ?>"
+                                           data-logo="<?php echo $functions->escape((string) ($link['logo'] ?? '')); ?>"
                                            data-alias="<?php echo $functions->escape((string) ($link['alias'] ?? '')); ?>"
                                            data-starred="<?php echo !empty($link['is_starred']) ? '1' : '0'; ?>"
                                            data-owner="<?php echo $isOwner ? '1' : '0'; ?>">
@@ -1458,6 +1460,36 @@ if ($bgImage !== '') {
                 </div>
 
                 <div class="my-field">
+                    <label>网站图标</label>
+
+                    <div class="icon-editor">
+                        <span class="icon-preview" id="qaIconPreview" aria-hidden="true">
+                            <span class="icon-preview-letter" id="qaIconLetter">?</span>
+                            <img id="qaIconImg" alt="" width="48" height="48" hidden referrerpolicy="no-referrer" decoding="async">
+                        </span>
+
+                        <div class="icon-editor-main">
+                            <div class="icon-editor-actions">
+                                <button type="button" class="my-btn is-small" id="qaIconUploadBtn">上传图标</button>
+                                <button type="button" class="my-btn is-small" id="qaIconUrlBtn">输入图标URL</button>
+                                <button type="button" class="my-btn is-small is-ghost" id="qaIconResetBtn" hidden>恢复默认</button>
+                            </div>
+
+                            <input type="file" id="qaIconFile" accept=".png,.jpg,.jpeg,.svg,.ico,image/png,image/jpeg,image/svg+xml,image/x-icon,image/vnd.microsoft.icon" hidden>
+
+                            <div class="icon-url-row" id="qaIconUrlRow" hidden>
+                                <input type="url" id="qaIconUrlInput" maxlength="500" autocomplete="off" spellcheck="false" placeholder="https://example.com/icon.png">
+                                <button type="button" class="my-btn is-small is-primary" id="qaIconUrlOk">确定</button>
+                            </div>
+
+                            <p class="my-note icon-note" id="qaIconNote" aria-live="polite">支持 PNG / JPG / SVG / ICO，超过 256px 会自动压缩。</p>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="qaLogo" value="">
+                </div>
+
+                <div class="my-field">
                     <label for="quickAddName">名称</label>
                     <input type="text" id="quickAddName" maxlength="100" placeholder="网站名称" autocomplete="off" aria-label="网站名称">
                 </div>
@@ -1465,6 +1497,17 @@ if ($bgImage !== '') {
                 <div class="my-field">
                     <label for="quickAddDesc">描述</label>
                     <input type="text" id="quickAddDesc" maxlength="200" placeholder="一句话说明这个网站（可留空）" autocomplete="off" aria-label="网站描述">
+                </div>
+
+                <div class="my-field">
+                    <label for="qaTags">标签</label>
+                    <div class="tag-input-row">
+                        <input type="text" id="qaTags" maxlength="255" autocomplete="off"
+                               placeholder="如：AI 工具 效率" aria-describedby="qaTagNote">
+                        <button type="button" class="my-btn is-small" id="qaTagAiBtn">AI 生成</button>
+                    </div>
+                    <div class="tag-preview" id="qaTagPreview"></div>
+                    <p class="my-note tag-note" id="qaTagNote">多个标签用空格分隔；留空也可。</p>
                 </div>
 
                 <div class="my-field">
@@ -1556,6 +1599,36 @@ if ($bgImage !== '') {
                     </div>
                 </div>
                 <div class="my-field">
+                    <label>网站图标</label>
+
+                    <div class="icon-editor">
+                        <span class="icon-preview" id="editIconPreview" aria-hidden="true">
+                            <span class="icon-preview-letter" id="editIconLetter">?</span>
+                            <img id="editIconImg" alt="" width="48" height="48" hidden referrerpolicy="no-referrer" decoding="async">
+                        </span>
+
+                        <div class="icon-editor-main">
+                            <div class="icon-editor-actions">
+                                <button type="button" class="my-btn is-small" id="editIconUploadBtn">上传图标</button>
+                                <button type="button" class="my-btn is-small" id="editIconUrlBtn">输入图标URL</button>
+                                <button type="button" class="my-btn is-small is-ghost" id="editIconResetBtn" hidden>恢复默认</button>
+                            </div>
+
+                            <input type="file" id="editIconFile" accept=".png,.jpg,.jpeg,.svg,.ico,image/png,image/jpeg,image/svg+xml,image/x-icon,image/vnd.microsoft.icon" hidden>
+
+                            <div class="icon-url-row" id="editIconUrlRow" hidden>
+                                <input type="url" id="editIconUrlInput" maxlength="500" autocomplete="off" spellcheck="false" placeholder="https://example.com/icon.png">
+                                <button type="button" class="my-btn is-small is-primary" id="editIconUrlOk">确定</button>
+                            </div>
+
+                            <p class="my-note icon-note" id="editIconNote" aria-live="polite">支持 PNG / JPG / SVG / ICO，超过 256px 会自动压缩。</p>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="editLogo" value="">
+                </div>
+
+                <div class="my-field">
                     <label for="editLinkName">名称</label>
                     <input type="text" id="editLinkName" maxlength="100" autocomplete="off" placeholder="网站名称">
                 </div>
@@ -1573,6 +1646,16 @@ if ($bgImage !== '') {
                 <div class="my-field">
                     <label for="editLinkDescription">备注</label>
                     <textarea id="editLinkDescription" maxlength="200" autocomplete="off" placeholder="可留空"></textarea>
+                </div>
+                <div class="my-field">
+                    <label for="editTags">标签</label>
+                    <div class="tag-input-row">
+                        <input type="text" id="editTags" maxlength="255" autocomplete="off"
+                               placeholder="如：AI 工具 效率" aria-describedby="editTagNote">
+                        <button type="button" class="my-btn is-small" id="editTagAiBtn">AI 生成</button>
+                    </div>
+                    <div class="tag-preview" id="editTagPreview"></div>
+                    <p class="my-note tag-note" id="editTagNote">多个标签用空格分隔；留空也可。</p>
                 </div>
             </div>
             <div class="my-dialog-foot">

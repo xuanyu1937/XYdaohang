@@ -790,6 +790,37 @@ switch ($action) {
 
     /* 收录前预览：只抓取、不入库，把结果连同「推荐分组」一起交给前端，
        等用户在收录框里确认（可改标题/描述/分组）后再调 quick_add 落库。 */
+    case 'suggest_tags':
+        // v2.16.5 · 生成标签建议（只读，不写库）。
+        // 前端在收录框里点「AI 生成」触发，也可以在编辑已有网址时重新生成。
+        $url = userSiteNormalizeUrl($_POST['url'] ?? '');
+        $name = userSiteTrim($_POST['name'] ?? '', 100);
+        $description = userSiteTrim($_POST['description'] ?? '', 200);
+
+        if ($url === '' && $name === '') {
+            $functions->jsonResponse(['ok' => false, 'error' => '缺少网址或名称', 'tags' => []], 400);
+        }
+
+        try {
+            $tagService = new AiService($functions);
+            $tagResult = $tagService->suggestTags($name, $url, $description);
+        } catch (Throwable $e) {
+            $tagResult = [
+                'ok' => false,
+                'source' => 'none',
+                'tags' => [],
+                'error' => '标签生成失败，可手动填写',
+            ];
+        }
+
+        $functions->jsonResponse([
+            'ok' => !empty($tagResult['ok']),
+            'source' => (string) ($tagResult['source'] ?? 'none'),
+            'tags' => array_values($tagResult['tags'] ?? []),
+            'error' => (string) ($tagResult['error'] ?? ''),
+        ]);
+        break;
+
     case 'quick_preview':
         $url = userSiteNormalizeUrl($_POST['url'] ?? '');
 
@@ -921,6 +952,24 @@ switch ($action) {
             $suggestReason = 'fallback';
         }
 
+        // v2.16.5 · 收录时顺手给一版标签建议。
+        // 只是预填，用户在弹窗里可以改；AI 未配置时退回关键词规则，不会阻断收录。
+        $suggestedTags = [];
+        $tagSource = 'none';
+
+        try {
+            $tagService = new AiService($functions);
+            $tagResult = $tagService->suggestTags($name, $url, $description);
+
+            if (!empty($tagResult['ok'])) {
+                $suggestedTags = array_values($tagResult['tags'] ?? []);
+                $tagSource = (string) ($tagResult['source'] ?? 'none');
+            }
+        } catch (Throwable $e) {
+            $suggestedTags = [];
+            $tagSource = 'none';
+        }
+
         $functions->jsonResponse([
             'ok' => true,
             'url' => $url,
@@ -936,6 +985,9 @@ switch ($action) {
             // v2.16.0：AI 推荐的新分组名（不存在时才非空），供「确认收录」时创建
             'suggested_category_name' => ($suggestReason === 'ai_new') ? $suggestedName : '',
             'suggest_reason' => $suggestReason,
+            // v2.16.5：标签建议 + 来源（ai / rules），前端据此标注
+            'suggested_tags' => $suggestedTags,
+            'tag_source' => $tagSource,
         ]);
         break;
 
@@ -1041,11 +1093,14 @@ switch ($action) {
         $sortStmt->execute([$userId]);
         $sort = (int) ($sortStmt->fetch()['next_sort'] ?? 1);
 
+        // v2.16.5：收录时带上 AI 建议过的标签（用户可以在弹窗里改掉或清空）
+        $tags = userSiteTrim($_POST['tags'] ?? '', 255);
+
         $stmt = $db->prepare(
-            'INSERT INTO nav_links (name, url, logo, description, category_id, user_id, sort_order, is_active, is_starred, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, NOW())'
+            'INSERT INTO nav_links (name, url, logo, description, category_id, user_id, sort_order, is_active, is_starred, tags, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, ?, NOW())'
         );
-        $stmt->execute([$name, $url, $logo, $description, $categoryId, $userId, $sort]);
+        $stmt->execute([$name, $url, $logo, $description, $categoryId, $userId, $sort, $tags]);
 
         $functions->jsonResponse([
             'ok' => true,
@@ -1054,6 +1109,7 @@ switch ($action) {
             'url' => $url,
             'logo' => $logo,
             'description' => $description,
+            'tags' => $tags,
             'category_id' => $categoryId,
             'category_name' => userSiteCategoryName($db, $categoryId),
             'is_starred' => 1,

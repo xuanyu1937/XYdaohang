@@ -6659,3 +6659,258 @@ html.is-touch-ui .card-actions .card-action {
     display: none !important;
     pointer-events: none !important;
 }
+
+/* ==========================================================================
+   v2.16.5 · 网址图标编辑 + 标签编辑
+   首页（index.php）与我的导航（my.php）共用：两页都引用本文件，
+   所以这套样式必须留在 nav.css，而不是某个页面的内联 <style>。
+   ========================================================================== */
+
+.icon-editor {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface-2);
+}
+
+.icon-preview {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--border);
+    overflow: hidden;
+}
+
+/* 图标本身常是正方形，内留 6px 让它在框里不至于顶满 */
+.icon-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 6px;
+    border-radius: 12px;
+    background: transparent;
+}
+
+.icon-preview-letter {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--muted);
+    line-height: 1;
+}
+
+/* 上传中：预览框蒙一层 + 转圈，避免用户以为没反应 */
+.icon-preview.is-busy::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--surface-2);
+    opacity: .78;
+}
+
+.icon-preview.is-busy::before {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border-strong);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: icon-spin 0.7s linear infinite;
+}
+
+@keyframes icon-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .icon-preview.is-busy::before { animation-duration: 2s; }
+}
+
+.icon-editor-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.icon-editor-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* 按钮文字一律不折行，窄屏下宁可整行换掉 */
+.icon-editor-actions .my-btn,
+.icon-url-row .my-btn {
+    white-space: nowrap;
+}
+
+.icon-url-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 9px;
+}
+
+.icon-url-row input {
+    flex: 1;
+    min-width: 0;
+    padding: 7px 11px;
+    font-size: 13px;
+}
+
+.icon-url-row .my-btn {
+    flex: none;
+    height: 34px;
+}
+
+.icon-note {
+    margin-top: 9px;
+}
+
+.icon-note.is-error {
+    color: var(--danger);
+}
+
+.icon-note.is-ok {
+    color: var(--success);
+}
+
+/* ---- 标签 ---- */
+.tag-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.tag-input-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+.tag-input-row .my-btn {
+    flex: none;
+    white-space: nowrap;
+}
+
+.tag-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    padding: 3px 4px 3px 9px;
+    border-radius: 999px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.tag-chip button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    opacity: .68;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+}
+
+.tag-chip button:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, .08);
+}
+
+.tag-note {
+    margin-top: 7px;
+}
+
+.tag-note .is-ai {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+@media (max-width: 575.98px) {
+    /* 窄屏改成上下结构：预览在上、按钮铺满一行，避免预览框被挤成窄条 */
+    .icon-editor {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 11px;
+    }
+
+    .icon-preview {
+        width: 48px;
+        height: 48px;
+    }
+
+    .icon-editor-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .icon-editor-actions .my-btn {
+        width: 100%;
+        justify-content: center;
+        min-height: 36px;
+    }
+
+    /* 「恢复默认」独占一行，不做成半个按钮 */
+    .icon-editor-actions .my-btn.is-ghost {
+        grid-column: 1 / -1;
+    }
+
+    .icon-url-row .my-btn {
+        min-height: 36px;
+    }
+
+    .tag-input-row .my-btn {
+        min-height: 36px;
+    }
+}
+
+/* v2.16.5：首页弹窗用到的两个小件——小号按钮与字段提示。
+   my.php 里原本是内联定义，这里补到公共表，避免首页按钮偏大、提示没样式。 */
+.my-btn.is-small {
+    padding: 5px 12px;
+    font-size: 12.5px;
+    border-radius: 8px;
+}
+
+.my-note {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 11.5px;
+    line-height: 1.6;
+}
+
+/* v2.16.5：编辑弹窗「抓取」按钮在窄屏被输入框挤成竖排两行，
+   与 my.php 的 #fetchBtn 同样的处理：不许折行、不许被压缩 */
+#editFetchBtn {
+    flex: none;
+    white-space: nowrap;
+}

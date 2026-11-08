@@ -2265,6 +2265,8 @@
                 name: card.getAttribute('data-name') || '',
                 category: card.getAttribute('data-category') || '0',
                 description: card.getAttribute('data-description') || '',
+                tags: card.getAttribute('data-tags') || '',
+                logo: card.getAttribute('data-logo') || '',
                 starred: card.getAttribute('data-starred') === '1',
                 owner: card.getAttribute('data-owner') === '1'
             };
@@ -2401,6 +2403,33 @@
             if (descInput) { descInput.value = data.description || ''; }
             if (msg) { msg.textContent = ''; msg.className = 'my-msg'; }
 
+            // v2.16.5：回填图标与标签。
+            // 图标优先用 nav_links.logo 原值；没有原值时退回卡片上已经渲染出来的
+            // favicon（可能是 CDN 兜底图），保证预览与列表看到的是一致的。
+            var renderedIcon = '';
+
+            if (card) {
+                var favImg = card.querySelector('.site-favicon');
+
+                if (favImg && favImg.getAttribute('src')) {
+                    renderedIcon = favImg.getAttribute('src');
+                }
+            }
+
+            if (editIcon) {
+                editIcon.set(data.logo || '', data.url || '', renderedIcon);
+            }
+
+            if (editTags) {
+                editTags.set(data.tags || '');
+                editTags.setContext({
+                    url: data.url || '',
+                    name: data.name || '',
+                    description: data.description || ''
+                });
+            }
+
+
             openDlg(editDialog);
 
             if (urlInput) {
@@ -2454,6 +2483,29 @@
                     urlInput.value = res.url || url;
                 }
 
+                // 换了网址后，图标的占位首字母、标签生成用的上下文都要跟着走
+                var finalUrl = urlInput ? urlInput.value.trim() : (res.url || url);
+
+                if (editIcon) {
+                    editIcon.setSiteUrl(finalUrl || url);
+
+                    // 只在用户还没设过图标时，才用抓到的 favicon 补一个；
+                    // 否则手动选好的图会被「抓取」按钮冲掉。
+                    if (editIcon.isEmpty()) {
+                        var icons = (meta.icons && meta.icons.length) ? meta.icons : [];
+                        var icon = icons.length ? icons[0] : '';
+                        editIcon.set(icon, finalUrl || url, icon);
+                    }
+                }
+
+                if (editTags) {
+                    editTags.setContext({
+                        url: finalUrl || url,
+                        name: nameInput ? nameInput.value.trim() : (meta.title || ''),
+                        description: descInput ? descInput.value.trim() : (meta.description || '')
+                    });
+                }
+
                 if (msg) { msg.textContent = meta.title ? '已获取：' + meta.title : '未获取到标题，可手动填写'; msg.className = 'my-msg is-success'; }
             }).catch(function () {
                 if (btn) { btn.disabled = false; }
@@ -2489,7 +2541,11 @@
                 url: url,
                 name: nameInput ? nameInput.value.trim() : '',
                 category_id: catSelect ? catSelect.value : '0',
-                description: descInput ? descInput.value.trim() : ''
+                description: descInput ? descInput.value.trim() : '',
+                // 只有用户真的动过图标才会带新值；没动时带的是打开时的原值，
+                // 与 nav_links.logo 一致，不会把已有图标清空。
+                logo: editIcon ? editIcon.value() : '',
+                tags: editTags ? editTags.value() : ''
             };
 
             postForm(payload).then(function (res) {
@@ -2714,6 +2770,421 @@
         // 收录框的当前状态：preview 成功后才有 logo / categories
         var quickAddState = { logo: '', previewed: false, busy: false, newCategoryName: '' };
 
+        /* ------------------------------------------------------------------
+           v2.16.5 · 网站图标编辑
+
+           首页的「添加 / 编辑」弹窗原先只能吃自动抓取的 favicon，抓错抓不到
+           都没法纠正。这里补一套与「我的导航」一致的编辑器：上传 / 外链 URL /
+           恢复默认。上传只落盘不写库，真正生效要等用户点保存。
+           ------------------------------------------------------------------ */
+        function createIconEditor(prefix, options) {
+            var opts = options || {};
+            var preview = document.getElementById(prefix + 'IconPreview');
+            var img = document.getElementById(prefix + 'IconImg');
+            var letter = document.getElementById(prefix + 'IconLetter');
+            var fileInput = document.getElementById(prefix + 'IconFile');
+            var uploadBtn = document.getElementById(prefix + 'IconUploadBtn');
+            var urlBtn = document.getElementById(prefix + 'IconUrlBtn');
+            var resetBtn = document.getElementById(prefix + 'IconResetBtn');
+            var urlRow = document.getElementById(prefix + 'IconUrlRow');
+            var urlInput = document.getElementById(prefix + 'IconUrlInput');
+            var urlOk = document.getElementById(prefix + 'IconUrlOk');
+            var note = document.getElementById(prefix + 'IconNote');
+            var hidden = document.getElementById(prefix + 'Logo');
+
+            if (!preview || !hidden) {
+                return null;
+            }
+
+            var value = '';
+            var siteUrl = '';
+            var pending = '';
+            var uploading = false;
+
+            function setNote(text, state) {
+                if (!note) {
+                    return;
+                }
+
+                note.textContent = text || '';
+                note.className = 'my-note icon-note' + (state ? ' is-' + state : '');
+            }
+
+            function initialOf(url) {
+                var host = '';
+
+                try {
+                    host = new URL(url).hostname.replace(/^www\./i, '');
+                } catch (error) {
+                    host = String(url || '');
+                }
+
+                return (host || '?').charAt(0).toUpperCase();
+            }
+
+            function render(src) {
+                if (src) {
+                    if (img) {
+                        img.hidden = false;
+                        img.src = src;
+                    }
+
+                    if (letter) {
+                        letter.hidden = true;
+                    }
+
+                    return;
+                }
+
+                if (img) {
+                    img.hidden = true;
+                    img.removeAttribute('src');
+                }
+
+                if (letter) {
+                    letter.hidden = false;
+                    letter.textContent = initialOf(siteUrl);
+                }
+            }
+
+            function setBusy(busy) {
+                uploading = !!busy;
+                preview.classList.toggle('is-busy', uploading);
+
+                if (uploadBtn) {
+                    uploadBtn.disabled = uploading;
+                }
+            }
+
+            function apply(logo, renderedSrc) {
+                value = logo || '';
+                render(value || renderedSrc || '');
+
+                if (resetBtn) {
+                    resetBtn.hidden = !value;
+                }
+
+                hidden.value = value;
+
+                if (opts.onChange) {
+                    opts.onChange(value);
+                }
+            }
+
+            if (uploadBtn && fileInput) {
+                uploadBtn.addEventListener('click', function () {
+                    if (!uploading) {
+                        fileInput.click();
+                    }
+                });
+
+                fileInput.addEventListener('change', function () {
+                    var file = fileInput.files && fileInput.files[0];
+
+                    if (!file) {
+                        return;
+                    }
+
+                    var body = new FormData();
+                    body.append('action', 'upload_logo');
+                    body.append('logo', file);
+
+                    if (pending) {
+                        body.append('discard', pending);
+                    }
+
+                    setBusy(true);
+                    setNote('正在上传并压缩…', '');
+
+                    fetch(API, {
+                        method: 'POST',
+                        body: body,
+                        credentials: 'same-origin',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    }).then(function (res) {
+                        return res.json();
+                    }).then(function (res) {
+                        setBusy(false);
+                        fileInput.value = '';
+
+                        if (!res || !res.ok) {
+                            setNote((res && res.error) || '上传失败，请换一张图', 'error');
+                            return;
+                        }
+
+                        pending = res.path || '';
+                        apply(res.path, res.url);
+                        setNote('图标已上传，点保存后生效', 'ok');
+                    }).catch(function () {
+                        setBusy(false);
+                        fileInput.value = '';
+                        setNote('网络错误，上传失败', 'error');
+                    });
+                });
+            }
+
+            if (urlBtn && urlRow) {
+                urlBtn.addEventListener('click', function () {
+                    urlRow.hidden = !urlRow.hidden;
+
+                    if (!urlRow.hidden && urlInput) {
+                        urlInput.focus();
+                    }
+                });
+            }
+
+            if (urlOk) {
+                urlOk.addEventListener('click', function () {
+                    var v = urlInput ? urlInput.value.trim() : '';
+
+                    if (!/^https:\/\/[^\s]+$/i.test(v)) {
+                        setNote('请输入 https:// 开头的图片地址', 'error');
+
+                        if (urlInput) {
+                            urlInput.focus();
+                        }
+
+                        return;
+                    }
+
+                    apply(v, v);
+                    setNote('已使用外链图标，点保存后生效', 'ok');
+
+                    if (urlRow) {
+                        urlRow.hidden = true;
+                    }
+                });
+            }
+
+            if (urlInput) {
+                urlInput.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+
+                        if (urlOk) {
+                            urlOk.click();
+                        }
+                    }
+                });
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function () {
+                    // 恢复默认等于放弃这张刚传的图，临时文件顺手删掉，别留孤儿
+                    if (pending) {
+                        postForm({ action: 'upload_logo', discard: pending });
+                        pending = '';
+                    }
+
+                    apply('', '');
+                    setNote('已恢复为自动抓取网站图标', 'ok');
+
+                    if (urlRow) {
+                        urlRow.hidden = true;
+                    }
+
+                    if (urlInput) {
+                        urlInput.value = '';
+                    }
+                });
+            }
+
+            return {
+                set: function (logo, url, renderedSrc) {
+                    siteUrl = url || '';
+                    pending = '';
+                    apply(logo || '', renderedSrc || '');
+                    setNote('支持 PNG / JPG / SVG / ICO，超过 256px 会自动压缩。', '');
+                },
+                setSiteUrl: function (url) {
+                    siteUrl = url || '';
+                },
+                value: function () {
+                    return value;
+                },
+                /** 弹窗关闭时调用：丢掉已上传但没被采用的那张图 */
+                discardPending: function () {
+                    if (pending && pending !== value) {
+                        postForm({ action: 'upload_logo', discard: pending });
+                    }
+
+                    pending = '';
+                },
+                isEmpty: function () {
+                    return value === '';
+                }
+            };
+        }
+
+        /* ------------------------------------------------------------------
+           v2.16.5 · 标签编辑
+
+           收录时先给 AI 建议、再把结果作为「可改的预填值」交给用户，
+           不做静默写库；用户清空就表示不要标签。
+           ------------------------------------------------------------------ */
+        function parseTags(text) {
+            var raw = String(text || '').split(/[\s,，、;；]+/);
+            var seen = {};
+            var out = [];
+
+            raw.forEach(function (item) {
+                var tag = String(item || '')
+                    .replace(/^#+/, '')
+                    .replace(/["'「」《》]/g, '')
+                    .trim();
+
+                if (tag === '' || tag.length > 12) {
+                    return;
+                }
+
+                var key = tag.toLowerCase();
+
+                if (seen[key]) {
+                    return;
+                }
+
+                seen[key] = 1;
+                out.push(tag);
+            });
+
+            return out.slice(0, 8);
+        }
+
+        function createTagEditor(prefix) {
+            var input = document.getElementById(prefix + 'Tags');
+            var wrap = document.getElementById(prefix + 'TagPreview');
+            var note = document.getElementById(prefix + 'TagNote');
+            var aiBtn = document.getElementById(prefix + 'TagAiBtn');
+
+            if (!input) {
+                return null;
+            }
+
+            var ctx = { url: '', name: '', description: '' };
+            var generating = false;
+
+            function defaultNote() {
+                return '多个标签用空格分隔；留空也可。';
+            }
+
+            function setNote(html) {
+                if (note) {
+                    note.innerHTML = html || defaultNote();
+                }
+            }
+
+            function render() {
+                var tags = parseTags(input.value);
+
+                if (wrap) {
+                    wrap.innerHTML = '';
+
+                    tags.forEach(function (tag) {
+                        var chip = document.createElement('span');
+                        chip.className = 'tag-chip';
+                        chip.appendChild(document.createTextNode(tag));
+
+                        var del = document.createElement('button');
+                        del.type = 'button';
+                        del.setAttribute('aria-label', '移除标签 ' + tag);
+                        del.textContent = '×';
+                        del.addEventListener('click', function () {
+                            var rest = parseTags(input.value).filter(function (item) {
+                                return item !== tag;
+                            });
+
+                            input.value = rest.join(' ');
+                            render();
+                        });
+
+                        chip.appendChild(del);
+                        wrap.appendChild(chip);
+                    });
+                }
+
+                if (aiBtn) {
+                    aiBtn.disabled = generating || ctx.url === '';
+                }
+
+                return tags;
+            }
+
+            input.addEventListener('input', render);
+            input.addEventListener('blur', function () {
+                input.value = parseTags(input.value).join(' ');
+                render();
+            });
+
+            if (aiBtn) {
+                aiBtn.addEventListener('click', function () {
+                    if (generating) {
+                        return;
+                    }
+
+                    if (!ctx.url) {
+                        setNote('先填写网址，AI 才知道该给什么标签。');
+                        return;
+                    }
+
+                    generating = true;
+                    aiBtn.textContent = '生成中…';
+                    aiBtn.disabled = true;
+
+                    postForm({
+                        action: 'suggest_tags',
+                        url: ctx.url,
+                        name: ctx.name,
+                        description: ctx.description
+                    }).then(function (res) {
+                        generating = false;
+                        aiBtn.textContent = 'AI 生成';
+
+                        if (res && res.ok && res.tags && res.tags.length) {
+                            input.value = res.tags.join(' ');
+                            render();
+                            setNote('<span class="is-ai">' + (res.source === 'ai' ? 'AI' : '规则')
+                                + ' 建议</span>：可直接改用，也可自己增删。');
+                        } else {
+                            setNote((res && res.error) || '暂时没想出合适的标签，可手动填写。');
+                        }
+
+                        render();
+                    }).catch(function () {
+                        generating = false;
+                        aiBtn.textContent = 'AI 生成';
+                        setNote('网络错误，标签生成失败。');
+                        render();
+                    });
+                });
+            }
+
+            return {
+                set: function (tags) {
+                    input.value = parseTags(tags).join(' ');
+                    setNote('');
+                    render();
+                },
+                setContext: function (data) {
+                    ctx.url = (data && data.url) || '';
+                    ctx.name = (data && data.name) || '';
+                    ctx.description = (data && data.description) || '';
+                    render();
+                },
+                value: function () {
+                    return parseTags(input.value).join(' ');
+                },
+                isEmpty: function () {
+                    return parseTags(input.value).length === 0;
+                }
+            };
+        }
+
+        var editIcon = createIconEditor('edit');
+        var editTags = createTagEditor('edit');
+        var quickIcon = createIconEditor('qa');
+        var quickTags = createTagEditor('qa');
+
+
         window.XYQuickAdd = {
             open: function (url, options) {
                 var opts = options || {};
@@ -2767,6 +3238,14 @@
             quickAddState.previewed = false;
             quickAddState.busy = false;
 
+            if (quickIcon) {
+                quickIcon.discardPending();
+            }
+
+            if (quickTags) {
+                quickTags.set('');
+            }
+
             if (msg) {
                 msg.textContent = '';
             }
@@ -2801,6 +3280,14 @@
                 input.value = typeof presetUrl === 'string' && presetUrl !== ''
                     ? presetUrl
                     : '';
+            }
+
+            if (quickIcon) {
+                quickIcon.set('', input ? input.value.trim() : '');
+            }
+
+            if (quickTags) {
+                quickTags.setContext({ url: input ? input.value.trim() : '' });
             }
 
             if (submit) {
@@ -2960,6 +3447,24 @@
 
             if (descInput) {
                 descInput.value = displayDesc;
+            }
+
+            // v2.16.5：图标与标签也一起回填。
+            // 图标用抓到的 favicon 作为「当前值」，用户可直接点上传覆盖；
+            // 标签是 AI 建议值，填进可编辑输入框，不写库。
+            if (quickIcon) {
+                quickIcon.set(data.logo || '', data.url || '', data.logo || '');
+            }
+
+            if (quickTags) {
+                quickTags.setContext({
+                    url: data.url || '',
+                    name: displayName,
+                    description: displayDesc
+                });
+
+                var suggested = Array.isArray(data.suggested_tags) ? data.suggested_tags : [];
+                quickTags.set(suggested.join(' '));
             }
 
             // 分组下拉：preview 带回当前用户可见的全部分组
@@ -3203,7 +3708,8 @@
                 url: url,
                 name: name,
                 description: descInput ? descInput.value.trim() : '',
-                logo: quickAddState.logo,
+                logo: quickIcon ? quickIcon.value() : quickAddState.logo,
+                tags: quickTags ? quickTags.value() : '',
                 category_id: categoryPayload.category_id,
                 category_name: categoryPayload.category_name
             }).then(function (res) {
@@ -3747,6 +4253,24 @@
             event.preventDefault();
             saveEditLink();
         });
+
+        // 弹窗无论怎么关（按钮 / ESC / 点遮罩）都要清掉刚上传但没保存的图标，
+        // 否则 uploads/logos/ 会慢慢堆孤儿文件。
+        if (editDialog) {
+            editDialog.addEventListener('close', function () {
+                if (editIcon) {
+                    editIcon.discardPending();
+                }
+            });
+        }
+
+        if (quickAddDialog) {
+            quickAddDialog.addEventListener('close', function () {
+                if (quickIcon) {
+                    quickIcon.discardPending();
+                }
+            });
+        }
     })();
 
     /* ----------------------------------------------------------------------
