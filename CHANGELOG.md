@@ -20,6 +20,9 @@
     线上匿名首页实测 97.6KB（原 120KB）。
 - **移除 `X-Powered-By: PHP/x.x`**（`includes/bootstrap.php`）
   - IIS FastCGI 下 web.config 的 `<customHeaders><remove>` 管不到 SAPI 头，脚本内 `header_remove()` 兜底。
+- **canonical / og:image 被拼成 `http://host\/...`**（`includes/bootstrap.php`、`includes/Services.php`、`forgot.php`）
+  - Windows / IIS 上 `dirname('/index.php')` 返回反斜杠分隔的 `'\'`，站点根目录判断永远不为空，
+    base 拼接后混进 `\`；三处统一把 `dirname()` 结果归一成 `/`，邮件重置链接同步修复。
 - **批量补齐失败原因可见化**：`icon_backfill` 返回 `error`（`fetch_failed` / `download_failed` / `not_image` 等），
   便于区分「站点不可达」与「图标格式不支持」。
 

@@ -184,7 +184,10 @@ if (!function_exists('navSiteBaseUrl')) {
 
         // 站点可能部署在子目录；直接取请求目录（/admin/xx.php → /admin），不做正则推断
         $script = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
-        $dir = rtrim(dirname($script), '/');
+        // v2.18.1 修复：Windows / IIS 上 dirname() 用反斜杠做分隔符，
+        // dirname('/index.php') 返回 '\'（而不是 Linux 的 '/'），不归一的话
+        // canonical / og:image 会拼成 http://host\/ 这样的坏 URL。
+        $dir = str_replace('\\', '/', rtrim(dirname($script), '/'));
 
         if ($dir === '.' || $dir === '/') {
             $dir = '';

@@ -3062,7 +3062,8 @@ class IconCacheService extends BaseService
     public function publicBase()
     {
         $script = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
-        $dir = rtrim(dirname($script), '/');
+        // v2.18.1 修复：Windows / IIS 上 dirname() 返回 '\' 分隔符，先归一成 '/'
+        $dir = str_replace('\\', '/', rtrim(dirname($script), '/'));
 
         if ($dir === '.' || $dir === '/') {
             $dir = '';

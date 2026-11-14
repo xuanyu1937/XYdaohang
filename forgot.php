@@ -68,7 +68,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $scheme = (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off') ? 'https' : 'http';
                     $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
-                    $resetUrl = $scheme . '://' . $host . rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/'), '/') . '/reset.php?token=' . $result['token'];
+                    // v2.18.1 修复：Windows / IIS 上 dirname() 返回 '\'，先归一成 '/'，
+                    // 否则邮件里的重置链接会变成 http://host\/reset.php
+                    $resetDir = str_replace('\\', '/', rtrim(dirname(str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? '/'))), '/'));
+                    $resetUrl = $scheme . '://' . $host . $resetDir . '/reset.php?token=' . $result['token'];
 
                     $safeName = $functions->escape($brandName);
                     $html = '<div style="font-family:sans-serif;max-width:520px;margin:0 auto;">'
