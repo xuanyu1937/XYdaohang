@@ -1774,12 +1774,20 @@
     }
 
     function probeStatus(card) {
-        var url = card.getAttribute('data-url');
+        // 卡片本身就是 <a href="…">，data-url 在 v2.18.1 瘦身时已移除，这里以 href 为准
+        var url = card.getAttribute('data-url') || card.getAttribute('href') || '';
 
         // v2.18.1 · 内网 / 后台勾选「跳过检测」的条目：不发请求，保持灰色「内网」
         var preset = card.getAttribute('data-check-status') || '';
 
         if (preset === 'skipped' || preset === 'internal') {
+            return Promise.resolve();
+        }
+
+        // 服务端批量检测已有结论时直接用，不再逐卡打跨域请求：
+        // 既省掉首屏几十个 HEAD，也避免 no-cors 探测被网关拦截后整站误标「无法访问」。
+        if (preset === 'ok' || preset === 'slow') {
+            setStatus(card, preset === 'slow' ? 'slower' : 'online');
             return Promise.resolve();
         }
 
@@ -1854,8 +1862,10 @@
         }
 
         if (statusEl) {
-            var label = status === 'online' ? '在线' : (status === 'offline' ? '离线' : '检测中');
-            statusEl.setAttribute('data-state', status);
+            var isUp = status === 'online' || status === 'slower';
+            var label = isUp ? (status === 'slower' ? '较慢' : '在线') : (status === 'offline' ? '离线' : '检测中');
+            // .site-status 的颜色规则只认 online / offline / pending / skipped（见 nav.css）
+            statusEl.setAttribute('data-state', isUp ? 'online' : status);
             statusEl.setAttribute('data-label', label);
             statusEl.setAttribute('aria-label', '网站状态：' + label);
         }
@@ -1880,6 +1890,16 @@
             speedEl.setAttribute('data-level', level);
             speedEl.setAttribute('data-state', 'ok');
             speedEl.setAttribute('title', '响应时间约 ' + ms + ' 毫秒');
+        } else if (status === 'online' || status === 'slower') {
+            // 采用服务端检测结论（没有实测毫秒可展示）
+            speedEl.textContent = status === 'slower' ? '较慢' : '在线';
+            if (status === 'slower') {
+                speedEl.setAttribute('data-level', 'slow');
+            } else {
+                speedEl.removeAttribute('data-level');
+            }
+            speedEl.setAttribute('data-state', 'ok');
+            speedEl.setAttribute('title', status === 'slower' ? '网站可访问，响应较慢' : '网站可访问');
         } else {
             speedEl.textContent = status === 'offline' ? '无法访问' : '检测中';
             speedEl.removeAttribute('data-level');

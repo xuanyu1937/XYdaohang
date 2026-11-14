@@ -497,8 +497,8 @@ if ($bgImage !== '') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.1">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.1">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.2">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.2">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -510,7 +510,7 @@ if ($bgImage !== '') {
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.1';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.2';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -530,10 +530,10 @@ if ($bgImage !== '') {
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.1" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.18.2" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.1" defer></script>
-    <script src="assets/js/search.js?v=2.18.1" defer></script>
+    <script src="assets/js/nav.js?v=2.18.2" defer></script>
+    <script src="assets/js/search.js?v=2.18.2" defer></script>
     <noscript>
         <style>
             .site-status,
