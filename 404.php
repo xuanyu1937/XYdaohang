@@ -47,7 +47,7 @@ $escape = static function ($value) {
     <meta name="robots" content="noindex, nofollow">
     <meta name="theme-color" content="#f5f5f3" id="themeColor">
     <link rel="icon" href="assets/img/icons/icon-192.png">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.4">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.5">
     <script>
         (function () {
             try {

@@ -72,17 +72,17 @@
 
 - 找不到对应段落时：**覆盖代码文件 → 清理 `cache/` → 强制刷新（Ctrl+F5）** 即可
 - `upgrade_*.sql` 多为幂等 UPDATE / 索引脚本；`upgrade_v2.18.1.sql` 中的 `ADD COLUMN` 在列已存在时会报 `Duplicate column`，忽略即可
-- 数据库变更版本只有两个：`v2.16.0`（`upgrade_v2.16.0.sql`，两个索引）与 `v2.18.1`（`upgrade_v2.18.1.sql`，`skipped` 枚举 + `skip_check` 列）；**v2.18.2 / v2.18.3 / v2.18.4 无任何数据库变更**
+- 数据库变更版本只有两个：`v2.16.0`（`upgrade_v2.16.0.sql`，两个索引）与 `v2.18.1`（`upgrade_v2.18.1.sql`，`skipped` 枚举 + `skip_check` 列）；**v2.18.2 / v2.18.3 / v2.18.4 / v2.18.5 无任何数据库变更**
 
-### 升级到当前版本 v2.18.4（2026-11-14）
+### 升级到当前版本 v2.18.5（2026-11-14）
 
 | 你的当前版本 | 需要执行的 SQL | 说明 |
 | --- | --- | --- |
-| v2.18.1 ~ v2.18.3 | 无 | 直接覆盖文件，清 `cache/`、Ctrl+F5 |
+| v2.18.1 ~ v2.18.4 | 无 | 直接覆盖文件，清 `cache/`、Ctrl+F5 |
 | v2.18.0 及更早 | `upgrade_v2.18.1.sql` | 先执行 SQL，再覆盖文件 |
 | v2.15.2 及更早 | `upgrade_v2.16.0.sql` + `upgrade_v2.18.1.sql` | 按版本顺序各执行一次 |
 
-> 已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，升到 v2.18.2 ~ v2.18.4 **不需要再执行任何 SQL**。全新安装直接用 `install/install.sql`（v2.18.4 修订已内置 `skip_check` 列与 `skipped` 枚举）。
+> 已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，升到 v2.18.2 ~ v2.18.5 **不需要再执行任何 SQL**。全新安装直接用 `install/install.sql`（v2.18.4 修订已内置 `skip_check` 列与 `skipped` 枚举）。
 
 **v2.18.x 版本序列**（完整清单见 [CHANGELOG.md](CHANGELOG.md) / [UPLOAD_LIST.md](UPLOAD_LIST.md)）：
 
@@ -93,6 +93,7 @@
 | v2.18.2 | 修复卡片瘦身移除 `data-url` 导致全站卡片发灰 |
 | v2.18.3 | 卡片显示真实网速（毫秒 + 快/一般/慢）；按 claude-seo 审计补 JSON-LD、站点索引页、动态 sitemap、canonical/og、面包屑、`llms.txt` |
 | v2.18.4 | 国内网络适配：去 Google / DuckDuckGo / cdnjs / jsdelivr，改搜狗 + `cn.bing.com` + bootcdn/staticfile + 国内更新镜像 |
+| v2.18.5 | 星标可取消且按浏览者计算、加载更多测速、文字对比度、后台浅色侧栏、表单可访问名、筛选栏焦点冲突、响应头与 CSP |
 
 > **v2.17.0 已回滚、从未发布**，版本序列从 v2.16.5 直接到 v2.18.0，不是漏发。
 
@@ -208,7 +209,7 @@
 - 完整变更记录见 [CHANGELOG.md](CHANGELOG.md)
 - 版本发布与安装包下载见 [Releases](https://github.com/xuanyu1937/XYdaohang/releases)
 
-当前版本：`VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` = **2.18.4**（2026-11-14）；静态资源 `?v=` 与 PWA 缓存名同为 `2.18.4`。
+当前版本：`VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` = **2.18.5**（2026-11-14）；静态资源 `?v=` 与 PWA 缓存名同为 `2.18.5`。
 
 ## 📄 许可证
 

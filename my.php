@@ -495,9 +495,9 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.4">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.4">
-    <script src="assets/js/category-quick-add.js?v=2.18.4" defer></script>
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.5">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.5">
+    <script src="assets/js/category-quick-add.js?v=2.18.5" defer></script>
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -7534,6 +7534,6 @@ DELETE /api/sites.php       删除网址</code></pre>
         })();
     </script>
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.18.4" defer></script>
+<script src="assets/js/search.js?v=2.18.5" defer></script>
 </body>
 </html>

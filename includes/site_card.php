@@ -19,6 +19,38 @@ if (!function_exists('navCardBrief')) {
         return $text;
     }
 }
+
+/**
+ * v2.18.5 · URL 归一化 key：协议与域名小写、去 www. 前缀、去结尾斜杠。
+ * 首页 index.php / api/home_list.php / api/user_sites.php 三处共用同一规则，
+ * 用于把「被展示用户的网址」映射到「当前浏览者自己的收藏状态」。
+ * api/user_sites.php 里有一份同样实现（该接口不加载本模板），改动需同步。
+ */
+if (!function_exists('navUrlKey')) {
+    function navUrlKey($url)
+    {
+        $raw = trim((string) $url);
+
+        if ($raw === '') {
+            return '';
+        }
+
+        $hasScheme = (bool) preg_match('#^https?://#i', $raw);
+        $parts = parse_url($hasScheme ? $raw : 'http://' . $raw);
+
+        if (!is_array($parts) || empty($parts['host'])) {
+            return strtolower(rtrim(preg_replace('#^https?://#i', '', $raw), '/'));
+        }
+
+        $scheme = strtolower((string) ($parts['scheme'] ?? 'http'));
+        $host = preg_replace('/^www\./i', '', strtolower((string) $parts['host']));
+        $port = isset($parts['port']) ? ':' . (int) $parts['port'] : '';
+        $path = rtrim((string) ($parts['path'] ?? ''), '/');
+        $query = isset($parts['query']) && $parts['query'] !== '' ? '?' . $parts['query'] : '';
+
+        return $scheme . '://' . $host . $port . $path . $query;
+    }
+}
 /**
  * 轩宇-导航 · 站点卡片渲染（v2.18.1）
  *
@@ -57,7 +89,10 @@ $cardDescMeta = $is_owner ? navCardBrief($cardDescFull, 100) : '';
 $cardDescText = navCardBrief($cardDescFull, 80);
 $cardTags = trim((string) ($link['tags'] ?? ''));
 $cardAlias = trim((string) ($link['alias'] ?? ''));
-$cardStarred = !empty($link['is_starred']);
+// v2.18.5 · $starOverride 由调用方传入：登录访客看他人导航时，星标必须按
+// 「浏览者自己名下有没有收藏」算，而不是被展示用户那一行的 is_starred（否则刷新回弹）。
+$starOverride = isset($starOverride) && $starOverride !== null ? (int) $starOverride : null;
+$cardStarred = $starOverride !== null ? ($starOverride === 1) : !empty($link['is_starred']);
 $cardStarLabel = $cardStarred ? '取消收藏' : '收藏';
 $cardSpeedSkipped = ($link['check_status'] ?? '') === 'skipped';
 $cardLatency = (int) ($link['latency_ms'] ?? 0);

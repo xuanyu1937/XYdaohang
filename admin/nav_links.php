@@ -978,8 +978,8 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
             }
         }
     </style>
-    <link href="../assets/css/admin.css?v=2.18.4" rel="stylesheet">
-    <link href="../assets/css/category-quick-add.css?v=2.18.4" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.5" rel="stylesheet">
+    <link href="../assets/css/category-quick-add.css?v=2.18.5" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -1047,7 +1047,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                         <?php endif; ?>
                                         
                                         <div class="mb-3">
-                                            <label class="form-label">网站名称 *</label>
+                                            <label class="form-label" for="navNameInput">网站名称 *</label>
                                             <input type="text" 
                                                    id="navNameInput"
                                                    name="name" 
@@ -1057,7 +1057,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                         </div>
                                         
                                         <div class="mb-3">
-                                            <label class="form-label">网站网址 *</label>
+                                            <label class="form-label" for="navUrlInput">网站网址 *</label>
                                             <div class="input-group">
                                                 <input type="url" 
                                                        id="navUrlInput"
@@ -1074,7 +1074,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                         </div>
                                         
                                         <div class="mb-3">
-                                            <label class="form-label">网站Logo</label>
+                                            <label class="form-label" for="navLogoFileInput">网站Logo</label>
                                             <?php if ($editNavLink && !empty($editNavLink['logo'])): ?>
                                                 <div class="mb-2">
                                                     <?php $logoUrl = $functions->getLogoUrl($editNavLink['logo']); ?>
@@ -1098,16 +1098,18 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                                 <br>
                                                 <small class="text-muted">智能抓取到的图标</small>
                                             </div>
-                                            <input type="hidden" name="logo_url" id="navLogoUrlInput" value="<?php echo $functions->escape($_POST['logo_url'] ?? ''); ?>">
+                                            <input type="hidden" name="logo_url" id="navLogoUrlInput" aria-label="网站图标 URL" value="<?php echo $functions->escape($_POST['logo_url'] ?? ''); ?>">
                                             <input type="file" 
+                                                   id="navLogoFileInput"
                                                    name="logo" 
                                                    class="form-control" 
+                                                   aria-label="上传网站图标"
                                                    accept="image/*">
                                             <small class="text-muted">建议尺寸：120x120 像素，支持 JPG/PNG/GIF/ICO 格式</small>
                                         </div>
                                         
                                         <div class="mb-3">
-                                            <label class="form-label">网站描述</label>
+                                            <label class="form-label" for="navDescInput">网站描述</label>
                                             <textarea name="description"
                                                       id="navDescInput"
                                                       class="form-control"
@@ -1116,8 +1118,9 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
 
                                         <?php if ($hasAlias): ?>
                                         <div class="mb-3">
-                                            <label class="form-label">网站别名</label>
+                                            <label class="form-label" for="navAliasInput">网站别名</label>
                                             <input type="text"
+                                                   id="navAliasInput"
                                                    name="alias"
                                                    class="form-control"
                                                    value="<?php echo $editNavLink ? $functions->escape($editNavLink['alias'] ?? '') : $functions->escape($_POST['alias'] ?? ''); ?>"
@@ -1129,8 +1132,9 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
 
                                         <?php if ($hasTags): ?>
                                         <div class="mb-3">
-                                            <label class="form-label">网站标签</label>
+                                            <label class="form-label" for="navTagsInput">网站标签</label>
                                             <input type="text"
+                                                   id="navTagsInput"
                                                    name="tags"
                                                    class="form-control"
                                                    value="<?php echo $editNavLink ? $functions->escape($editNavLink['tags'] ?? '') : $functions->escape($_POST['tags'] ?? ''); ?>"
@@ -1160,8 +1164,9 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                         </div>
                                         
                                         <div class="mb-3">
-                                            <label class="form-label">排序顺序</label>
+                                            <label class="form-label" for="navSortOrderInput">排序顺序</label>
                                             <input type="number" 
+                                                   id="navSortOrderInput"
                                                    name="sort_order" 
                                                    class="form-control" 
                                                    value="<?php echo $editNavLink ? $editNavLink['sort_order'] : '0'; ?>" 
@@ -1256,7 +1261,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                                         <i class="fas fa-check-square me-1"></i>已选 <span id="selectedCount">0</span> 项
                                                     </div>
                                                     <div class="d-flex flex-wrap align-items-center gap-2">
-                                                        <select name="batch_category_id" class="form-select form-select-sm" data-category-options style="width:auto;">
+                                                        <select name="batch_category_id" aria-label="批量移动到的分类" class="form-select form-select-sm" data-category-options style="width:auto;">
                                                             <option value="">移动到分类…</option>
                                                             <?php foreach ($categories as $category): ?>
                                                                 <option value="<?php echo $category['id']; ?>"><?php echo $functions->escape($category['display_name'] ?? $category['name']); ?></option>
@@ -1267,7 +1272,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                                         </button>
                                                         <?php if ($hasUserId): ?>
                                                             <span class="batch-divider"></span>
-                                                            <select name="batch_owner_id" id="batchOwnerSelect" class="form-select form-select-sm" style="width:auto;">
+                                                            <select name="batch_owner_id" id="batchOwnerSelect" aria-label="批量转移的归属用户" class="form-select form-select-sm" style="width:auto;">
                                                                 <option value="">归属用户…</option>
                                                                 <option value="0">公共（所有人可见）</option>
                                                                 <?php foreach ($userOptions as $userOption): ?>
@@ -1309,13 +1314,14 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                         <div class="col-md-3">
                                             <input type="text" 
                                                    name="search" 
+                                                   aria-label="搜索名称、网址或描述"
                                                    class="form-control" 
                                                    placeholder="搜索名称、网址或描述..." 
                                                    value="<?php echo $functions->escape($search); ?>">
                                         </div>
                                         <div class="col-md-3">
                                             <div class="d-flex align-items-stretch gap-1">
-                                                <select name="category" class="form-select" data-category-options>
+                                                <select name="category" aria-label="按分类筛选" class="form-select" data-category-options>
                                                     <option value="all">所有分类</option>
                                                     <?php foreach ($categories as $category): ?>
                                                         <option value="<?php echo $category['id']; ?>"
@@ -1331,7 +1337,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                             </div>
                                         </div>
                                         <div class="col-md-2">
-                                            <select name="status" class="form-select">
+                                            <select name="status" aria-label="按状态筛选" class="form-select">
                                                 <option value="all">所有状态</option>
                                                 <option value="active" <?php echo $statusFilter == 'active' ? 'selected' : ''; ?>>已启用</option>
                                                 <option value="inactive" <?php echo $statusFilter == 'inactive' ? 'selected' : ''; ?>>已禁用</option>
@@ -1339,7 +1345,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                         </div>
                                         <?php if ($hasUserId): ?>
                                         <div class="col-md-2">
-                                            <select name="owner" class="form-select">
+                                            <select name="owner" aria-label="按归属用户筛选" class="form-select">
                                                 <option value="all">全部归属</option>
                                                 <option value="public" <?php echo $ownerFilter === 'public' ? 'selected' : ''; ?>>公共</option>
                                                 <?php foreach ($userOptions as $userOption): ?>
@@ -2216,7 +2222,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
     })();
     </script>
 
-    <script src="../assets/js/category-quick-add.js?v=2.18.4"></script>
+    <script src="../assets/js/category-quick-add.js?v=2.18.5"></script>
     <script>
     /* v2.12.0 · 导航管理页「添加分类」：与分类管理用同一个组件、同一套字段和校验 */
     (function () {

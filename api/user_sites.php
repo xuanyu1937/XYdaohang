@@ -665,6 +665,79 @@ function userSiteCategoryName($db, $categoryId)
     }
 }
 
+/**
+ * v2.18.5 · URL 归一化 key：协议与域名小写、去 www. 前缀、去结尾斜杠。
+ * 与 includes/site_card.php 中的同名函数实现一致（本 API 不加载卡片模板，
+ * 所以这里独立定义一份；改动必须两处同步）。
+ */
+if (!function_exists('navUrlKey')) {
+    function navUrlKey($url)
+    {
+        $raw = trim((string) $url);
+
+        if ($raw === '') {
+            return '';
+        }
+
+        $hasScheme = (bool) preg_match('#^https?://#i', $raw);
+        $parts = parse_url($hasScheme ? $raw : 'http://' . $raw);
+
+        if (!is_array($parts) || empty($parts['host'])) {
+            return strtolower(rtrim(preg_replace('#^https?://#i', '', $raw), '/'));
+        }
+
+        $scheme = strtolower((string) ($parts['scheme'] ?? 'http'));
+        $host = preg_replace('/^www\./i', '', strtolower((string) $parts['host']));
+        $port = isset($parts['port']) ? ':' . (int) $parts['port'] : '';
+        $path = rtrim((string) ($parts['path'] ?? ''), '/');
+        $query = isset($parts['query']) && $parts['query'] !== '' ? '?' . $parts['query'] : '';
+
+        return $scheme . '://' . $host . $port . $path . $query;
+    }
+}
+
+/**
+ * v2.18.5 · star_toggle 未命中时，复用 quick_add 的落库口径新建一条收藏：
+ * 抓标题 / 描述 / 图标、自动补「未分类」、校验收藏上限、is_starred=1。
+ * 抽成函数是为了完全不改动 add 与 quick_add 两个既有分支。
+ */
+function navStarCreateFromUrl(PDO $db, Functions $functions, SiteInfoService $siteInfo, $userId, $url)
+{
+    $countStmt = $db->prepare('SELECT COUNT(*) AS total FROM nav_links WHERE user_id = ?');
+    $countStmt->execute([$userId]);
+
+    if ((int) ($countStmt->fetch()['total'] ?? 0) >= USER_LINK_LIMIT) {
+        throw new RuntimeException('已达收藏上限（' . USER_LINK_LIMIT . ' 条）');
+    }
+
+    $meta = $siteInfo->fetch($url);
+    $host = (string) parse_url($url, PHP_URL_HOST);
+    $host = $host !== '' ? preg_replace('/^www\./i', '', $host) : '';
+    $name = !empty($meta['ok']) ? userSiteNiceName((string) ($meta['title'] ?? ''), $host) : '';
+    $description = !empty($meta['description']) ? userSiteTrim($meta['description'], 200) : '';
+    $logo = !empty($meta['icons'][0]) ? userSiteTrim($meta['icons'][0], 500) : '';
+
+    if ($name === '') {
+        $name = $host !== '' ? $host : $url;
+    }
+
+    $engine = new CategoryEngine($functions);
+    $engine->setUserId($userId);
+    $categoryId = $engine->ensure('未分类', 'bi-collection');
+
+    $sortStmt = $db->prepare('SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_sort FROM nav_links WHERE user_id = ?');
+    $sortStmt->execute([$userId]);
+    $sort = (int) ($sortStmt->fetch()['next_sort'] ?? 1);
+
+    $stmt = $db->prepare(
+        'INSERT INTO nav_links (name, url, logo, description, category_id, user_id, sort_order, is_active, is_starred, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, NOW())'
+    );
+    $stmt->execute([$name, $url, $logo, $description, $categoryId, $userId, $sort]);
+
+    return (int) $db->lastInsertId();
+}
+
 switch ($action) {
     case 'fetch':
         $url = userSiteNormalizeUrl($_POST['url'] ?? '');
@@ -764,6 +837,75 @@ switch ($action) {
         $stmt->execute([$star, $id, $userId]);
 
         $functions->jsonResponse(['ok' => true, 'id' => $id, 'is_starred' => $star]);
+        break;
+
+    /**
+     * v2.18.5 · 首页星标统一入口（收藏 / 取消收藏）。
+     * 语义：星标 = 收藏到「我的导航」并置 is_starred=1；取消收藏 = 只置 0，不删记录；
+     * 删除仍然只在「我的导航」里做。
+     * 与 quick_add 的区别：命中已有记录时是「取反」而不是「永远置 1」。
+     */
+    case 'star_toggle':
+        $url = userSiteNormalizeUrl($_POST['url'] ?? '');
+
+        if ($url === '') {
+            $functions->jsonResponse(['ok' => false, 'error' => '请输入有效的网址'], 400);
+        }
+
+        try {
+            $found = null;
+
+            // 先精确匹配 url，未命中再取该用户全部 url 用 PHP 按 key 比对
+            $exactStmt = $db->prepare(
+                'SELECT id, url, is_starred FROM nav_links
+                 WHERE user_id = ? AND url = ? AND deleted_at IS NULL LIMIT 1'
+            );
+            $exactStmt->execute([$userId, $url]);
+            $found = $exactStmt->fetch();
+
+            if (!$found) {
+                $key = navUrlKey($url);
+                $allStmt = $db->prepare(
+                    'SELECT id, url, is_starred FROM nav_links
+                     WHERE user_id = ? AND deleted_at IS NULL'
+                );
+                $allStmt->execute([$userId]);
+
+                foreach ($allStmt->fetchAll() as $candidate) {
+                    if (navUrlKey((string) $candidate['url']) === $key) {
+                        $found = $candidate;
+                        break;
+                    }
+                }
+            }
+
+            if ($found) {
+                $id = (int) $found['id'];
+                $toggleStmt = $db->prepare(
+                    'UPDATE nav_links
+                     SET is_starred = CASE WHEN is_starred = 1 THEN 0 ELSE 1 END, updated_at = NOW()
+                     WHERE id = ? AND user_id = ?'
+                );
+                $toggleStmt->execute([$id, $userId]);
+
+                // 回读而不是用前端传来的旧值推算，避免并发点击算出反的状态
+                $readStmt = $db->prepare('SELECT is_starred FROM nav_links WHERE id = ? AND user_id = ?');
+                $readStmt->execute([$id, $userId]);
+                $starred = !empty($readStmt->fetch()['is_starred']) ? 1 : 0;
+
+                $functions->jsonResponse(['ok' => true, 'starred' => $starred, 'created' => false]);
+            }
+
+            $newId = navStarCreateFromUrl($db, $functions, $siteInfo, $userId, $url);
+            $functions->jsonResponse(['ok' => true, 'starred' => 1, 'created' => true, 'id' => $newId]);
+        } catch (Throwable $error) {
+            $message = $error->getMessage();
+            $isClientError = strpos($message, '收藏上限') !== false;
+            $functions->jsonResponse(
+                ['ok' => false, 'error' => $message !== '' ? $message : '操作失败，请稍后重试'],
+                $isClientError ? 400 : 500
+            );
+        }
         break;
 
     case 'move':

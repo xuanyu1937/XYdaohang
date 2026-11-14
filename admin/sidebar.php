@@ -270,10 +270,12 @@ try {
         min-width: 0;
     }
 
+    /* v2.18.5 · 浅色主题下侧栏底色是 #fcfcfb，写死白字只有 1.06:1。
+       改用后台主题变量，浅/暗两套主题都可读（与 admin.css 同一套令牌）。 */
     .sidebar .user-name {
         margin-bottom: 2px;
         overflow: hidden;
-        color: #f1f5f9;
+        color: var(--admin-text);
         font-size: 13px;
         font-weight: 600;
         text-overflow: ellipsis;
@@ -284,7 +286,7 @@ try {
         display: flex;
         align-items: center;
         gap: 5px;
-        color: rgba(203, 213, 225, 0.65);
+        color: var(--admin-text-secondary);
         font-size: 11.5px;
         line-height: 1.4;
     }

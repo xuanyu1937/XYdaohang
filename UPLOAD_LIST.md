@@ -1,32 +1,52 @@
-# 轩宇-导航 部署清单（当前版本 v2.18.4）
+# 轩宇-导航 部署清单（当前版本 v2.18.5）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：**v2.18.4**（2026-11-14）
+当前版本：**v2.18.5**（2026-11-14）
 
-> **v2.18.4 是 v2.18.x 系列的当前版本**。v2.18.1 之后又发布了 3 个增量版本
-> （v2.18.2 修卡片发灰、v2.18.3 网速展示 + SEO、v2.18.4 国内网络适配），**这三个版本均无数据库变更**。
-> 从 v2.18.1 起升级：覆盖文件 → 清 `cache/` → Ctrl+F5 即可，不用再跑 SQL。
-> 从 v2.18.0 或更早升级：先执行 `upgrade_v2.18.1.sql`（本系列唯一的数据库脚本），再覆盖文件。
+> **v2.18.5 修掉 v2.18.4 遗留的 8 项问题**：星标可取消、加载更多卡片测速、文字对比度、后台浅色侧栏、后台表单可访问名、筛选栏焦点冲突、响应头重复与缺失、CSP 缺失。
+> **无数据库变更，无需执行 SQL**；已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，从 v2.18.2 一路覆盖到 v2.18.5 都不用再跑 SQL。
 
 ## ⚠️ 升级须知（三步）
 
-1. **仅当从 v2.18.0 或更早版本升级时**，先执行 `upgrade_v2.18.1.sql`（后台「系统工具 → 数据库」或 phpMyAdmin 导入）。它会给 `nav_links.check_status` 增加 `skipped` 取值、新增 `skip_check` 列、把既有内网地址标为跳过；重复执行时 `ADD COLUMN` 报 `Duplicate column` 可忽略。**全新安装请直接用 `install/install.sql`，不要执行升级脚本。**
-2. **用后台「系统工具 → 在线更新」上传 v2.18.4 整包，并勾选「强制覆盖」**：小版本号同为 2.18.4 时修订包不强制会被跳过。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
-3. **清一次浏览器缓存**（Ctrl+F5）。资源参数已全部同步到 `?v=2.18.4`；PWA 的 `sw.js` 缓存名同步为 `xy-nav-pwa-v2.18.4`，激活时会自动清掉旧缓存。
+1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.5 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
+2. **后台「系统工具 → 在线更新」上传 v2.18.5 整包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
+3. **清一次浏览器缓存**（Ctrl+F5）。18 个 PHP 文件的 33 处资源参数已升到 `?v=2.18.5`；`sw.js` 缓存名 `xy-nav-pwa-v2.18.5` 激活时自动清掉旧 PWA 缓存。
 
 **验证是否生效**
 
-- `/api/index.php` 徽章显示 `v2.18.4`；`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php` 均为 2.18.4；
-- 站内搜索菜单可打开搜狗 / `cn.bing.com`，不再出现打不开的 Google；
-- 卡片右下角显示「xx 毫秒 · 快 / 一般 / 慢」，内网显示「内网」，且**卡片不再整体发灰**；
-- `/sites.php` 全部站点索引 200；`/sitemap.xml` 为 sitemap 索引、`/sitemap-sites.php` 动态输出详情页、`/llms.txt` 200；
-- 详情页有 canonical / og / JSON-LD / 面包屑，首页有 `WebSite` + `SearchAction` JSON-LD；
-- 访问不存在的地址返回自定义 404 页（真实 404 状态码、无堆栈、无物理路径、无 PHP/IIS 版本）；
-- 匿名首页响应头有 `Cache-Control: public, max-age=60` 和 `ETag`，带 `If-None-Match` 二次请求返回 304；
-- 后台「系统工具 → 本地图标」补齐可用；内网地址显示灰色「内网」而不是红色失败。
+- `/api/index.php` 徽章显示 `v2.18.5`；`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php` 均为 2.18.5；
+- 登录普通用户点星标：本人视图已有记录时变实心 →「已收藏」，公共网址首次收藏新建记录时 →「已收藏到你的导航」；再点变空心 →「已取消收藏」，刷新后状态保持；
+- 点「加载更多」：新卡片立即显示毫秒 + 快/一般/慢或「测速中」，1–2 秒出结果；服务端已有毫秒的条目刷新后仍显示原值；
+- axe-core 复扫首页 / 我的导航 / 后台首页 / 后台导航管理：`critical=0`、`color-contrast=0`、`aria-hidden-focus=0`；
+- 后台浅色与暗色两种主题下，主题切换按钮、管理员名、侧栏脚注链接都清晰可读；
+- `curl -D -` 看首页：四条安全头各一次、存在 `Content-Security-Policy-Report-Only`、`Cache-Control: public, max-age=60, s-maxage=60`、带 `ETag`、`Vary: Cookie, Accept-Encoding`；登录态仍 `no-store`；
+- 手机端 390px 后台导航管理：表格可横向滚动、操作按钮不错位。
 
-## 本次 v2.18.2 ~ v2.18.4 变动文件
+## 本次 v2.18.5 变动文件（11 个功能文件，无新增文件，无 SQL）
+
+| 文件 | 说明 |
+| --- | --- |
+| `api/user_sites.php` | 新增 `action=star_toggle` 与 `navUrlKey()` / `navStarCreateFromUrl()`；`add` / `quick_add` 原样不动 |
+| `assets/js/nav.js` | `toggleStar()` 统一走 `star_toggle`；`setStatus()` 补 `.site-speed` 节点；筛选栏 `inert` + 老浏览器 `tabindex` 兜底 |
+| `includes/site_card.php` | 新增 `navUrlKey()` 与 `$starOverride`，星标按浏览者计算 |
+| `index.php` | 登录非 owner 时查自己名下收藏状态按 key 建映射，两处卡片渲染注入 `$starOverride` |
+| `api/home_list.php` | `navHomeListShape()` 补测速两参数并传局部变量；同一套星标映射；`Vary` 合并 |
+| `assets/css/nav.css` | 新增 `--success-text`；23 处次要文字统一 `--muted`；`body .my-group-tab .mgt-count` 去透明度 |
+| `assets/css/admin.css` | `admin.css` 是本次改动最多的文件：主题开关改变量；两组 `:root` 的 `--admin-muted` 抬到 ≥7:1；新增 5 个语义色「文字专用」变量统一覆盖 badge / `.text-*` / outline 按钮；暗色作用域统一收口写死浅底的 `.batch-toolbar-wrap`、`.meta-pill`、`.btn-light`、`.btn-outline-*`、页头下拉按钮、`.btn-primary` 文字；补齐浅色 surface 变量 |
+| `admin/sidebar.php` | 内联 `.user-name` / `.user-time` 改后台主题变量 |
+| `admin/nav_links.php` | 7 个 `label` 补 `for`、控件补 `id`、隐藏上传与 5 个 `select` 补 `aria-label` |
+| `includes/bootstrap.php` | IIS 判重跳过四条头；CSP Report-Only；两处 `Vary` 合并；`APP_VERSION` 升 2.18.5 |
+| `web.config` | 加 `Content-Security-Policy-Report-Only`（与 bootstrap 策略一致），注明 IIS 端独占四条安全头 |
+| `VERSION` / `config/version.php` / `includes/ConfigManager.php` / `api/index.php` / `sw.js` | 版本号升至 2.18.5、PWA 缓存名同步 |
+| 18 个 PHP 页面（33 处） | `?v=2.18.5` |
+| `CHANGELOG.md` / `README.md` / `UPLOAD_LIST.md` / `FAQ.md` | 文档同步 |
+
+> 已确认本次**不要动**：全站 h1、canonical 与 og:image、robots.txt、动态 sitemap、自定义 404/500、JSON-LD、sites.php 全站索引、llms.txt、favicon 外链兜底、内网 `skip_check`、首页匿名 60 秒缓存（仅合并了 `Vary`）。
+
+> 本地已用 Chromium + axe-core 4.10.3 全量验收（含后台明暗双主题、390px 手机端、`curl -D -` 响应头、真实点击「加载更多」与星标），逐项结果见 `CHANGELOG.md` → v2.18.5「本地验收结果」。CSS 净增 6,229 字节、JS 净增 1,742 字节，均在约束内；验收工具只装在本地临时目录，不在交付包内。
+
+## 历史：v2.18.2 ~ v2.18.4 变动文件
 
 ### v2.18.4 · 国内网络适配（30 个文件修改，无新增文件，无 SQL）
 

@@ -1,5 +1,82 @@
 # 轩宇-导航 · 版本记录
 
+## v2.18.5（2026-11-14）
+
+> **8 项遗留问题集中修复**：星标可取消、加载更多测速、文字对比度、后台浅色侧栏、后台表单可访问名、筛选栏焦点冲突、响应头重复与缺失。**无数据库变更，无需执行 SQL，覆盖文件即可。**
+
+### P0 · 星标只能收藏、无法取消
+
+- `api/user_sites.php` 新增 `action=star_toggle`（**不改动 `add` 与 `quick_add`**）：
+  - 新增 `navUrlKey()`：协议与域名小写、去 `www.`、去结尾斜杠；先精确匹配 `url`，未命中再取该用户全部 URL 用 PHP 按 key 比对。
+  - 命中自己名下同一条：`UPDATE ... SET is_starred = CASE WHEN is_starred = 1 THEN 0 ELSE 1 END`，再回读状态，返回 `{"ok":true,"starred":0|1,"created":false}`。
+  - 未命中：复用 `quick_add` 的落库口径（抓标题 / 描述 / 图标、自动补「未分类」、保留 `USER_LINK_LIMIT` 校验、`is_starred=1`），返回 `created:true`。
+  - 失败统一 `{"ok":false,"error":...}`，400（限额）或 500。
+  - 语义：**取消收藏只置 0，不删记录；删除仍在「我的导航」里做**。
+- `assets/js/nav.js` `toggleStar()` 不再按 owner 二分，统一 `postForm({action:'star_toggle', url: data.url})`；按 `res.starred` 更新图标与 `aria-label` / `title`；toast 区分「已收藏到你的导航 / 已收藏 / 已取消收藏」；失败不改图标、网络异常提示「网络错误，请稍后重试」。访客仍先提示登录。
+- **星标按浏览者计算**（此前取自被展示用户那行，刷新必回弹）：`includes/site_card.php` 新增 `$starOverride`（非 null 时覆盖 `$cardStarred` 与星形 `fill`）；`index.php` 与 `api/home_list.php` 在登录且非 owner 时用一条 `SELECT url, is_starred FROM nav_links WHERE user_id = ? AND deleted_at IS NULL` 按 `navUrlKey` 建映射，访客不查；首屏与「加载更多」口径完全一致。`navUrlKey()` 在卡片模板与 API 各有一份同实现（API 不加载模板），改动需两处同步。
+
+### P0 · 「加载更多」出来的卡片没有测速
+
+- `api/home_list.php`：`navHomeListShape()` 签名补 `$monitorEnabled, $showSpeedLabel`，在 `require site_card.php` 前赋给同名局部变量并传参。此前这两个变量只在脚本作用域，函数内取不到，模板里 `if ($monitorEnabled && $showSpeedLabel)` 恒假，返回 HTML 完全没有 `.site-speed` 节点。
+- `assets/js/nav.js` `setStatus()` 兜底：`.site-speed` 不存在时在 `.site-metrics` 内补一个 `<span class="site-speed">` 再写入，避免模板差异造成测速位永久空白。
+- 未改 `probeStatus()` 的 `data-latency` 分支，未改 `appendCards() → added.forEach(watchCard)` 链路，`STATUS_LIMIT` 仍为 2。
+
+### 无障碍 · 文字对比度（axe-core color-contrast）
+
+- `assets/css/nav.css`：新增文字专用 `--success-text`（浅色 `#0a7a43` ≈ 5.2:1，暗色 `#6ee7b7`），`.site-speed[data-level="fast"]` 改用它，**不改 `--success` 本身**（圆点与背景还在用）；`.hot-count` 等 23 处 `color: var(--muted-2)` 统一提到 `var(--muted)`，`--muted-2` 只留给占位符与装饰；暗色 11–12px 文字同样随变量取 `--muted`。
+- `my.php` 的 `.mgt-count { opacity:.75 }` 通过 `nav.css` 里 `body .my-group-tab .mgt-count { opacity:1; color:inherit }` 高优先级覆盖，**没有改 my.php**（不在本次点名文件内），明暗主题与选中态都由父级按钮文字色保证对比度。
+- `assets/css/admin.css`（全部是「改变量 + 统一覆盖」，没有逐条硬编码颜色）：
+  - 两组 `:root` 的 `--admin-muted` 由 `#7c8aa0` / `#7c7c76` 抬到 `var(--admin-text-secondary)` 同值（浅色 `#475569` / `#4b4b47`，≥7:1）。后台 37 处次要文字都引用这个变量，一条改动全量达标，压在 `#f4f4f2` / `#ffffff` 上从 3.81~4.19:1 提升。
+  - 新增文字专用语义变量 `--admin-success-text` / `--admin-danger-text` / `--admin-warning-text` / `--admin-info-text` / `--admin-secondary-text`（浅色更深一档、暗色更亮一档），统一覆盖 `.badge.*`、`.text-success`、`.text-danger`、`.text-info`、`.btn-outline-danger` 等；圆点、状态背景、进度条继续用原 `--admin-success` 等变量，视觉不变。原 `#0f8f63` 压在 `#e9f8f1` 上只有 3.73:1。
+  - 末尾统一覆盖 `.text-muted` / `.small` / `.form-text` / 表格次要文字 / `.system-info-label` / `.health-latency` / `.dataTables_info` / `th` / `.page-breadcrumb` / `.page-subtitle` / 侧栏脚注为 `var(--admin-text-secondary)`；补齐 `--admin-surface-2` / `--admin-surface-hover` 的浅色定义。
+
+### 无障碍 · 后台暗色主题（验收时新发现并一并修复）
+
+- 暗色下 `.batch-toolbar-wrap`（页面内联写死 `#fff`）、`.meta-pill`、`.bg-secondary.badge` 等仍是浅底，文字却随主题变浅，最低只有 1.44:1；`--admin-primary` 亮蓝 `#8aa6ff` 上白字 2.33:1；`.btn-outline-*` 一族把语义色文字写死，压在 dark soft 背景上 1.6~2.3:1。
+- `assets/css/admin.css` 追加暗色作用域统一覆盖：上述浅底控件与全部 `.btn-outline-*` / `.btn-light` 改用 `var(--admin-surface-2)` + `var(--admin-text)` + `var(--admin-border-strong)`；`.btn-primary` 文字改 `#0d131f`。
+- 页头下拉按钮另有一条 `.page-header .dropdown .btn` 的 `!important` 写死 `#f8fafc`（特异性 0,3,0，高于通用覆盖），补一条 `html[data-theme="dark"] .page-header .dropdown .btn` 高优先级规则收口。
+- 明暗各跑一次 axe：后台首页 / 后台导航管理 `color-contrast` 均为 0；主题切换按钮、管理员名、侧栏脚注实测浅色 8.37~16.63:1、暗色 5.37~14.18:1。
+
+### 无障碍 · 后台浅色侧栏白字（1.01:1 / 1.06:1）
+
+- `assets/css/admin.css` `.admin-theme-toggle` 去掉写死的白字 / 白色半透明边框与背景，改为 `var(--admin-text-secondary)` + `var(--admin-border)` + `var(--admin-surface-2)`；hover 用 `var(--admin-surface-hover)` 与 `var(--admin-text)`。
+- `admin/sidebar.php` 内联 `.user-name` → `var(--admin-text)`、`.user-time` → `var(--admin-text-secondary)`；侧栏快捷入口 / 用户时间的 `--admin-muted`（浅色 `#7c7c76`，4.08:1）统一改为 `--admin-text-secondary`。
+
+### 无障碍 · 后台表单可访问名（critical）
+
+- `admin/nav_links.php`：7 个 `<label>` 补 `for`，对应控件补 `id`（`navNameInput` / `navUrlInput` / `navDescInput` / `navLogoFileInput` / `navAliasInput` / `navTagsInput` / `navSortOrderInput`）；隐藏的 `logo_url` 与文件上传控件补 `aria-label`；5 个无 label 的 `select`（批量分类 / 归属用户 / 分类 / 状态 / 归属）与筛选搜索框补 `aria-label`，**不用 `title` 代替**。
+
+### 无障碍 · 筛选栏 aria-hidden 与可聚焦冲突（serious）
+
+- `assets/js/nav.js`：折叠时除 `aria-hidden="true"` 外同时设 `filterBarWrap.inert = true`，展开置 false；不支持 `inert` 的老浏览器逐个把内部控件 `tabindex` 设为 -1 并保存原值，恢复时还原。仍用 `grid-template-rows` 过渡，**没有用 `display:none`**。
+
+### 响应头重复、缺失与 Vary 覆盖
+
+- `includes/bootstrap.php`：检测 `SERVER_SOFTWARE` 含 `Microsoft-IIS` 时跳过发送四条安全头（`web.config` 已下发，能覆盖不经过 PHP 的静态资源），Apache / Nginx 仍由 PHP 发送，判断不到按原样发送。
+- **CSP 先发 Report-Only 观察一轮**（`Content-Security-Policy-Report-Only`），IIS 走 `web.config`、Apache 走 `bootstrap.php`，两端策略字符串一致：`default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'`。观察无异常后再切正式头。
+- HSTS 仍只在 HTTPS 请求下发（站点目前是 HTTP），不强行加。
+- `Vary` 两处（`navMaybeGzip()` 与 `navPublicCache()`）合并成一次发送 `Vary: Cookie, Accept-Encoding`，`Accept-Encoding` 不再被覆盖；`api/home_list.php` 同步。匿名首页仍是 `Cache-Control: public, max-age=60, s-maxage=60` + ETag，登录态不缓存。
+
+### 版本与发布
+
+- 版本号 `2.18.4 → 2.18.5`：`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php`、`api/index.php`、`sw.js` PWA 缓存名、18 个 PHP 文件共 33 处 `?v=` 全部同步。
+- 本次仅改点名的 11 个功能文件 + 版本/文档同步文件；**CSS 增量 6,229 字节**（`nav.css +1,027`、`admin.css +5,202`）、**JS 增量 1,742 字节**，远低于 40KB / 5KB 约束，未引入任何第三方库（axe-core 与 Playwright 只在本地验收临时目录，不进仓库）。
+
+### 本地验收结果（2026-11-14，Chromium + axe-core 4.10.3）
+
+| 验收项 | 结果 |
+| --- | --- |
+| 星标：首次点 / 再次点 / 刷新保持 | 实心「已收藏」→ 空心「已取消收藏」→ 刷新仍空心，PASS |
+| `star_toggle` 新建分支 | `created:true, starred:1` → 再点 `starred:0, created:false` |
+| 「加载更多」测速 | 接口 HTML 含 6 个 `.site-speed`；浏览器点按钮新增 12 张卡片，全部带毫秒与快 / 一般 / 慢 |
+| axe：首页（登录态 / 访客态）、我的导航 | critical 0、color-contrast 0、aria-hidden-focus 0、表单可访问名 0 |
+| axe：后台首页 / 后台导航管理（浅色 + 暗色共 4 次） | critical 0、color-contrast 0、aria-hidden-focus 0 |
+| 筛选栏焦点 | `aria-hidden="true"` + `inert=true`，`aria-hidden-focus` 0；`grid-template-rows` 过渡保留 |
+| `curl -D -` 首页 | 四条安全头各 1 次、CSP Report-Only 1 次、`Cache-Control: public, max-age=60, s-maxage=60`、ETag 有、`Vary: Cookie, Accept-Encoding`；登录态 `no-store, no-cache, must-revalidate` 不缓存 |
+| 手机端 390px 后台导航管理 | `body.scrollWidth = 390` 无横向溢出；表格容器 `clientWidth 328 / scrollWidth 672 / overflow-x:auto`，可横向滚动 |
+
+> 后台仍有 `heading-order`（moderate）、`landmark-one-main`（moderate）、`region`（moderate）、`empty-table-header`（minor）等 best-practice / 结构类提示，不属于本次验收标准（critical / color-contrast / aria-hidden-focus），也未在「只改点名文件」范围内，留待后续版本处理。
+
 ## v2.18.4（2026-11-14）
 
 > **国内网络适配**：大陆主机/用户访问不了 Google、GitHub raw、cdnjs、jsdelivr、DuckDuckGo 等境外服务，

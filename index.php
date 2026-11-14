@@ -183,6 +183,34 @@ if (!$rawLinks && !$isOwner) {
 }
 
 require_once __DIR__ . '/includes/site_card_build.php';
+// 只为拿到 navUrlKey()：模板顶部有「无 $link 即 return」保护，不会在这里渲染卡片。
+require_once __DIR__ . '/includes/site_card.php';
+
+/**
+ * v2.18.5 · 星标按「当前浏览者」计算。
+ * 首页展示的是 $viewUserId 的数据，卡片里的 is_starred 属于被展示用户；
+ * 登录访客把网址收藏到自己的导航后，一刷新就会回弹成对方的状态。
+ * 这里用一条 SQL 取出浏览者自己名下的收藏状态，按 navUrlKey 建映射，
+ * 渲染时通过 $starOverride 覆盖模板里的星标；访客与本人视图都不查。
+ */
+$viewerStarMap = [];
+
+if ($currentUser && !$isOwner) {
+    try {
+        $viewerStarStmt = $db->prepare(
+            'SELECT url, is_starred FROM nav_links WHERE user_id = ? AND deleted_at IS NULL'
+        );
+        $viewerStarStmt->execute([(int) $currentUser['id']]);
+
+        foreach ($viewerStarStmt->fetchAll() as $viewerStarRow) {
+            $viewerStarMap[navUrlKey((string) $viewerStarRow['url'])] =
+                !empty($viewerStarRow['is_starred']) ? 1 : 0;
+        }
+    } catch (Throwable $ignored) {
+        // 老库缺列或查询失败时退回「未收藏」，不影响首页渲染
+        $viewerStarMap = [];
+    }
+}
 
 $links = [];
 $linkCountByCategory = [];
@@ -592,8 +620,8 @@ $navJsonLd = [
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.4">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.4">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.5">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.5">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -605,7 +633,7 @@ $navJsonLd = [
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.4';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.5';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -625,10 +653,10 @@ $navJsonLd = [
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.4" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.18.5" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.4" defer></script>
-    <script src="assets/js/search.js?v=2.18.4" defer></script>
+    <script src="assets/js/nav.js?v=2.18.5" defer></script>
+    <script src="assets/js/search.js?v=2.18.5" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -1120,6 +1148,9 @@ $navJsonLd = [
                                         $is_owner = $isOwner;
                                         $card_eager = ($navEagerCards === 0); // 全页第一张卡参与 LCP，不能懒加载
                                         $navEagerCards++;
+                                        $starOverride = ($currentUser && !$isOwner)
+                                            ? (int) ($viewerStarMap[navUrlKey((string) ($link['safe_url'] ?? ''))] ?? 0)
+                                            : null;
                                         require __DIR__ . '/includes/site_card.php';
                                         ?>
                                     <?php endforeach; ?>
@@ -1150,6 +1181,9 @@ $navJsonLd = [
                                         $is_owner = $isOwner;
                                         $card_eager = ($navEagerCards === 0); // 全页第一张卡参与 LCP，不能懒加载
                                         $navEagerCards++;
+                                        $starOverride = ($currentUser && !$isOwner)
+                                            ? (int) ($viewerStarMap[navUrlKey((string) ($link['safe_url'] ?? ''))] ?? 0)
+                                            : null;
                                         require __DIR__ . '/includes/site_card.php';
                                         ?>
                                     <?php endforeach; ?>

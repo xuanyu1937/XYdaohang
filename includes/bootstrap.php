@@ -23,7 +23,7 @@ if (is_file($navVersionFile)) {
 }
 
 if (!defined('APP_VERSION')) {
-    define('APP_VERSION', '2.18.4');
+    define('APP_VERSION', '2.18.5');
 }
 
 if (!defined('APP_RELEASE')) {
@@ -55,16 +55,37 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+/**
+ * v2.18.5 · CSP 先以 Report-Only 观察一轮再切正式头，避免一上线就拦掉
+ * 内联脚本 / 外链图标。IIS 由 web.config 的 customHeaders 下发同一串策略，
+ * Apache / Nginx 由这里下发；两端内容必须一致。
+ */
+if (!defined('NAV_CSP_POLICY')) {
+    define('NAV_CSP_POLICY', "default-src 'self'; img-src 'self' data: https:; "
+        . "style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; "
+        . "font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; "
+        . "base-uri 'self'; form-action 'self'; object-src 'none'");
+}
+
+// web.config 的 customHeaders 对 PHP 页面和静态资源都会生效；
+// IIS 上再由 PHP 发一遍就会得到重复响应头。判断不到服务器类型时按原样发送。
+$navIsIis = stripos((string) ($_SERVER['SERVER_SOFTWARE'] ?? ''), 'Microsoft-IIS') !== false;
+
 if (!headers_sent()) {
     // v2.18.1 · 去掉 PHP 版本泄露。IIS FastCGI 下 web.config 的 <customHeaders><remove>
     // 管不到 SAPI 自己追加的 X-Powered-By，只能在脚本里显式摘掉；
     // Apache 侧 .htaccess 的 Header unset 作为另一条兜底。
     header_remove('X-Powered-By');
-    header('X-Content-Type-Options: nosniff');
-    header('X-Frame-Options: SAMEORIGIN');
-    header('Referrer-Policy: strict-origin-when-cross-origin');
-    header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
 
+    if (!$navIsIis) {
+        header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: SAMEORIGIN');
+        header('Referrer-Policy: strict-origin-when-cross-origin');
+        header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+        header('Content-Security-Policy-Report-Only: ' . NAV_CSP_POLICY);
+    }
+
+    // 站点目前是 HTTP，HTTPS 请求才下发 HSTS，不强行加
     if ($navIsHttps) {
         header('Strict-Transport-Security: max-age=31536000');
     }
@@ -112,7 +133,9 @@ if (!function_exists('navMaybeGzip')) {
             return;
         }
 
-        header('Vary: Accept-Encoding');
+        // v2.18.5 · 合并成一次发送：后面 navPublicCache() 会再发一次同值，
+        // 单发 Accept-Encoding 会被覆盖，单发 Cookie 也会把压缩协商冲掉。
+        header('Vary: Cookie, Accept-Encoding');
 
         ob_start(function ($buffer) {
             // 太短的内容压缩反而变大，且不值得多一次 CPU
@@ -281,8 +304,9 @@ if (!function_exists('navPublicCache')) {
             header_remove('Expires');
             header_remove('Pragma');
             header('Cache-Control: public, max-age=60, s-maxage=60');
-            // 覆盖 session_start 的 no-store，同时保证 Vary 里只出现一次 Cookie
-            header('Vary: Cookie');
+            // 覆盖 session_start 的 no-store；Vary 一次带齐两项，
+            // 不要把 navMaybeGzip() 的 Accept-Encoding 覆盖掉（v2.18.5）
+            header('Vary: Cookie, Accept-Encoding');
         }
 
         ob_start(function ($buffer) {

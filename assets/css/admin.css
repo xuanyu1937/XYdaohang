@@ -15,6 +15,9 @@
 
     --admin-bg: #f4f6fb;
     --admin-surface: #ffffff;
+    /* v2.18.5 · 主题开关等需要「可点击浅底」的控件用 */
+    --admin-surface-2: #f8fafc;
+    --admin-surface-hover: #e8edf5;
 
     --admin-border: #e8edf5;
     --admin-border-strong: #dfe5ef;
@@ -22,7 +25,8 @@
 
     --admin-text: #1e293b;
     --admin-text-secondary: #475569;
-    --admin-muted: #7c8aa0;
+    /* v2.18.5 · 次要文字统一抬到 4.5:1 以上，避免逐条硬编码 */
+    --admin-muted: #475569;
 
     --admin-success: #0f9f6e;
     --admin-success-soft: #ecfdf5;
@@ -1715,7 +1719,9 @@ small.text-muted,
 
     --admin-text: #1c1c1a;
     --admin-text-secondary: #4b4b47;
-    --admin-muted: #7c7c76;
+    /* v2.18.5 · 后台 37 处次要文字都引用本变量；原 #7c7c76 压在
+       #f4f4f2 / #ffffff 上只有 3.81~4.19:1，统一抬到 ≥7:1。 */
+    --admin-muted: #4b4b47;
 
     --admin-success: #0f8f63;
     --admin-success-soft: #e9f8f1;
@@ -1725,6 +1731,14 @@ small.text-muted,
     --admin-warning-soft: #fdf5e7;
     --admin-info: #1a6fa8;
     --admin-info-soft: #ecf6fd;
+
+    /* v2.18.5 · 语义色「文字专用」变量：圆点 / 状态背景仍用上面原色，
+       文字换成更深一档，保证 badge 在 soft 背景上也 ≥4.5:1。 */
+    --admin-success-text: #0a6b4a;
+    --admin-danger-text: #a12b24;
+    --admin-warning-text: #83500c;
+    --admin-info-text: #12557f;
+    --admin-secondary-text: #3f4a5b;
 
     --admin-radius: 14px;
     --admin-radius-md: 10px;
@@ -1955,7 +1969,7 @@ body {
 .sidebar-footer .user-time,
 .sidebar-footer .user-time .text,
 .sidebar-footer .user-time i {
-    color: var(--admin-muted);
+    color: var(--admin-text-secondary);
     font-size: 11px;
 }
 
@@ -3140,6 +3154,7 @@ html[data-theme="dark"] {
     --admin-bg: #0d131f;
     --admin-surface: #161f2f;
     --admin-surface-2: #1d283b;
+    --admin-surface-hover: #25324a;
 
     --admin-border: #28344a;
     --admin-border-strong: #37455f;
@@ -3153,6 +3168,13 @@ html[data-theme="dark"] {
     --admin-danger-soft: #3a1f24;
     --admin-warning-soft: #3a2d16;
     --admin-info-soft: #142c3e;
+
+    /* v2.18.5 · 暗色语义文字：亮一档，压在深色 soft 背景上 ≥4.5:1 */
+    --admin-success-text: #6ee7b7;
+    --admin-danger-text: #fca5a5;
+    --admin-warning-text: #fcd34d;
+    --admin-info-text: #7dd3fc;
+    --admin-secondary-text: #c3cee0;
 
     --admin-shadow: 0 1px 2px rgba(0, 0, 0, 0.32),
                     0 12px 32px -20px rgba(0, 0, 0, 0.65);
@@ -3292,15 +3314,15 @@ html[data-theme="dark"] .char-count { color: var(--admin-muted) !important; }
     width: 100%;
     margin-bottom: 10px;
     padding: 9px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--admin-border);
     border-radius: 10px;
-    background: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.82);
+    background: var(--admin-surface-2);
+    color: var(--admin-text-secondary);
     font-size: 13px;
     cursor: pointer;
     transition: background-color 0.18s ease, color 0.18s ease;
 }
-.admin-theme-toggle:hover { background: rgba(255, 255, 255, 0.13); color: #fff; }
+.admin-theme-toggle:hover { background: var(--admin-surface-hover); color: var(--admin-text); }
 .admin-theme-toggle i { width: 16px; text-align: center; }
 .sidebar.collapsed .admin-theme-toggle { justify-content: center; padding: 9px 0; }
 .sidebar.collapsed .admin-theme-toggle span { display: none; }
@@ -3310,14 +3332,14 @@ html[data-theme="dark"] .char-count { color: var(--admin-muted) !important; }
    组件样式自带在 includes/site_links.php，这里只处理侧栏折叠与深色主题。
    -------------------------------------------------------------------------- */
 .sidebar-footer .site-quick-links.is-admin {
-    color: var(--admin-muted, #8a8a86);
+    color: var(--admin-text-secondary);
     margin: 12px 0 2px;
     padding: 12px 4px 0;
 }
 .sidebar-footer .site-quick-links.is-admin a { color: inherit; }
 .sidebar-footer .site-quick-links.is-admin a:hover,
 .sidebar-footer .site-quick-links.is-admin a:focus-visible { color: var(--admin-primary, #3d6bff); }
-html[data-theme="dark"] .sidebar-footer .site-quick-links.is-admin { color: #9aa0a6; }
+html[data-theme="dark"] .sidebar-footer .site-quick-links.is-admin { color: var(--admin-text-secondary); }
 
 /* 折叠态只有 ~70px 宽：只保留「查看 API 文档」，缩写为 API，仍然可点 */
 .sidebar.collapsed .sidebar-footer .site-quick-links.is-admin {
@@ -3338,4 +3360,113 @@ html[data-theme="dark"] .sidebar-footer .site-quick-links.is-admin { color: #9aa
 :where(.btn, .nav-link, .page-link, .dropdown-item, .btn-action):focus-visible {
     outline: 2px solid var(--admin-primary);
     outline-offset: 2px;
+}
+
+
+/* --------------------------------------------------------------------------
+   v2.18.5 · 后台次要文字对比度统一收口（axe color-contrast）
+   浅色 --admin-text-secondary #475569 / #f8fafc ≈ 7:1，
+   暗色 #b8c4d8 / #161f2f ≈ 8:1；后台导航管理页那几百处违规绝大多数来自
+   .text-muted / .small / 表格里的次要文字，这里一次覆盖，不再逐条写死。
+   admin.css 只在后台页面加载，因此全局选择器即「后台范围」。
+   -------------------------------------------------------------------------- */
+.text-muted,
+small.text-muted,
+.form-text,
+.small,
+.table td small,
+.table .text-muted,
+.table td .text-muted,
+.sidebar-footer,
+.site-quick-links,
+.system-info-label,
+.health-latency,
+.dataTables_info,
+th,
+.page-breadcrumb,
+.page-subtitle {
+    color: var(--admin-text-secondary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   v2.18.5 · 语义色文字统一收口（后台 badge / 状态文字的 color-contrast）
+   只换文字色：圆点、状态背景、进度条仍引用 --admin-success / --admin-danger
+   等原变量，视觉不变；badge 在 soft 背景上从 3.7:1 抬到 ≥4.5:1。
+   -------------------------------------------------------------------------- */
+.text-success,
+.card.stat-card small.text-success,
+.stat-card small.text-success,
+.badge.bg-success,
+.badge.text-bg-success,
+.health-ok {
+    color: var(--admin-success-text) !important;
+}
+
+.text-danger,
+.btn-outline-danger,
+.badge.bg-danger,
+.badge.text-bg-danger {
+    color: var(--admin-danger-text) !important;
+}
+
+.text-warning,
+.badge.bg-warning,
+.badge.text-bg-warning {
+    color: var(--admin-warning-text) !important;
+}
+
+.text-info,
+.badge.bg-info,
+.badge.text-bg-info {
+    color: var(--admin-info-text) !important;
+}
+
+.badge.bg-secondary,
+.badge.text-bg-secondary {
+    color: var(--admin-secondary-text) !important;
+}
+
+/* v2.18.5 · 暗色主题：批量工具栏在页面内联写死 #fff，浅色次要文字压上去
+   只有 3.08:1；统一跟随主题表面色，边框同步换主题变量。 */
+html[data-theme="dark"] .batch-toolbar-wrap {
+    background: var(--admin-surface) !important;
+    border-color: var(--admin-border) !important;
+}
+
+/* --------------------------------------------------------------------------
+   v2.18.5 · 暗色主题：一批控件把浅底 / 语义色文字写死在行内样式或
+   Bootstrap 里，切到暗色后「浅底 + 浅字」或「亮底 + 白字」只有 1.4~2.3:1。
+   这里按控件族一次收口，不逐条给每个按钮写颜色。
+   -------------------------------------------------------------------------- */
+html[data-theme="dark"] .meta-pill,
+html[data-theme="dark"] .badge.bg-secondary,
+html[data-theme="dark"] .badge.text-bg-secondary,
+html[data-theme="dark"] .btn-light,
+html[data-theme="dark"] .btn-outline-primary,
+html[data-theme="dark"] .btn-outline-secondary,
+html[data-theme="dark"] .btn-outline-info,
+html[data-theme="dark"] .btn-outline-success,
+html[data-theme="dark"] .btn-outline-warning,
+html[data-theme="dark"] .btn-outline-danger,
+html[data-theme="dark"] .btn-outline-dark,
+html[data-theme="dark"] .btn-outline-light {
+    background-color: var(--admin-surface-2) !important;
+    color: var(--admin-text) !important;
+    border-color: var(--admin-border-strong) !important;
+}
+
+/* 暗色 --admin-primary 是亮蓝 #8aa6ff，白字只有 2.33:1，按钮文字改用深色 */
+html[data-theme="dark"] .btn-primary,
+html[data-theme="dark"] .btn-primary:disabled {
+    color: #0d131f !important;
+}
+
+/* 页头下拉按钮另有 .page-header .dropdown .btn 的 !important 写死 #f8fafc，
+   特异性 (0,3,0) 高于上面的通用覆盖，这里单独抬一档，暗色才不会浅底浅字。 */
+html[data-theme="dark"] .page-header .dropdown .btn,
+html[data-theme="dark"] .page-header .dropdown .btn:hover,
+html[data-theme="dark"] .page-header .dropdown .btn:focus {
+    background-color: var(--admin-surface-2) !important;
+    color: var(--admin-text) !important;
+    border-color: var(--admin-border-strong) !important;
 }

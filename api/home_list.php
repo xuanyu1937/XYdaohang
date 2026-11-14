@@ -109,10 +109,37 @@ $monitorEnabled = $functions->getSetting('monitor_enabled') !== '0';
 $showSpeedLabel = $functions->getSetting('show_speed_label') !== '0';
 
 /**
+ * v2.18.5 · 与 index.php 同一套规则：登录访客看他人导航时，
+ * 「加载更多」返回的卡片星标也必须按浏览者自己的收藏状态算，
+ * 否则首屏是对的、翻页后又回弹成被展示用户的状态。
+ */
+$viewerStarMap = [];
+
+if ($currentUser && !$isOwner) {
+    try {
+        $viewerStarStmt = $db->prepare(
+            'SELECT url, is_starred FROM nav_links WHERE user_id = ? AND deleted_at IS NULL'
+        );
+        $viewerStarStmt->execute([(int) $currentUser['id']]);
+
+        foreach ($viewerStarStmt->fetchAll() as $viewerStarRow) {
+            $viewerStarMap[navUrlKey((string) $viewerStarRow['url'])] =
+                !empty($viewerStarRow['is_starred']) ? 1 : 0;
+        }
+    } catch (Throwable $ignored) {
+        $viewerStarMap = [];
+    }
+}
+
+/**
  * 统一的结果整形：卡片 HTML + 纯字段，两边都给，前端用哪个都行。
  */
-function navHomeListShape(array $rows, Functions $functions, $isOwner, $defaultTarget)
+function navHomeListShape(array $rows, Functions $functions, $isOwner, $defaultTarget, $monitorEnabled, $showSpeedLabel)
 {
+    // 与 index.php 完全相同的星标映射规则；签名按发版规格只加测速两个参数，
+    // 映射通过同请求主流程算好的 $viewerStarMap 传入，避免每张卡查一次库。
+    global $viewerStarMap, $currentUser;
+
     $items = [];
     $html = '';
 
@@ -129,6 +156,13 @@ function navHomeListShape(array $rows, Functions $functions, $isOwner, $defaultT
         $link = $card;
         $card_index = $index;
         $is_owner = $isOwner;
+        // v2.18.5 · 这两个变量原本定义在脚本作用域，函数里 require 模板时取不到，
+        // 导致加载更多返回的卡片没有 .site-speed 节点（测速位空白）。
+        $monitorEnabled = $monitorEnabled;
+        $showSpeedLabel = $showSpeedLabel;
+        $starOverride = ($currentUser && !$isOwner)
+            ? (int) (($viewerStarMap[navUrlKey((string) ($card['safe_url'] ?? ''))] ?? 0))
+            : null;
         require __DIR__ . '/../includes/site_card.php';
         $html .= ob_get_clean();
 
@@ -213,7 +247,7 @@ try {
     exit;
 }
 
-$shaped = navHomeListShape($rows, $functions, $isOwner, $defaultTarget);
+$shaped = navHomeListShape($rows, $functions, $isOwner, $defaultTarget, $monitorEnabled, $showSpeedLabel);
 $nextOffset = $offset + count($shaped['items']);
 
 $payload = [
@@ -243,7 +277,8 @@ if ($currentUser) {
     header('Cache-Control: private, no-store, max-age=0');
 } else {
     header('Cache-Control: public, max-age=60, s-maxage=60');
-    header('Vary: Cookie');
+    // v2.18.5 · 合并成一次发送，别把 navMaybeGzip 的 Accept-Encoding 覆盖掉
+    header('Vary: Cookie, Accept-Encoding');
 }
 
 $etag = '"' . md5($json) . '"';

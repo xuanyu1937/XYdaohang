@@ -790,8 +790,44 @@
         /* 折叠用 Grid 0fr → 1fr 过渡（见 nav.css），这里只切 data-open，不碰 hidden，
            否则 display:none 会让过渡失效 */
         if (filterBarWrap) {
-            filterBarWrap.setAttribute('data-open', filtering ? '1' : '0');
-            filterBarWrap.setAttribute('aria-hidden', filtering ? 'false' : 'true');
+            (function (wrap, open) {
+                wrap.setAttribute('data-open', open ? '1' : '0');
+                wrap.setAttribute('aria-hidden', open ? 'false' : 'true');
+
+                /* v2.18.5 · aria-hidden="true" 里还留着可聚焦的「清除筛选」按钮，
+                   axe 会报 aria-hidden-focus；inert 把整块移出 Tab 顺序，
+                   同时保留 grid-template-rows 折叠过渡（不能用 display:none）。
+                   老浏览器没有 inert 时逐个把内部控件 tabindex 设为 -1，并记住原值。 */
+                if ('inert' in wrap) {
+                    wrap.inert = !open;
+                    return;
+                }
+
+                var focusables = wrap.querySelectorAll('button, [href], input, select, textarea, [tabindex]');
+
+                for (var i = 0; i < focusables.length; i++) {
+                    var el = focusables[i];
+
+                    if (open) {
+                        var saved = el.getAttribute('data-inert-tabindex');
+
+                        if (saved !== null) {
+                            el.setAttribute('tabindex', saved);
+                            el.removeAttribute('data-inert-tabindex');
+                        } else {
+                            el.removeAttribute('tabindex');
+                        }
+                    } else {
+                        var previous = el.getAttribute('tabindex');
+
+                        if (previous !== null) {
+                            el.setAttribute('data-inert-tabindex', previous);
+                        }
+
+                        el.setAttribute('tabindex', '-1');
+                    }
+                }
+            })(filterBarWrap, !!filtering);
         }
 
         /* 选定单一分类时，顶部大标题已经说明分类，再隐藏各分组的小标题避免重复；
@@ -1874,8 +1910,20 @@
             statusEl.setAttribute('aria-label', '网站状态：' + label);
         }
 
+        /* v2.18.5 · 模板差异兜底：加载更多早期返回的卡片可能没有 .site-speed，
+           此时在 .site-metrics 里补一个节点再写入，避免测速位永远空白。 */
         if (!speedEl) {
-            return;
+            var metricsEl = card.querySelector('.site-metrics');
+
+            if (!metricsEl) {
+                return;
+            }
+
+            speedEl = document.createElement('span');
+            speedEl.className = 'site-speed';
+            speedEl.setAttribute('data-state', 'pending');
+            speedEl.textContent = '测速中';
+            metricsEl.appendChild(speedEl);
         }
 
         if (status === 'online' && typeof ms === 'number' && isFinite(ms)) {
@@ -2669,30 +2717,20 @@
                 return;
             }
 
-            if (data.owner) {
-                postForm({ action: 'star', id: data.id, star: data.starred ? 0 : 1 }).then(function (res) {
-                    if (res && res.ok) {
-                        updateStarIcon(card, !data.starred);
-                        showToast(!data.starred ? '已收藏' : '已取消收藏');
-                    } else {
-                        showToast((res && res.error) || '操作失败');
-                    }
-                }).catch(function () {
-                    showToast('网络错误，请稍后重试');
-                });
-            } else {
-                // 查看他人导航：快捷收藏到自己的导航并标记星标
-                postForm({ action: 'quick_add', url: data.url }).then(function (res) {
-                    if (res && res.ok) {
-                        updateStarIcon(card, true);
-                        showToast(res.duplicate ? '该网址已在你的导航中，已标记收藏' : '已收藏到你的导航');
-                    } else {
-                        showToast((res && res.error) || '收藏失败');
-                    }
-                }).catch(function () {
-                    showToast('网络错误，请稍后重试');
-                });
-            }
+            /* v2.18.5 · 不再按 owner 二分：本人视图与他人视图统一走 star_toggle，
+               服务端在自己名下命中就取反 is_starred，没命中就新建一条收藏。
+               旧的 quick_add 分支只会「置 1」，反复点永远取消不了。 */
+            postForm({ action: 'star_toggle', url: data.url }).then(function (res) {
+                if (res && res.ok) {
+                    var starred = res.starred === 1;
+                    updateStarIcon(card, starred);
+                    showToast(res.created ? '已收藏到你的导航' : (starred ? '已收藏' : '已取消收藏'));
+                } else {
+                    showToast((res && res.error) || '操作失败');
+                }
+            }).catch(function () {
+                showToast('网络错误，请稍后重试');
+            });
         }
 
         function showQr(url) {
