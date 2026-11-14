@@ -4,6 +4,25 @@
 
 > **六类问题集中修复**：自定义 404 / SEO 四件套 / 无障碍 / 外链图标治理 / 首页按需加载 / 匿名短缓存 / 内网误判离线。**需要执行 `upgrade_v2.18.1.sql`**（新增 `skip_check` 列并给 `check_status` 增加 `skipped` 取值）。
 
+### 线上部署补丁（同日第二次发布，v2.18.1 内）
+
+- **`chmod` 未判存在导致线上图标补齐全量失败**（`includes/Services.php` `IconCacheService::cacheFromUrl`）
+  - 部分虚拟主机把 `chmod` / `chown` 列入 `disable_functions`，运行时调用会抛 `Error`（`@` 拦不住），
+    整个补齐流程 0 成功；改为与 `functions.php`、`api/user_sites.php` 一致的 `function_exists()` 先判存在。
+- **匿名访客「加载更多 / 搜索」返回空集**（`api/home_list.php`）
+  - `settings.default_user_id` 指向无数据用户时，首页有空站自愈而接口没有；接口补上同一套回退逻辑，
+    自动切到公开数据量最多的视图用户，与首页保持一致。
+- **清空搜索后分组被永久隐藏**（`assets/js/nav.js` `runSearch`）
+  - 空关键词分支漏了重置 `state.query`，`applyFilters()` 仍按上一个关键词做 DOM 过滤，整站只剩个别卡片。
+- **首屏 HTML 压到 100KB 内**（`includes/site_card.php`、`index.php`、`assets/css/nav.css`）
+  - 卡片星标改 `<symbol>` + `<use>`、svg 描边参数收口进 CSS、空值属性不再输出、
+    `data-description` 只在主人视图输出、编辑/收录/移动/登录弹窗按登录态裁剪；
+    线上匿名首页实测 97.6KB（原 120KB）。
+- **移除 `X-Powered-By: PHP/x.x`**（`includes/bootstrap.php`）
+  - IIS FastCGI 下 web.config 的 `<customHeaders><remove>` 管不到 SAPI 头，脚本内 `header_remove()` 兜底。
+- **批量补齐失败原因可见化**：`icon_backfill` 返回 `error`（`fetch_failed` / `download_failed` / `not_image` 等），
+  便于区分「站点不可达」与「图标格式不支持」。
+
 ### 修复
 
 - **内网站点被误判「无法访问」**（`includes/Services.php` `HealthCheckService`）

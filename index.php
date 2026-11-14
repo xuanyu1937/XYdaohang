@@ -424,7 +424,7 @@ if ($bgImage !== '') {
         <link rel="icon" href="<?php echo $functions->escape($siteLogoUrl); ?>">
     <?php endif; ?>
 
-    <!-- v2.18.0 · PWA：可添加到手机桌面（manifest 动态生成，图标为静态 PNG） -->
+    <!-- v2.18.1 · PWA：可添加到手机桌面（manifest 动态生成，图标为静态 PNG） -->
     <link rel="manifest" href="manifest.php">
     <meta name="application-name" content="<?php echo $functions->escape($brandName); ?>">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -552,6 +552,9 @@ if ($bgImage !== '') {
       data-target="<?php echo $functions->escape($defaultTarget); ?>"
       data-logged-in="<?php echo $currentUser ? '1' : '0'; ?>"<?php echo $bodyStyle; ?>>
     <a class="skip-link" href="#siteMain">跳到网站列表</a>
+
+    <!-- v2.18.1 · 卡片星标图标只定义一次，每张卡用 <use> 引用（单卡省约 200 字节） -->
+    <svg class="nav-sprite" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden"><symbol id="nav-i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></symbol></svg>
 
     <div class="page-shell">
         <header class="site-header">
@@ -1151,7 +1154,10 @@ if ($bgImage !== '') {
         </button>
     </div>
 
-    <!-- 登录/注册 统一弹窗（v2.4.0 新增） -->
+    <!-- 登录/注册 统一弹窗（v2.4.0 新增）。
+         v2.18.1：只输出给未登录访客 —— 已登录用户永远用不到它，
+         首屏 HTML 可以省约 2KB；JS 侧对 authModal 缺失有守卫。 -->
+    <?php if (!$currentUser): ?>
     <dialog class="auth-modal" id="authModal">
         <div class="auth-modal-head">
             <div class="auth-modal-title">
@@ -1202,8 +1208,11 @@ if ($bgImage !== '') {
             </form>
         <?php endif; ?>
     </dialog>
+    <?php endif; ?>
 
-    <!-- 收录工具框：识别到网址后弹出，自动填好标题/描述/图标/分组，用户确认才入库 -->
+    <!-- 收录工具框：识别到网址后弹出，自动填好标题/描述/图标/分组，用户确认才入库。
+         v2.18.1：登录用户专属，匿名访客不再输出（省约 4KB 首屏字节）。 -->
+    <?php if ($currentUser): ?>
     <dialog class="my-dialog qa-dialog" id="quickAddDialog">
         <div class="my-dialog-head">
             <h3>收录到我的导航</h3>
@@ -1301,6 +1310,7 @@ if ($bgImage !== '') {
             <button type="button" class="my-btn is-primary" id="quickAddSubmit">识别网站信息</button>
         </div>
     </dialog>
+    <?php endif; ?>
 
     <!-- 二维码 -->
     <dialog class="my-dialog" id="qrDialog">
@@ -1322,7 +1332,8 @@ if ($bgImage !== '') {
         </div>
     </dialog>
 
-    <!-- 移动分组 -->
+    <!-- 移动分组（登录用户专属，v2.18.1 匿名不输出） -->
+    <?php if ($currentUser): ?>
     <dialog class="my-dialog" id="moveDialog">
         <div class="my-dialog-head">
             <h3>移动到分组</h3>
@@ -1349,8 +1360,10 @@ if ($bgImage !== '') {
             <button type="button" class="my-btn is-primary" id="moveSubmit">移动</button>
         </div>
     </dialog>
+    <?php endif; ?>
 
-    <!-- 编辑网址 -->
+    <!-- 编辑网址（登录用户专属，v2.18.1 匿名不输出，省约 4KB） -->
+    <?php if ($currentUser): ?>
     <dialog class="my-dialog" id="editLinkDialog">
         <form method="dialog" id="editLinkForm">
             <div class="my-dialog-head">
@@ -1438,6 +1451,7 @@ if ($bgImage !== '') {
             </div>
         </form>
     </dialog>
+    <?php endif; ?>
 
     <!-- 卡片右键 / 长按菜单 -->
     <div class="card-context-menu" id="cardContextMenu" hidden>

@@ -3384,6 +3384,12 @@ dialog.auth-modal::backdrop {
 .card-star svg {
     width: 15px;
     height: 15px;
+    /* v2.18.1：描边参数从 HTML 属性挪到这里，640 张卡省约 7KB 首屏字节。
+       fill 必须留在标签属性上——收藏态要由 JS 改成 currentColor，CSS 会盖掉它。 */
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .card-star:hover {
@@ -3446,6 +3452,12 @@ dialog.auth-modal::backdrop {
 .card-action svg {
     width: 14px;
     height: 14px;
+    /* v2.18.1：同 .card-star，描边参数统一收口到 CSS */
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .card-action:hover {

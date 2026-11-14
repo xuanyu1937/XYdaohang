@@ -59,6 +59,49 @@ $db = Database::getInstance()->getConnection();
 $currentUser = $users->currentUser();
 $viewUserId = $currentUser ? (int) $currentUser['id'] : $users->defaultViewUserId();
 $isOwner = $currentUser && (int) $currentUser['id'] === $viewUserId;
+
+/**
+ * v2.18.1 · 空站自愈（与 index.php 同一套逻辑，两边必须一致）：
+ * 「默认访客视图」指向的用户名下没有任何公开数据时（常见于老安装只写了
+ * admin 记录、settings.default_user_id 指到没有数据的用户），首页会自动
+ * 切到数据量最多的用户；接口不同步这个回退的话，匿名访客的
+ * 「加载更多」和「搜索」会拿到 total=0 的空结果。
+ */
+if (!$isOwner) {
+    try {
+        $selfHealCheck = $db->prepare(
+            'SELECT COUNT(*) AS total
+             FROM nav_links nl
+             LEFT JOIN categories c ON c.id = nl.category_id
+             WHERE nl.user_id = ? AND nl.is_active = 1 AND nl.deleted_at IS NULL
+               AND COALESCE(c.is_private, 0) = 0'
+        );
+        $selfHealCheck->execute([$viewUserId]);
+
+        if ((int) ($selfHealCheck->fetch()['total'] ?? 0) === 0) {
+            $selfHealOwner = $db->prepare(
+                'SELECT nl.user_id
+                 FROM nav_links nl
+                 LEFT JOIN categories c ON c.id = nl.category_id
+                 WHERE nl.is_active = 1 AND nl.deleted_at IS NULL
+                   AND COALESCE(c.is_private, 0) = 0
+                 GROUP BY nl.user_id
+                 ORDER BY COUNT(*) DESC
+                 LIMIT 1'
+            );
+            $selfHealOwner->execute();
+            $selfHealRow = $selfHealOwner->fetch();
+
+            if ($selfHealRow) {
+                $viewUserId = (int) $selfHealRow['user_id'];
+                $isOwner = $currentUser && (int) $currentUser['id'] === $viewUserId;
+            }
+        }
+    } catch (Throwable $ignored) {
+        // 自愈探测失败时按原 viewUserId 继续，最多是结果为空，不让接口 500
+    }
+}
+
 $engine->setUserId($viewUserId);
 
 $defaultTarget = $functions->getSetting('default_target') === '_self' ? '_self' : '_blank';

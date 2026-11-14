@@ -954,6 +954,9 @@
         var text = (keyword || '').trim();
 
         if (text === '') {
+            // v2.18.1 修复：清空时必须同步重置 state.query，否则 applyFilters
+            // 仍按上一个关键词做 DOM 过滤，分组会被永久隐藏只剩个别卡片。
+            state.query = '';
             restoreGroups();
             applyFilters();
             return;

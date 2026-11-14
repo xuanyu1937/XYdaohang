@@ -56,6 +56,10 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!headers_sent()) {
+    // v2.18.1 · 去掉 PHP 版本泄露。IIS FastCGI 下 web.config 的 <customHeaders><remove>
+    // 管不到 SAPI 自己追加的 X-Powered-By，只能在脚本里显式摘掉；
+    // Apache 侧 .htaccess 的 Header unset 作为另一条兜底。
+    header_remove('X-Powered-By');
     header('X-Content-Type-Options: nosniff');
     header('X-Frame-Options: SAMEORIGIN');
     header('Referrer-Policy: strict-origin-when-cross-origin');

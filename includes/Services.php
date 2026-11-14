@@ -3159,15 +3159,24 @@ class IconCacheService extends BaseService
             return ['ok' => false, 'error' => 'write_failed'];
         }
 
-        @chmod($full, 0644);
+        // v2.18.1 修复：部分虚拟主机（如本站的 IIS 主机）把 chmod/chown 列入
+        // disable_functions —— 那种环境下调用会直接抛 Error，@ 也拦不住，
+        // 之前整个 cacheFromUrl 都被它炸掉，批量补齐 0 成功。
+        // 与 functions.php / api/user_sites.php 的既有做法保持一致：先判存在。
+        if (function_exists('chmod')) {
+            @chmod($full, 0644);
+        }
 
         // 与站点其它文件保持一致的所有者，避免后续备份/更新时权限不一致
-        $owner = @fileowner(dirname($dir));
-        $group = @filegroup(dirname($dir));
+        if (function_exists('chown') && function_exists('fileowner')) {
+            $owner = @fileowner(dirname($dir));
+            $group = function_exists('filegroup') ? @filegroup(dirname($dir)) : false;
+            $currentOwner = function_exists('fileowner') ? @fileowner($full) : false;
 
-        if ($owner !== false && $owner !== @fileowner($full)) {
-            @chown($full, $owner);
-            @chgrp($full, $group === false ? $owner : $group);
+            if ($owner !== false && $currentOwner !== false && $owner !== $currentOwner) {
+                @chown($full, $owner);
+                @chgrp($full, $group === false ? $owner : $group);
+            }
         }
 
         return ['ok' => true, 'path' => self::DIRECTORY . '/' . $fileName];
@@ -3248,6 +3257,11 @@ class IconCacheService extends BaseService
             $host = (string) parse_url($url, PHP_URL_HOST);
 
             $saved = false;
+            // v2.18.1：记录最后一步失败原因（invalid_url / download_failed /
+            // too_large / not_image / dir_unwritable / write_failed / fetch_failed），
+            // 后台批量补齐面板能把失败原因直接展示出来，方便区分
+            // 「站点不可达」和「图标格式不支持」。
+            $lastError = 'fetch_failed';
 
             try {
                 $meta = $siteInfo->fetch($url);
@@ -3261,15 +3275,19 @@ class IconCacheService extends BaseService
                         $saved = true;
                         break;
                     }
+
+                    $lastError = (string) ($cached['error'] ?? 'unknown');
                 }
             } catch (Throwable $error) {
                 $saved = false;
+                // 排查线上批量补齐全量失败时，需要异常的具体消息（截断到 80 字）
+                $lastError = 'fetch_exception: ' . mb_substr((string) $error->getMessage(), 0, 80);
             }
 
             if ($saved) {
                 $success++;
             } else {
-                $failed[] = ['id' => (int) $row['id'], 'url' => $url];
+                $failed[] = ['id' => (int) $row['id'], 'url' => $url, 'error' => $lastError];
             }
         }
 
