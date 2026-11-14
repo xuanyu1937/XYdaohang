@@ -152,6 +152,21 @@
         google: { label: '谷歌', placeholder: '在 Google 中搜索', url: 'https://www.google.com/search?q=' }
     };
 
+    var cardObserver = null;
+
+    if ('IntersectionObserver' in window) {
+        cardObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) {
+                    return;
+                }
+
+                cardObserver.unobserve(entry.target);
+                activateCard(entry.target);
+            });
+        }, { root: null, rootMargin: '300px 0px', threshold: 0.01 });
+    }
+
     var cards = toArray(document.querySelectorAll('.site-card'));
     var groups = toArray(document.querySelectorAll('.link-group'));
     var hotItems = toArray(document.querySelectorAll('.hot-item'));
@@ -1363,52 +1378,78 @@
        favicon：站点 favicon → 第三方图标服务 → 首字母占位
        ---------------------------------------------------------------------- */
 
-    function initFavicons() {
-        qsa('.site-favicon').forEach(function (img) {
-            var chain = [
-                img.getAttribute('data-src'),
-                img.getAttribute('data-fb1'),
-                img.getAttribute('data-fb2'),
-                img.getAttribute('data-fb3'),
-                img.getAttribute('data-fb4')
-            ].filter(function (url) {
-                return typeof url === 'string' && url.length > 0;
-            });
+    /* v2.18.0 · favicon 懒加载：仅当图片接近视口时才挂 data-src 兜底链 */
+    var faviconObserver = null;
 
-            if (!chain.length) {
-                return;
-            }
-
-            var index = 0;
-
-            function advance() {
-                index++;
-
-                if (index < chain.length) {
-                    img.src = chain[index];
-                } else {
-                    img.classList.remove('is-loaded');
-                }
-            }
-
-            img.addEventListener('load', function () {
-                /* 部分图标服务会返回 1x1 透明占位图，HTTP 是 200 但视觉上仍是空白。
-                   这种情况当作失败继续走下一级，最后露出域名首字母色块兜底。 */
-                if (img.naturalWidth <= 1 || img.naturalHeight <= 1) {
-                    advance();
+    if ('IntersectionObserver' in window) {
+        faviconObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) {
                     return;
                 }
 
-                img.classList.add('is-loaded');
+                faviconObserver.unobserve(entry.target);
+                loadFavicon(entry.target);
             });
-
-            img.addEventListener('error', advance);
-
-            img.src = chain[index];
-        });
+        }, { root: null, rootMargin: '200px 0px', threshold: 0 });
     }
 
-    initFavicons();
+    function loadFavicon(img) {
+        if (!img || img.getAttribute('data-fav-done') === '1') {
+            return;
+        }
+
+        img.setAttribute('data-fav-done', '1');
+
+        var chain = [img.getAttribute('data-src'), img.getAttribute('data-fb1'),
+            img.getAttribute('data-fb2'), img.getAttribute('data-fb3'),
+            img.getAttribute('data-fb4')].filter(function (url) {
+            return typeof url === 'string' && url.length > 0;
+        });
+
+        if (!chain.length) {
+            return;
+        }
+
+        var i = 0;
+
+        function advance() {
+            i++;
+
+            if (i < chain.length) {
+                img.src = chain[i];
+            } else {
+                img.classList.remove('is-loaded');
+            }
+        }
+
+        img.addEventListener('load', function () {
+            /* 图标服务返回 1x1 透明图时 HTTP 是 200 但视觉空白，当作失败继续走下一级 */
+            if (img.naturalWidth <= 1 || img.naturalHeight <= 1) {
+                advance();
+                return;
+            }
+
+            img.classList.add('is-loaded');
+        });
+
+        img.addEventListener('error', advance);
+        img.src = chain[i];
+    }
+
+    function initFavicons() {
+        qsa('.site-favicon').forEach(function (img) {
+            if (img.getAttribute('data-fav-done') === '1') {
+                return;
+            }
+
+            if (faviconObserver) {
+                faviconObserver.observe(img);
+            } else {
+                loadFavicon(img);
+            }
+        });
+    }
 
     /* ----------------------------------------------------------------------
        可用性 / 速度检测
@@ -1416,7 +1457,9 @@
 
     var statusQueue = [];
     var statusRunning = 0;
-    var STATUS_LIMIT = 4;
+    // v2.18.0：并发 4 → 2，两次探测之间留 150~250ms，避免同时抢连接拖慢首屏
+    var STATUS_LIMIT = 2;
+    var STATUS_GAP = 150 + Math.round(Math.random() * 100);
     var STATUS_TIMEOUT = 6000;
 
     function queueStatus(card) {
@@ -1430,17 +1473,27 @@
     }
 
     function pumpStatus() {
+        if (document.hidden) {
+            return;
+        }
+
         while (statusRunning < STATUS_LIMIT && statusQueue.length > 0) {
             statusRunning++;
             probeStatus(statusQueue.shift()).then(function () {
                 statusRunning--;
-                pumpStatus();
+                setTimeout(pumpStatus, STATUS_GAP);
             }, function () {
                 statusRunning--;
-                pumpStatus();
+                setTimeout(pumpStatus, STATUS_GAP);
             });
         }
     }
+
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) {
+            pumpStatus();
+        }
+    });
 
     function probeWithImage(card) {
         return new Promise(function (resolve) {
@@ -1701,51 +1754,62 @@
        懒检测：进入视口后再请求，避免阻塞首屏
        ---------------------------------------------------------------------- */
 
+    function activateCard(card) {
+        if (!card) {
+            return;
+        }
+
+        if (body.getAttribute('data-monitor') !== '0') {
+            queueStatus(card);
+        }
+
+        queueTitle(card);
+
+        var img = card.querySelector('.site-favicon');
+
+        if (img && img.getAttribute('data-fav-done') !== '1') {
+            if (faviconObserver) {
+                faviconObserver.observe(img);
+            } else {
+                loadFavicon(img);
+            }
+        }
+    }
+
+    function watchCard(card) {
+        if (!card) {
+            return;
+        }
+
+        if (cardObserver) {
+            cardObserver.observe(card);
+        } else {
+            activateCard(card);
+        }
+    }
+
     function startMonitoring() {
         if (!cards.length) {
+                initFavicons();
             return;
         }
 
-        var monitoringEnabled = body.getAttribute('data-monitor') !== '0';
+        if ('IntersectionObserver' in window) {
+            cards.forEach(watchCard);
 
-        function process(card) {
-            if (monitoringEnabled) {
-                queueStatus(card);
-            }
-
-            queueTitle(card);
-        }
-
-        if (!('IntersectionObserver' in window)) {
-            cards.forEach(process);
+            initFavicons();
             return;
         }
 
-        var observer = new IntersectionObserver(function (entries) {
-            entries.forEach(function (entry) {
-                if (!entry.isIntersecting) {
-                    return;
-                }
-
-                process(entry.target);
-                observer.unobserve(entry.target);
-            });
-        }, {
-            root: null,
-            rootMargin: '240px 0px',
-            threshold: 0.01
-        });
-
-        cards.forEach(function (card) {
-            observer.observe(card);
-        });
+        cards.forEach(activateCard);
+        initFavicons();
     }
 
     if (document.readyState === 'complete') {
-        setTimeout(startMonitoring, 300);
+        setTimeout(startMonitoring, 800);
     } else {
         window.addEventListener('load', function () {
-            setTimeout(startMonitoring, 300);
+            setTimeout(startMonitoring, 800);
         }, { once: true });
     }
 
@@ -2744,6 +2808,8 @@
 
             // 让新卡片进到 cards 集合里，后续筛选/排序/右键菜单都能认出它
             cards = toArray(document.querySelectorAll('.site-card'));
+
+            watchCard(card);
 
             var empty = document.getElementById('emptyState');
             if (empty) { empty.hidden = true; }

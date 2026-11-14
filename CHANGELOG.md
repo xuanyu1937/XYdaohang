@@ -1,5 +1,39 @@
 # 轩宇-导航 · 版本记录
 
+## v2.18.0（2026-11-14）
+
+> **图标抓取重写 + 开放 API 收录对齐 + 首页首屏瘦身 + 可添加到手机桌面**。本版解决三件长期存在的问题：API 收录的网站没有图标、不自动分组、标签被丢弃；以及首页站点一多就卡。**无数据库变更，覆盖文件即可。**
+
+### 修复
+
+- **图标抓取识别不到常见写法**（`includes/Services.php` `parseHtml`）
+  - 旧逻辑要求 `rel` 必须加引号、且 `<link>` 里 `rel` 在 `href` 前面，`<link rel=icon href=/favicon.svg>` 直接漏掉。
+  - 现在整段取出 `<link>` 再分别取属性，顺序无关，双引号 / 单引号 / 无引号都认。
+  - `rel` 多值（`shortcut icon`）全量判断；`href` 支持绝对 / 相对 / 协议相对 `//host/x.png`。
+  - 解析出的图标为空时，补 `/apple-touch-icon.png`、`/favicon.ico`、`/favicon.svg` 等根路径候选——SPA 站点首屏 HTML 没有 link 图标，靠这一步拿到。
+  - 畸形 `data:;base64,=`（抖音首页的真实输出）不再被当成图标写库。
+  - 抓取缓存加解析版本号，规则升级后旧缓存自动失效，不用等 7 天。
+- **开放 API 收录的网站没有图标**（`api/sites.php`）：POST 未传 `logo`、PUT 显式传空串时，自动抓一次目标站点 meta 取图标；失败留空，不影响收录。
+- **开放 API 收录不自动分组**：补上本地关键词匹配层，优先级为 `category_id` → `category_name` → 关键词 → `ai_recommend` → 未分类，与站内收录口径一致。
+- **开放 API 收录标签 / 别名被丢弃**：`tags`、`alias` 入库，GET 列表与详情一并返回；`tags` 支持中英文逗号混用、去重。
+
+### 优化
+
+- **首页首屏瘦身**（`assets/js/nav.js` / `assets/css/nav.css` / `index.php`）
+  - favicon 改为进入视口前 200px 才开始加载；实测 49 张卡片首屏只发 6 个图标请求。
+  - 可用性探测改为卡片进入视口才入队，并发 4 → 2，探测间隔 150~250ms，页面不可见时暂停。
+  - 屏外卡片 `content-visibility: auto`，占位高度按三种视图实测值给出，滚动条不跳。
+  - 首页品牌 Logo 补 `loading="lazy"`。
+
+### 新增
+
+- **添加到手机桌面（PWA）**：`manifest.php` 动态生成清单（站点名、描述跟随后台设置），`sw.js` 提供离线兜底，新增 192 / 512 / maskable 三套图标与 `offline.html`。iOS 通过 `apple-touch-icon` 添加到主屏，Android / Chrome 可直接安装。
+
+### 兼容性
+
+- 开放 API 请求参数名、返回字段、状态码、错误码全部不变，仅新增 `logo_source`、`tags`、`alias` 字段与 `category_source=keyword` 取值。
+- 未引入任何第三方库。
+
 ## v2.16.5（2026-11-08）
 
 > **首页弹窗补齐图标编辑 + 收录自动打标签**。v2.16.3 给「我的导航」做了图标编辑区，但首页 `index.php` 的添加 / 编辑弹窗没有同步；收录网址时标签全靠手填。本版把两件事补齐。**无数据库变更，覆盖文件即可。**

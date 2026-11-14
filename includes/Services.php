@@ -976,6 +976,13 @@ class SiteInfoService extends BaseService
 {
     const CACHE_OK_TTL = 604800;   // 抓取成功缓存 7 天
     const CACHE_FAIL_TTL = 1800;   // 失败缓存 30 分钟
+
+    /**
+     * v2.18.0 · 图标解析版本。
+     * 解析规则升级后，旧缓存里的图标候选（顺序错、缺根路径兜底、含畸形 data URI）
+     * 会被当成新规则的结果继续用满 7 天，等于改动不生效。版本号不匹配即视为未命中。
+     */
+    const CACHE_PARSER_VERSION = 2;
     const MAX_BYTES = 524288;
 
     /** @var string 最近一次请求拿到的 Location 头（3xx 时） */
@@ -1155,6 +1162,9 @@ class SiteInfoService extends BaseService
                 $payload['error'] = 'no_title';
             }
         }
+
+        // 带上解析版本，规则升级后旧缓存自动失效
+        $payload['pv'] = self::CACHE_PARSER_VERSION;
 
         if (!empty($prepared['cacheFile'])) {
             $this->writeCache($prepared['cacheFile'], $payload);
@@ -1377,6 +1387,9 @@ class SiteInfoService extends BaseService
         $description = '';
         $icons = [];
 
+        // v2.18.0：容错——非字符串输入按空页面处理，避免 PHP 8.1+ 的 null 传参告警
+        $html = is_string($html) ? $html : '';
+
         if (preg_match('/<title\b[^>]*>(.*?)<\/title>/is', $html, $match)) {
             $title = $match[1];
         } elseif (preg_match('/<meta[^>]+(?:property|name)\s*=\s*["\'](?:og:title|twitter:title)["\'][^>]*>/i', $html, $tag)
@@ -1391,37 +1404,243 @@ class SiteInfoService extends BaseService
             $description = $content[1];
         }
 
-        if (preg_match_all('/<link\b[^>]+rel\s*=\s*["\'][^"\']*icon[^"\']*["\'][^>]*>/i', $html, $matches)) {
-            foreach ($matches[0] as $tag) {
-                if (preg_match('/href\s*=\s*["\'](.*?)["\']/is', $tag, $href)) {
-                    $icons[] = $this->absoluteUrl($href[1], $url);
+        // v2.18.0 · 图标解析重写：
+        //   ① 先整段取出 <link ...> 标签，再分别取 rel / href / sizes / type，
+        //      不再假设属性顺序，也不要求 rel 必须带引号（<link rel=icon href=/favicon.svg> 能识别）；
+        //   ② rel 多值全部参与判断（icon / shortcut icon / apple-touch-icon 等）；
+        //   ③ href 支持绝对、相对、协议相对、data URI 四种写法；
+        //   ④ 按「分辨率越高越靠前」排序，社交大图只做最后兜底；
+        //   ⑤ HTML 里没有可用图标时，用根路径常见图标兜底（SPA 站点靠这一步）。
+        // 全程容错：任何一步匹配失败只是少一个候选，标题 / 描述照常返回。
+        $ranked = [];
+
+        try {
+            if (preg_match_all('/<link\b[^>]*>/i', (string) $html, $tags)) {
+                foreach ($tags[0] as $tag) {
+                    $rel = strtolower(trim((string) $this->htmlAttr($tag, 'rel')));
+                    $href = $this->htmlAttr($tag, 'href');
+
+                    if ($rel === '' || $href === '') {
+                        continue;
+                    }
+
+                    $relTokens = preg_split('/\s+/', str_replace(['，', ','], ' ', $rel), -1, PREG_SPLIT_NO_EMPTY);
+                    $isShortcutIcon = strpos($rel, 'shortcut') !== false && strpos($rel, 'icon') !== false;
+
+                    $score = 0;
+
+                    if (in_array('apple-touch-icon', $relTokens, true) || in_array('apple-touch-icon-precomposed', $relTokens, true)) {
+                        $score = 90;
+                    } elseif (in_array('icon', $relTokens, true) || $isShortcutIcon) {
+                        // 有 sizes 的目标通常是高分辨率 PNG，优先于普通 favicon
+                        $size = $this->iconSizeScore($this->htmlAttr($tag, 'sizes'));
+                        $score = $size > 0 ? 60 + min($size, 30) : 40;
+
+                        if (preg_match('/\.svg(\?|#|$)/i', $href)) {
+                            $score = 55;
+                        }
+                    } elseif (in_array('mask-icon', $relTokens, true) || in_array('fluid-icon', $relTokens, true)) {
+                        $score = 50;
+                    } else {
+                        continue;
+                    }
+
+                    $resolved = $this->iconHref($href, $url);
+                    $this->pushIcon($ranked, $resolved, $score, 1);
                 }
             }
+
+            // og:image / twitter:image / msapplication-TileImage：只能是最后一档兜底
+            if (preg_match_all('/<meta\b[^>]*>/i', (string) $html, $metas)) {
+                $socialKeys = ['og:image', 'og:image:url', 'og:image:secure_url', 'twitter:image', 'twitter:image:src', 'msapplication-tileimage'];
+
+                foreach ($metas[0] as $tag) {
+                    $key = strtolower(trim((string) $this->htmlAttr($tag, 'property')));
+
+                    if ($key === '') {
+                        $key = strtolower(trim((string) $this->htmlAttr($tag, 'name')));
+                    }
+
+                    if ($key === '' || !in_array($key, $socialKeys, true)) {
+                        continue;
+                    }
+
+                    $content = $this->htmlAttr($tag, 'content');
+
+                    if ($content === '') {
+                        continue;
+                    }
+
+                    $this->pushIcon($ranked, $this->iconHref($content, $url), $key === 'msapplication-tileimage' ? 25 : 15, 0);
+                }
+            }
+        } catch (Throwable $error) {
+            // 解析异常不影响标题 / 描述返回，后面还有根路径兜底
         }
 
-        // og:image / twitter:image / msapplication-TileImage 作为兜底图标候选
-        if (preg_match_all('/<meta[^>]+(?:property|name)\s*=\s*["\'](?:og:image|twitter:image|msapplication-TileImage)["\'][^>]*>/i', $html, $matches)) {
-            foreach ($matches[0] as $tag) {
-                if (preg_match('/content\s*=\s*["\'](.*?)["\']/is', $tag, $content)) {
-                    $icons[] = $this->absoluteUrl($content[1], $url);
-                }
-            }
-        }
+        // 根路径兜底：SPA 首屏 HTML 常常没有 link 图标，靠约定路径拿到。
+        // 这里只拼候选 URL，是否存在由前端 onerror 兜底链判断，不额外发请求。
+        $origin = '';
 
         if ($host !== '') {
-            $icons[] = (strpos($url, 'https://') === 0 ? 'https://' : 'http://') . $host . '/favicon.ico';
+            $origin = (strpos($url, 'https://') === 0 ? 'https://' : 'http://') . $host;
+        } else {
+            $parts = parse_url((string) $url);
+
+            if (!empty($parts['scheme']) && !empty($parts['host'])) {
+                $origin = $parts['scheme'] . '://' . $parts['host'];
+            }
+        }
+
+        if ($origin !== '') {
+            // apple-touch-icon.png 是根路径里分辨率最高的（通常 180px），排最前
+            $rootIcons = [
+                '/apple-touch-icon.png' => 34,
+                '/favicon.ico' => 32,
+                '/favicon.svg' => 30,
+                '/apple-touch-icon-precomposed.png' => 28,
+                '/apple-touch-icon.svg' => 26,
+            ];
+
+            foreach ($rootIcons as $path => $rank) {
+                $this->pushIcon($ranked, $origin . $path, $rank, 0);
+            }
+        }
+
+        // 图标声明 ≥1 个时，社交大图不再参与（只留真正声明 + 根路径兜底）
+        $hasDecl = false;
+
+        foreach ($ranked as $entry) {
+            if ($entry['tier'] === 1) {
+                $hasDecl = true;
+                break;
+            }
+        }
+
+        $icons = [];
+
+        foreach ($ranked as $entry) {
+            if ($hasDecl && $entry['tier'] === 0 && $entry['score'] < 30) {
+                // 有真正的图标声明时，og:image / TileImage 只做最后备选
+                continue;
+            }
+
+            $icons[] = $entry['url'];
         }
 
         $title = $this->cleanText($title, 80);
         $description = $this->cleanText($description, 200);
-
-        $icons = array_values(array_unique(array_filter(array_map('trim', $icons))));
 
         return [
             'title' => $title,
             'description' => $description,
             'icons' => array_slice($icons, 0, 5),
         ];
+    }
+
+    /**
+     * 从标签文本里取属性值（v2.18.0）。
+     * 兼容双引号 / 单引号 / 无引号三种写法；属性顺序任意。
+     */
+    protected function htmlAttr($tag, $name)
+    {
+        $pattern = '/\b' . preg_quote($name, '/') . '\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s"\'>]+))/i';
+
+        if (preg_match($pattern, (string) $tag, $match)) {
+            return isset($match[1]) && $match[1] !== '' ? $match[1]
+                : (isset($match[2]) && $match[2] !== '' ? $match[2] : ($match[3] ?? ''));
+        }
+
+        return '';
+    }
+
+    /**
+     * sizes="192x192" → 192；多值时取最大；any / 空值返回 0。
+     */
+    protected function iconSizeScore($sizes)
+    {
+        $sizes = strtolower(trim((string) $sizes));
+
+        if ($sizes === '' || $sizes === 'any') {
+            return 0;
+        }
+
+        $max = 0;
+
+        foreach (preg_split('/\s+/', $sizes, -1, PREG_SPLIT_NO_EMPTY) as $item) {
+            if (preg_match('/^(\d+)x\d+$/', $item, $m)) {
+                $max = max($max, (int) $m[1]);
+            }
+        }
+
+        return $max;
+    }
+
+    /**
+     * link/meta 里的图标地址归一化（v2.18.0）：
+     * data URI 原样保留（超长截断丢弃），其余交给 absoluteUrl 处理相对 / 协议相对路径。
+     */
+    protected function iconHref($href, $baseUrl)
+    {
+        $href = trim((string) $href);
+
+        if ($href === '') {
+            return '';
+        }
+
+        if (stripos($href, 'data:') === 0) {
+            // 太长会撑爆 nav_links.logo（500 字符），直接丢弃
+            if (strlen($href) > 1000) {
+                return '';
+            }
+
+            // data:;base64,= 这类畸形占位（缺 MIME、无有效载荷）不是图标，必须丢弃，
+            // 否则会被当成 <img src> 渲染成空图并顶掉后面的正常候选
+            if (!preg_match('#^data:image/[a-z0-9.+-]+[;,]+\S*[A-Za-z0-9+/=]#i', $href)) {
+                return '';
+            }
+
+            return $href;
+        }
+
+        try {
+            return $this->absoluteUrl($href, $baseUrl);
+        } catch (Throwable $error) {
+            return '';
+        }
+    }
+
+    /**
+     * 按 score 降序插入候选并去重（v2.18.0）。
+     *
+     * tier=1 为真正的图标声明（icon / shortcut icon / apple-touch-icon / mask-icon），
+     * tier=0 为 og:image / twitter:image 这类社交大图与根路径兜底。
+     * 先比 tier 再比 score：没有 sizes 的普通 favicon 声明也不会被 og:image 顶掉，
+     * 社交大图只会在「页面里压根没有图标声明」时补位。
+     */
+    protected function pushIcon(array &$ranked, $url, $score, $tier = 0)
+    {
+        $url = trim((string) $url);
+
+        if ($url === '') {
+            return;
+        }
+
+        foreach ($ranked as $entry) {
+            if ($entry['url'] === $url) {
+                return;
+            }
+        }
+
+        $ranked[] = ['url' => $url, 'score' => (int) $score, 'tier' => (int) $tier];
+
+        usort($ranked, static function ($a, $b) {
+            if ($a['tier'] !== $b['tier']) {
+                return $b['tier'] <=> $a['tier'];
+            }
+
+            return $b['score'] <=> $a['score'];
+        });
     }
 
     protected function cleanText($text, $limit)
@@ -1720,6 +1939,11 @@ class SiteInfoService extends BaseService
         $data = $raw ? json_decode($raw, true) : null;
 
         if (!is_array($data) || !array_key_exists('ok', $data)) {
+            return null;
+        }
+
+        // 旧解析规则产出的缓存直接视为未命中，下次抓取会按新规则重写
+        if ((int) ($data['pv'] ?? 0) !== self::CACHE_PARSER_VERSION) {
             return null;
         }
 

@@ -921,6 +921,24 @@ html[data-theme="light"] .theme-toggle .icon-sun {
                 background-color 0.2s ease;
 }
 
+/* v2.18.0 · 屏外卡片渲染优化（零 JS 成本）
+   content-visibility: auto 让浏览器跳过屏外卡片的布局与绘制，
+   contain-intrinsic-size 给出占位高度，避免滚动条跳动。
+   只作用于站点卡片，不碰顶栏 / 分类栏 / 搜索区 / 弹窗。 */
+.site-grid > .site-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 150px;
+}
+
+/* 占位高度按各视图实测卡片高度给，偏差控制在几像素内，滚动条不会明显跳动 */
+html[data-mode="list"] .site-grid > .site-card {
+    contain-intrinsic-size: auto 57px;
+}
+
+html[data-mode="compact"] .site-grid > .site-card {
+    contain-intrinsic-size: auto 44px;
+}
+
 .site-card:hover,
 .site-card:focus-visible {
     border-color: var(--primary-border);

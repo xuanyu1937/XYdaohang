@@ -332,6 +332,95 @@ function navApiCategoryName($db, $categoryId)
     }
 }
 
+/**
+ * v2.18.0 · 规范化标签：英文逗号分隔，去重、去空、每项截断，总长 255（与站内一致）。
+ */
+function navApiTags($value)
+{
+    if (is_array($value)) {
+        $value = implode(',', array_map('strval', $value));
+    }
+
+    $value = str_replace(['，', ';', '；'], ',', (string) $value);
+    $tags = [];
+
+    foreach (explode(',', $value) as $tag) {
+        $tag = navApiTrim($tag, 30);
+
+        if ($tag !== '' && !in_array($tag, $tags, true)) {
+            $tags[] = $tag;
+        }
+    }
+
+    return navApiTrim(implode(',', $tags), 255);
+}
+
+/**
+ * v2.18.0 · logo 为空时按网址抓一次 meta，取第一个可用图标。
+ * 任何失败（超时 / 打不开 / 无图标）都返回空串，绝不中断收录主流程。
+ * 复用 SiteInfoService::fetch()，与站内 api/user_sites.php 的抓取口径保持一致。
+ */
+function navApiFetchLogo(Functions $functions, $url)
+{
+    if ($url === '') {
+        return '';
+    }
+
+    try {
+        $siteInfo = new SiteInfoService($functions);
+        $meta = $siteInfo->fetch($url);
+
+        if (!empty($meta['icons']) && is_array($meta['icons']) && !empty($meta['icons'][0])) {
+            return navApiTrim($meta['icons'][0], 500);
+        }
+    } catch (Throwable $error) {
+        // 静默失败：logo 留空即可
+    }
+
+    return '';
+}
+
+/**
+ * v2.18.0 · 关键词匹配可见分类（站名 + 描述 + 域名）。
+ * 与 api/user_sites.php 的 userSiteSuggestCategory() 使用同一个 smartMatch 规则，
+ * 保证「站内收录」和「开放 API 收录」分组结果一致。
+ *
+ * @return int 命中的分类 id；未命中返回 0
+ */
+function navApiKeywordCategory(Functions $functions, $userId, $text)
+{
+    try {
+        $engine = new CategoryEngine($functions);
+        $engine->setUserId($userId);
+        $rows = $engine->all($userId);
+        $categories = [];
+
+        foreach ($rows as $row) {
+            $categories[] = ['id' => (int) $row['id'], 'name' => (string) $row['name']];
+        }
+
+        if (!$categories) {
+            return 0;
+        }
+
+        $matched = $engine->smartMatch($text, array_column($categories, 'name'));
+
+        if ($matched === null) {
+            return 0;
+        }
+
+        foreach ($categories as $category) {
+            if ($category['name'] === $matched) {
+                return (int) $category['id'];
+            }
+        }
+    } catch (Throwable $error) {
+        // 匹配失败不阻断收录，继续走 AI / 未分类
+    }
+
+    return 0;
+}
+
 function navApiNormalizeUrl($url){
     $url = trim((string) $url);
 
@@ -456,6 +545,7 @@ switch ($method) {
             $stmt = $db->prepare(
                 'SELECT nl.id, nl.name, nl.url, nl.logo, nl.description, nl.category_id, nl.user_id,
                         nl.clicks, nl.is_active, nl.check_status, nl.latency_ms, nl.sort_order, nl.created_at,
+                        nl.tags, nl.alias,
                         c.name AS category_name
                  FROM nav_links nl
                  LEFT JOIN categories c ON nl.category_id = c.id
@@ -484,6 +574,8 @@ switch ($method) {
                     'check_status' => (string) $detail['check_status'],
                     'latency_ms' => $detail['latency_ms'] === null ? null : (int) $detail['latency_ms'],
                     'created_at' => (string) $detail['created_at'],
+                    'tags' => (string) ($detail['tags'] ?? ''),
+                    'alias' => (string) ($detail['alias'] ?? ''),
                 ],
             ]);
         }
@@ -534,6 +626,7 @@ switch ($method) {
         $stmt = $db->prepare(
             'SELECT nl.id, nl.name, nl.url, nl.logo, nl.description, nl.category_id, nl.user_id,
                     nl.clicks, nl.is_active, nl.check_status, nl.latency_ms, nl.sort_order, nl.created_at,
+                    nl.tags, nl.alias,
                     c.name AS category_name
              FROM nav_links nl
              LEFT JOIN categories c ON nl.category_id = c.id' . $where . '
@@ -565,6 +658,8 @@ switch ($method) {
                 'check_status' => (string) $row['check_status'],
                 'latency_ms' => $row['latency_ms'] === null ? null : (int) $row['latency_ms'],
                 'created_at' => (string) $row['created_at'],
+                'tags' => (string) ($row['tags'] ?? ''),
+                'alias' => (string) ($row['alias'] ?? ''),
             ];
         }
 
@@ -633,7 +728,20 @@ switch ($method) {
                 $categorySource = 'category_name';
             }
 
-            // v2.16.0 ③ · ai_recommend：让 AI 根据名称 + 描述推荐分类
+            // v2.18.0 ③ · 本地关键词匹配：站名 + 描述 + 域名 去匹配令牌可见分类。
+            // 放在 AI 之前：免费、无网络依赖，命中就不用再花一次 AI 调用。
+            if ($categoryId <= 0) {
+                $hostLabel = (string) parse_url($url, PHP_URL_HOST);
+                $hostLabel = $hostLabel !== '' ? preg_replace('/^www\./i', '', $hostLabel) : '';
+                $keywordCategoryId = navApiKeywordCategory($functions, $categoryOwner, $name . ' ' . $description . ' ' . $hostLabel);
+
+                if ($keywordCategoryId > 0) {
+                    $categoryId = $keywordCategoryId;
+                    $categorySource = 'keyword';
+                }
+            }
+
+            // v2.16.0 ④ · ai_recommend：让 AI 根据名称 + 描述推荐分类
             if ($categoryId <= 0 && navApiTruthy($input['ai_recommend'] ?? null)) {
                 $ai = new AiService($functions);
 
@@ -695,6 +803,21 @@ switch ($method) {
             $logo = mb_substr($logo, 0, 500, 'UTF-8');
         }
 
+        // v2.18.0：调用方没传 logo 时，按网址抓一次 meta 自动补图标（失败留空，不阻断收录）
+        $logoSource = $logo !== '' ? 'request' : 'none';
+
+        if ($logo === '') {
+            $logo = navApiFetchLogo($functions, $url);
+
+            if ($logo !== '') {
+                $logoSource = 'fetched';
+            }
+        }
+
+        // v2.18.0：tags（英文逗号分隔）/ alias 入库，长度口径与站内 api/user_sites.php 一致
+        $tags = navApiTags($input['tags'] ?? '');
+        $alias = navApiTrim($input['alias'] ?? '', 255);
+
         $sortStmt = $db->prepare('SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_sort FROM nav_links WHERE user_id = ?');
         $sortStmt->execute([$owner]);
         $sort = (int) ($sortStmt->fetch()['next_sort'] ?? 1);
@@ -704,10 +827,10 @@ switch ($method) {
             : 1;
 
         $stmt = $db->prepare(
-            'INSERT INTO nav_links (name, url, logo, description, category_id, user_id, sort_order, is_active, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())'
+            'INSERT INTO nav_links (name, url, logo, description, category_id, user_id, sort_order, is_active, tags, alias, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())'
         );
-        $stmt->execute([$name, $url, $logo, $description, $categoryId, $owner, $sort, $isActive]);
+        $stmt->execute([$name, $url, $logo, $description, $categoryId, $owner, $sort, $isActive, $tags, $alias]);
 
         $functions->jsonResponse([
             'ok' => true,
@@ -717,6 +840,11 @@ switch ($method) {
             'category_id' => $categoryId,
             'category_name' => $categoryNameOut,
             'category_source' => $categorySource,
+            // v2.18.0：回传自动补的图标与标签，便于调用方确认
+            'logo' => $logo,
+            'logo_source' => $logoSource,
+            'tags' => $tags,
+            'alias' => $alias,
         ], 201);
         break;
 
@@ -771,8 +899,38 @@ switch ($method) {
 
         if (array_key_exists('logo', $input)) {
             $logo = trim((string) $input['logo']);
+
+            // v2.18.0：显式传空串时按网址（本次传入的或库里的）补抓一次图标
+            if ($logo === '') {
+                $logoUrl = array_key_exists('url', $input) ? navApiNormalizeUrl($input['url']) : '';
+
+                if ($logoUrl === '') {
+                    try {
+                        $urlStmt = $db->prepare('SELECT url FROM nav_links WHERE id = ? LIMIT 1');
+                        $urlStmt->execute([$id]);
+                        $urlRow = $urlStmt->fetch();
+                        $logoUrl = $urlRow ? (string) $urlRow['url'] : '';
+                    } catch (Throwable $error) {
+                        $logoUrl = '';
+                    }
+                }
+
+                $logo = navApiFetchLogo($functions, $logoUrl);
+            }
+
             $fields[] = 'logo = ?';
             $values[] = function_exists('mb_substr') ? mb_substr($logo, 0, 500, 'UTF-8') : $logo;
+        }
+
+        // v2.18.0：tags / alias 仅在请求里出现时更新，没传保持原值
+        if (array_key_exists('tags', $input)) {
+            $fields[] = 'tags = ?';
+            $values[] = navApiTags($input['tags']);
+        }
+
+        if (array_key_exists('alias', $input)) {
+            $fields[] = 'alias = ?';
+            $values[] = navApiTrim($input['alias'], 255);
         }
 
         if (array_key_exists('category_id', $input)) {

@@ -9,7 +9,7 @@
  * 本页只输出静态说明，不读取也不展示任何令牌。
  */
 
-$version = '2.16.5';
+$version = '2.18.0';
 $versionFile = __DIR__ . '/../VERSION';
 
 if (is_readable($versionFile)) {

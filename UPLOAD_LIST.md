@@ -1,40 +1,39 @@
-# 轩宇-导航 部署清单（当前版本 v2.16.5）
+# 轩宇-导航 部署清单（当前版本 v2.18.0）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.16.5
+当前版本：v2.18.0
 
-> **首页弹窗补齐 + 收录自动打标签**。`index.php` 的编辑 / 收录弹窗新增网站图标编辑区（与「我的导航」同款交互），收录时 AI 生成标签并预填为可改的预填值，AI 未配置降级为本地关键词规则。**无数据库变更，无需执行 SQL，覆盖文件即可。**
+> **图标抓取重写 + 开放 API 收录对齐 + 首页首屏瘦身 + 可添加到手机桌面**。API 收录的网站现在会自动补图标、自动分组、保留标签；首页站点多时不再一次性拉全部图标和探测。**无数据库变更，无需执行 SQL，覆盖文件即可。**
 
 ## ⚠️ 升级须知（两步）
 
-1. **推荐用后台「系统工具 → 在线更新」上传整包，并勾选「强制覆盖」**。本版已让更新器精确放行 `uploads/.htaccess` 与 `uploads/web.config`，会一并覆盖。
-   - **从 v2.16.3 升级请连跑两次**：第一次执行的还是 v2.16.3 的旧更新器（仍会跳过整个 `uploads/`），代码会升到 2.16.4 但两个配置还是旧的；第二次跑新更新器才真正覆盖。实测第一次与第二次都显示「覆盖 134 个文件」，之后 SVG 静态访问才从 404 变 200。
-   - 只跑一次也可以，随后用 FTP 手动覆盖这两个文件。
-2. **清一次浏览器缓存**（或强刷 Ctrl+F5）。资源版本号已同步到 `?v=2.16.5`。
+1. **推荐用后台「系统工具 → 在线更新」上传整包，并勾选「强制覆盖」**。在线更新只覆盖不删除，本版无被删除的旧文件，直接覆盖即可。
+2. **清一次浏览器缓存**（或强刷 Ctrl+F5）。资源版本号已同步到 `?v=2.18.0`；Service Worker 生效后刷新会自动接管，旧缓存键 `xy-nav-pwa-v1` 会在激活时清理。
 
-**验证是否生效**：`/api/index.php` 徽章显示 `v2.16.5`；登录后进「我的导航」→ 编辑任一网址 → 上传一张图，预览立刻变化且**不再报上传失败**；IIS 主机直接访问上传的 `.svg` 图标应返回 200 + `Content-Type: image/svg+xml`，而不是 403/404。
+**验证是否生效**：`/api/index.php` 徽章显示 `v2.18.0`；访问 `/manifest.php` 返回 JSON 清单；手机 Chrome 打开首页，菜单里出现「添加到主屏幕 / 安装应用」；用 API 收录一个没传 logo、没传分类的网址，返回体里 `logo_source` 应为 `fetched`，`category_source` 可能是 `keyword`。
 
-> **手动 FTP 部署**必须覆盖 `uploads/.htaccess`（Apache）与 `uploads/web.config`（IIS）。这两个文件本版内容与 v2.16.3 相同（放行已清洗的 SVG），只是以前在线更新传不上去。
->
-> **已经在 v2.16.0 及之后的站点不需要再执行 `upgrade_v2.16.0.sql`** —— 索引早已建好。从 v2.15.2 或更早直接跳到 v2.16.5 仍需执行一次（幂等）。
+> **PWA 需要 HTTPS**。`dh.pxyblog.top` 若是 http 访问，Android 的「安装应用」不会出现（iOS 仍可通过分享菜单「添加到主屏幕」）。不影响其它功能。
 
-## 本次 v2.16.5 变动文件
+## 本次 v2.18.0 变动文件
 
 | 文件 | 说明 |
 | --- | --- |
-| `index.php` | 编辑 / 收录两个弹窗新增网站图标区与标签字段（图标区在名称上方）；卡片补 `data-logo` |
-| `assets/js/nav.js` | 新增 `createIconEditor()` / `createTagEditor()` / `parseTags()`；编辑与收录保存时带 `logo` / `tags`；关窗清理临时图标；AI 标签预填 |
-| `assets/css/nav.css` | 图标编辑区与标签样式从 `my.php` 内联抽到公共表（类名 `my-icon-*` → `icon-*`）；补 `.my-btn.is-small` / `.my-note` / `#editFetchBtn` 不折行 |
-| `my.php` | 删除内联图标样式（迁至 nav.css）；收录弹窗新增标签字段 + 「AI 生成」按钮，提交带 `tags` |
-| `includes/Services.php` | `AiService::suggestTags()`（AI 生成标签）与 `CategoryEngine::keywordTags()`（关键词兜底）；修复 trim 字符范围误伤中文标签 |
-| `api/user_sites.php` | 新增 `suggest_tags` 动作；`quick_preview` 返回 `suggested_tags` / `tag_source`；`quick_add` 支持 `tags` 落库 |
-| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.16.5 |
-| `api/index.php` | 文档页版本徽章 2.16.5 |
-| 全部 PHP 页面（31 处） | 资源参数 `?v=2.16.5` |
+| `includes/Services.php` | `parseHtml()` 重写：link 标签属性顺序无关、三种引号、rel 多值、协议相对路径、data URI 校验、根路径兜底、按分辨率排序；新增 `htmlAttr()` / `iconSizeScore()` / `iconHref()` / `pushIcon()`；抓取缓存加 `CACHE_PARSER_VERSION` |
+| `api/sites.php` | 新增 `navApiTags()` / `navApiFetchLogo()` / `navApiKeywordCategory()`；新增关键词分组层；logo 自动补抓；tags / alias 入库与返回 |
+| `assets/js/nav.js` | favicon 改 IntersectionObserver 懒加载；状态探测改「可见才探测」、并发 2、间隔 150–250ms、页面隐藏暂停；新卡片自动接管 |
+| `assets/css/nav.css` | 站点卡片 `content-visibility: auto` + 三视图占位高度 |
+| `index.php` | PWA 的 manifest / apple-touch-icon 接入与 SW 注册；品牌 Logo 补 `loading="lazy" decoding="async"` |
+| `manifest.php` | **新增**，动态 Web App Manifest |
+| `sw.js` | **新增**，Service Worker（页面网络优先、静态资源缓存优先、后台与接口不缓存） |
+| `offline.html` | **新增**，离线兜底页 |
+| `assets/img/icons/icon-192.png`、`icon-512.png`、`maskable-512.png` | **新增**，PWA 图标 |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.18.0 |
+| `api/index.php` | 文档页版本徽章 2.18.0 |
+| 全部 PHP 页面（16 个文件） | 资源参数 `?v=2.18.0` |
 | `CHANGELOG.md`、`README.md`、`UPLOAD_LIST.md` | 文档同步 |
 
-**本版没有新增文件、没有 SQL**，全部为既有文件修改，直接覆盖即可。
+**本版没有 SQL**；新增 6 个文件，其余为既有文件修改。
 
 ## 上一版 v2.16.4 变动文件（供跳版本参考）
 

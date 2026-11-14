@@ -23,7 +23,7 @@ if (is_file($navVersionFile)) {
 }
 
 if (!defined('APP_VERSION')) {
-    define('APP_VERSION', '2.16.5');
+    define('APP_VERSION', '2.18.0');
 }
 
 if (!defined('APP_RELEASE')) {
