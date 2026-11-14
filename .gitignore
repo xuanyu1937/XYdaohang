@@ -7,6 +7,8 @@ uploads/logos/*
 !uploads/logos/.htaccess
 uploads/avatars/*
 !uploads/avatars/.htaccess
+# 本地化图标是运行时产物，不入库（后台「批量补齐本地图标」生成）
+uploads/icons/*
 
 # 本地回滚备份：含旧版源码与完整配置，禁止上传
 backups/
