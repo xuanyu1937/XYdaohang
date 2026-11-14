@@ -1,30 +1,85 @@
-# 轩宇-导航 部署清单（当前版本 v2.18.1）
+# 轩宇-导航 部署清单（当前版本 v2.18.4）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.18.1
+当前版本：**v2.18.4**（2026-11-14）
 
-> **六类问题集中修复**：自定义 404 / SEO 四件套 / 无障碍 / 外链图标治理 / 首页按需加载 / 匿名短缓存 / 内网误判离线。**本版有数据库变更，必须先执行 SQL。**
+> **v2.18.4 是 v2.18.x 系列的当前版本**。v2.18.1 之后又发布了 3 个增量版本
+> （v2.18.2 修卡片发灰、v2.18.3 网速展示 + SEO、v2.18.4 国内网络适配），**这三个版本均无数据库变更**。
+> 从 v2.18.1 起升级：覆盖文件 → 清 `cache/` → Ctrl+F5 即可，不用再跑 SQL。
+> 从 v2.18.0 或更早升级：先执行 `upgrade_v2.18.1.sql`（本系列唯一的数据库脚本），再覆盖文件。
 
 ## ⚠️ 升级须知（三步）
 
-1. **先执行 `upgrade_v2.18.1.sql`**（后台「系统工具 → 数据库」或直接导入）。它会：
-   - 给 `nav_links.check_status` 增加 `skipped` 取值（不加的话写 `skipped` 会变成空串）；
-   - 新增 `skip_check` 列；
-   - 把既有内网地址一次性标记为跳过。
-   可重复执行，已存在的列/枚举会报错，忽略即可。
-2. **用后台「系统工具 → 在线更新」上传整包，并勾选「强制覆盖」**。在线更新只覆盖不删除，本版无被删除的旧文件。
-3. **清一次浏览器缓存**（Ctrl+F5）。资源版本号已同步到 `?v=2.18.1`。
+1. **仅当从 v2.18.0 或更早版本升级时**，先执行 `upgrade_v2.18.1.sql`（后台「系统工具 → 数据库」或 phpMyAdmin 导入）。它会给 `nav_links.check_status` 增加 `skipped` 取值、新增 `skip_check` 列、把既有内网地址标为跳过；重复执行时 `ADD COLUMN` 报 `Duplicate column` 可忽略。**全新安装请直接用 `install/install.sql`，不要执行升级脚本。**
+2. **用后台「系统工具 → 在线更新」上传 v2.18.4 整包，并勾选「强制覆盖」**：小版本号同为 2.18.4 时修订包不强制会被跳过。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
+3. **清一次浏览器缓存**（Ctrl+F5）。资源参数已全部同步到 `?v=2.18.4`；PWA 的 `sw.js` 缓存名同步为 `xy-nav-pwa-v2.18.4`，激活时会自动清掉旧缓存。
 
-**验证是否生效**：
-- `/api/index.php` 徽章显示 `v2.18.1`；
-- 访问一个不存在的地址，返回自定义 404 页（无堆栈、无物理路径）；
-- `/robots.txt`、`/sitemap.xml` 均 200；
-- 匿名打开首页，响应头有 `Cache-Control: public, max-age=60` 和 `ETag`，二次请求（带 `If-None-Match`）返回 304；
-- 后台「系统工具 → 本地图标」点「开始补齐」，`uploads/icons/` 出现文件，列表里的图标变成站内路径；
-- 任意内网地址（如 `http://192.168.1.10`）在后台显示灰色「内网」，不显示红色失败。
+**验证是否生效**
 
-## 本次 v2.18.1 变动文件
+- `/api/index.php` 徽章显示 `v2.18.4`；`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php` 均为 2.18.4；
+- 站内搜索菜单可打开搜狗 / `cn.bing.com`，不再出现打不开的 Google；
+- 卡片右下角显示「xx 毫秒 · 快 / 一般 / 慢」，内网显示「内网」，且**卡片不再整体发灰**；
+- `/sites.php` 全部站点索引 200；`/sitemap.xml` 为 sitemap 索引、`/sitemap-sites.php` 动态输出详情页、`/llms.txt` 200；
+- 详情页有 canonical / og / JSON-LD / 面包屑，首页有 `WebSite` + `SearchAction` JSON-LD；
+- 访问不存在的地址返回自定义 404 页（真实 404 状态码、无堆栈、无物理路径、无 PHP/IIS 版本）；
+- 匿名首页响应头有 `Cache-Control: public, max-age=60` 和 `ETag`，带 `If-None-Match` 二次请求返回 304；
+- 后台「系统工具 → 本地图标」补齐可用；内网地址显示灰色「内网」而不是红色失败。
+
+## 本次 v2.18.2 ~ v2.18.4 变动文件
+
+### v2.18.4 · 国内网络适配（30 个文件修改，无新增文件，无 SQL）
+
+| 文件 | 说明 |
+| --- | --- |
+| `assets/js/search.js` / `index.php` | 搜索引擎菜单与默认引擎去 Google，改搜狗 + `cn.bing.com`；引擎文案从后台配置读取，自定义引擎不再错标 |
+| `install/install.sql` / `upgrade_v2.8.0.sql` | 安装与跨版本升级的初始搜索引擎数据同步为国内可达的三个引擎 |
+| `my.php` | 图标兜底链去 DuckDuckGo / Google s2，改「站点自身 favicon + `api.iowen.cn`」 |
+| `admin/*.php`（12 个后台页） / `includes/asset_fallbacks.php` | CDN 兜底从 cdnjs / jsdelivr 改为 `cdn.bootcdn.net` / `cdn.staticfile.org` |
+| `api/check_update.php` | 更新检查改国内镜像优先、官方端点最后兜底，避免国内主机等十几秒超时 |
+| `VERSION` / `config/version.php` / `includes/ConfigManager.php` / `includes/bootstrap.php` / `api/index.php` | 版本号升至 2.18.4 |
+| 全部 PHP 页面（33 处） | 资源参数 `?v=2.18.4` |
+| `CHANGELOG.md` | 追加 v2.18.4 记录 |
+
+### v2.18.3 · 网速展示 + SEO（**新增 5 个文件**，无 SQL）
+
+| 文件 | 说明 |
+| --- | --- |
+| `sites.php` | **新增**，全部站点索引页（按分类归档，页脚「全部站点」入口） |
+| `sitemap-sites.php` | **新增**，数据库实时生成详情页 sitemap |
+| `sitemap-pages.xml` | **新增**，静态页 sitemap |
+| `includes/site_index_data.php` | **新增**，站点索引 / JSON-LD 共用数据层 |
+| `llms.txt` | **新增**，给 AI 搜索看的站点说明 |
+| `sitemap.xml` | 改为 sitemap 索引，指向上面两个子 sitemap |
+| `index.php` | 首页 `WebSite` + `SearchAction` + `Organization` + `CollectionPage` / `ItemList` JSON-LD；长 meta description；`index.php?q=` 直达搜索；首图 `loading="eager" fetchpriority="high"` |
+| `detail.php` | canonical / og / `WebPage` + `BreadcrumbList` JSON-LD；描述补长；标题带分类；图片补 `width` / `height` |
+| `includes/site_card.php` / `includes/site_card_build.php` / `assets/js/nav.js` | 卡片显示真实延迟（毫秒 + 快/一般/慢），优先用服务端 `latency_ms` |
+| `includes/site_links.php` | 页脚「全部站点」入口 |
+| 其余 PHP 页面 / `VERSION` / 版本常量 | 版本号与 `?v=` 升至 2.18.3 |
+
+### v2.18.2 · 全站卡片发灰修复（30 个文件修改，无新增文件，无 SQL）
+
+| 文件 | 说明 |
+| --- | --- |
+| `assets/js/nav.js` | 探测地址改 `data-url \|\| href`；服务端 `ok` / `slow` 直接采用，仅 `unknown` / `down` 走浏览器实测；`data-state` 映射到 CSS 认可的取值 |
+| `assets/css/nav.css` | 状态圆点颜色与 `data-state` 对齐 |
+| `includes/Services.php` / `includes/bootstrap.php` / `includes/site_card.php` / `index.php` | 卡片状态属性与渲染配套修正 |
+| `api/home_list.php` | 按需加载接口与首页状态口径一致 |
+| 全部 PHP 页面 / `VERSION` / 版本常量 | 版本号与 `?v=` 升至 2.18.2 |
+
+### v2.18.4 修订（本次同步，版本号不变，无 SQL）
+
+| 文件 | 说明 |
+| --- | --- |
+| `install/install.sql` | **补 `skip_check` 列**：此前全新安装的库缺列，写「跳过检测」会报 SQL 错误；`check_status` 的 `skipped` 枚举原本已在 |
+| `sw.js` | PWA 缓存名从 `xy-nav-pwa-v1` 改为 `xy-nav-pwa-v2.18.4`，发版时不再沿用旧缓存 |
+| `config/version.php` | `APP_RELEASE` / `APP_UPDATE_TIME` 从 2026-11-07 / 11-08 同步到 v2.18.4 的 2026-11-14 |
+| `template/mail/*.html`（3 个） / `api/check_update.php` | 邮件模板里遗漏的 `cdnjs.cloudflare.com` 换成 `cdn.bootcdn.net`；更新检查里残留的两条 `jsdelivr` 换成 `ghproxy.net` 镜像，与 v2.18.4 国内适配口径一致 |
+| `upgrade_v2.18.1.sql` | 头部注明：v2.18.2 ~ v2.18.4 无需再执行 SQL、全新安装不要执行本脚本 |
+| `README.md` / `UPLOAD_LIST.md` / `CHANGELOG.md` | 当前版本、升级规则、版本序列、v2.17.0 回滚说明同步 |
+| `tag` / GitHub Releases | 补齐 v2.18.3 / v2.18.4 标签，补发 v2.18.0 ~ v2.18.4 五个 Release 与安装包 |
+
+## 历史：v2.18.1 变动文件（本系列唯一需执行 SQL 的版本）
 
 | 文件 | 说明 |
 | --- | --- |

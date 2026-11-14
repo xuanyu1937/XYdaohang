@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS `nav_links` (
   `is_active` tinyint(1) DEFAULT '1',
   `check_status` enum('unknown','ok','slow','down','skipped') NOT NULL DEFAULT 'unknown',
   `latency_ms` int(11) DEFAULT NULL,
+  `skip_check` tinyint(1) NOT NULL DEFAULT 0 COMMENT '1=跳过可用性检测（内网/常关设备），v2.18.1 新增',
   `last_checked_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

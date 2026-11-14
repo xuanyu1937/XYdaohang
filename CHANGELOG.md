@@ -21,6 +21,21 @@
 - 实测：bootcdn 158ms、staticfile 655ms、搜狗 840ms、cn.bing 221ms 均返回 200；
   `api.github.com` / `google.com` / `youtube.com` 在国内主机上确实全部超时（000）。
 
+
+### 同步修订（2026-11-14，版本号不变）
+
+发布前做了一次全仓一致性核对，补齐 v2.18.0 ~ v2.18.4 快速迭代期间落下的安装口径与文档：
+
+- `install/install.sql` 补 `skip_check` 列——此前**全新安装**的库缺这一列，后台勾「跳过可用性检测」会报 SQL 错误；`check_status` 的 `skipped` 枚举原本已内置。
+- `sw.js` 的 PWA 缓存名从固定 `xy-nav-pwa-v1` 改为 `xy-nav-pwa-v2.18.4`，注释里写明发版必须与 `VERSION` 同步。
+- `config/version.php` 的 `APP_RELEASE` / `APP_UPDATE_TIME` 从 2026-11-07 / 11-08 同步到 2026-11-14。
+- 三个邮件模板里遗漏的 `cdnjs.cloudflare.com` 换成 `cdn.bootcdn.net`；`api/check_update.php` 的 raw 端点里残留的两条 `jsdelivr` 换成 `ghproxy.net` 镜像，与「不依赖境外服务」的口径一致。
+- `upgrade_v2.18.1.sql` 头部注明 v2.18.2 ~ v2.18.4 无数据库变更、全新安装不要执行升级脚本。
+- `README.md` / `UPLOAD_LIST.md` 的当前版本、升级矩阵、v2.18.x 版本序列与验证项同步到 v2.18.4；补 v2.17.0 回滚说明。
+- GitHub tag 补齐 `v2.18.3` / `v2.18.4`，并补发 v2.18.0 ~ v2.18.4 五个 Release（此前最新 Release 停在 v2.16.5，releases 页面看不到 v2.18.x）。
+
+> 本次修订无 PHP 业务逻辑改动、无 SQL 结构变更、无 API 契约变化；线上 v2.18.4 站点覆盖文件 + 清缓存即可。
+
 ## v2.18.3（2026-11-14）
 
 > **两件事**：① 卡片上显示的是真实网速（毫秒 + 快/一般/慢），不再是「在线」两个字；
@@ -157,6 +172,13 @@
 
 - 开放 API 请求参数名、返回字段、状态码、错误码全部不变，仅新增 `logo_source`、`tags`、`alias` 字段与 `category_source=keyword` 取值。
 - 未引入任何第三方库。
+
+## v2.17.0（2026-11-08）· 已回滚，未发布
+
+> 该版本曾打包为 `XYdaohang-2.17.0.zip` 并出过交付报告（`v2.17.0-交付报告-已回滚.md`），
+> 因线上验收未通过**当天全量回滚**，代码、tag、Release 均未保留，站点从未运行过该版本。
+> 版本序列因此从 v2.16.5 直接跳到 v2.18.0；**不是漏发，也不存在 v2.17.x 升级路径**。
+> 若手上有 v2.17.0 的包，请勿部署，直接用 v2.18.4 全量覆盖。
 
 ## v2.16.5（2026-11-08）
 

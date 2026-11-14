@@ -61,6 +61,8 @@
 5. 确认 `uploads/`、`cache/`、`logs/` 可写。
 
 > 后台用到的 jQuery / Bootstrap / DataTables / Chart.js / SweetAlert2 / Font Awesome / datepicker 已随包放在 `assets/` 下，服务器无外网也能正常使用；页面里保留的 CDN 地址仅在本地文件缺失时兜底。
+>
+> **v2.18.4 国内网络适配**：兜底 CDN 已换成 `cdn.bootcdn.net` / `cdn.staticfile.org`，默认搜索引擎为百度 / 搜狗 / `cn.bing.com`，图标兜底用 `api.iowen.cn`，更新检查走国内镜像；不依赖 Google、DuckDuckGo、cdnjs、jsdelivr 等境外服务。国内主机可直接部署，无需代理；若 GitHub Releases 页面本身打不开，请用国内镜像站或线下传包，站点运行不依赖 GitHub。
 
 ## 🔄 版本升级
 
@@ -69,14 +71,32 @@
 ### 通用规则
 
 - 找不到对应段落时：**覆盖代码文件 → 清理 `cache/` → 强制刷新（Ctrl+F5）** 即可
-- `upgrade_*.sql` 全部幂等，重复执行不报错
-- v2.10.0 ~ v2.15.2 **无数据库变更**；**v2.16.0 起有一个索引脚本 `upgrade_v2.16.0.sql`**，升级时必须执行
+- `upgrade_*.sql` 多为幂等 UPDATE / 索引脚本；`upgrade_v2.18.1.sql` 中的 `ADD COLUMN` 在列已存在时会报 `Duplicate column`，忽略即可
+- 数据库变更版本只有两个：`v2.16.0`（`upgrade_v2.16.0.sql`，两个索引）与 `v2.18.1`（`upgrade_v2.18.1.sql`，`skipped` 枚举 + `skip_check` 列）；**v2.18.2 / v2.18.3 / v2.18.4 无任何数据库变更**
 
-### 从 v2.13.x 及更早版本升级到 v2.18.0
+### 升级到当前版本 v2.18.4（2026-11-14）
 
-**v2.16.0 有数据库索引变更**，跨版本升级需执行一次 `upgrade_v2.16.0.sql`（只加两个索引，幂等，重复执行安全）；**v2.16.1 ~ v2.18.0 均无数据库变更**，只需覆盖文件。其余文件覆盖后清理 `cache/`、前台强制刷新（Ctrl+F5）即可。v2.10.0 ~ v2.15.2 均无数据库结构变更。
+| 你的当前版本 | 需要执行的 SQL | 说明 |
+| --- | --- | --- |
+| v2.18.1 ~ v2.18.3 | 无 | 直接覆盖文件，清 `cache/`、Ctrl+F5 |
+| v2.18.0 及更早 | `upgrade_v2.18.1.sql` | 先执行 SQL，再覆盖文件 |
+| v2.15.2 及更早 | `upgrade_v2.16.0.sql` + `upgrade_v2.18.1.sql` | 按版本顺序各执行一次 |
 
-> **v2.18.0 解决三件事**：① 图标抓取重写——`<link>` 属性顺序无关、单/无引号都认、`rel` 多值全判、支持协议相对路径，HTML 里没有图标时用 `/apple-touch-icon.png`、`/favicon.ico` 等根路径兜底（SPA 站点靠这一步），畸形 `data:;base64,=` 不再入库；② 开放 API 收录自动补图标、补关键词分组（`category_id` → `category_name` → 关键词 → `ai_recommend` → 未分类）、保留 `tags` / `alias`；③ 首页首屏瘦身——图标与可用性探测都改成「进入视口才做」，屏外卡片 `content-visibility: auto`。同版上线 **PWA**，手机浏览器可「添加到主屏幕」，`manifest.php` / `sw.js` / `offline.html` / 三套图标为新增文件。**无数据库变更。** 上一版 v2.16.5 补齐首页弹窗能力：`index.php` 的添加 / 编辑网址弹窗加入与「我的导航」一致的**网站图标编辑区**（48×48 预览 + 上传图标 / 输入图标URL / 恢复默认，上传自动压缩、关窗清理临时文件），并上线**收录自动打标签**——AI 根据站点名称 / 域名 / 描述生成 2–5 个中文标签，识别完直接预填，用户可增删可清空，绝不静默写库；AI 未配置时降级为本地关键词规则。同版修掉首页「抓取」按钮窄屏折行、AI 标签解析被 PHP trim 字符范围误伤的缺陷。**从 v2.16.3 在线升级要连跑两次**——第一次执行的仍是旧更新器，只换代码不换这两个配置；或直接 FTP 覆盖它们。v2.16.3 把编辑网址弹窗里的纯文本「图标地址」换成可视化**网站图标编辑区**：48×48 预览 + 上传图标 / 输入图标URL / 恢复默认。上传图片自动压到 256px 转 PNG，SVG 先剥掉脚本再存。同时修掉一个影响面更大的缺陷——列表项漏了 `logo` 原值导致 `data-logo` 始终为空，**v2.16.0 起凡是通过编辑弹窗保存过的网址，图标都可能被静默清空**。v2.16.2 上线「我的导航」**AI 一键分类**：AI 读一遍网址名称、域名、描述，批量判断归属分组，已有分组能装下就复用、装不下才新建；先预览、逐条可勾选、确认后才落库。AI 未配置或调用失败自动降级为本地关键词规则，不会整个功能失效。同时修掉重名分组导致「未分类」误判的缺陷。v2.16.1 修复手机端常驻操作按钮在微信 / UC / QQ 内置浏览器与 iPadOS 桌面版 UA 下隐藏失效的问题——改为「多信号判定 + 直接删 DOM + CSS 绝对兜底」三层防护，这些设备上按钮彻底不存在，桌面端行为不变。v2.16.0 打通前后台登录态（管理员前台登录后可直接进后台）、上线前后台回收站、后台批量转移 / 复制归属，首页首屏 JS 从 533KB 降到 217KB、响应体 gzip 后缩到 7%；快捷收录支持新建分组，AI 推荐的新分组只在采纳后才创建；开放 API 的 POST 新增 `category_name` / `ai_recommend` 自动建分类。v2.14.0 修复了「同时登录后台与前台时，前台新建分组被写成公共分类」的归属缺陷，**此前误建为公共的分组需在后台「分类管理 → 编辑 → 归属用户」手动改回**。v2.13.0 对 `api/` 全部端点做了真实 HTTP 审计并修复 9 个缺陷；v2.12.0 是 AI 测试连接 / 统一分类入口 / 全站快捷入口；v2.11.0 是按线上真实检测结果做的 17 项体验修复。完整清单见 [CHANGELOG.md](CHANGELOG.md) 与 [UPLOAD_LIST.md](UPLOAD_LIST.md)。
+> 已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，升到 v2.18.2 ~ v2.18.4 **不需要再执行任何 SQL**。全新安装直接用 `install/install.sql`（v2.18.4 修订已内置 `skip_check` 列与 `skipped` 枚举）。
+
+**v2.18.x 版本序列**（完整清单见 [CHANGELOG.md](CHANGELOG.md) / [UPLOAD_LIST.md](UPLOAD_LIST.md)）：
+
+| 版本 | 一句话 |
+| --- | --- |
+| v2.18.0 | 图标抓取重写、开放 API 收录自动补图标/分组/标签、首页首屏瘦身、PWA 添加到桌面 |
+| v2.18.1 | 自定义 404/500、SEO 四件套、无障碍、图标本地化与后台批量补齐、首页按需加载、匿名短缓存、内网跳过检测（**v2.18.x 中唯一需要执行 SQL 的版本**） |
+| v2.18.2 | 修复卡片瘦身移除 `data-url` 导致全站卡片发灰 |
+| v2.18.3 | 卡片显示真实网速（毫秒 + 快/一般/慢）；按 claude-seo 审计补 JSON-LD、站点索引页、动态 sitemap、canonical/og、面包屑、`llms.txt` |
+| v2.18.4 | 国内网络适配：去 Google / DuckDuckGo / cdnjs / jsdelivr，改搜狗 + `cn.bing.com` + bootcdn/staticfile + 国内更新镜像 |
+
+> **v2.17.0 已回滚、从未发布**，版本序列从 v2.16.5 直接到 v2.18.0，不是漏发。
+
+**部署方式**：推荐后台「系统工具 → 在线更新」上传整包并勾选「强制覆盖」，更新包不会覆盖 `config/database.local.php` 与 `uploads/`；也可按 [UPLOAD_LIST.md](UPLOAD_LIST.md) 手动覆盖。
 
 ### 从 v2.8.x 升级到 v2.9.0
 
@@ -188,7 +208,7 @@
 - 完整变更记录见 [CHANGELOG.md](CHANGELOG.md)
 - 版本发布与安装包下载见 [Releases](https://github.com/xuanyu1937/XYdaohang/releases)
 
-当前版本：`VERSION` / `config/version.php` = **2.16.5**（2026-11-07）
+当前版本：`VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` = **2.18.4**（2026-11-14）；静态资源 `?v=` 与 PWA 缓存名同为 `2.18.4`。
 
 ## 📄 许可证
 

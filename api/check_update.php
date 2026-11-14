@@ -82,6 +82,8 @@ $rawPath = 'https://raw.githubusercontent.com/' . $repo . '/main/VERSION';
 
 // v2.18.4 · 国内主机访问 api.github.com / raw.githubusercontent.com 会一直等到超时，
 // 「检查更新」因此要卡十几秒。改成国内可达的镜像优先，官方端点只作为最后兜底。
+// v2.18.4 修订 · raw 端点里残留的 cdn.jsdelivr.net / fastly.jsdelivr.net 同样属境外服务，
+// 换成与 apiEndpoints 对称的 ghproxy.net 镜像，国内适配口径与 CHANGELOG 保持一致。
 $apiEndpoints = [
     'https://gh-proxy.com/' . $apiPath,
     'https://ghfast.top/' . $apiPath,
@@ -92,8 +94,7 @@ $apiEndpoints = [
 $rawEndpoints = [
     'https://gh-proxy.com/' . $rawPath,
     'https://ghfast.top/' . $rawPath,
-    'https://cdn.jsdelivr.net/gh/' . $repo . '@main/VERSION',
-    'https://fastly.jsdelivr.net/gh/' . $repo . '@main/VERSION',
+    'https://ghproxy.net/' . $rawPath,
     $rawPath,
 ];
 
