@@ -669,8 +669,8 @@
         engines: {
             site:   { label: '站内', url: '' },
             baidu:  { label: '百度', url: 'https://www.baidu.com/s?wd={q}' },
-            bing:   { label: '必应', url: 'https://www.bing.com/search?q={q}' },
-            google: { label: '谷歌', url: 'https://www.google.com/search?q={q}' }
+            bing:   { label: '必应', url: 'https://cn.bing.com/search?q={q}' },
+            sogou:  { label: '搜狗', url: 'https://www.sogou.com/web?query={q}' }
         },
         loaded: false
     };
@@ -1245,13 +1245,19 @@
 
         function engineLabel() {
             var engine = currentEngine();
+            var meta = engineCache.engines[engine];
+
+            // 后台自定义引擎的 key 是 global_N / user_N，不能写死三选一
+            if (meta && meta.label) {
+                return meta.label;
+            }
 
             if (engine === 'bing') {
                 return '必应';
             }
 
-            if (engine === 'google') {
-                return 'Google';
+            if (engine === 'sogou') {
+                return '搜狗';
             }
 
             return '百度';

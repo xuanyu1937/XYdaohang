@@ -53,8 +53,8 @@ INSERT INTO `search_engines` (`name`, `url_template`, `icon`, `sort_order`)
 SELECT * FROM (
   SELECT '百度' AS name, 'https://www.baidu.com/s?wd={q}' AS url_template, '🔍' AS icon, 1 AS sort_order
   UNION ALL
-  SELECT '必应', 'https://www.bing.com/search?q={q}', '🅱️', 2
+  SELECT '必应', 'https://cn.bing.com/search?q={q}', '🅱️', 2
   UNION ALL
-  SELECT '谷歌', 'https://www.google.com/search?q={q}', '🌐', 3
+  SELECT '搜狗', 'https://www.sogou.com/web?query={q}', '🔎', 3
 ) AS defaults
 WHERE NOT EXISTS (SELECT 1 FROM `search_engines`);

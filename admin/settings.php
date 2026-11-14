@@ -191,9 +191,9 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>系统设置 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
-    <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
+    <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
     <link href="../assets/sweetalert2/sweetalert2.min.css" rel="stylesheet">
-    <link href="../assets/css/admin.css?v=2.18.3" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.4" rel="stylesheet">
     <style>
         /* ==================================================================
            系统设置页（仅本页使用，颜色与间距统一取自 admin.css 变量）

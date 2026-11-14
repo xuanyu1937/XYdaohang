@@ -61,7 +61,7 @@ $currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.1.3';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>后台管理 - 仪表盘</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
-    <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
+    <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
     <link href="../assets/sweetalert2/sweetalert2.min.css" rel="stylesheet">
     <script src="../assets/js/chart.umd.min.js"></script>
     <script>window.Chart || document.write('<script src="https://cdn.staticfile.org/Chart.js/4.3.0/chart.umd.min.js"><\/script>');</script>
@@ -202,7 +202,7 @@ $currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.1.3';
             font-size: 1rem !important;
         }
     </style>
-    <link href="../assets/css/admin.css?v=2.18.3" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.4" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>

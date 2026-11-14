@@ -80,22 +80,21 @@ $repo = 'xuanyu1937/XYdaohang';
 $apiPath = 'https://api.github.com/repos/' . $repo . '/releases/latest';
 $rawPath = 'https://raw.githubusercontent.com/' . $repo . '/main/VERSION';
 
-// Releases API 端点：官方优先，失败时回退国内镜像（原有逻辑保持不变）
+// v2.18.4 · 国内主机访问 api.github.com / raw.githubusercontent.com 会一直等到超时，
+// 「检查更新」因此要卡十几秒。改成国内可达的镜像优先，官方端点只作为最后兜底。
 $apiEndpoints = [
-    $apiPath,
-    'https://ghfast.top/' . $apiPath,
     'https://gh-proxy.com/' . $apiPath,
+    'https://ghfast.top/' . $apiPath,
     'https://ghproxy.net/' . $apiPath,
+    $apiPath,
 ];
 
-// raw VERSION 端点：官方 + 国内镜像（jsdelivr 走 CDN，国内可用性最好）
 $rawEndpoints = [
-    $rawPath,
-    'https://fastly.jsdelivr.net/gh/' . $repo . '@main/VERSION',
-    'https://gcore.jsdelivr.net/gh/' . $repo . '@main/VERSION',
-    'https://ghfast.top/' . $rawPath,
     'https://gh-proxy.com/' . $rawPath,
-    'https://ghproxy.net/' . $rawPath,
+    'https://ghfast.top/' . $rawPath,
+    'https://cdn.jsdelivr.net/gh/' . $repo . '@main/VERSION',
+    'https://fastly.jsdelivr.net/gh/' . $repo . '@main/VERSION',
+    $rawPath,
 ];
 
 $cacheDir = dirname(__DIR__) . '/cache';

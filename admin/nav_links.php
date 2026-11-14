@@ -878,7 +878,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>导航管理 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
-    <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
+    <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
     <link href="../assets/css/dataTables.bootstrap5.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css';">
     <style>
         .logo-preview {
@@ -978,8 +978,8 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
             }
         }
     </style>
-    <link href="../assets/css/admin.css?v=2.18.3" rel="stylesheet">
-    <link href="../assets/css/category-quick-add.css?v=2.18.3" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.4" rel="stylesheet">
+    <link href="../assets/css/category-quick-add.css?v=2.18.4" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -2216,7 +2216,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
     })();
     </script>
 
-    <script src="../assets/js/category-quick-add.js?v=2.18.3"></script>
+    <script src="../assets/js/category-quick-add.js?v=2.18.4"></script>
     <script>
     /* v2.12.0 · 导航管理页「添加分类」：与分类管理用同一个组件、同一套字段和校验 */
     (function () {

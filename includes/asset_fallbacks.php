@@ -5,7 +5,7 @@
  */
 ?>
 <script>
-window.jQuery || document.write('<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"><\/script>');
+window.jQuery || document.write('<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"><\/script>');
 </script>
 <script>
 window.jQuery || document.write('<script src="https://cdn.staticfile.org/jquery/3.7.1/jquery.min.js"><\/script>');
@@ -14,7 +14,7 @@ window.jQuery || document.write('<script src="https://cdn.staticfile.org/jquery/
 window.jQuery || document.write('<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"><\/script>');
 </script>
 <script>
-window.bootstrap || document.write('<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"><\/script>');
+window.bootstrap || document.write('<script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"><\/script>');
 </script>
 <script>
 window.bootstrap || document.write('<script src="https://cdn.staticfile.org/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"><\/script>');
@@ -23,7 +23,7 @@ window.bootstrap || document.write('<script src="https://cdn.staticfile.org/twit
 window.bootstrap || document.write('<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"><\/script>');
 </script>
 <script>
-window.Swal || document.write('<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"><\/script>');
+window.Swal || document.write('<script src="https://cdn.staticfile.org/sweetalert2/11.10.0/sweetalert2.all.min.js"><\/script>');
 </script>
 <script>
 window.Swal || document.write('<script src="https://cdn.staticfile.org/sweetalert2/11.7.0/sweetalert2.all.min.js"><\/script>');

@@ -1,5 +1,26 @@
 # 轩宇-导航 · 版本记录
 
+## v2.18.4（2026-11-14）
+
+> **国内网络适配**：大陆主机/用户访问不了 Google、GitHub raw、cdnjs、jsdelivr、DuckDuckGo 等境外服务，
+> 项目里凡是依赖它们的入口全部换成国内可达方案。无需执行 SQL（仅改了一条搜索引擎配置数据）。
+
+### 修改清单
+
+| 位置 | 原来 | 现在 |
+|------|------|------|
+| 站内搜索菜单 / 默认引擎 | Google（点了打不开） | 搜狗 `www.sogou.com` |
+| 必应 | `www.bing.com` | `cn.bing.com` |
+| 安装/升级脚本初始引擎 | 含谷歌 | 搜狗 + cn.bing.com |
+| `my.php` 图标兜底链 | DuckDuckGo + Google s2 | 站点自身 favicon + 国内 `api.iowen.cn` |
+| 12 个后台页 / `asset_fallbacks.php` 的 CDN 回退 | cdnjs.cloudflare.com、jsdelivr | 国内 `cdn.bootcdn.net`、`cdn.staticfile.org` |
+| `api/check_update.php` | 先请求 `api.github.com`（必超时十几秒） | 国内镜像优先，官方端点最后兜底 |
+| `search.js` 引擎文案 | 写死「百度/必应/谷歌」三选一 | 从后台配置读取，自定义引擎不再错标 |
+
+- 线上 `search_engines` 表已同步：id=3 谷歌 → 搜狗，id=2 必应 → cn.bing.com。
+- 实测：bootcdn 158ms、staticfile 655ms、搜狗 840ms、cn.bing 221ms 均返回 200；
+  `api.github.com` / `google.com` / `youtube.com` 在国内主机上确实全部超时（000）。
+
 ## v2.18.3（2026-11-14）
 
 > **两件事**：① 卡片上显示的是真实网速（毫秒 + 快/一般/慢），不再是「在线」两个字；

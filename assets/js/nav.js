@@ -148,8 +148,8 @@
     var SEARCH_ENGINES = {
         site:   { label: '站内', placeholder: '搜索网站或粘贴网址', url: '' },
         baidu:  { label: '百度', placeholder: '在百度中搜索', url: 'https://www.baidu.com/s?wd=' },
-        bing:   { label: '必应', placeholder: '在必应中搜索', url: 'https://www.bing.com/search?q=' },
-        google: { label: '谷歌', placeholder: '在 Google 中搜索', url: 'https://www.google.com/search?q=' }
+        bing:   { label: '必应', placeholder: '在必应中搜索', url: 'https://cn.bing.com/search?q=' },
+        sogou:  { label: '搜狗', placeholder: '在搜狗中搜索', url: 'https://www.sogou.com/web?query=' }
     };
 
     var cardObserver = null;

@@ -531,8 +531,8 @@ function sendRejectionEmail($data) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>申请管理 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
-    <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
-    <link href="../assets/css/bootstrap-datepicker.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.9.0/dist/css/bootstrap-datepicker.min.css';">
+    <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
+    <link href="../assets/css/bootstrap-datepicker.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.bootcdn.net/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css';">
     <style>
         .logo-preview {
             width: 60px;
@@ -565,7 +565,7 @@ function sendRejectionEmail($data) {
             color: #721c24;
         }
     </style>
-    <link href="../assets/css/admin.css?v=2.18.3" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.4" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -903,7 +903,7 @@ function sendRejectionEmail($data) {
     <script>window.jQuery && jQuery.fn.DataTable || document.write('<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"><\/script><script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"><\/script>');</script>
     <script src="../assets/js/bootstrap-datepicker.min.js"></script>
     <script src="../assets/js/bootstrap-datepicker.zh-CN.min.js"></script>
-    <script>window.jQuery && jQuery.fn.datepicker || document.write('<script src="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.9.0/dist/js/bootstrap-datepicker.min.js"><\/script><script src="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.9.0/dist/locales/bootstrap-datepicker.zh-CN.min.js"><\/script>');</script>
+    <script>window.jQuery && jQuery.fn.datepicker || document.write('<script src="https://cdn.bootcdn.net/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"><\/script><script src="https://cdn.bootcdn.net/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.zh-CN.min.js"><\/script>');</script>
     
     <script>
     $(document).ready(function() {
