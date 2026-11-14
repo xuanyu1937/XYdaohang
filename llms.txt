@@ -1,0 +1,31 @@
+# 轩宇-导航（Xuanyu Nav）
+
+> 一个中文人工精选的网址导航站：收录常用网站，按分类整理，每个站点带简介、访问测速、标签与二维码，
+> 支持站内搜索、三种视图切换和自定义分组收藏。
+
+## 主要入口
+
+- [站点主页](http://dh.pxyblog.top/): 按分类分组的站点卡片，每类首屏 12 条，「加载更多」按需拉取
+- [全部站点索引](http://dh.pxyblog.top/sites.php): 按分类列出所有站点，链接到站内详情页
+- [关于本站](http://dh.pxyblog.top/about.php): 站点定位、收录标准与使用说明
+- [申请收录](http://dh.pxyblog.top/apply.php): 提交新网址，审核通过后进入导航
+- [联系管理员](http://dh.pxyblog.top/contact.php): 报错、建议与站点合作
+- [开放 API 文档](http://dh.pxyblog.top/api/): 只读 JSON 接口说明
+
+## 内容结构
+
+- [首页](http://dh.pxyblog.top/): 分类分组的站点卡片，支持搜索、收藏、拖动排序
+- [全部站点索引](http://dh.pxyblog.top/sites.php): 一页看全所有收录站点
+- [站点详情页示例](http://dh.pxyblog.top/detail.php?id=29): 站点简介、分类、标签、二维码与相关推荐
+- [只读接口](http://dh.pxyblog.top/api/home_list.php?group=0&offset=0&limit=12): `group`/`offset`/`limit`/`q` 四个参数，返回 JSON
+
+## 收录范围
+
+常用工具、AI 与大模型平台、开发编程、设计素材、影音娱乐、学习教育、购物生活、效率办公、
+云服务与主机、社区论坛等中文用户常用站点。仅收录可公开访问、内容正常的网站。
+
+## 使用说明
+
+- 站点内容免费浏览，无需登录
+- 收藏、自定义分组、提交收录需要注册账号
+- 转载或抓取时请保留来源链接

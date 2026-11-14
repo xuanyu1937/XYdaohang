@@ -76,7 +76,7 @@ $seoDescription = trim((string) $functions->getSetting('seo_description'));
 $brandName = $siteTitle !== '' ? $siteTitle : '轩宇-导航';
 $brandSubtitle = $siteDescription !== '' ? $siteDescription : '一个简洁实用的导航网站';
 $metaTitle = $seoTitle !== '' ? $seoTitle : $brandName . ' - ' . $brandSubtitle;
-$metaDescription = $seoDescription !== '' ? $seoDescription : $brandSubtitle;
+$metaDescription = $seoDescription; // 留空则由下方按真实数据生成（见「SEO 文案」段）
 $currentYear = date('Y');
 
 // 页脚版权：优先当前视图用户的自定义版权，其次后台全局设置，最后默认「© 年份 站点名」
@@ -384,6 +384,101 @@ $bodyStyle = '';
 if ($bgImage !== '') {
     $bodyStyle = ' style="--bg-image: url(' . $functions->escape($bgImage) . ');"';
 }
+
+/* ------------------------------ SEO 文案 ------------------------------
+ * v2.18.3 · 描述留空时不再只写副标题（11 个字，搜索结果里几乎等于没有），
+ * 改为用真实数据生成 100~160 字的摘要：收录数量 + 分类名 + 能做什么。
+ * 站长在后台填了「SEO 描述」就完全以填的为准。 */
+$navTotalSites = count($links);
+$navCategoryNames = [];
+
+foreach ($sections as $seoSection) {
+    if ((int) $seoSection['id'] <= 0) {
+        continue;
+    }
+
+    $navCategoryNames[] = $seoSection['name'];
+
+    if (count($navCategoryNames) >= 4) {
+        break;
+    }
+}
+
+if ($metaDescription === '') {
+    $metaDescription = $brandName . '是一个人工精选的网址导航站，收录 ' . $navTotalSites . ' 个常用网站';
+
+    if ($navCategoryNames) {
+        $metaDescription .= '，按' . implode('、', $navCategoryNames) . '等分类整理';
+    }
+
+    $metaDescription .= '，每个站点都带简介、访问测速与收藏功能，支持搜索、三视图切换和自定义分组，帮你更快找到需要的网站。';
+}
+
+$metaDescription = trim(preg_replace('/\s+/u', ' ', $metaDescription));
+
+/* 结构化数据：目录站最缺的是「这是什么站、里面有哪些条目」的机器可读描述。
+   WebSite + SearchAction 让搜索结果直接出现站内搜索框，
+   CollectionPage + ItemList 让搜索引擎知道首页是一份列表而不是一篇文章。 */
+/* canonical 在 <head> 里才计算，但结构化数据要绝对地址（schema.org 不接受相对路径），
+   这里先独立算一份，后面 <head> 复用同样的值。 */
+$canonicalBase = navSiteBaseUrl();
+$canonicalPath = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? '/index.php'));
+$canonicalPath = preg_replace('#/(index)\.php$#i', '/', $canonicalPath);
+$canonicalUrl = $canonicalBase . ($canonicalPath === '' ? '/' : $canonicalPath);
+
+$navStructuredItems = [];
+
+foreach (array_slice($links, 0, 12) as $structuredCard) {
+    $navStructuredItems[] = [
+        '@type' => 'ListItem',
+        'position' => count($navStructuredItems) + 1,
+        'url' => $canonicalBase . '/detail.php?id=' . (int) $structuredCard['id'],
+        'name' => $structuredCard['display_name'],
+    ];
+}
+
+$navJsonLd = [
+    '@context' => 'https://schema.org',
+    '@graph' => [
+        [
+            '@type' => 'WebSite',
+            '@id' => $canonicalBase . '/#website',
+            'url' => $canonicalBase . '/',
+            'name' => $brandName,
+            'inLanguage' => 'zh-CN',
+            'publisher' => ['@id' => $canonicalBase . '/#organization'],
+            'potentialAction' => [
+                '@type' => 'SearchAction',
+                'target' => [
+                    '@type' => 'EntryPoint',
+                    'urlTemplate' => $canonicalBase . '/index.php?q={search_term_string}',
+                ],
+                'query-input' => 'required name=search_term_string',
+            ],
+        ],
+        [
+            '@type' => 'Organization',
+            '@id' => $canonicalBase . '/#organization',
+            'name' => $brandName,
+            'url' => $canonicalBase . '/',
+            'logo' => $canonicalBase . '/assets/img/icons/icon-512.png',
+        ],
+        [
+            '@type' => 'CollectionPage',
+            '@id' => $canonicalUrl . '#webpage',
+            'url' => $canonicalUrl,
+            'name' => $metaTitle,
+            'description' => $metaDescription,
+            'isPartOf' => ['@id' => $canonicalBase . '/#website'],
+            'inLanguage' => 'zh-CN',
+            'mainEntity' => [
+                '@type' => 'ItemList',
+                'numberOfItems' => $navTotalSites,
+                'itemListElement' => $navStructuredItems,
+            ],
+        ],
+    ],
+];
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN" data-skin="<?php echo $functions->escape($skin); ?>">
@@ -497,8 +592,8 @@ if ($bgImage !== '') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.2">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.2">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.3">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.3">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -510,7 +605,7 @@ if ($bgImage !== '') {
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.2';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.3';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -530,10 +625,10 @@ if ($bgImage !== '') {
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.2" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.18.3" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.2" defer></script>
-    <script src="assets/js/search.js?v=2.18.2" defer></script>
+    <script src="assets/js/nav.js?v=2.18.3" defer></script>
+    <script src="assets/js/search.js?v=2.18.3" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -544,6 +639,7 @@ if ($bgImage !== '') {
             }
         </style>
     </noscript>
+    <script type="application/ld+json"><?php echo json_encode($navJsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?></script>
 </head>
 <body data-monitor="<?php echo $monitorEnabled ? '1' : '0'; ?>"
       data-speed-label="<?php echo $showSpeedLabel ? '1' : '0'; ?>"
@@ -1005,7 +1101,7 @@ if ($bgImage !== '') {
                 </div>
 
                 <div class="link-sections" id="linkSections">
-                    <?php foreach ($sections as $sectionIndex => $section): ?>
+                    <?php $navEagerCards = 0; foreach ($sections as $sectionIndex => $section): ?>
                         <section class="link-group"
                                  data-category="<?php echo (int) $section['id']; ?>"
                                  data-group-name="<?php echo $functions->escape($section['name']); ?>">
@@ -1022,6 +1118,8 @@ if ($bgImage !== '') {
                                         <?php
                                         $card_index = $cardIndex;
                                         $is_owner = $isOwner;
+                                        $card_eager = ($navEagerCards === 0); // 全页第一张卡参与 LCP，不能懒加载
+                                        $navEagerCards++;
                                         require __DIR__ . '/includes/site_card.php';
                                         ?>
                                     <?php endforeach; ?>
@@ -1050,6 +1148,8 @@ if ($bgImage !== '') {
                                         <?php
                                         $card_index = $cardIndex;
                                         $is_owner = $isOwner;
+                                        $card_eager = ($navEagerCards === 0); // 全页第一张卡参与 LCP，不能懒加载
+                                        $navEagerCards++;
                                         require __DIR__ . '/includes/site_card.php';
                                         ?>
                                     <?php endforeach; ?>
@@ -1491,5 +1591,27 @@ if ($bgImage !== '') {
         });
     })();
     </script>
+
+    <?php
+    /* v2.18.3 · 支持 index.php?q=关键词 直接出结果。
+       WebSite 的 SearchAction 指向这个地址，搜索引擎的「站内搜索框」因此可用；
+       用户从搜索引擎/分享链接点进来也能直接看到搜索结果，而不是一个空首页。 */
+    $initialQuery = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
+
+    if ($initialQuery !== '') :
+    ?>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var input = document.getElementById('siteSearch');
+
+        if (!input) {
+            return;
+        }
+
+        input.value = <?php echo json_encode(mb_substr($initialQuery, 0, 60, 'UTF-8'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    </script>
+    <?php endif; ?>
 </body>
 </html>

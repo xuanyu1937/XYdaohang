@@ -1,33 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    <url>
-        <loc>http://dh.pxyblog.top/</loc>
+<!-- v2.18.3 · 站点地图索引。静态页面在 sitemap-pages.xml，
+     站点详情页由 sitemap-sites.php 根据数据库实时生成（页面数量会随收录增长）。 -->
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <sitemap>
+        <loc>http://dh.pxyblog.top/sitemap-pages.xml</loc>
         <lastmod>2026-11-14</lastmod>
-        <changefreq>daily</changefreq>
-        <priority>1.0</priority>
-    </url>
-    <url>
-        <loc>http://dh.pxyblog.top/about.php</loc>
+    </sitemap>
+    <sitemap>
+        <loc>http://dh.pxyblog.top/sitemap-sites.php</loc>
         <lastmod>2026-11-14</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.5</priority>
-    </url>
-    <url>
-        <loc>http://dh.pxyblog.top/contact.php</loc>
-        <lastmod>2026-11-14</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.5</priority>
-    </url>
-    <url>
-        <loc>http://dh.pxyblog.top/apply.php</loc>
-        <lastmod>2026-11-14</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.5</priority>
-    </url>
-    <url>
-        <loc>http://dh.pxyblog.top/api/index.php</loc>
-        <lastmod>2026-11-14</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.5</priority>
-    </url>
-</urlset>
+    </sitemap>
+</sitemapindex>

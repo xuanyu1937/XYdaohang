@@ -29,6 +29,7 @@ if (!function_exists('siteQuickLinksHtml')) {
         $isAdmin = $variant === 'admin';
 
         $links = [
+            ['全部站点', $prefix . 'sites.php'],
             ['关于本站', $prefix . 'about.php'],
             ['联系管理员', $prefix . 'contact.php'],
             ['申请收录', $prefix . 'apply.php'],

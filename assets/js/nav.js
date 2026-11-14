@@ -1784,11 +1784,15 @@
             return Promise.resolve();
         }
 
-        // 服务端批量检测已有结论时直接用，不再逐卡打跨域请求：
-        // 既省掉首屏几十个 HEAD，也避免 no-cors 探测被网关拦截后整站误标「无法访问」。
+        // 服务端批量检测已经量过延迟：直接按毫秒展示，不再重复打请求。
         if (preset === 'ok' || preset === 'slow') {
-            setStatus(card, preset === 'slow' ? 'slower' : 'online');
-            return Promise.resolve();
+            var known = parseInt(card.getAttribute('data-latency') || '0', 10);
+
+            if (known > 0) {
+                setStatus(card, 'online', known);
+                return Promise.resolve();
+            }
+            // 服务端没留下延迟数字，交给浏览器实测一次
         }
 
         if (!url) {

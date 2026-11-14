@@ -1,5 +1,39 @@
 # 轩宇-导航 · 版本记录
 
+## v2.18.3（2026-11-14）
+
+> **两件事**：① 卡片上显示的是真实网速（毫秒 + 快/一般/慢），不再是「在线」两个字；
+> ② 按 claude-seo 的审计结论做了一轮 SEO 结构化改造。无需执行 SQL。
+
+### 网速展示
+
+- **卡片右下角改为显示延迟**（`includes/site_card.php`、`assets/js/nav.js`）
+  - 服务端批量检测已有 `latency_ms` 的，直接渲染「75 毫秒 · 快」，不再逐卡打跨域探测；
+  - 没有延迟数字的条目，由浏览器实测一次补上；
+  - `down` 状态显示「无法访问」，`skipped`（内网）显示「内网」，语义不变。
+
+### SEO（依据 claude-seo 审计）
+
+- **结构化数据**（此前全站 0 个 JSON-LD）
+  - 首页：`WebSite` + `SearchAction`（搜索结果直接带站内搜索框）、`Organization`、
+    `CollectionPage` + `ItemList`（前 20 个站点，指向站内详情页）。
+  - 详情页：`WebPage` + `BreadcrumbList`（首页 › 分类 › 站点）+ `about` 指向原站。
+  - 全部站点索引页：`CollectionPage` + `BreadcrumbList`。
+- **站内详情页从「孤儿页」变成可抓取**
+  - 新增 `sites.php`：全部站点索引（按分类归档 49 条内链 + 简介），页脚「全部站点」入口；
+  - 新增 `sitemap-sites.php`：由数据库实时生成的详情页 sitemap；
+  - `sitemap.xml` 改为 sitemap 索引，静态页拆到 `sitemap-pages.xml`。
+  - 原来 200 多个 `detail.php` 页面在站内没有任何入口，搜索引擎只能靠猜。
+- **描述长度**
+  - 首页描述从 11 字扩到 105 字（收录数量 + 分类名 + 能做什么，站长填了自定义描述则不覆盖）；
+  - 详情页描述不足 60 字时自动补成完整句子，并截断到 155 字；
+  - 详情页标题补上分类：「Kimi（AI 对话） - 轩宇导航」。
+- **LCP / CLS**
+  - 全页第一张卡片的图标改为 `loading="eager" fetchpriority="high"`（原来首图也是 lazy）；
+  - 详情页三处图片补 `width`/`height`，消除布局抖动。
+- **`index.php?q=关键词` 可用**：直接出搜索结果，配合 `SearchAction` 落地。
+- **新增 `llms.txt`**：给 AI 搜索（ChatGPT / Perplexity / AI Overviews）的站点说明。
+
 ## v2.18.2（2026-11-14）
 
 > **全站卡片发灰的修复**：卡片瘦身时移除了 `data-url`，但前端可用性检测仍按 `data-url` 取地址，

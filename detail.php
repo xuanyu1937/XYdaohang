@@ -57,8 +57,74 @@ $relatedLinks = $relatedStmt->fetchAll();
 $urlParts = parse_url($link['url']);
 $domain = isset($urlParts['host']) ? $urlParts['host'] : $link['url'];
 
-$pageTitle = $link['name'] . ' - ' . $siteTitle;
-$pageDescription = $link['description'] ?: $link['name'] . ' - 优质网站导航推荐';
+$detailCategory = trim((string) ($link['category_name'] ?? ''));
+/* v2.18.3 · 标题补上分类，避免几百个详情页只有「名称 - 站名」这一种模板 */
+$pageTitle = $link['name'] . ($detailCategory !== '' ? '（' . $detailCategory . '）' : '') . ' - ' . $siteTitle;
+
+$detailDescRaw = trim(preg_replace('/\s+/u', ' ', (string) ($link['description'] ?? '')));
+
+if ($detailDescRaw === '') {
+    $detailDescRaw = $link['name'] . '是' . $siteTitle . '收录的' . ($detailCategory !== '' ? $detailCategory . '分类下' : '') . '网站，提供站点简介、访问地址与二维码，可直接跳转访问。';
+}
+
+$pageDescription = $detailDescRaw;
+
+/* 站点简介普遍只有一句（十几个字），搜索结果里等于空描述：
+   太短时补成「名称（分类）：简介。站点定位 + 能做什么」。 */
+if (mb_strlen($pageDescription, 'UTF-8') < 60) {
+    $pageDescription = $link['name']
+        . ($detailCategory !== '' ? '（' . $detailCategory . '）' : '')
+        . '：' . rtrim($detailDescRaw, '。')
+        . '。' . $siteTitle . '收录的网址导航条目，含站点简介、标签、访问地址与二维码。';
+}
+
+$pageDescription = mb_strlen($pageDescription, 'UTF-8') > 155
+    ? mb_substr($pageDescription, 0, 155, 'UTF-8') . '…'
+    : $pageDescription;
+
+$detailBase = navSiteBaseUrl();
+$detailUrl = $detailBase . '/detail.php?id=' . (int) $link['id'];
+$detailLogoUrl = $functions->getLogoDisplayUrl((string) ($link['logo'] ?? ''));
+$detailOgImage = $detailLogoUrl !== '' ? $detailLogoUrl : $detailBase . '/assets/img/icons/icon-512.png';
+
+/* 结构化数据：面包屑 + 网页实体。详情页是目录站唯一有独立内容的页面，
+   标好层级搜索引擎才知道「首页 › 分类 › 具体站点」的关系。 */
+$detailBreadcrumb = [
+    ['@type' => 'ListItem', 'position' => 1, 'name' => '首页', 'item' => $detailBase . '/'],
+];
+
+if ($detailCategory !== '') {
+    $detailBreadcrumb[] = ['@type' => 'ListItem', 'position' => 2, 'name' => $detailCategory, 'item' => $detailBase . '/index.php'];
+}
+
+$detailBreadcrumb[] = ['@type' => 'ListItem', 'position' => count($detailBreadcrumb) + 1, 'name' => $link['name'], 'item' => $detailUrl];
+
+$detailJsonLd = [
+    '@context' => 'https://schema.org',
+    '@graph' => [
+        [
+            '@type' => 'WebPage',
+            '@id' => $detailUrl,
+            'url' => $detailUrl,
+            'name' => $pageTitle,
+            'description' => $pageDescription,
+            'inLanguage' => 'zh-CN',
+            'isPartOf' => ['@id' => $detailBase . '/#website'],
+            'breadcrumb' => ['@id' => $detailUrl . '#breadcrumb'],
+            'primaryImageOfPage' => ['@type' => 'ImageObject', 'url' => $detailOgImage],
+            'about' => [
+                '@type' => 'WebSite',
+                'name' => $link['name'],
+                'url' => $link['url'],
+            ],
+        ],
+        [
+            '@type' => 'BreadcrumbList',
+            '@id' => $detailUrl . '#breadcrumb',
+            'itemListElement' => $detailBreadcrumb,
+        ],
+    ],
+];
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -70,7 +136,18 @@ $pageDescription = $link['description'] ?: $link['name'] . ' - 优质网站导�
     <meta name="keywords" content="<?php echo $functions->escape($link['name']); ?>,网站导航,网址推荐">
     <meta name="author" content="<?php echo $functions->escape($siteTitle); ?>">
     <meta name="robots" content="index, follow">
-    
+    <link rel="canonical" href="<?php echo $functions->escape($detailUrl); ?>">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="<?php echo $functions->escape($pageTitle); ?>">
+    <meta property="og:description" content="<?php echo $functions->escape($pageDescription); ?>">
+    <meta property="og:url" content="<?php echo $functions->escape($detailUrl); ?>">
+    <meta property="og:site_name" content="<?php echo $functions->escape($siteTitle); ?>">
+    <meta property="og:image" content="<?php echo $functions->escape($detailOgImage); ?>">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="<?php echo $functions->escape($pageTitle); ?>">
+    <meta name="twitter:description" content="<?php echo $functions->escape($pageDescription); ?>">
+    <script type="application/ld+json"><?php echo json_encode($detailJsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?></script>
+
     <script src="assets/js/tailwind.min.js"></script>
     <link href="assets/css/font-awesome.min.css" rel="stylesheet">
     
@@ -353,6 +430,7 @@ $pageDescription = $link['description'] ?: $link['name'] . ' - 优质网站导�
                         <?php if ($siteLogoUrl): ?>
                             <img src="<?php echo $functions->escape($siteLogoUrl); ?>" 
                                  alt="<?php echo $functions->escape($siteTitle); ?>" 
+                                 width="120" height="40"
                                  class="logo-img"
                                  style="max-height: 40px; width: auto;">
                         <?php endif; ?>
@@ -369,7 +447,7 @@ $pageDescription = $link['description'] ?: $link['name'] . ' - 优质网站导�
                 <div class="breadcrumb mt-3">
                     <a href="index.php"><i class="fas fa-home"></i> 首页</a>
                     <i class="fas fa-chevron-right mx-2 text-xs"></i>
-                    <a href="index.php">
+                    <a href="sites.php">
                         <?php echo $functions->escape($link['category_name'] ?: '全部分类'); ?>
                     </a>
                     <i class="fas fa-chevron-right mx-2 text-xs"></i>
@@ -389,6 +467,7 @@ $pageDescription = $link['description'] ?: $link['name'] . ' - 优质网站导�
                             ?>
                                 <img src="<?php echo $functions->escape($logoUrl); ?>" 
                                      alt="<?php echo $functions->escape($link['name']); ?>"
+                                     width="100" height="100"
                                      class="site-logo-large"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <?php endif; ?>
@@ -524,6 +603,7 @@ $pageDescription = $link['description'] ?: $link['name'] . ' - 优质网站导�
                                     ?>
                                         <img src="<?php echo $functions->escape($relLogo); ?>" 
                                              alt="<?php echo $functions->escape($related['name']); ?>"
+                                             width="48" height="48"
                                              class="related-logo flex-shrink-0"
                                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                     <?php endif; ?>
