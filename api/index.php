@@ -13,7 +13,7 @@
    也避免每次刷新都重新走一遍 PHP。 */
 header('Cache-Control: public, max-age=300');
 
-$version = '2.18.5';
+$version = '2.18.6';
 $versionFile = __DIR__ . '/../VERSION';
 
 if (is_readable($versionFile)) {

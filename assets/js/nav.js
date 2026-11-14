@@ -301,8 +301,11 @@
 
         closeSkinMenu();
 
-        if (userMenu) {
+        // v2.18.6：Esc 关闭用户下拉后，把焦点还给触发按钮
+        if (userMenu && userMenu.hasAttribute('open')) {
             userMenu.removeAttribute('open');
+            var menuSummary = userMenu.querySelector('summary');
+            if (menuSummary) { menuSummary.focus(); }
         }
 
         closeRail();
@@ -2664,8 +2667,10 @@
                 // v2.18.1 · data-logo 已从 DOM 移除（与图标 img 的 data-src 重复），改为读图标本身
                 logo: card.getAttribute('data-logo') || cardIconSource(card),
                 starred: card.getAttribute('data-starred') === '1',
-                // 有无卡片操作区即代表是否本人数据
-                owner: !!card.querySelector('.card-actions')
+                // v2.18.6 · 触屏/窄屏下 purgeCardActions() 会删掉 .card-actions，
+                // 不能再用「有无操作区」推断归属；改用服务端写在卡片上的 data-owner，
+                // 保留旧判断作为兜底（例如第三方注入的卡片）。
+                owner: card.getAttribute('data-owner') === '1' || !!card.querySelector('.card-actions')
             };
         }
 
@@ -4228,9 +4233,16 @@
 
             // v2.14.0：长按菜单里的收藏按钮按当前卡片状态切换文案，
             // 点击后走既有的 handleAction('star') → toggleStar(card)。
-            var starBtn = ctxMenu.querySelector('#ctxMenuStar span');
-            if (starBtn) {
-                starBtn.textContent = data.starred ? '取消收藏' : '收藏';
+            // v2.18.6：文案、title、aria-label 三处同步，读屏与鼠标悬停不滞后。
+            var starItem = ctxMenu.querySelector('#ctxMenuStar');
+            if (starItem) {
+                var starText = data.starred ? '取消收藏' : '收藏';
+                var starLabel = starItem.querySelector('span');
+                if (starLabel) {
+                    starLabel.textContent = starText;
+                }
+                starItem.setAttribute('title', starText);
+                starItem.setAttribute('aria-label', starText);
             }
 
             ctxMenu.hidden = false;
@@ -4241,14 +4253,29 @@
 
             ctxMenu.style.left = Math.max(8, Math.min(x, maxX)) + 'px';
             ctxMenu.style.top = Math.max(8, Math.min(y, maxY)) + 'px';
+
+            // v2.18.6：焦点进入第一个可见项，Tab 可依次聚焦菜单项；
+            // 鼠标触发时 :focus-visible 不匹配，不会出现多余焦点环。
+            var firstItem = ctxMenu.querySelector('.ccm-item:not([hidden])');
+            if (firstItem) {
+                firstItem.focus({ preventScroll: true });
+            }
         }
 
-        function closeCtxMenu() {
+        function closeCtxMenu(restoreFocus) {
+            var card = ctxCard;
+
             if (ctxMenu) {
                 ctxMenu.hidden = true;
             }
 
             ctxCard = null;
+
+            // v2.18.6：按 Esc 后把焦点还给触发卡片。
+            // scroll / resize 监听会直接把事件对象当首参传进来，故严格判 true。
+            if (restoreFocus === true && card && typeof card.focus === 'function') {
+                card.focus({ preventScroll: true });
+            }
         }
 
         /* v2.10.5：紧凑模式下操作条改为「点击展开」 */
@@ -4276,6 +4303,10 @@
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 closeCompactActions();
+                // v2.18.6：Esc 关闭右键/长按菜单并把焦点还给触发卡片
+                if (ctxMenu && !ctxMenu.hidden) {
+                    closeCtxMenu(true);
+                }
             }
         });
 
@@ -4479,15 +4510,13 @@
                 mode = localStorage.getItem('nav_open_mode') || 'default';
             } catch (error) { /* 忽略 */ }
 
-            var label = openModeToggle.querySelector('span');
-            var text = mode === 'self'
-                ? '打开方式：当前页'
-                : (mode === 'blank' ? '打开方式：新标签' : '打开方式：默认');
+            // v2.18.6：文案固定为「打开方式」，只更新右对齐状态徽标，
+            // 不再整行改文案导致长度随状态变化。
+            var badge = document.getElementById('openModeBadge');
+            var text = mode === 'self' ? '当前页' : (mode === 'blank' ? '新标签' : '默认');
 
-            if (label) {
-                label.textContent = text;
-            } else {
-                openModeToggle.textContent = text;
+            if (badge) {
+                badge.textContent = text;
             }
         }
 

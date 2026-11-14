@@ -21,7 +21,7 @@
 
 用法：
     python3 scripts/release_sync_check.py              # 以 VERSION 文件为准
-    python3 scripts/release_sync_check.py 2.18.5      # 指定待发布版本
+    python3 scripts/release_sync_check.py 2.18.6      # 指定待发布版本
 退出码：0 = 无 FAIL；1 = 存在 FAIL，禁止发版。
 
 适用范围：以上 8 项针对「版本发布」。仅新增工具、修错别字、改流程说明等

@@ -1,5 +1,56 @@
 # 轩宇-导航 · 版本记录
 
+## v2.18.6（2026-11-14）
+
+> **三处收尾 + 两项顺带修复**：卡片长按/右键菜单两页统一为 7 项并修手机端缺项、手机端 logo 放大、顶部按钮与用户下拉菜单风格跨页统一；顺带修「我的导航」星标状态渲染与暗色主题 3 处对比度遗留。**无数据库变更，无需执行 SQL，覆盖文件即可。**
+
+### 一、卡片菜单统一为 7 项（手机端只剩 4 项的根因）
+
+- **根因**：`assets/js/nav.js` 的 `purgeCardActions()` 在触屏/窄屏删除 `.card-actions`，而 `cardData()` 原先用 `owner: !!card.querySelector('.card-actions')` 推断归属，删完恒为 `false`，`openCtxMenu()` 据此把编辑/移动/删除全部 `hidden`。
+- `includes/site_card.php`：`.site-card` 增加 `data-owner="<?php echo $is_owner ? '1' : '0'; ?>"`，归属由服务端直接给出，与 `.card-actions` 是否存在解耦。
+- `assets/js/nav.js`：`cardData()` 改为 `owner: card.getAttribute('data-owner') === '1' || !!card.querySelector('.card-actions')`（保留旧判断兜底）；**不停用 `purgeCardActions()`**，避免手机端重新挂出常驻操作条。
+- `index.php`：菜单 7 项顺序原本正确，给 `#ctxMenuStar` 补 `title` / `aria-label`；`openCtxMenu()` 同步 `<span>` 文案、`title`、`aria-label` 三处，读屏与悬停不滞后。
+- `my.php`：菜单在「二维码」与「编辑」之间补 star 按钮（复用首页星形 path）；新增 `syncCtxStar()`，`contextmenu` 与 `showRowMenu()` 两个入口都调用；菜单点击 switch 补 `case 'star': toggleStar(target)`；`updateStarIcon()` 联动菜单文案。
+- 菜单显隐：前三项始终显示；收藏对登录用户显示、文案随 `data-starred` 切换，访客点击由 `isGuest()` 提示「请先登录后再收藏」；编辑/移动/删除仅 `data.owner` 为真时显示，**未改任何接口字段与 `userSiteOwned()` 权限**。
+- 两页 `.card-context-menu` 增加 `max-height: calc(100vh - 24px)` 与 `overflow-y: auto`，7 项在小屏不越界。
+- **顺带修复**：`my.php` 第 435 行重构 `$item` 数组时漏带 `is_starred`，导致 `data-starred` 恒为 `0`、行内星标与长按菜单文案无法反映真实收藏状态且刷新回退。补 `'is_starred' => !empty($row['is_starred']) ? 1 : 0` 后，文案同步与刷新保持均通过验收。
+
+### 二、手机端 logo 放大
+
+- `assets/css/nav.css`：解开 920 / 430 / 360 三档 `!important` 覆盖链，改为同级选择器覆盖；`≤430px` logo `34 → 42px` / radius `11 → 13`、标题 20px；`≤360px` logo `32 → 38px` / radius `10 → 12`、标题 `13 → 19px` 且保持单行省略。
+- `.brand-mark img` padding `7px → 5px`，避免图标被内边距吃掉；`.brand-title` 在 360 / 390 / 430 三档均 `text-overflow: ellipsis` + `nowrap`，实测不裁切、头部不横向溢出。
+
+### 三、顶部按钮与用户下拉跨页统一
+
+- `assets/css/nav.css` 新增 `--ctl-size`（桌面 44px / `≤920px` 40px）、`--ctl-radius`、`--ctl-border`、`--ctl-bg`、`--ctl-shadow`；hover 统一主色边框/浅底/主色文字，transition ≤180ms；图标桌面 20px / 移动端 18px，头像 28 / 30px，箭头 13px；移动端按钮 `36 → 40px`；`mode-switch` 在 `≤480px` 继续隐藏。
+- `my.php` 头部从 `.my-userbar`（34px 头像）+ 裸 `#themeToggle` + 裸文字「返回首页 / 退出登录」，改为与 `index.php` 同构的 3 枚 `tool-btn` 图标按钮（皮肤 / 主题 / `details.user-menu`）与 8 项下拉；移除工具条裸文字按钮，退出登录收进下拉末项 `is-danger`。补内联交互层：皮肤切换与持久化、打开方式徽标、账号设置链接、快捷收藏、点击外部收起、Esc 与焦点归还；**`my.php` 仍不加载 `nav.js`**，两页逻辑各自独立但规格一致。
+- 用户下拉（两页 8 项）：全部补 16px 内联 SVG，固定 20px 图标槽 + 10px 间距保证文字左对齐；九宫格 / 书签 / 人像 / 星形 / 外链 / 滑块 / 信息圆 / 出箭；`min-height:40px`、`padding:0 12px`、3 条 1px `--hairline` 分组分隔线；`.is-current` 改左侧 3px 主色竖条；打开方式改为固定文案 + 右对齐 11px `--surface-2` 状态徽标，JS 只更新徽标文本；容器宽度 `172 → 208px`、padding 8px。
+- 键盘：右键/长按菜单打开时聚焦首个可见项，Tab 可依次遍历；Esc 关闭用户下拉与右键菜单并把焦点还给触发元素；`my.php` 同步实现。
+
+### 四、顺带修复：暗色主题 3 处对比度遗留
+
+- `html[data-theme="dark"]` 的 `--primary` 为 `#3b82f6`：作背景承载白字时仅 3.67:1（`#addBtn`、`.my-group-tab.is-active`），作文字压在 `#1a2332` 上时仅 4.29:1（`.section-tool-label`），均低于 WCAG 2.1 AA 4.5:1。
+- 在 `nav.css` 末尾新增 `--primary-solid-dark` / `--primary-text-dark` 两个语义变量并统一覆盖，**不改 `--primary` 本身**、不动亮色主题与其它 skin。axe-core 明暗双主题复扫首页与 `my.php` 均为 0 违规。
+
+### 约束与增量
+
+- 功能改动仅限 `includes/site_card.php`、`index.php`、`my.php`、`assets/js/nav.js`、`assets/css/nav.css` 五个点名文件；版本同步与文档属发版必需项。
+- CSS 净增 **7,547 字节**（≤40KB）、JS 净增 **2,607 字节**（≤5KB）；不引入第三方库，图标全部内联 SVG，系统字体栈；**未改任何接口字段与权限**。
+- 版本号与全部 33 处 `?v=` 升至 `2.18.6`，`sw.js` 缓存名 `xy-nav-pwa-v2.18.6`。
+
+### 本地验收结果
+
+- Chromium + Playwright 综合验收 **71 项断言 / 0 FAIL**（原始日志见 `v2.18.6-验收日志.txt`）：
+  - 390px 登录态首页长按 7 项齐全且顺序正确，编辑 / 移动 / 删除分别打开 `#editLinkDialog` / `#moveDialog` / 删除二次确认；「加载更多」真实新增 12 张卡片，最后一张同样 7 项。
+  - 访客长按 4 项、点收藏提示登录；登录用户看非本人数据 4 项且无编辑/移动/删除。
+  - `my.php` 长按 7 项，收藏 / 取消收藏文案与行内星标、`title` 同步，点击后 `data-starred` 翻转，刷新保持。
+  - 360 / 390 / 430 三档：logo 38 / 42 / 42px，标题 19 / 20 / 20px 单行省略不裁切，头部 `scrollWidth == clientWidth` 无溢出。
+  - 两页顶部各 3 枚按钮，高 / 圆角 / 边框 / 阴影 computed 值完全一致；工具条无裸文字按钮；`mode-switch` 390px 隐藏。
+  - 用户下拉 208px、8 项全 SVG、图标槽 20px、3 条分隔线、当前页竖条、右对齐 11px 徽标，状态只更新徽标文本。
+  - Tab 可依次聚焦按钮与菜单项；Esc 关闭下拉 / 右键菜单并归还焦点到 `summary` / `.site-card` / `.my-item`。
+  - axe-core（wcag2a/2aa/21a/21aa）明暗双主题 × 首页 / `my.php` 共 4 次扫描，全部 0 违规；无 `pageerror`。
+- 截图证据：`v2.18.6-顶部按钮并排对比.png`、`v2.18.6-user_menu.png`、`v2.18.6-mobile_menu.png`。
+
 ## v2.18.5（2026-11-14）
 
 > **8 项遗留问题集中修复**：星标可取消、加载更多测速、文字对比度、后台浅色侧栏、后台表单可访问名、筛选栏焦点冲突、响应头重复与缺失。**无数据库变更，无需执行 SQL，覆盖文件即可。**

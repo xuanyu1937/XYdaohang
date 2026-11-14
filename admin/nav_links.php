@@ -978,8 +978,8 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
             }
         }
     </style>
-    <link href="../assets/css/admin.css?v=2.18.5" rel="stylesheet">
-    <link href="../assets/css/category-quick-add.css?v=2.18.5" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.6" rel="stylesheet">
+    <link href="../assets/css/category-quick-add.css?v=2.18.6" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -2222,7 +2222,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
     })();
     </script>
 
-    <script src="../assets/js/category-quick-add.js?v=2.18.5"></script>
+    <script src="../assets/js/category-quick-add.js?v=2.18.6"></script>
     <script>
     /* v2.12.0 · 导航管理页「添加分类」：与分类管理用同一个组件、同一套字段和校验 */
     (function () {

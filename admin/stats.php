@@ -23,7 +23,7 @@ $statsUserId = 0;
     <title>数据统计 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
-    <link href="../assets/css/admin.css?v=2.18.5" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.6" rel="stylesheet">
     <script src="../assets/js/chart.umd.min.js"></script>
     <script>window.Chart || document.write('<script src="https://cdn.staticfile.org/Chart.js/4.3.0/chart.umd.min.js"><\/script>');</script>
     <style>

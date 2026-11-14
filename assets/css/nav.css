@@ -259,7 +259,8 @@ svg {
     inset: 0;
     width: 100%;
     height: 100%;
-    padding: 7px;
+    /* v2.18.6：手机端 logo 放大后同步收内边距，避免图标被 padding 吃掉 */
+    padding: 5px;
     background: linear-gradient(145deg, var(--brand-from) 0%, var(--brand-to) 100%);
     object-fit: contain;
     filter: drop-shadow(0 1px 2px rgba(9, 18, 33, 0.28));
@@ -4312,16 +4313,18 @@ dialog.my-dialog::backdrop {
         gap: 10px;
     }
 
+    /* v2.18.6：去掉 !important，改由 ≤430 / ≤360 档的同级选择器覆盖。
+       否则后写的 42px / 38px 与 19px 标题会被这里的 !important 压死。 */
     .brand-mark,
     .brand-mark img {
-        width: 38px !important;
-        height: 38px !important;
-        flex-basis: 38px !important;
-        border-radius: 12px !important;
+        width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+        border-radius: 12px;
     }
 
     .brand-title {
-        font-size: 17px !important;
+        font-size: 17px;
         line-height: 1.2;
     }
 
@@ -4331,8 +4334,8 @@ dialog.my-dialog::backdrop {
     }
 
     .header-tools .tool-btn {
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
         border-radius: 12px;
     }
 
@@ -6541,15 +6544,19 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
         gap: 8px;
     }
 
-    /* 390px 下 logo 38 + 间距 8 + 标题 64 = 110px，
-       工具区需 44(搜索) + 34(头像) + 44(主题) + 76(退出) + 4×6(间距) = 222px
-       合计 332px，落在 354px 可用宽度内，留 22px 余量 */
+    /* v2.18.6：logo 34 → 42px，去掉 !important；标题同步到 20px。
+       两枚裸文字按钮已收进用户下拉，工具区改为 3 枚 40px 图标按钮，
+       360 / 390 / 430 三档重新分配后均不溢出。 */
     .site-header .brand-mark,
     .site-header .brand-mark img {
-        width: 34px !important;
-        height: 34px !important;
-        flex-basis: 34px !important;
-        border-radius: 11px !important;
+        width: 42px;
+        height: 42px;
+        flex-basis: 42px;
+        border-radius: 13px;
+    }
+
+    .site-header .brand-title {
+        font-size: 20px;
     }
 
     .site-header .header-tools {
@@ -6561,11 +6568,11 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
         font-size: 12.5px;
     }
 
-    /* 主题按钮与搜索框统一 38px，避免一高一矮 */
+    /* 主题按钮与搜索框统一到 --ctl-size(40px)，避免一高一矮 */
     .site-header .theme-toggle,
     .site-header .header-search-btn {
-        width: 38px;
-        height: 38px;
+        width: 40px;
+        height: 40px;
     }
 
     .site-header .my-avatar-img,
@@ -6582,8 +6589,9 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
    360px 视口下标题可用宽度只有约 54px，14px 需要 56px —— 差 2px 就会被
    ellipsis 截成「轩宇导…」。降到 13px（52px）才能完整放下四个字。 */
 @media (max-width: 360px) {
+    /* v2.18.6：logo 放大后标题不再压到 13px，降到 19px 仍保持单行省略 */
     .site-header .brand-title {
-        font-size: 13px !important;
+        font-size: 19px;
     }
 
     .site-header .brand {
@@ -6601,10 +6609,10 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
 
     .site-header .brand-mark,
     .site-header .brand-mark img {
-        width: 32px !important;
-        height: 32px !important;
-        flex-basis: 32px !important;
-        border-radius: 10px !important;
+        width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+        border-radius: 12px;
     }
 }
 
@@ -7051,4 +7059,198 @@ html[data-theme="dark"] .group-more-btn {
 body .my-group-tab .mgt-count {
     opacity: 1;
     color: inherit;
+}
+
+
+/* ==========================================================================
+   v2.18.6 · 顶部控件 / 用户下拉 / 右键菜单 跨页统一层
+   --------------------------------------------------------------------------
+   放在文件末尾，以同级或更高选择器覆盖历史分散规则：
+   首页与 my.php 共用同一套 --ctl-* 规格、同一套下拉条目与图标槽。
+   不引入第三方库，图标全部内联 SVG，动画只用 ≤180ms 的 transition。
+   ========================================================================== */
+
+:root {
+    /* 顶部图标控件统一规格（桌面 44px / ≤920px 40px） */
+    --ctl-size: 44px;
+    --ctl-radius: 12px;
+    --ctl-border: 1px solid var(--border);
+    --ctl-bg: var(--surface);
+    --ctl-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 920px) {
+    :root { --ctl-size: 40px; }
+}
+
+/* 两页所有图标按钮：同高、同圆角、同边框、同阴影 */
+.site-header .header-tools .tool-btn {
+    width: var(--ctl-size);
+    height: var(--ctl-size);
+    min-width: var(--ctl-size);
+    padding: 0;
+    border: var(--ctl-border);
+    border-radius: var(--ctl-radius);
+    background: var(--ctl-bg);
+    box-shadow: var(--ctl-shadow);
+    transition: border-color 0.16s ease, background-color 0.16s ease,
+                color 0.16s ease, box-shadow 0.16s ease;
+}
+
+/* 头像按钮带姓名/箭头时：高度不变、宽度按内容收缩 */
+.site-header .header-tools .tool-btn.user-summary,
+.site-header .header-tools .tool-btn.user-summary-guest {
+    width: auto;
+    min-width: var(--ctl-size);
+    padding: 0 8px;
+}
+
+.site-header .header-tools .tool-btn:hover,
+.site-header .header-tools .tool-btn:focus-visible {
+    border-color: var(--primary-border);
+    background: var(--primary-soft);
+    color: var(--primary);
+}
+
+/* 图标：桌面 20px / 移动端 18px；头像：桌面 28px / 移动端 30px；箭头 13px */
+.site-header .header-tools .tool-btn > svg {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+}
+
+.site-header .header-tools .tool-btn > .user-avatar,
+.site-header .header-tools .tool-btn > .user-avatar-img {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+}
+
+.site-header .header-tools .tool-btn > svg.user-caret {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 13px;
+}
+
+@media (max-width: 920px) {
+    .site-header .header-tools .tool-btn > svg { width: 18px; height: 18px; }
+
+    .site-header .header-tools .tool-btn > .user-avatar,
+    .site-header .header-tools .tool-btn > .user-avatar-img {
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+    }
+
+    .site-header .header-tools .mode-switch { height: var(--ctl-size); }
+    /* mode-switch 在 ≤480px 继续由历史规则隐藏，此处不触碰 display */
+}
+
+/* ---------- 用户下拉：208px、8 项图标槽、分组分隔、当前页竖条 ---------- */
+
+.site-header .header-tools .user-dropdown {
+    width: 208px;
+    min-width: 208px;
+    gap: 0;
+    padding: 8px;
+}
+
+.site-header .header-tools .user-dropdown .user-item {
+    min-height: 40px;
+    gap: 0;
+    padding: 0 12px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* 固定 20px 图标槽 + 10px 间距，所有文字左边缘对齐 */
+.site-header .header-tools .user-dropdown .user-item > svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 20px;
+    margin-right: 10px;
+    color: var(--muted);
+}
+
+.site-header .header-tools .user-dropdown .user-item:hover > svg,
+.site-header .header-tools .user-dropdown .user-item:focus-visible > svg {
+    color: var(--primary);
+}
+
+/* 当前页：左侧 3px 主色竖条，不再只靠加粗表达 */
+.site-header .header-tools .user-dropdown .user-item.is-current {
+    box-shadow: inset 3px 0 0 var(--primary);
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.site-header .header-tools .user-dropdown .user-item.is-current > svg {
+    color: var(--primary);
+}
+
+/* 退出登录：图标与文字常驻危险色 */
+.site-header .header-tools .user-dropdown .user-item.is-danger,
+.site-header .header-tools .user-dropdown .user-item.is-danger > svg {
+    color: var(--danger);
+}
+
+.site-header .header-tools .user-dropdown .user-item.is-danger:hover {
+    background: var(--danger-soft);
+    color: var(--danger);
+}
+
+.site-header .header-tools .user-dropdown .user-item.is-danger:hover > svg {
+    color: var(--danger);
+}
+
+/* 分组分隔线，上下各 6px */
+.site-header .header-tools .user-dropdown .user-sep {
+    height: 1px;
+    margin: 6px 4px;
+    background: var(--hairline);
+}
+
+/* 打开方式：文案固定，状态改为右对齐徽标 */
+.site-header .header-tools .user-dropdown .user-mode-badge {
+    margin-left: auto;
+    padding: 2px 6px;
+    border-radius: var(--radius-compact);
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+/* ---------- 右键 / 长按菜单：7 项在小屏不越界 ---------- */
+
+.card-context-menu {
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+}
+
+/* --------------------------------------------------------------------------
+   v2.18.6 · 暗色主题对比度补强（既有遗留，非本次改动引入）
+   html[data-theme="dark"] 的 --primary 为 #3b82f6：
+     · 作背景承载白字时对比度仅 3.67:1（#addBtn / 激活分组 tab）
+     · 作文字落在 #1a2332 上时仅 4.29:1（分组工具标签）
+   均低于 WCAG 2.1 AA 的 4.5:1。分别改用深蓝底与亮蓝字，
+   不动亮色主题、不动其它 skin，也不改 --primary 本身以免影响全局。
+   -------------------------------------------------------------------------- */
+html[data-theme="dark"] {
+    --primary-solid-dark: #1d4ed8;
+    --primary-text-dark: #93c5fd;
+}
+
+html[data-theme="dark"] body .my-btn.is-primary,
+html[data-theme="dark"] body #addBtn,
+html[data-theme="dark"] body .my-group-tab.is-active {
+    background: var(--primary-solid-dark);
+    color: #fff;
+}
+
+html[data-theme="dark"] .section-tool-label,
+html[data-theme="dark"] .section-tool.is-active .section-tool-label {
+    color: var(--primary-text-dark);
 }

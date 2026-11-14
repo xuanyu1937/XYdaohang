@@ -689,7 +689,7 @@ $tableLabels = [
     <title>系统工具 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
-    <link href="../assets/css/admin.css?v=2.18.5" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.6" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>

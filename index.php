@@ -620,8 +620,8 @@ $navJsonLd = [
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.5">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.5">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.6">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.6">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -633,7 +633,7 @@ $navJsonLd = [
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.5';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.6';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -653,10 +653,10 @@ $navJsonLd = [
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.5" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.18.6" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.5" defer></script>
-    <script src="assets/js/search.js?v=2.18.5" defer></script>
+    <script src="assets/js/nav.js?v=2.18.6" defer></script>
+    <script src="assets/js/search.js?v=2.18.6" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -797,25 +797,46 @@ $navJsonLd = [
                                 <span class="user-account-name"><?php echo $functions->escape($currentUser['username']); ?></span>
                                 <?php if ((int) $currentUser['is_admin'] === 1): ?><span class="user-account-tag">管理员</span><?php endif; ?>
                             </div>
-                            <a class="user-item<?php echo $isOwner ? ' is-current' : ''; ?>" href="index.php">全部导航</a>
-                            <a class="user-item" href="my.php">我的导航</a>
+                            <!-- v2.18.6：8 项全部补 16px 内联 SVG，统一 20px 图标槽；
+                                 分 4 组，用 .user-sep 分隔；打开方式状态改为右对齐徽标。 -->
+                            <a class="user-item<?php echo $isOwner ? ' is-current' : ''; ?>" href="index.php">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
+                                <span>全部导航</span>
+                            </a>
+                            <a class="user-item" href="my.php">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12v17l-6-4-6 4z"></path></svg>
+                                <span>我的导航</span>
+                            </a>
+                            <div class="user-sep" aria-hidden="true"></div>
                             <a class="user-item" href="my.php?open=account" title="头像、昵称、密码与页脚版权">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="15" height="15"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"></path></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"></path></svg>
                                 <span>账号设置</span>
                             </a>
                             <button type="button" class="user-item user-item-btn" id="quickAddTrigger">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="15" height="15"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                                 <span>快捷收藏</span>
                             </button>
                             <button type="button" class="user-item user-item-btn" id="openModeToggle">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="15" height="15"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path></svg>
-                                <span>打开方式：默认</span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path></svg>
+                                <span>打开方式</span>
+                                <span class="user-mode-badge" id="openModeBadge">默认</span>
                             </button>
+                            <div class="user-sep" aria-hidden="true"></div>
                             <?php if ((int) $currentUser['is_admin'] === 1): ?>
-                                <a class="user-item" href="admin/index.php">管理后台</a>
+                                <a class="user-item" href="admin/index.php">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"></path><circle cx="16" cy="7" r="2"></circle><circle cx="8" cy="17" r="2"></circle></svg>
+                                    <span>管理后台</span>
+                                </a>
                             <?php endif; ?>
-                            <a class="user-item" href="about.php">关于本站</a>
-                            <a class="user-item is-danger" href="logout.php">退出登录</a>
+                            <a class="user-item" href="about.php">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.6v.2"></path></svg>
+                                <span>关于本站</span>
+                            </a>
+                            <div class="user-sep" aria-hidden="true"></div>
+                            <a class="user-item is-danger" href="logout.php">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3H5.5A2.5 2.5 0 0 0 3 5.5v13A2.5 2.5 0 0 0 5.5 21H9"></path><path d="m16 16 4-4-4-4M20 12H9"></path></svg>
+                                <span>退出登录</span>
+                            </a>
                         </div>
                     </details>
                 <?php else: ?>
@@ -1592,8 +1613,10 @@ $navJsonLd = [
         <button type="button" class="ccm-item" data-action="open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg>新标签打开</button>
         <button type="button" class="ccm-item" data-action="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>复制链接</button>
         <button type="button" class="ccm-item" data-action="qrcode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3M21 14v7M14 21h3M17 17h4"></path></svg>二维码</button>
-        <!-- v2.14.0：手机端隐藏常驻操作条后，收藏改由长按菜单承担；不带 ccm-owner，所有登录用户可见 -->
-        <button type="button" class="ccm-item" data-action="star" id="ctxMenuStar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg><span>收藏</span></button>
+        <!-- v2.14.0：手机端隐藏常驻操作条后，收藏改由长按菜单承担；不带 ccm-owner，登录用户可见。
+             v2.18.6：访客也保留此项（长按共 4 项），点击由 toggleStar() 的 isGuest() 分支提示登录；
+             title / aria-label 与 <span> 文案一并由 openCtxMenu() 按 data-starred 同步。 -->
+        <button type="button" class="ccm-item" data-action="star" id="ctxMenuStar" title="收藏" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg><span>收藏</span></button>
         <button type="button" class="ccm-item ccm-owner" data-action="edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>编辑</button>
         <button type="button" class="ccm-item ccm-owner" data-action="move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14M5 12h14M5 20h14"></path><path d="M9 8l3-3 3 3M9 16l3 3 3-3"></path></svg>移动分组</button>
         <button type="button" class="ccm-item ccm-owner ccm-danger" data-action="delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg>删除</button>

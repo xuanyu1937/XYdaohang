@@ -3,7 +3,7 @@
  * 版本号更新时会清理旧缓存。
  * 发版时必须把 CACHE 里的版本串与 VERSION / config/version.php 同步（v2.18.4 修订）。
  */
-var CACHE = 'xy-nav-pwa-v2.18.5';
+var CACHE = 'xy-nav-pwa-v2.18.6';
 var OFFLINE_URL = 'offline.html';
 
 self.addEventListener('install', function (e) {

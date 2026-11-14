@@ -447,6 +447,9 @@ foreach ($rawLinks as $row) {
         'favicons' => $faviconFor($row['logo'] ?? '', $url),
         'tags' => (string) ($row['tags'] ?? ''),
         'alias' => (string) ($row['alias'] ?? ''),
+        // v2.18.6：此前重构 $item 漏带 is_starred，data-starred 恒为 0，
+        // 导致「我的导航」行内星标与长按菜单文案无法反映真实收藏状态、刷新后回退。
+        'is_starred' => !empty($row['is_starred']) ? 1 : 0,
     ];
 
     if (isset($groups[$categoryId])) {
@@ -495,9 +498,9 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.5">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.5">
-    <script src="assets/js/category-quick-add.js?v=2.18.5" defer></script>
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.6">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.6">
+    <script src="assets/js/category-quick-add.js?v=2.18.6" defer></script>
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -2296,36 +2299,90 @@ $hasLinks = $totalLinks > 0;
             </div>
 
             <div class="header-tools">
-                <div class="my-userbar">
-                    <?php
-                    $userAvatar = trim((string) ($user['avatar'] ?? ''));
-                    $avatarUrl = $userAvatar !== '' ? $functions->getLogoDisplayUrl($userAvatar) : '';
-                    ?>
-                    <?php if ($avatarUrl !== ''): ?>
-                        <img class="my-avatar-img" src="<?php echo $functions->escape($avatarUrl); ?>" alt="头像" width="34" height="34" loading="eager" decoding="async" onerror="this.onerror=null;this.src='assets/img/avatar-default.svg';">
-                        <span class="my-avatar" aria-hidden="true" style="display:none;"><?php echo $functions->escape($brandInitial); ?></span>
-                    <?php else: ?>
-                        <span class="my-avatar" aria-hidden="true"><?php echo $functions->escape($brandInitial); ?></span>
-                    <?php endif; ?>
-                    <span class="my-username" title="<?php echo $functions->escape($user['username']); ?>" translate="no"><?php echo $functions->escape($user['username']); ?></span>
-                    <button type="button" class="my-avatar-edit" id="avatarEditBtn" title="设置头像" aria-label="设置头像">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2L8 5h8l1.5 2h2A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"></path>
-                            <circle cx="12" cy="13" r="3.2"></circle>
-                        </svg>
+                <?php
+                $userAvatar = trim((string) ($user['avatar'] ?? ''));
+                $avatarUrl = $userAvatar !== '' ? $functions->getLogoDisplayUrl($userAvatar) : '';
+                $isAdmin = (int) ($user['is_admin'] ?? 0) === 1;
+                ?>
+                <!-- v2.18.6：工具条与 index.php 对齐为 3 枚 --ctl-* 图标按钮，
+                     「返回首页 / 退出登录」等裸文字按钮全部收进用户下拉。 -->
+                <div class="skin-picker" id="skinPicker">
+                    <button type="button" class="tool-btn" id="skinToggle" aria-label="选择配色" title="选择配色" aria-expanded="false">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9.5" r="5"></circle><circle cx="15" cy="9.5" r="5"></circle><circle cx="12" cy="14.5" r="5"></circle></svg>
                     </button>
+                    <div class="skin-menu" id="skinMenu" role="menu" aria-label="配色方案">
+                        <button type="button" class="skin-option is-active" role="menuitemradio" aria-checked="true" data-skin="default"><span class="skin-dot" data-skin="default" aria-hidden="true"></span>经典蓝</button>
+                        <button type="button" class="skin-option" role="menuitemradio" aria-checked="false" data-skin="purple"><span class="skin-dot" data-skin="purple" aria-hidden="true"></span>静谧紫</button>
+                        <button type="button" class="skin-option" role="menuitemradio" aria-checked="false" data-skin="orange"><span class="skin-dot" data-skin="orange" aria-hidden="true"></span>暖阳橙</button>
+                        <button type="button" class="skin-option" role="menuitemradio" aria-checked="false" data-skin="mint"><span class="skin-dot" data-skin="mint" aria-hidden="true"></span>薄荷青</button>
+                    </div>
                 </div>
-                <button type="button" class="theme-toggle" id="themeToggle" aria-label="切换深浅色" title="切换深浅色">
-                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"></path>
-                    </svg>
-                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="4"></circle>
-                        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
-                    </svg>
+
+                <button type="button" class="tool-btn theme-toggle" id="themeToggle" aria-label="切换深浅色" title="切换深浅色">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"></path></svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
                 </button>
-                <a class="my-btn is-ghost" href="index.php">返回首页</a>
-                <a class="my-btn is-ghost" href="logout.php">退出登录</a>
+
+                <details class="user-menu" id="userMenu">
+                    <summary class="tool-btn user-summary" aria-label="账号菜单：<?php echo $functions->escape($user['username']); ?>">
+                        <?php if ($avatarUrl !== ''): ?>
+                            <img class="user-avatar-img" src="<?php echo $functions->escape($avatarUrl); ?>" alt="<?php echo $functions->escape($user['username']); ?> 头像" width="28" height="28" loading="eager" decoding="async" onerror="this.onerror=null;this.src='assets/img/avatar-default.svg';">
+                        <?php else: ?>
+                            <span class="user-avatar" aria-hidden="true"><?php echo $functions->escape($brandInitial); ?></span>
+                        <?php endif; ?>
+                        <span class="user-name" translate="no"><?php echo $functions->escape($user['username']); ?></span>
+                        <svg class="user-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                    </summary>
+                    <div class="user-dropdown">
+                        <div class="user-account">
+                            <?php if ($avatarUrl !== ''): ?>
+                                <img class="user-avatar-img" src="<?php echo $functions->escape($avatarUrl); ?>" alt="" width="24" height="24" onerror="this.onerror=null;this.src='assets/img/avatar-default.svg';">
+                            <?php else: ?>
+                                <span class="user-avatar" aria-hidden="true"><?php echo $functions->escape($brandInitial); ?></span>
+                            <?php endif; ?>
+                            <span class="user-account-name"><?php echo $functions->escape($user['username']); ?></span>
+                            <?php if ($isAdmin): ?><span class="user-account-tag">管理员</span><?php endif; ?>
+                        </div>
+                        <a class="user-item" href="index.php">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
+                            <span>全部导航</span>
+                        </a>
+                        <a class="user-item is-current" href="my.php">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12v17l-6-4-6 4z"></path></svg>
+                            <span>我的导航</span>
+                        </a>
+                        <div class="user-sep" aria-hidden="true"></div>
+                        <a class="user-item" href="my.php?open=account" title="头像、昵称、密码与页脚版权">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"></path></svg>
+                            <span>账号设置</span>
+                        </a>
+                        <button type="button" class="user-item user-item-btn" id="quickAddTriggerMy">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            <span>快捷收藏</span>
+                        </button>
+                        <button type="button" class="user-item user-item-btn" id="openModeToggleMy">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path></svg>
+                            <span>打开方式</span>
+                            <span class="user-mode-badge" id="openModeBadgeMy">默认</span>
+                        </button>
+                        <div class="user-sep" aria-hidden="true"></div>
+                        <?php if ($isAdmin): ?>
+                            <a class="user-item" href="admin/index.php">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"></path><circle cx="16" cy="7" r="2"></circle><circle cx="8" cy="17" r="2"></circle></svg>
+                                <span>管理后台</span>
+                            </a>
+                        <?php endif; ?>
+                        <a class="user-item" href="about.php">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.6v.2"></path></svg>
+                            <span>关于本站</span>
+                        </a>
+                        <div class="user-sep" aria-hidden="true"></div>
+                        <a class="user-item is-danger" href="logout.php">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3H5.5A2.5 2.5 0 0 0 3 5.5v13A2.5 2.5 0 0 0 5.5 21H9"></path><path d="m16 16 4-4-4-4M20 12H9"></path></svg>
+                            <span>退出登录</span>
+                        </a>
+                    </div>
+                </details>
             </div>
         </header>
 
@@ -3478,6 +3535,8 @@ DELETE /api/sites.php       删除网址</code></pre>
         <button type="button" class="ccm-item" data-action="open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg>新标签打开</button>
         <button type="button" class="ccm-item" data-action="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>复制链接</button>
         <button type="button" class="ccm-item" data-action="qrcode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3M21 14v7M14 21h3M17 17h4"></path></svg>二维码</button>
+        <!-- v2.18.6 · 与首页右键菜单统一为 7 项；文案、title、aria-label 由 syncCtxStar() 按 data-starred 同步 -->
+        <button type="button" class="ccm-item" data-action="star" id="ctxMenuStar" title="收藏" aria-label="收藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg><span>收藏</span></button>
         <button type="button" class="ccm-item" data-action="edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>编辑</button>
         <button type="button" class="ccm-item" data-action="move"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14M5 12h14M5 20h14"></path><path d="M9 8l3-3 3 3M9 16l3 3 3-3"></path></svg>移动分组</button>
         <button type="button" class="ccm-item ccm-danger" data-action="delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg>删除</button>
@@ -6685,6 +6744,19 @@ DELETE /api/sites.php       删除网址</code></pre>
                 var label = starred ? '取消收藏' : '收藏';
                 star.setAttribute('aria-label', label);
                 star.setAttribute('title', label);
+                syncCtxStar(item);
+            }
+
+            /* v2.18.6：右键/长按菜单的收藏项与行内星标共用 data-starred。
+               菜单挂在 body 末尾、不在 .my-item 内，需单独同步文案、title、aria-label。 */
+            function syncCtxStar(item) {
+                var starItem = qs('#ctxMenuStar');
+                if (!starItem) { return; }
+                var label = getItemData(item).starred ? '取消收藏' : '收藏';
+                var text = starItem.querySelector('span');
+                if (text) { text.textContent = label; }
+                starItem.setAttribute('title', label);
+                starItem.setAttribute('aria-label', label);
             }
 
             function toggleStar(item) {
@@ -6770,6 +6842,7 @@ DELETE /api/sites.php       删除网址</code></pre>
 
                 event.preventDefault();
                 contextTarget = item;
+                syncCtxStar(item);
 
                 if (contextMenu) {
                     contextMenu.hidden = false;
@@ -6809,6 +6882,7 @@ DELETE /api/sites.php       删除网址</code></pre>
             function showRowMenu(item, x, y) {
                 if (!contextMenu) { return; }
 
+                syncCtxStar(item);
                 contextMenu.hidden = false;
                 var menuRect = contextMenu.getBoundingClientRect();
 
@@ -6937,6 +7011,9 @@ DELETE /api/sites.php       删除网址</code></pre>
                         case 'qrcode':
                             showQrDialog(data.url);
                             break;
+                        case 'star':
+                            toggleStar(target);
+                            break;
                         case 'edit':
                             openLinkDialog({
                                 id: data.id,
@@ -7012,6 +7089,82 @@ DELETE /api/sites.php       删除网址</code></pre>
                     contextMenu.hidden = true;
                 }
             }, true);
+
+            /* v2.18.6 跨页统一：皮肤 / 用户下拉 / 徽标 / Esc 焦点 */
+            var vMenu=qs('#userMenu'),vSkin=qs('#skinPicker'),vSkinBtn=qs('#skinToggle');
+            function closeVMenu(f){
+                if(!vMenu||!vMenu.hasAttribute('open'))return;
+                vMenu.removeAttribute('open');
+                if(f)vMenu.querySelector('summary').focus();
+            }
+            function applyV(k){
+                if(['default','purple','orange','mint'].indexOf(k)<0)k='default';
+                document.documentElement.setAttribute('data-skin',k);
+                qsa('.skin-option').forEach(function(o){
+                    var on=o.getAttribute('data-skin')===k;
+                    o.classList.toggle('is-active',on);
+                    o.setAttribute('aria-checked',on?'true':'false');
+                });
+            }
+            if(vSkin&&vSkinBtn){
+                var sk='default';
+                try{sk=localStorage.getItem('xy-nav-skin')||'default';}catch(e){}
+                applyV(sk);
+                vSkinBtn.addEventListener('click',function(e){
+                    e.stopPropagation();
+                    vSkinBtn.setAttribute('aria-expanded',vSkin.classList.toggle('is-open')?'true':'false');
+                });
+                qsa('.skin-option').forEach(function(o){
+                    o.addEventListener('click',function(){
+                        var k=o.getAttribute('data-skin');
+                        applyV(k);
+                        try{localStorage.setItem('xy-nav-skin',k);}catch(e){}
+                        vSkin.classList.remove('is-open');
+                        vSkinBtn.setAttribute('aria-expanded','false');
+                    });
+                });
+            }
+            function readMode(){try{return localStorage.getItem('nav_open_mode')||'default';}catch(e){return 'default';}}
+            function badgeV(){
+                var b=qs('#openModeBadgeMy');
+                if(b){var m=readMode();b.textContent=m==='self'?'当前页':(m==='blank'?'新标签':'默认');}
+            }
+            badgeV();
+            var modeV=qs('#openModeToggleMy');
+            if(modeV)modeV.addEventListener('click',function(){
+                var m=readMode(),n=m==='default'?'self':(m==='self'?'blank':'default');
+                try{localStorage.setItem('nav_open_mode',n);}catch(e){}
+                badgeV();
+            });
+            var qk=qs('#quickAddTriggerMy');
+            if(qk)qk.addEventListener('click',function(){
+                closeVMenu(false);
+                var q=qs('#quickAddBtn');
+                if(q)q.click();
+            });
+            document.addEventListener('click',function(e){
+                if(vMenu&&vMenu.hasAttribute('open')&&!vMenu.contains(e.target))vMenu.removeAttribute('open');
+                if(vSkin&&vSkin.classList.contains('is-open')&&!vSkin.contains(e.target)){
+                    vSkin.classList.remove('is-open');
+                    vSkinBtn.setAttribute('aria-expanded','false');
+                }
+            });
+            document.addEventListener('keydown',function(e){
+                if(e.key!=='Escape')return;
+                closeVMenu(true);
+                if(vSkin&&vSkin.classList.contains('is-open')){
+                    vSkin.classList.remove('is-open');
+                    vSkinBtn.setAttribute('aria-expanded','false');
+                    vSkinBtn.focus();
+                }
+                if(contextMenu&&!contextMenu.hidden){
+                    contextMenu.hidden=true;
+                    if(contextTarget&&typeof contextTarget.focus==='function'){
+                        if(!contextTarget.hasAttribute('tabindex'))contextTarget.setAttribute('tabindex','-1');
+                        contextTarget.focus({preventScroll:true});
+                    }
+                }
+            });
 
             // 快捷收藏弹窗
             var quickAddBtn = qs('#quickAddBtn');
@@ -7534,6 +7687,6 @@ DELETE /api/sites.php       删除网址</code></pre>
         })();
     </script>
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.18.5" defer></script>
+<script src="assets/js/search.js?v=2.18.6" defer></script>
 </body>
 </html>

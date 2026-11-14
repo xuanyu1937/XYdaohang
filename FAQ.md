@@ -1,6 +1,6 @@
 # 常见问题 FAQ
 
-> 本文档为通用问答，与版本无关；**当前版本 v2.18.5（2026-11-14）**，版本差异与升级步骤见 [CHANGELOG.md](CHANGELOG.md) / [UPLOAD_LIST.md](UPLOAD_LIST.md)。
+> 本文档为通用问答，与版本无关；**当前版本 v2.18.6（2026-11-14）**，版本差异与升级步骤见 [CHANGELOG.md](CHANGELOG.md) / [UPLOAD_LIST.md](UPLOAD_LIST.md)。
 
 ## 安装与部署
 

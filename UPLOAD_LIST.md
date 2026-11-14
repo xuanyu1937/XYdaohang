@@ -1,29 +1,51 @@
-# 轩宇-导航 部署清单（当前版本 v2.18.5）
+# 轩宇-导航 部署清单（当前版本 v2.18.6）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：**v2.18.5**（2026-11-14）
+当前版本：**v2.18.6**（2026-11-14）
 
-> **v2.18.5 修掉 v2.18.4 遗留的 8 项问题**：星标可取消、加载更多卡片测速、文字对比度、后台浅色侧栏、后台表单可访问名、筛选栏焦点冲突、响应头重复与缺失、CSP 缺失。
-> **无数据库变更，无需执行 SQL**；已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，从 v2.18.2 一路覆盖到 v2.18.5 都不用再跑 SQL。
+> **v2.18.6 三处收尾**：卡片长按/右键菜单两页统一为 7 项并修手机端缺项、手机端 logo 放大、顶部按钮与用户下拉菜单风格跨页统一；顺带修「我的导航」星标状态渲染与暗色主题 3 处对比度遗留。
+> **无数据库变更，无需执行 SQL**；已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，从 v2.18.2 一路覆盖到 v2.18.6 都不用再跑 SQL。
 
 ## ⚠️ 升级须知（三步）
 
-1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.5 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
-2. **后台「系统工具 → 在线更新」上传 v2.18.5 整包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
-3. **清一次浏览器缓存**（Ctrl+F5）。18 个 PHP 文件的 33 处资源参数已升到 `?v=2.18.5`；`sw.js` 缓存名 `xy-nav-pwa-v2.18.5` 激活时自动清掉旧 PWA 缓存。
+1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.6 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
+2. **后台「系统工具 → 在线更新」上传 v2.18.6 更新包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
+3. **清一次浏览器缓存**（Ctrl+F5）。18 个 PHP 文件的 33 处资源参数已升到 `?v=2.18.6`；`sw.js` 缓存名 `xy-nav-pwa-v2.18.6` 激活时自动清掉旧 PWA 缓存。
 
 **验证是否生效**
 
-- `/api/index.php` 徽章显示 `v2.18.5`；`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php` 均为 2.18.5；
-- 登录普通用户点星标：本人视图已有记录时变实心 →「已收藏」，公共网址首次收藏新建记录时 →「已收藏到你的导航」；再点变空心 →「已取消收藏」，刷新后状态保持；
-- 点「加载更多」：新卡片立即显示毫秒 + 快/一般/慢或「测速中」，1–2 秒出结果；服务端已有毫秒的条目刷新后仍显示原值；
-- axe-core 复扫首页 / 我的导航 / 后台首页 / 后台导航管理：`critical=0`、`color-contrast=0`、`aria-hidden-focus=0`；
-- 后台浅色与暗色两种主题下，主题切换按钮、管理员名、侧栏脚注链接都清晰可读；
-- `curl -D -` 看首页：四条安全头各一次、存在 `Content-Security-Policy-Report-Only`、`Cache-Control: public, max-age=60, s-maxage=60`、带 `ETag`、`Vary: Cookie, Accept-Encoding`；登录态仍 `no-store`；
-- 手机端 390px 后台导航管理：表格可横向滚动、操作按钮不错位。
+- `/api/index.php` 徽章显示 `v2.18.6`；`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php` 均为 2.18.6；
+- 390px 登录态首页长按：7 项齐全（新标签打开 / 复制链接 / 二维码 / 收藏 / 编辑 / 移动分组 / 删除），编辑、移动、删除分别打开弹窗与二次确认；「加载更多」出来的卡片同样 7 项；
+- 访客长按 4 项，点收藏提示「请先登录后再收藏」；登录用户看非本人数据 4 项，不出现编辑/移动/删除；
+- `my.php` 长按 7 项，收藏/取消收藏文案与行内星标同步、刷新保持；
+- 首页与 `my.php` 顶部各 3 枚图标按钮同高、同圆角、同边框与阴影，工具条无裸文字按钮；
+- 360 / 390 / 430 三档：logo ≥38px、标题单行省略、头部不换行不溢出；
+- 用户下拉 8 项全部内联 SVG、文字左对齐、3 条分组分隔线、当前页左侧主色竖条、「打开方式」右对齐状态徽标；
+- 键盘 Tab 可依次聚焦按钮与菜单项，Esc 关闭下拉/右键菜单并归还焦点；
+- axe-core 明暗双主题扫描首页与 `my.php`：`color-contrast=0`；
+- `curl -D -` 看首页：四条安全头各一次、`Content-Security-Policy-Report-Only`、匿名 `public, max-age=60`、带 `ETag`、`Vary: Cookie, Accept-Encoding`；登录态仍 `no-store`。
 
-## 本次 v2.18.5 变动文件（11 个功能文件，无新增文件，无 SQL）
+## 本次 v2.18.6 变动文件（5 个功能文件 + 版本同步，无新增文件，无 SQL）
+
+| 文件 | 说明 |
+| --- | --- |
+| `includes/site_card.php` | `.site-card` 增加 `data-owner`，触屏删除 `.card-actions` 后仍能判断归属 |
+| `index.php` | 右键菜单 star 补 `title` / `aria-label`；用户下拉 8 项内联 SVG、4 组分隔线、当前页竖条、打开方式徽标 |
+| `my.php` | 右键菜单补 star 项与文案/点击联动；头部改为 3 枚统一图标按钮 + 8 项下拉；`$item` 补 `is_starred` |
+| `assets/js/nav.js` | `cardData()` 用 `data-owner` 判归属；`openCtxMenu()` 同步 star 文案；徽标更新；Esc 与焦点归还；打开菜单聚焦首项 |
+| `assets/css/nav.css` | 新增 `--ctl-*` 变量组；解 `!important` 锁并放大手机 logo（42/38）；移动端按钮 36→40；用户下拉 208px 统一层；菜单小屏滚动；暗色对比度补强 |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` / `sw.js` | 版本号升至 2.18.6、PWA 缓存名同步 |
+| 18 个 PHP 页面（33 处） | `?v=2.18.6` |
+| `CHANGELOG.md` / `README.md` / `UPLOAD_LIST.md` / `FAQ.md` | 文档同步 |
+
+> 约束核对：功能改动仅限 5 个点名前端文件（版本同步与文档属发版必需）；CSS 净增 7,547 字节 ≤40KB、JS 净增 2,607 字节 ≤5KB；不引第三方库、图标全内联 SVG、系统字体栈；**未改任何接口字段与权限**。
+
+> 本地已用 Chromium + axe-core 4.10.3 全量验收，71 项断言 0 FAIL（含明暗双主题、360/390/430 三档、访客态、加载更多、真实星标持久化、Tab/Esc 焦点），逐项结果见 `CHANGELOG.md` → v2.18.6「本地验收结果」与 `v2.18.6-验收日志.txt`；验收工具只装在本地临时目录，不在交付包内。
+
+## 历史变动文件
+
+### v2.18.5 · 8 项遗留问题集中修复（11 个功能文件，无新增文件，无 SQL）
 
 | 文件 | 说明 |
 | --- | --- |
@@ -46,7 +68,8 @@
 
 > 本地已用 Chromium + axe-core 4.10.3 全量验收（含后台明暗双主题、390px 手机端、`curl -D -` 响应头、真实点击「加载更多」与星标），逐项结果见 `CHANGELOG.md` → v2.18.5「本地验收结果」。CSS 净增 6,229 字节、JS 净增 1,742 字节，均在约束内；验收工具只装在本地临时目录，不在交付包内。
 
-## 历史：v2.18.2 ~ v2.18.4 变动文件
+
+### v2.18.2 ~ v2.18.4 变动文件
 
 ### v2.18.4 · 国内网络适配（30 个文件修改，无新增文件，无 SQL）
 
