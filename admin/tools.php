@@ -689,7 +689,7 @@ $tableLabels = [
     <title>系统工具 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
-    <link href="../assets/css/admin.css?v=2.18.0" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.1" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -721,14 +721,14 @@ $tableLabels = [
             <?php if ($message): ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <?php echo $functions->escape($message); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
                 </div>
             <?php endif; ?>
 
             <?php if ($error): ?>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <?php echo $functions->escape($error); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
                 </div>
             <?php endif; ?>
 
@@ -759,6 +759,11 @@ $tableLabels = [
                         <?php if ($unreadMessages > 0): ?>
                             <span class="badge bg-danger ms-1"><?php echo (int) $unreadMessages; ?></span>
                         <?php endif; ?>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tabBtn-icons" data-bs-toggle="tab" data-bs-target="#tab-icons" type="button" role="tab">
+                        <i class="fas fa-image me-1"></i>本地图标
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -1095,7 +1100,7 @@ $tableLabels = [
                                                                     <input type="hidden" name="tab" value="api">
                                                                     <input type="hidden" name="action" value="toggle_token_perm">
                                                                     <input type="hidden" name="token_id" value="<?php echo (int) $row['id']; ?>">
-                                                                    <button type="submit" class="btn btn-action btn-action-edit" title="切换权限">
+                                                                    <button type="submit" class="btn btn-action btn-action-edit" title="切换权限" aria-label="切换权限">
                                                                         <i class="fas fa-arrows-rotate"></i>
                                                                     </button>
                                                                 </form>
@@ -1103,7 +1108,7 @@ $tableLabels = [
                                                                     <input type="hidden" name="tab" value="api">
                                                                     <input type="hidden" name="action" value="delete_token">
                                                                     <input type="hidden" name="token_id" value="<?php echo (int) $row['id']; ?>">
-                                                                    <button type="submit" class="btn btn-action btn-action-delete" title="删除令牌">
+                                                                    <button type="submit" class="btn btn-action btn-action-delete" title="删除令牌" aria-label="删除令牌">
                                                                         <i class="fas fa-trash-can"></i>
                                                                     </button>
                                                                 </form>
@@ -1530,7 +1535,7 @@ $tableLabels = [
                                                                 <input type="hidden" name="tab" value="messages">
                                                                 <input type="hidden" name="action" value="msg_unread">
                                                                 <input type="hidden" name="message_id" value="<?php echo (int) $msg['id']; ?>">
-                                                                <button type="submit" class="btn btn-action btn-action-edit" title="标记为未读">
+                                                                <button type="submit" class="btn btn-action btn-action-edit" title="标记为未读" aria-label="标记为未读">
                                                                     <i class="fas fa-envelope"></i>
                                                                 </button>
                                                             </form>
@@ -1539,7 +1544,7 @@ $tableLabels = [
                                                                 <input type="hidden" name="tab" value="messages">
                                                                 <input type="hidden" name="action" value="msg_read">
                                                                 <input type="hidden" name="message_id" value="<?php echo (int) $msg['id']; ?>">
-                                                                <button type="submit" class="btn btn-action btn-action-edit" title="标记为已读">
+                                                                <button type="submit" class="btn btn-action btn-action-edit" title="标记为已读" aria-label="标记为已读">
                                                                     <i class="fas fa-envelope-open"></i>
                                                                 </button>
                                                             </form>
@@ -1549,7 +1554,7 @@ $tableLabels = [
                                                             <input type="hidden" name="tab" value="messages">
                                                             <input type="hidden" name="action" value="msg_delete">
                                                             <input type="hidden" name="message_id" value="<?php echo (int) $msg['id']; ?>">
-                                                            <button type="submit" class="btn btn-action btn-action-delete" title="删除留言">
+                                                            <button type="submit" class="btn btn-action btn-action-delete" title="删除留言" aria-label="删除留言">
                                                                 <i class="fas fa-trash-can"></i>
                                                             </button>
                                                         </form>
@@ -1600,6 +1605,36 @@ $tableLabels = [
                                     </nav>
                                 </div>
                             <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================
+                     5.5) 本地图标补齐（v2.18.1）
+                     ============================================================ -->
+                <div class="tab-pane fade" id="tab-icons" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-image me-2"></i>批量补齐本地图标
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-3">
+                                把「没有图标」的站点图标下载到本站 <code>uploads/icons/</code>，之后首页只请求同源图片，
+                                不再向几十个外部域名发请求。单张限制 64KB，只接受图片类型，失败会保留为空并在下方列出。
+                            </p>
+                            <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                                <button type="button" class="btn btn-primary" id="iconBackfillStart">
+                                    <i class="fas fa-download me-1"></i>开始补齐（每批 10 条）
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="iconBackfillStop" disabled>
+                                    <i class="fas fa-stop me-1"></i>停止
+                                </button>
+                                <span class="text-muted small" id="iconBackfillStats">尚未开始</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 10px;">
+                                <div class="progress-bar" id="iconBackfillBar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="补齐进度"></div>
+                            </div>
+                            <div id="iconBackfillFailed" class="small text-danger"></div>
                         </div>
                     </div>
                 </div>
@@ -1843,6 +1878,131 @@ $tableLabels = [
                     }
                 }
             });
+        });
+    })();
+    </script>
+
+    <script>
+    /* v2.18.1 · 批量补齐本地图标：每次 10 条，循环到 done */
+    (function () {
+        var startBtn = document.getElementById('iconBackfillStart');
+        var stopBtn = document.getElementById('iconBackfillStop');
+        var statsEl = document.getElementById('iconBackfillStats');
+        var barEl = document.getElementById('iconBackfillBar');
+        var failedEl = document.getElementById('iconBackfillFailed');
+
+        if (!startBtn) {
+            return;
+        }
+
+        var running = false;
+        var cancelled = false;
+        var offset = 0;
+        var total = 0;
+        var success = 0;
+        var failedCount = 0;
+        var skipIds = [];
+
+        function paint(text, percent) {
+            statsEl.textContent = text;
+
+            if (typeof percent === 'number') {
+                barEl.style.width = Math.max(0, Math.min(100, percent)) + '%';
+                barEl.setAttribute('aria-valuenow', String(Math.round(percent)));
+            }
+        }
+
+        function step() {
+            if (cancelled) {
+                running = false;
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                return;
+            }
+
+            var body = new URLSearchParams();
+            body.append('offset', String(offset));
+            body.append('limit', '10');
+
+            if (skipIds.length) {
+                body.append('skip', skipIds.join(','));
+            }
+
+            fetch('icon_backfill.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                body: body.toString()
+            }).then(function (res) {
+                return res.json();
+            }).then(function (data) {
+                if (!data || !data.ok) {
+                    throw new Error('server');
+                }
+
+                total = data.total || total;
+                success += data.success || 0;
+                offset = data.next || offset;
+
+                if (data.failed && data.failed.length) {
+                    failedCount += data.failed.length;
+                    data.failed.forEach(function (item) {
+                        // 失败的条目留在「logo 为空」集合里，必须记住并跳过，
+                        // 否则下一批还是它，进度会卡死在同一个地方。
+                        if (skipIds.indexOf(item.id) === -1) {
+                            skipIds.push(item.id);
+                        }
+                    });
+                    failedEl.textContent = '最近失败：' + data.failed.slice(-5).map(function (item) {
+                        return item.url;
+                    }).join('、');
+                }
+
+                var handled = offset;
+                var base = total > 0 ? Math.min(100, Math.round((handled / total) * 100)) : 100;
+
+                paint('已处理 ' + handled + ' / ' + (total || handled) + '，成功 ' + success + '，失败 ' + failedCount, base);
+
+                if (data.done || (data.processed || 0) === 0) {
+                    running = false;
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    paint('完成：共 ' + handled + ' 条，成功 ' + success + '，失败 ' + failedCount, 100);
+                    return;
+                }
+
+                setTimeout(step, 250);
+            }).catch(function () {
+                running = false;
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                paint('已中断：成功 ' + success + '，失败 ' + failedCount + '（可再次点击继续）', null);
+            });
+        }
+
+        startBtn.addEventListener('click', function () {
+            if (running) {
+                return;
+            }
+
+            running = true;
+            cancelled = false;
+            offset = 0;
+            success = 0;
+            failedCount = 0;
+            total = 0;
+            skipIds = [];
+            failedEl.textContent = '';
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            paint('正在处理…', 0);
+            step();
+        });
+
+        stopBtn.addEventListener('click', function () {
+            cancelled = true;
+            stopBtn.disabled = true;
+            paint('正在停止…', null);
         });
     })();
     </script>

@@ -721,6 +721,8 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>申请收录 - <?php echo $functions->escape($siteTitle); ?></title>
+    <?php /* v2.18.1 · canonical（无查询参数） */ ?>
+    <link rel="canonical" href="<?php echo $functions->escape(navSiteBaseUrl() . '/apply.php'); ?>">
     <script src="assets/js/tailwind.min.js"></script>
     <link href="assets/css/font-awesome.min.css" rel="stylesheet">
     <script src="assets/js/jquery3.7.1.js"></script>

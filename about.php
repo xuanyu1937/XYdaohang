@@ -115,6 +115,8 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>关于本站 - <?php echo $functions->escape($brandName); ?></title>
+    <?php /* v2.18.1 · canonical（无查询参数） */ ?>
+    <link rel="canonical" href="<?php echo $functions->escape(navSiteBaseUrl() . '/about.php'); ?>">
     <meta name="description" content="<?php echo $functions->escape('关于 ' . $brandName . ' 的介绍与使用说明。'); ?>">
     <meta name="theme-color" content="#f5f5f3" id="themeColor">
     <meta name="robots" content="index, follow">
@@ -146,7 +148,7 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.1">
     <link rel="stylesheet" href="assets/css/page.css?v=<?php echo APP_VERSION; ?>">
 </head>
 <body data-monitor="0">
@@ -296,6 +298,6 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.18.0" defer></script>
+<script src="assets/js/search.js?v=2.18.1" defer></script>
 </body>
 </html>

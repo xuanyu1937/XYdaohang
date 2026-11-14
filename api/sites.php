@@ -545,7 +545,7 @@ switch ($method) {
             $stmt = $db->prepare(
                 'SELECT nl.id, nl.name, nl.url, nl.logo, nl.description, nl.category_id, nl.user_id,
                         nl.clicks, nl.is_active, nl.check_status, nl.latency_ms, nl.sort_order, nl.created_at,
-                        nl.tags, nl.alias,
+                        nl.tags, nl.alias, nl.skip_check,
                         c.name AS category_name
                  FROM nav_links nl
                  LEFT JOIN categories c ON nl.category_id = c.id
@@ -576,6 +576,7 @@ switch ($method) {
                     'created_at' => (string) $detail['created_at'],
                     'tags' => (string) ($detail['tags'] ?? ''),
                     'alias' => (string) ($detail['alias'] ?? ''),
+                    'skip_check' => (int) ($detail['skip_check'] ?? 0) === 1,
                 ],
             ]);
         }
@@ -626,7 +627,7 @@ switch ($method) {
         $stmt = $db->prepare(
             'SELECT nl.id, nl.name, nl.url, nl.logo, nl.description, nl.category_id, nl.user_id,
                     nl.clicks, nl.is_active, nl.check_status, nl.latency_ms, nl.sort_order, nl.created_at,
-                    nl.tags, nl.alias,
+                    nl.tags, nl.alias, nl.skip_check,
                     c.name AS category_name
              FROM nav_links nl
              LEFT JOIN categories c ON nl.category_id = c.id' . $where . '
@@ -660,6 +661,7 @@ switch ($method) {
                 'created_at' => (string) $row['created_at'],
                 'tags' => (string) ($row['tags'] ?? ''),
                 'alias' => (string) ($row['alias'] ?? ''),
+                'skip_check' => (int) ($row['skip_check'] ?? 0) === 1,
             ];
         }
 
@@ -954,6 +956,19 @@ switch ($method) {
 
             $fields[] = 'category_id = ?';
             $values[] = $categoryId;
+        }
+
+        // v2.18.1 · 跳过可用性检测（内网 / 常关设备）
+        if (array_key_exists('skip_check', $input)) {
+            $skipCheck = navApiTruthy($input['skip_check']) ? 1 : 0;
+            $fields[] = 'skip_check = ?';
+            $values[] = $skipCheck;
+
+            if ($skipCheck === 1) {
+                // 立即把状态改为 skipped，避免列表里还挂着旧的 down
+                $fields[] = "check_status = 'skipped'";
+                $fields[] = 'latency_ms = NULL';
+            }
         }
 
         if (array_key_exists('is_active', $input)) {

@@ -150,7 +150,7 @@ $currentDefaultUserId = $userService->defaultViewUserId();
     <title>用户管理 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
-    <link href="../assets/css/admin.css?v=2.18.0" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.1" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -182,14 +182,14 @@ $currentDefaultUserId = $userService->defaultViewUserId();
             <?php if ($message): ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <?php echo $functions->escape($message); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
                 </div>
             <?php endif; ?>
 
             <?php if ($error): ?>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <?php echo $functions->escape($error); ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
                 </div>
             <?php endif; ?>
 
@@ -197,7 +197,7 @@ $currentDefaultUserId = $userService->defaultViewUserId();
                 <div class="alert alert-info alert-dismissible fade show" role="alert">
                     <i class="fas fa-shield-halved me-1"></i>
                     已识别当前登录管理员对应的用户（ID：<?php echo (int) $currentUserId; ?>），该账号不可被封禁或删除。
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
                 </div>
             <?php endif; ?>
 
@@ -500,7 +500,7 @@ $currentDefaultUserId = $userService->defaultViewUserId();
                         <h5 class="modal-title" id="resetPasswordTitle">
                             <i class="fas fa-key me-1"></i>重置用户密码
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭" aria-label="关闭"></button>
                     </div>
                     <div class="modal-body">
                         <p class="mb-3">

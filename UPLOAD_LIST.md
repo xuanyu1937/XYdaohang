@@ -1,21 +1,58 @@
-# 轩宇-导航 部署清单（当前版本 v2.18.0）
+# 轩宇-导航 部署清单（当前版本 v2.18.1）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：v2.18.0
+当前版本：v2.18.1
 
-> **图标抓取重写 + 开放 API 收录对齐 + 首页首屏瘦身 + 可添加到手机桌面**。API 收录的网站现在会自动补图标、自动分组、保留标签；首页站点多时不再一次性拉全部图标和探测。**无数据库变更，无需执行 SQL，覆盖文件即可。**
+> **六类问题集中修复**：自定义 404 / SEO 四件套 / 无障碍 / 外链图标治理 / 首页按需加载 / 匿名短缓存 / 内网误判离线。**本版有数据库变更，必须先执行 SQL。**
 
-## ⚠️ 升级须知（两步）
+## ⚠️ 升级须知（三步）
 
-1. **推荐用后台「系统工具 → 在线更新」上传整包，并勾选「强制覆盖」**。在线更新只覆盖不删除，本版无被删除的旧文件，直接覆盖即可。
-2. **清一次浏览器缓存**（或强刷 Ctrl+F5）。资源版本号已同步到 `?v=2.18.0`；Service Worker 生效后刷新会自动接管，旧缓存键 `xy-nav-pwa-v1` 会在激活时清理。
+1. **先执行 `upgrade_v2.18.1.sql`**（后台「系统工具 → 数据库」或直接导入）。它会：
+   - 给 `nav_links.check_status` 增加 `skipped` 取值（不加的话写 `skipped` 会变成空串）；
+   - 新增 `skip_check` 列；
+   - 把既有内网地址一次性标记为跳过。
+   可重复执行，已存在的列/枚举会报错，忽略即可。
+2. **用后台「系统工具 → 在线更新」上传整包，并勾选「强制覆盖」**。在线更新只覆盖不删除，本版无被删除的旧文件。
+3. **清一次浏览器缓存**（Ctrl+F5）。资源版本号已同步到 `?v=2.18.1`。
 
-**验证是否生效**：`/api/index.php` 徽章显示 `v2.18.0`；访问 `/manifest.php` 返回 JSON 清单；手机 Chrome 打开首页，菜单里出现「添加到主屏幕 / 安装应用」；用 API 收录一个没传 logo、没传分类的网址，返回体里 `logo_source` 应为 `fetched`，`category_source` 可能是 `keyword`。
+**验证是否生效**：
+- `/api/index.php` 徽章显示 `v2.18.1`；
+- 访问一个不存在的地址，返回自定义 404 页（无堆栈、无物理路径）；
+- `/robots.txt`、`/sitemap.xml` 均 200；
+- 匿名打开首页，响应头有 `Cache-Control: public, max-age=60` 和 `ETag`，二次请求（带 `If-None-Match`）返回 304；
+- 后台「系统工具 → 本地图标」点「开始补齐」，`uploads/icons/` 出现文件，列表里的图标变成站内路径；
+- 任意内网地址（如 `http://192.168.1.10`）在后台显示灰色「内网」，不显示红色失败。
 
-> **PWA 需要 HTTPS**。`dh.pxyblog.top` 若是 http 访问，Android 的「安装应用」不会出现（iOS 仍可通过分享菜单「添加到主屏幕」）。不影响其它功能。
+## 本次 v2.18.1 变动文件
 
-## 本次 v2.18.0 变动文件
+| 文件 | 说明 |
+| --- | --- |
+| `404.php` / `500.php` | **新增**，自定义错误页（真实状态码、无敏感信息） |
+| `web.config` / `.htaccess` | `httpErrors` / `ErrorDocument` 配置；移除 `X-Powered-By` |
+| `robots.txt` / `sitemap.xml` | **新增**，根目录静态 SEO 文件 |
+| `api/home_list.php` | **新增**，首页分组按需加载 / 搜索接口（只读、公开字段、`limit` 上限 50、公共缓存 + ETag） |
+| `includes/site_card.php` | **新增**，卡片 HTML 模板（首页与 `home_list.php` 共用） |
+| `includes/site_card_build.php` | **新增**，`navBuildCard()` / `navStatusLabel()` 从 `index.php` 抽出复用 |
+| `includes/Services.php` | 新增 `IconCacheService`（图标本地化、64KB 上限、类型校验、批量补齐）；`HealthCheckService::classifyHost()` 内网识别与 `skipped` 状态 |
+| `includes/bootstrap.php` | `navSiteBaseUrl()`、`navPublicCache()`（匿名短缓存 + ETag + 304）、整页空白压缩 `navMinifyHtml()` |
+| `index.php` | 每分组首屏 12 条 + 「加载更多」；卡片模板改为 `require`；canonical / og:image；`h1` 与 `alt` / `aria-label` 修正；图标兜底链收敛 |
+| `assets/js/nav.js` | 「加载更多」分页；搜索改走 `api/home_list.php`（300ms 防抖）并在清空时还原分组视图 |
+| `assets/css/nav.css` / `assets/css/admin.css` | 「加载更多」样式；统一 `:focus-visible` 焦点环；`skipped` 灰色状态 |
+| `admin/tools.php` | 新增「本地图标」标签页（批量补齐，进度 / 失败清单） |
+| `admin/icon_backfill.php` | **新增**，批量补齐的 AJAX 接口 |
+| `admin/nav_links.php` | 「跳过可用性检测」开关；内网条目灰色徽章；图标按钮补 `aria-label` |
+| `admin/*.php` | 弹窗关闭、密码显隐等纯图标按钮补 `aria-label`；资源版本号 |
+| `api/sites.php` | 返回 / 接受 `skip_check` |
+| `api/index.php` | 版本号与公共缓存头 |
+| `about.php` / `contact.php` / `apply.php` / `detail.php` / `share.php` / `my.php` | canonical；`alt` / `aria-label`；二维码 `alt` |
+| `upgrade_v2.18.1.sql` | **新增**，本版必须执行的 SQL |
+| `install/install.sql` | `check_status` 枚举补 `skipped` |
+| `cron/daily_check.php` | 汇总增加「跳过 N」 |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` | 版本号升至 2.18.1 |
+| `CHANGELOG.md` / `README.md` / `UPLOAD_LIST.md` | 文档同步 |
+
+## 上一版 v2.18.0 变动文件（供参考）
 
 | 文件 | 说明 |
 | --- | --- |

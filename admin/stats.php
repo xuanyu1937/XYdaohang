@@ -23,7 +23,7 @@ $statsUserId = 0;
     <title>数据统计 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
-    <link href="../assets/css/admin.css?v=2.18.0" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.1" rel="stylesheet">
     <script src="../assets/js/chart.umd.min.js"></script>
     <script>window.Chart || document.write('<script src="https://cdn.staticfile.org/Chart.js/4.3.0/chart.umd.min.js"><\/script>');</script>
     <style>
@@ -71,7 +71,7 @@ $statsUserId = 0;
         <div class="admin-page-body" id="statsPage" data-user-id="<?php echo (int) $statsUserId; ?>">
             <div class="alert alert-danger alert-dismissible fade show d-none" role="alert" id="statsAlert">
                 <span id="statsAlertText"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
             </div>
 
             <div class="card mb-4">

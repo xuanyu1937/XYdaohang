@@ -193,7 +193,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
     <link href="../assets/sweetalert2/sweetalert2.min.css" rel="stylesheet">
-    <link href="../assets/css/admin.css?v=2.18.0" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.1" rel="stylesheet">
     <style>
         /* ==================================================================
            系统设置页（仅本页使用，颜色与间距统一取自 admin.css 变量）
@@ -811,7 +811,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="fas fa-circle-check"></i>
                     <span><?php echo $functions->escape($message); ?></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭" aria-label="关闭"></button>
                 </div>
             <?php endif; ?>
 
@@ -819,7 +819,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="fas fa-circle-exclamation"></i>
                     <span><?php echo $functions->escape($error); ?></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭" aria-label="关闭"></button>
                 </div>
             <?php endif; ?>
 

@@ -3025,6 +3025,268 @@ class CategoryEngine extends BaseService
 }
 
 /* ==========================================================================
+ * 4.5 图标本地化（v2.18.1）
+ *
+ * 首页图标如果直接引用各站点自己的域 / 第三方图标服务，一次打开会产生几十个
+ * 外部域名请求。这里把图标下载到 uploads/icons/ 并改写 nav_links.logo，
+ * 前端只请求同源地址，外部请求降到 0。
+ * ========================================================================== */
+
+class IconCacheService extends BaseService
+{
+    /** 单张图标体积上限（64KB） */
+    const MAX_BYTES = 65536;
+
+    /** 允许的图片类型 → 落盘扩展名 */
+    const MIME_EXT = [
+        'image/png' => 'png',
+        'image/jpeg' => 'jpg',
+        'image/jpg' => 'jpg',
+        'image/gif' => 'gif',
+        'image/webp' => 'webp',
+        'image/svg+xml' => 'svg',
+        'image/x-icon' => 'ico',
+        'image/vnd.microsoft.icon' => 'ico',
+        'image/ico' => 'ico',
+        'image/bmp' => 'bmp',
+    ];
+
+    const DIRECTORY = 'uploads/icons';
+
+    public function directory()
+    {
+        return dirname(__DIR__) . '/uploads/icons';
+    }
+
+    /** 公开访问前缀，如 /uploads/icons/ */
+    public function publicBase()
+    {
+        $script = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+        $dir = rtrim(dirname($script), '/');
+
+        if ($dir === '.' || $dir === '/') {
+            $dir = '';
+        }
+
+        return $dir . '/' . self::DIRECTORY . '/';
+    }
+
+    /** 是否已经是本地缓存路径 */
+    public function isLocal($path)
+    {
+        return is_string($path) && strpos(ltrim($path, '/'), self::DIRECTORY . '/') === 0;
+    }
+
+    /**
+     * 下载一个远程图标并落盘。
+     *
+     * @return array{ok:bool,path?:string,error?:string}
+     */
+    public function cacheFromUrl($iconUrl, $host)
+    {
+        $iconUrl = trim((string) $iconUrl);
+
+        if ($iconUrl === '' || !preg_match('#^https?://#i', $iconUrl)) {
+            return ['ok' => false, 'error' => 'invalid_url'];
+        }
+
+        if (!function_exists('curl_init')) {
+            return ['ok' => false, 'error' => 'curl_missing'];
+        }
+
+        $ch = curl_init($iconUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 3,
+            CURLOPT_CONNECTTIMEOUT => 4,
+            CURLOPT_TIMEOUT => 8,
+            CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; XuanyuNav/2.0; +icon-cache)',
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_MAXFILESIZE => self::MAX_BYTES,
+            CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+        ]);
+
+        $body = curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $mime = strtolower((string) curl_getinfo($ch, CURLINFO_CONTENT_TYPE));
+        curl_close($ch);
+
+        if (!is_string($body) || $body === '' || $code < 200 || $code >= 300) {
+            return ['ok' => false, 'error' => 'download_failed'];
+        }
+
+        if (strlen($body) > self::MAX_BYTES) {
+            return ['ok' => false, 'error' => 'too_large'];
+        }
+
+        // Content-Type 可能带 charset，去掉参数
+        $mime = trim(explode(';', $mime)[0]);
+
+        if ($mime === '' || $mime === 'application/octet-stream' || $mime === 'text/plain') {
+            $mime = $this->sniffMime($body, $iconUrl);
+        }
+
+        if (!isset(self::MIME_EXT[$mime])) {
+            return ['ok' => false, 'error' => 'not_image'];
+        }
+
+        // 双保险：必须能识别成图片。SVG 用文本判断，位图用 getimagesizefromstring
+        if ($mime === 'image/svg+xml') {
+            if (stripos($body, '<svg') === false) {
+                return ['ok' => false, 'error' => 'not_image'];
+            }
+        } elseif (@getimagesizefromstring($body) === false && $mime !== 'image/ico' && $mime !== 'image/x-icon' && $mime !== 'image/vnd.microsoft.icon') {
+            return ['ok' => false, 'error' => 'not_image'];
+        }
+
+        $dir = $this->directory();
+
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+
+        if (!is_dir($dir) || !is_writable($dir)) {
+            return ['ok' => false, 'error' => 'dir_unwritable'];
+        }
+
+        $hash = md5(strtolower((string) $host) . '|' . $iconUrl);
+        $fileName = $hash . '.' . self::MIME_EXT[$mime];
+        $full = $dir . '/' . $fileName;
+
+        if (@file_put_contents($full, $body, LOCK_EX) === false) {
+            return ['ok' => false, 'error' => 'write_failed'];
+        }
+
+        @chmod($full, 0644);
+
+        // 与站点其它文件保持一致的所有者，避免后续备份/更新时权限不一致
+        $owner = @fileowner(dirname($dir));
+        $group = @filegroup(dirname($dir));
+
+        if ($owner !== false && $owner !== @fileowner($full)) {
+            @chown($full, $owner);
+            @chgrp($full, $group === false ? $owner : $group);
+        }
+
+        return ['ok' => true, 'path' => self::DIRECTORY . '/' . $fileName];
+    }
+
+    /** 根据文件头推断 MIME，兜住不返回 Content-Type 的服务器 */
+    protected function sniffMime($body, $url)
+    {
+        $head = substr($body, 0, 512);
+
+        if (strpos($head, '<?xml') !== false || stripos($head, '<svg') !== false) {
+            return 'image/svg+xml';
+        }
+
+        $info = @getimagesizefromstring($body);
+
+        if (is_array($info) && !empty($info['mime'])) {
+            return strtolower((string) $info['mime']);
+        }
+
+        if (substr($body, 0, 4) === "\x00\x00\x01\x00") {
+            return 'image/x-icon';
+        }
+
+        if (preg_match('/\.ico(\?|#|$)/i', (string) $url)) {
+            return 'image/x-icon';
+        }
+
+        return '';
+    }
+
+    /**
+     * 给「logo 为空」的条目批量补本地图标。
+     *
+     * @param int $limit 本批处理条数
+     * @param int $offset 已处理进度（从 0 开始，仅用于展示）
+     * @param array $skipIds 本会话里已经失败过、本轮不再重试的条目 id
+     * @return array{ok:bool,total:int,processed:int,success:int,failed:array,next:int,done:bool}
+     */
+    public function backfillEmptyLogos($limit = 10, $offset = 0, array $skipIds = [])
+    {
+        $limit = max(1, min(50, (int) $limit));
+        $offset = max(0, (int) $offset);
+
+        // 补成功的行会从「logo 为空」集合里消失，集合本身在缩小，
+        // 因此分页不能用 OFFSET 递增，只从队头取下一批；$offset 仅用于展示进度。
+        // 补失败的条目需要靠 $skipIds 挡掉，否则队头会一直是它，进度永远推不动。
+        $skipIds = array_values(array_filter(array_map('intval', $skipIds)));
+        $notIn = '';
+
+        if ($skipIds !== []) {
+            $notIn = ' AND id NOT IN (' . implode(',', $skipIds) . ')';
+        }
+
+        $countStmt = $this->db->query(
+            "SELECT COUNT(*) AS total FROM nav_links
+             WHERE (logo IS NULL OR logo = '') AND is_active = 1 AND deleted_at IS NULL" . $notIn
+        );
+        $total = (int) ($countStmt->fetch()['total'] ?? 0);
+
+        $stmt = $this->db->prepare(
+            "SELECT id, url FROM nav_links
+             WHERE (logo IS NULL OR logo = '') AND is_active = 1 AND deleted_at IS NULL" . $notIn . "
+             ORDER BY id LIMIT ?"
+        );
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll();
+
+        $siteInfo = new SiteInfoService($this->functions);
+        $success = 0;
+        $failed = [];
+        $processed = 0;
+
+        foreach ($rows as $row) {
+            $processed++;
+            $url = (string) $row['url'];
+            $host = (string) parse_url($url, PHP_URL_HOST);
+
+            $saved = false;
+
+            try {
+                $meta = $siteInfo->fetch($url);
+
+                foreach ((array) ($meta['icons'] ?? []) as $iconUrl) {
+                    $cached = $this->cacheFromUrl($iconUrl, $host);
+
+                    if ($cached['ok']) {
+                        $this->db->prepare('UPDATE nav_links SET logo = ?, updated_at = NOW() WHERE id = ?')
+                            ->execute([$cached['path'], (int) $row['id']]);
+                        $saved = true;
+                        break;
+                    }
+                }
+            } catch (Throwable $error) {
+                $saved = false;
+            }
+
+            if ($saved) {
+                $success++;
+            } else {
+                $failed[] = ['id' => (int) $row['id'], 'url' => $url];
+            }
+        }
+
+        return [
+            'ok' => true,
+            'total' => $total,
+            'processed' => $processed,
+            'success' => $success,
+            'failed' => $failed,
+            'next' => $offset + $processed,
+            // 取不满一批说明已经没有可处理的条目了
+            'done' => count($rows) < $limit,
+        ];
+    }
+}
+
+/* ==========================================================================
  * 5. 健康检测
  * ========================================================================== */
 
@@ -3038,12 +3300,117 @@ class HealthCheckService extends BaseService
      *
      * @return array{status:string,latency_ms:int,http_code:int}
      */
+    /**
+     * v2.18.1 · 判断地址是否属于内网 / 保留地址（不应参与可用性检测）。
+     * 覆盖 127/8、10/8、172.16/12、192.168/16、169.254/16、::1、fc00::/7、fe80::/10，
+     * 以及 localhost、*.local、*.lan、*.internal 这类内网主机名。
+     * 解析失败（DNS 不出去、域名还没解析）同样视为「不检测」——把它当 down 是错误的。
+     *
+     * @return string 'internal' | 'unresolved' | ''
+     */
+    public function classifyHost($url)
+    {
+        $host = strtolower((string) parse_url((string) $url, PHP_URL_HOST));
+
+        if ($host === '') {
+            return 'unresolved';
+        }
+
+        $host = trim($host, '[]');
+
+        if ($host === 'localhost' || substr($host, -6) === '.local'
+            || substr($host, -4) === '.lan' || substr($host, -9) === '.internal'
+        ) {
+            return 'internal';
+        }
+
+        if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $long = ip2long($host);
+
+            if ($long === false) {
+                return 'unresolved';
+            }
+
+            $ranges = [
+                ['127.0.0.0', '255.0.0.0'],
+                ['10.0.0.0', '255.0.0.0'],
+                ['172.16.0.0', '255.240.0.0'],
+                ['192.168.0.0', '255.255.0.0'],
+                ['169.254.0.0', '255.255.0.0'],
+                ['0.0.0.0', '255.0.0.0'],
+            ];
+
+            foreach ($ranges as $range) {
+                if ((ip2long($range[0]) & ip2long($range[1])) === ($long & ip2long($range[1]))) {
+                    return 'internal';
+                }
+            }
+
+            return '';
+        }
+
+        if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $bin = @inet_pton($host);
+
+            if ($bin === false) {
+                return 'unresolved';
+            }
+
+            // ::1
+            if ($bin === inet_pton('::1')) {
+                return 'internal';
+            }
+
+            $first = ord($bin[0]);
+
+            // fc00::/7（fd 也在这个范围内）、fe80::/10
+            if (($first & 0xFE) === 0xFC) {
+                return 'internal';
+            }
+
+            if ($first === 0xFE && (ord($bin[1]) & 0xC0) === 0x80) {
+                return 'internal';
+            }
+
+            return '';
+        }
+
+        $ips = @gethostbynamel($host);
+
+        if (!$ips) {
+            return 'unresolved';
+        }
+
+        foreach ($ips as $ip) {
+            $long = ip2long($ip);
+
+            if ($long === false) {
+                continue;
+            }
+
+            foreach ([['127.0.0.0', '255.0.0.0'], ['10.0.0.0', '255.0.0.0'], ['172.16.0.0', '255.240.0.0'], ['192.168.0.0', '255.255.0.0'], ['169.254.0.0', '255.255.0.0']] as $range) {
+                if ((ip2long($range[0]) & ip2long($range[1])) === ($long & ip2long($range[1]))) {
+                    return 'internal';
+                }
+            }
+        }
+
+        return '';
+    }
+
     public function checkUrl($url, $timeout = 6)
     {
         $url = trim((string) $url);
 
         if ($url === '' || !$this->functions->validateUrl($url)) {
-            return ['status' => 'down', 'latency_ms' => 0, 'http_code' => 0, 'error' => 'invalid_url'];
+            return ['status' => 'skipped', 'latency_ms' => 0, 'http_code' => 0, 'error' => 'invalid_url'];
+        }
+
+        // v2.18.1 · 内网 / 保留地址 / 解析失败：不发起任何请求，直接跳过
+        $kind = $this->classifyHost($url);
+
+        if ($kind !== '') {
+            return ['status' => 'skipped', 'latency_ms' => 0, 'http_code' => 0, 'error' => $kind];
         }
 
         if (!function_exists('curl_init')) {
@@ -3114,7 +3481,7 @@ class HealthCheckService extends BaseService
     public function checkLink($id)
     {
         $id = (int) $id;
-        $stmt = $this->db->prepare('SELECT id, name, url FROM nav_links WHERE id = ? LIMIT 1');
+        $stmt = $this->db->prepare('SELECT id, name, url, skip_check FROM nav_links WHERE id = ? LIMIT 1');
         $stmt->execute([$id]);
         $link = $stmt->fetch();
 
@@ -3122,7 +3489,10 @@ class HealthCheckService extends BaseService
             return ['ok' => false, 'error' => 'not_found'];
         }
 
-        $result = $this->checkUrl($link['url']);
+        // v2.18.1 · 手动标记「跳过检测」的条目直接记 skipped，不发请求
+        $result = !empty($link['skip_check'])
+            ? ['status' => 'skipped', 'latency_ms' => 0, 'http_code' => 0, 'error' => 'skip_check']
+            : $this->checkUrl($link['url']);
         $this->saveResult($id, $result);
 
         return array_merge(['ok' => true, 'id' => $id, 'name' => $link['name'], 'url' => $link['url']], $result);
@@ -3136,7 +3506,7 @@ class HealthCheckService extends BaseService
     public function checkAll($userId = 0, $limit = 0)
     {
         $userId = (int) $userId;
-        $sql = 'SELECT id, name, url FROM nav_links WHERE user_id = ? AND is_active = 1 AND deleted_at IS NULL ORDER BY id';
+        $sql = 'SELECT id, name, url, skip_check FROM nav_links WHERE user_id = ? AND is_active = 1 AND deleted_at IS NULL ORDER BY id';
 
         if ($limit > 0) {
             $sql .= ' LIMIT ' . (int) $limit;
@@ -3146,10 +3516,14 @@ class HealthCheckService extends BaseService
         $stmt->execute([$userId]);
         $links = $stmt->fetchAll();
 
-        $summary = ['ok' => true, 'total' => 0, 'ok_count' => 0, 'slow' => 0, 'down' => 0, 'items' => []];
+        $summary = ['ok' => true, 'total' => 0, 'ok_count' => 0, 'slow' => 0, 'down' => 0, 'skipped' => 0, 'items' => []];
 
         foreach ($links as $link) {
-            $result = $this->checkUrl($link['url']);
+            // v2.18.1 · skip_check=1 的条目不检测，单独计入 skipped，不混进「失败」
+            $result = !empty($link['skip_check'])
+                ? ['status' => 'skipped', 'latency_ms' => 0, 'http_code' => 0, 'error' => 'skip_check']
+                : $this->checkUrl($link['url']);
+
             $this->saveResult((int) $link['id'], $result);
 
             $summary['total']++;
@@ -3158,6 +3532,8 @@ class HealthCheckService extends BaseService
                 $summary['ok_count']++;
             } elseif ($result['status'] === 'slow') {
                 $summary['slow']++;
+            } elseif ($result['status'] === 'skipped') {
+                $summary['skipped']++;
             } else {
                 $summary['down']++;
             }
@@ -3179,7 +3555,7 @@ class HealthCheckService extends BaseService
         );
 
         return $stmt->execute([
-            in_array($result['status'], ['ok', 'slow', 'down'], true) ? $result['status'] : 'unknown',
+            in_array($result['status'], ['ok', 'slow', 'down', 'skipped'], true) ? $result['status'] : 'unknown',
             isset($result['latency_ms']) ? (int) $result['latency_ms'] : null,
             (int) $id,
         ]);
@@ -3197,7 +3573,7 @@ class HealthCheckService extends BaseService
         );
         $stmt->execute([(int) $userId]);
 
-        $result = ['ok' => 0, 'slow' => 0, 'down' => 0, 'unknown' => 0];
+        $result = ['ok' => 0, 'slow' => 0, 'down' => 0, 'skipped' => 0, 'unknown' => 0];
 
         foreach ($stmt->fetchAll() as $row) {
             $status = (string) $row['check_status'];

@@ -9,7 +9,11 @@
  * 本页只输出静态说明，不读取也不展示任何令牌。
  */
 
-$version = '2.18.0';
+/* v2.18.1 · 静态文档页给一份公共短缓存：不依赖会话，缓存 5 分钟足够，
+   也避免每次刷新都重新走一遍 PHP。 */
+header('Cache-Control: public, max-age=300');
+
+$version = '2.18.1';
 $versionFile = __DIR__ . '/../VERSION';
 
 if (is_readable($versionFile)) {
@@ -43,6 +47,8 @@ header('Referrer-Policy: strict-origin-when-cross-origin');
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2714%27%20fill%3D%27%231d4ed8%27%2F%3E%3Cpath%20d%3D%27M25%2020c-6%200-8%203-8%208v2c0%203-1%204-4%204%203%200%204%201%204%204v2c0%205%202%208%208%208M39%2020c6%200%208%203%208%208v2c0%203%201%204%204%204-3%200-4%201-4%204v2c0%205-2%208-8%208%27%20fill%3D%27none%27%20stroke%3D%27white%27%20stroke-width%3D%274%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E">
 <title>开放 API 文档 · 轩宇导航</title>
+<?php /* v2.18.1 · canonical（doc 页只有这一个地址，无查询参数变体） */ ?>
+<link rel="canonical" href="<?php echo $esc(str_replace('/api/', '/api/index.php', $baseUrl)); ?>">
 <style>
 :root {
     --primary: #1d4ed8;

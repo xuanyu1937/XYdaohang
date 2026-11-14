@@ -68,13 +68,15 @@ foreach ($owners as $owner) {
     $totalChecked += $summary['total'];
     $totalDown += $summary['down'];
 
+    // v2.18.1 · 「跳过」单独计数：内网 / 手动 skip_check 的条目不计入失败
     echo sprintf(
-        "  导航 #%d：共 %d 条，正常 %d，较慢 %d，失败 %d\n",
+        "  导航 #%d：共 %d 条，正常 %d，较慢 %d，失败 %d，跳过 %d\n",
         $owner,
         $summary['total'],
         $summary['ok_count'],
         $summary['slow'],
-        $summary['down']
+        $summary['down'],
+        $summary['skipped'] ?? 0
     );
 
     foreach ($summary['items'] as $item) {

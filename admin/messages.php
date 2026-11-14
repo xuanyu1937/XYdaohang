@@ -82,7 +82,7 @@ try {
     <title>留言管理 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
-    <link href="../assets/css/admin.css?v=2.18.0" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.1" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -114,13 +114,13 @@ try {
         <?php if ($message !== ''): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <div><?php echo $functions->escape($message); ?></div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭" aria-label="关闭"></button>
             </div>
         <?php endif; ?>
         <?php if ($error !== ''): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <div><?php echo $functions->escape($error); ?></div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭" aria-label="关闭"></button>
             </div>
         <?php endif; ?>
 

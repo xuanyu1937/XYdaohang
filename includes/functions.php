@@ -659,8 +659,13 @@ class Functions {
         }
         
         $logoPath = ltrim(str_replace('\\', '/', $logoPath), '/');
-        
-        return strpos($logoPath, 'uploads/logos/') === 0 ? $logoPath : '';
+
+        // v2.18.1 · 本地化图标缓存在 uploads/icons/，与上传目录同等对待
+        if (strpos($logoPath, 'uploads/logos/') === 0 || strpos($logoPath, 'uploads/icons/') === 0) {
+            return $logoPath;
+        }
+
+        return '';
     }
     
     public function deleteLogoFile($logoPath) {

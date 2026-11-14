@@ -202,7 +202,7 @@ $currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.1.3';
             font-size: 1rem !important;
         }
     </style>
-    <link href="../assets/css/admin.css?v=2.18.0" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.1" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -348,7 +348,7 @@ $currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.1.3';
                                 你有 <strong><?php echo $unreadMessages; ?></strong> 条未读留言，
                                 <a href="messages.php" class="alert-link">点击查看</a>
                             </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭" aria-label="关闭"></button>
                         </div>
                     <?php endif; ?>
                     

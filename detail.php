@@ -588,6 +588,7 @@ $pageDescription = $link['description'] ?: $link['name'] . ' - 优质网站导�
     
     <button id="backToTop" 
             class="fixed bottom-8 right-8 bg-blue-600 text-white w-12 h-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hidden z-50"
+            aria-label="回到顶部"
             onclick="scrollToTop()">
         <i class="fas fa-arrow-up"></i>
     </button>
@@ -614,6 +615,14 @@ $pageDescription = $link['description'] ?: $link['name'] . ' - 优质网站导�
                 colorDark: "#000000",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
+            });
+
+            /* v2.18.1 · qrcode.js 生成的 <img> 没有 alt，读屏会念成「图片」，
+               这里补上语义；装饰性容器本身已 aria-hidden。 */
+            document.querySelectorAll('#qrcode img').forEach(function (qrImg) {
+                if (!qrImg.hasAttribute('alt')) {
+                    qrImg.setAttribute('alt', '网址二维码');
+                }
             });
             
             $(window).scroll(function() {

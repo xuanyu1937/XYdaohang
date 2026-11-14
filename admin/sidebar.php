@@ -456,7 +456,7 @@ try {
             </div>
             <span><?php echo htmlspecialchars($systemConfig['name'] ?? '导航系统'); ?></span>
         </h4>
-        <button class="collapse-toggle" id="collapseToggle" title="折叠/展开">
+        <button class="collapse-toggle" id="collapseToggle" title="折叠/展开" aria-label="折叠/展开">
             <i class="fas fa-chevron-left toggle-icon"></i>
         </button>
     </div>

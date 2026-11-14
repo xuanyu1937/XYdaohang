@@ -7,6 +7,7 @@ require_once __DIR__ . '/includes/bootstrap.php';
 require_once 'includes/functions.php';
 require_once 'includes/Services.php';
 require_once __DIR__ . '/includes/site_links.php';
+require_once __DIR__ . '/includes/site_card_build.php';
 
 $functions = new Functions();
 $users = new UserService($functions);
@@ -181,117 +182,7 @@ if (!$rawLinks && !$isOwner) {
     }
 }
 
-/**
- * 把一条记录整理成卡片所需字段。
- */
-function navBuildCard(array $row, Functions $functions)
-{
-    $rawUrl = trim((string) ($row['url'] ?? ''));
-
-    if ($rawUrl === '') {
-        return null;
-    }
-
-    if (!preg_match('#^https?://#i', $rawUrl)) {
-        $rawUrl = 'https://' . ltrim($rawUrl, '/');
-    }
-
-    $parts = parse_url($rawUrl);
-
-    if (!$parts || empty($parts['host'])) {
-        return null;
-    }
-
-    $host = $parts['host'];
-    $scheme = strtolower($parts['scheme'] ?? 'https');
-
-    if (!in_array($scheme, ['http', 'https'], true)) {
-        $scheme = 'https';
-    }
-
-    $displayName = trim((string) ($row['name'] ?? ''));
-
-    if ($displayName === '') {
-        $displayName = $host;
-    }
-
-    $logoUrl = $functions->getLogoDisplayUrl($row['logo'] ?? '');
-    $chain = [];
-
-    if ($logoUrl !== '') {
-        $chain[] = $logoUrl;
-    }
-
-    $chain[] = $scheme . '://' . $host . '/favicon.ico';
-    $chain[] = 'https://api.iowen.cn/favicon/' . $host . '.png';
-    $chain[] = 'https://www.google.com/s2/favicons?sz=64&domain=' . rawurlencode($host);
-    $chain[] = 'https://icons.duckduckgo.com/ip3/' . $host . '.ico';
-
-    $chain = array_values(array_unique(array_filter($chain, function ($url) {
-        return is_string($url) && $url !== '';
-    })));
-
-    $initial = function_exists('mb_substr')
-        ? mb_substr($displayName, 0, 1, 'UTF-8')
-        : strtoupper(substr($displayName, 0, 1));
-
-    if ($initial === '' || $initial === false) {
-        $initial = '#';
-    } elseif (preg_match('/^[a-z]$/', $initial)) {
-        $initial = strtoupper($initial);
-    }
-
-    $row['safe_url'] = $rawUrl;
-    $row['host'] = $host;
-    $row['display_domain'] = preg_replace('/^www\./i', '', $host);
-    $row['display_name'] = $displayName;
-    $row['initial'] = $initial;
-
-    /* favicon 全部失败时的兜底：取域名首字母 + 由域名哈希决定的稳定底色。
-       以前只用网站名首字且没有底色，图标服务返回透明图时看起来就是空白卡片。 */
-    $domainForInitial = preg_replace('/^www\./i', '', (string) $host);
-    $fallbackInitial = function_exists('mb_substr')
-        ? mb_substr($domainForInitial, 0, 1, 'UTF-8')
-        : substr($domainForInitial, 0, 1);
-    $fallbackInitial = strtoupper((string) $fallbackInitial);
-
-    if ($fallbackInitial === '') {
-        $fallbackInitial = '#';
-    }
-
-    $fallbackPalette = [
-        ['#e8efff', '#3457c5'], ['#e7f6ee', '#1e7a52'],
-        ['#fff0e4', '#b6601c'], ['#f2eaff', '#7040b5'],
-        ['#ffecef', '#b83a54'], ['#e4f5f8', '#1b7189'],
-        ['#fbf1d8', '#8a6816'], ['#ecf2e5', '#4a7030'],
-    ];
-    $fallbackPair = $fallbackPalette[hexdec(substr(md5((string) $host), 0, 2)) % count($fallbackPalette)];
-
-    $row['fallback_initial'] = $fallbackInitial;
-    $row['fallback_bg'] = $fallbackPair[0];
-    $row['fallback_fg'] = $fallbackPair[1];
-    $row['favicon_chain'] = $chain;
-    $row['click_count'] = max(0, (int) ($row['clicks'] ?? 0));
-    $row['check_status'] = (string) ($row['check_status'] ?? 'unknown');
-    $row['latency_ms'] = isset($row['latency_ms']) ? (int) $row['latency_ms'] : null;
-
-    return $row;
-}
-
-/** 把状态枚举映射为前端既有 class / 文案，保证与 nav.js 的探测结果一致。 */
-function navStatusLabel($status)
-{
-    switch ($status) {
-        case 'ok':
-            return ['state' => 'online', 'label' => '在线'];
-        case 'slow':
-            return ['state' => 'online', 'label' => '在线（较慢）'];
-        case 'down':
-            return ['state' => 'offline', 'label' => '离线'];
-        default:
-            return ['state' => 'pending', 'label' => '检测中'];
-    }
-}
+require_once __DIR__ . '/includes/site_card_build.php';
 
 $links = [];
 $linkCountByCategory = [];
@@ -398,6 +289,11 @@ foreach ($railGroups as $index => $group) {
     $railGroups[$index]['name'] = $group['name'] . ($ownerId > 0 ? '（我的）' : '（公共）');
 }
 
+/* v2.18.1 · 按需加载：首屏每个分组最多渲染 NAV_FIRST_PAGE 条，
+   剩下的交给「加载更多」按需请求 api/home_list.php。
+   之前首页一次性输出两百多张卡片，首屏 HTML 体积大、大部分内容还在屏幕外。 */
+const NAV_FIRST_PAGE = 12;
+
 // 分组卡片区：按分类排序输出，父分类下先放自身链接，再放子分类。
 $sections = [];
 $usedCategoryIds = [];
@@ -425,7 +321,13 @@ foreach ($railGroups as $group) {
         }
 
         if ($childCards) {
-            $children[] = ['name' => $child['name'], 'cards' => $childCards];
+            $children[] = [
+                'id' => (int) $child['id'],
+                'name' => $child['name'],
+                'count' => count($childCards),
+                // 首屏只渲染前 NAV_FIRST_PAGE 条，其余由「加载更多」按需拉取
+                'cards' => array_slice($childCards, 0, NAV_FIRST_PAGE),
+            ];
         }
     }
 
@@ -437,7 +339,8 @@ foreach ($railGroups as $group) {
         'id' => $group['id'],
         'name' => $group['name'],
         'count' => $group['count'],
-        'cards' => $groupCards,
+        'total' => count($groupCards),
+        'cards' => array_slice($groupCards, 0, NAV_FIRST_PAGE),
         'children' => $children,
     ];
 }
@@ -497,6 +400,25 @@ if ($bgImage !== '') {
     <meta property="og:title" content="<?php echo $functions->escape($metaTitle); ?>">
     <meta property="og:description" content="<?php echo $functions->escape($metaDescription); ?>">
     <meta name="format-detection" content="telephone=no">
+
+    <?php
+        // v2.18.1 · canonical：只取协议+域名+路径，丢掉全部查询参数（category / utm_* / from / q 都不进），
+        // 避免「同一页面的几十种参数组合」被搜索引擎当成重复内容。
+        $canonicalBase = navSiteBaseUrl();
+        $canonicalPath = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? '/index.php'));
+        $canonicalPath = preg_replace('#/(index)\.php$#i', '/', $canonicalPath);
+        $canonicalUrl = $canonicalBase . ($canonicalPath === '' ? '/' : $canonicalPath);
+        $ogImageUrl = $canonicalBase . '/assets/img/icons/icon-512.png';
+    ?>
+    <link rel="canonical" href="<?php echo $functions->escape($canonicalUrl); ?>">
+    <?php /* v2.18.1 · 只对「实际还会用到」的第三方图标服务做预连接（全站仅此一个） */ ?>
+    <link rel="dns-prefetch" href="//api.iowen.cn">
+    <link rel="preconnect" href="https://api.iowen.cn" crossorigin>
+    <meta property="og:image" content="<?php echo $functions->escape($ogImageUrl); ?>">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:image" content="<?php echo $functions->escape($ogImageUrl); ?>">
 
     <?php if ($siteLogoUrl !== ''): ?>
         <link rel="icon" href="<?php echo $functions->escape($siteLogoUrl); ?>">
@@ -575,8 +497,8 @@ if ($bgImage !== '') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.0">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.1">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.1">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -588,7 +510,7 @@ if ($bgImage !== '') {
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.0';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.1';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -608,10 +530,10 @@ if ($bgImage !== '') {
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.0" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.18.1" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.0" defer></script>
-    <script src="assets/js/search.js?v=2.18.0" defer></script>
+    <script src="assets/js/nav.js?v=2.18.1" defer></script>
+    <script src="assets/js/search.js?v=2.18.1" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -641,11 +563,12 @@ if ($bgImage !== '') {
                             <path d="m15.4 8.6-2.1 4.7-4.7 2.1 2.1-4.7z"></path>
                         </svg>
                         <?php if ($siteLogoUrl !== ''): ?>
-                            <img src="<?php echo $functions->escape($siteLogoUrl); ?>" alt="" width="48" height="48" loading="lazy" decoding="async" fetchpriority="high" onerror="this.remove();">
+                            <img src="<?php echo $functions->escape($siteLogoUrl); ?>" alt="<?php echo $functions->escape($brandName); ?>" width="48" height="48" loading="lazy" decoding="async" fetchpriority="high" onerror="this.remove();">
                         <?php endif; ?>
                     </span>
                     <span class="brand-info">
-                        <span class="brand-title" translate="no"><?php echo $functions->escape($brandName); ?></span>
+                        <?php /* v2.18.1 · 全页唯一的 h1：站点名。class 保持 brand-title，样式不变 */ ?>
+                        <h1 class="brand-title" translate="no"><?php echo $functions->escape($brandName); ?></h1>
                         <span class="brand-subtitle"><?php echo $functions->escape($brandSubtitle); ?></span>
                         <span class="brand-stats">
                             共 <strong><?php echo $totalSites; ?></strong> 个站点
@@ -727,7 +650,7 @@ if ($bgImage !== '') {
                     <details class="user-menu" id="userMenu">
                         <summary class="tool-btn user-summary" aria-label="账号菜单：<?php echo $functions->escape($currentUser['username']); ?>">
                             <?php if ($displayAvatar !== ''): ?>
-                                <img class="user-avatar-img" src="<?php echo $functions->escape($displayAvatar); ?>" alt="" width="28" height="28" loading="eager" decoding="async" onerror="this.onerror=null;this.src='<?php echo $defaultAvatarUrl; ?>';">
+                                <img class="user-avatar-img" src="<?php echo $functions->escape($displayAvatar); ?>" alt="<?php echo $functions->escape($currentUser['username']); ?> 头像" width="28" height="28" loading="eager" decoding="async" onerror="this.onerror=null;this.src='<?php echo $defaultAvatarUrl; ?>';">
                                 <span class="user-avatar" aria-hidden="true" style="display:none;"><?php echo $functions->escape($displayAvatarInitial); ?></span>
                             <?php else: ?>
                                 <span class="user-avatar" aria-hidden="true"><?php echo $functions->escape($displayAvatarInitial); ?></span>
@@ -740,7 +663,7 @@ if ($bgImage !== '') {
                         <div class="user-dropdown">
                             <div class="user-account">
                                 <?php if ($displayAvatar !== ''): ?>
-                                    <img class="user-avatar-img" src="<?php echo $functions->escape($displayAvatar); ?>" alt="" width="24" height="24" onerror="this.onerror=null;this.src='<?php echo $defaultAvatarUrl; ?>';">
+                                    <img class="user-avatar-img" src="<?php echo $functions->escape($displayAvatar); ?>" alt="<?php echo $functions->escape($currentUser['username']); ?> 头像" width="24" height="24" onerror="this.onerror=null;this.src='<?php echo $defaultAvatarUrl; ?>';">
                                 <?php else: ?>
                                     <span class="user-avatar" aria-hidden="true"><?php echo $functions->escape($displayAvatarInitial); ?></span>
                                 <?php endif; ?>
@@ -773,7 +696,7 @@ if ($bgImage !== '') {
                         <button type="button" class="tool-btn user-summary user-summary-guest" id="authTrigger"
                                 aria-label="登录<?php echo $registerEnabled ? ' / 注册' : ''; ?>"
                                 title="登录<?php echo $registerEnabled ? ' / 注册' : ''; ?>">
-                            <img class="user-avatar-img" src="<?php echo $defaultAvatarUrl; ?>" alt="" width="28" height="28">
+                            <img class="user-avatar-img" src="<?php echo $defaultAvatarUrl; ?>" alt="" aria-hidden="true" width="28" height="28">
                             <svg class="user-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="m6 9 6 6 6-6"></path>
                             </svg>
@@ -865,7 +788,7 @@ if ($bgImage !== '') {
                     <!-- 「搜索 / 收藏」放在输入框内部同一格：切换时只换按钮不换位置，
                          整条胶囊宽度和右侧留白都不动 -->
                     <div class="search-actions">
-                        <button type="button" class="search-submit" id="searchSubmit" aria-label="搜索" title="搜索">
+                        <button type="button" class="search-submit" id="searchSubmit" title="搜索">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                                 <circle cx="11" cy="11" r="7"></circle>
                                 <path d="m20 20-3.2-3.2"></path>
@@ -1084,227 +1007,61 @@ if ($bgImage !== '') {
                                  data-category="<?php echo (int) $section['id']; ?>"
                                  data-group-name="<?php echo $functions->escape($section['name']); ?>">
                             <header class="group-head">
-                                <h3><?php echo $functions->escape($section['name']); ?></h3>
+                                <h2 class="group-title"><?php echo $functions->escape($section['name']); ?></h2>
                                 <span class="group-count" data-group-count="<?php echo (int) $section['id']; ?>"><?php echo (int) $section['count']; ?></span>
                             </header>
 
                             <?php if ($section['cards']): ?>
-                                <div class="site-grid" data-grid-category="<?php echo (int) $section['id']; ?>">
+                                <div class="site-grid"
+                                     data-grid-category="<?php echo (int) $section['id']; ?>"
+                                     data-grid-total="<?php echo (int) $section['total']; ?>">
                                     <?php foreach ($section['cards'] as $cardIndex => $link): ?>
                                         <?php
-                                        $status = navStatusLabel($link['check_status']);
-                                        $chain = $link['favicon_chain'];
-                                        $clicks = $link['click_count'];
+                                        $card_index = $cardIndex;
+                                        $is_owner = $isOwner;
+                                        require __DIR__ . '/includes/site_card.php';
                                         ?>
-                                        <a class="site-card"
-                                           href="<?php echo $functions->escape($link['safe_url']); ?>"
-                                           target="<?php echo $functions->escape($defaultTarget); ?>"
-                                           rel="noopener noreferrer"
-                                           style="--enter-index: <?php echo (int) ($cardIndex % 24); ?>;"
-                                           aria-label="访问 <?php echo $functions->escape($link['display_name']); ?>（<?php echo $functions->escape($link['display_domain']); ?>）"
-                                           data-id="<?php echo (int) $link['id']; ?>"
-                                           data-category="<?php echo (int) $link['category_id']; ?>"
-                                           data-name="<?php echo $functions->escape($link['display_name']); ?>"
-                                           data-domain="<?php echo $functions->escape($link['display_domain']); ?>"
-                                           data-host="<?php echo $functions->escape($link['host']); ?>"
-                                           data-url="<?php echo $functions->escape($link['safe_url']); ?>"
-                                           data-clicks="<?php echo $clicks; ?>"
-                                           data-description="<?php echo $functions->escape((string) ($link['description'] ?? '')); ?>"
-                                           data-tags="<?php echo $functions->escape((string) ($link['tags'] ?? '')); ?>"
-                                           data-logo="<?php echo $functions->escape((string) ($link['logo'] ?? '')); ?>"
-                                           data-alias="<?php echo $functions->escape((string) ($link['alias'] ?? '')); ?>"
-                                           data-starred="<?php echo !empty($link['is_starred']) ? '1' : '0'; ?>"
-                                           data-owner="<?php echo $isOwner ? '1' : '0'; ?>">
-                                            <span class="site-status"
-                                                  data-state="<?php echo $functions->escape($status['state']); ?>"
-                                                  data-label="<?php echo $functions->escape($status['label']); ?>"
-                                                  role="img"
-                                                  aria-label="网站状态：<?php echo $functions->escape($status['label']); ?>">
-                                                <span class="status-dot"></span>
-                                            </span>
-
-                                            <span class="site-card-main">
-                                                <span class="site-icon" aria-hidden="true">
-                                                    <span class="site-icon-letter" style="--fallback-bg: <?php echo $functions->escape($link['fallback_bg']); ?>; --fallback-fg: <?php echo $functions->escape($link['fallback_fg']); ?>"><?php echo $functions->escape($link['fallback_initial']); ?></span>
-                                                    <img class="site-favicon"
-                                                         alt=""
-                                                         width="44"
-                                                         height="44"
-                                                         loading="lazy"
-                                                         decoding="async"
-                                                         referrerpolicy="no-referrer"
-                                                         data-src="<?php echo $functions->escape($chain[0] ?? ''); ?>"
-                                                         data-fb1="<?php echo $functions->escape($chain[1] ?? ''); ?>"
-                                                         data-fb2="<?php echo $functions->escape($chain[2] ?? ''); ?>"
-                                                         data-fb3="<?php echo $functions->escape($chain[3] ?? ''); ?>"
-                                                         data-fb4="<?php echo $functions->escape($chain[4] ?? ''); ?>">
-                                                </span>
-                                                <span class="site-info">
-                                                    <span class="site-name"><?php echo $functions->escape($link['display_name']); ?></span>
-                                                    <span class="site-desc"><?php echo $functions->escape((string) ($link['description'] ?? '')); ?></span>
-                                                </span>
-                                            </span>
-
-                                            <span class="site-meta">
-                                                <span class="site-domain"><?php echo $functions->escape($link['display_domain']); ?></span>
-                                                <span class="site-metrics">
-                                                    <span class="site-clicks" title="累计点击 <?php echo number_format($clicks); ?> 次"><?php echo $clicks > 0 ? number_format($clicks) . ' 次' : '新收录'; ?></span>
-                                                    <?php if ($monitorEnabled && $showSpeedLabel): ?>
-                                                        <span class="site-speed"
-                                                              data-state="<?php echo $link['check_status'] === 'unknown' ? 'pending' : 'ok'; ?>"
-                                                              <?php if ($link['latency_ms']): ?>data-level="<?php echo $link['latency_ms'] < 300 ? 'fast' : ($link['latency_ms'] > 1000 ? 'slow' : 'mid'); ?>"<?php endif; ?>>
-                                                            <?php
-                                                            if ($link['latency_ms']) {
-                                                                echo (int) $link['latency_ms'] . ' 毫秒';
-                                                            } else {
-                                                                echo '检测中';
-                                                            }
-                                                            ?>
-                                                        </span>
-                                                    <?php endif; ?>
-                                                </span>
-                                            </span>
-
-                                            <span class="card-corner" role="toolbar" aria-label="卡片操作">
-                                                <span class="card-star" role="button" tabindex="0" aria-label="<?php echo !empty($link['is_starred']) ? '取消收藏' : '收藏'; ?>" title="<?php echo !empty($link['is_starred']) ? '取消收藏' : '收藏'; ?>">
-                                                    <svg viewBox="0 0 24 24" fill="<?php echo !empty($link['is_starred']) ? 'currentColor' : 'none'; ?>" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                                                    </svg>
-                                                </span>
-                                                <?php if ($isOwner): ?>
-                                                <span class="card-actions">
-                                                    <span class="card-action" data-action="edit" role="button" tabindex="0" aria-label="编辑" title="编辑">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>
-                                                    </span>
-                                                    <span class="card-action" data-action="copy" role="button" tabindex="0" aria-label="复制链接" title="复制链接">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                                                    </span>
-                                                    <span class="card-action" data-action="qrcode" role="button" tabindex="0" aria-label="二维码" title="二维码">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3M21 14v7M14 21h3M17 17h4"></path></svg>
-                                                    </span>
-                                                    <span class="card-action" data-action="move" role="button" tabindex="0" aria-label="移动分组" title="移动分组">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14M5 12h14M5 20h14"></path><path d="M9 8l3-3 3 3M9 16l3 3 3-3"></path></svg>
-                                                    </span>
-                                                    <span class="card-action card-action-danger" data-action="delete" role="button" tabindex="0" aria-label="删除" title="删除">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg>
-                                                    </span>
-                                                </span>
-                                                <?php endif; ?>
-                                            </span>
-                                        </a>
                                     <?php endforeach; ?>
                                 </div>
+                                <?php if ($section['total'] > count($section['cards'])): ?>
+                                    <div class="group-more" data-group-more="<?php echo (int) $section['id']; ?>">
+                                        <button type="button"
+                                                class="group-more-btn"
+                                                data-more-category="<?php echo (int) $section['id']; ?>"
+                                                data-more-offset="<?php echo count($section['cards']); ?>"
+                                                data-more-total="<?php echo (int) $section['total']; ?>">
+                                            加载更多（还有 <?php echo (int) $section['total'] - count($section['cards']); ?> 个）
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
                             <?php endif; ?>
 
                             <?php foreach ($section['children'] as $child): ?>
                                 <div class="group-subhead">
-                                    <h4><?php echo $functions->escape($child['name']); ?></h4>
+                                     <h3 class="group-subtitle"><?php echo $functions->escape($child['name']); ?></h3>
                                 </div>
-                                <div class="site-grid" data-grid-category="<?php echo (int) $child['cards'][0]['category_id']; ?>">
+                                <div class="site-grid"
+                                     data-grid-category="<?php echo (int) $child['id']; ?>"
+                                     data-grid-total="<?php echo (int) $child['count']; ?>">
                                     <?php foreach ($child['cards'] as $cardIndex => $link): ?>
                                         <?php
-                                        $status = navStatusLabel($link['check_status']);
-                                        $chain = $link['favicon_chain'];
-                                        $clicks = $link['click_count'];
+                                        $card_index = $cardIndex;
+                                        $is_owner = $isOwner;
+                                        require __DIR__ . '/includes/site_card.php';
                                         ?>
-                                        <a class="site-card"
-                                           href="<?php echo $functions->escape($link['safe_url']); ?>"
-                                           target="<?php echo $functions->escape($defaultTarget); ?>"
-                                           rel="noopener noreferrer"
-                                           style="--enter-index: <?php echo (int) ($cardIndex % 24); ?>;"
-                                           aria-label="访问 <?php echo $functions->escape($link['display_name']); ?>（<?php echo $functions->escape($link['display_domain']); ?>）"
-                                           data-id="<?php echo (int) $link['id']; ?>"
-                                           data-category="<?php echo (int) $link['category_id']; ?>"
-                                           data-name="<?php echo $functions->escape($link['display_name']); ?>"
-                                           data-domain="<?php echo $functions->escape($link['display_domain']); ?>"
-                                           data-host="<?php echo $functions->escape($link['host']); ?>"
-                                           data-url="<?php echo $functions->escape($link['safe_url']); ?>"
-                                           data-clicks="<?php echo $clicks; ?>"
-                                           data-description="<?php echo $functions->escape((string) ($link['description'] ?? '')); ?>"
-                                           data-tags="<?php echo $functions->escape((string) ($link['tags'] ?? '')); ?>"
-                                           data-logo="<?php echo $functions->escape((string) ($link['logo'] ?? '')); ?>"
-                                           data-alias="<?php echo $functions->escape((string) ($link['alias'] ?? '')); ?>"
-                                           data-starred="<?php echo !empty($link['is_starred']) ? '1' : '0'; ?>"
-                                           data-owner="<?php echo $isOwner ? '1' : '0'; ?>">
-                                            <span class="site-status"
-                                                  data-state="<?php echo $functions->escape($status['state']); ?>"
-                                                  data-label="<?php echo $functions->escape($status['label']); ?>"
-                                                  role="img"
-                                                  aria-label="网站状态：<?php echo $functions->escape($status['label']); ?>">
-                                                <span class="status-dot"></span>
-                                            </span>
-
-                                            <span class="site-card-main">
-                                                <span class="site-icon" aria-hidden="true">
-                                                    <span class="site-icon-letter" style="--fallback-bg: <?php echo $functions->escape($link['fallback_bg']); ?>; --fallback-fg: <?php echo $functions->escape($link['fallback_fg']); ?>"><?php echo $functions->escape($link['fallback_initial']); ?></span>
-                                                    <img class="site-favicon"
-                                                         alt=""
-                                                         width="44"
-                                                         height="44"
-                                                         loading="lazy"
-                                                         decoding="async"
-                                                         referrerpolicy="no-referrer"
-                                                         data-src="<?php echo $functions->escape($chain[0] ?? ''); ?>"
-                                                         data-fb1="<?php echo $functions->escape($chain[1] ?? ''); ?>"
-                                                         data-fb2="<?php echo $functions->escape($chain[2] ?? ''); ?>"
-                                                         data-fb3="<?php echo $functions->escape($chain[3] ?? ''); ?>"
-                                                         data-fb4="<?php echo $functions->escape($chain[4] ?? ''); ?>">
-                                                </span>
-                                                <span class="site-info">
-                                                    <span class="site-name"><?php echo $functions->escape($link['display_name']); ?></span>
-                                                    <span class="site-desc"><?php echo $functions->escape((string) ($link['description'] ?? '')); ?></span>
-                                                </span>
-                                            </span>
-
-                                            <span class="site-meta">
-                                                <span class="site-domain"><?php echo $functions->escape($link['display_domain']); ?></span>
-                                                <span class="site-metrics">
-                                                    <span class="site-clicks" title="累计点击 <?php echo number_format($clicks); ?> 次"><?php echo $clicks > 0 ? number_format($clicks) . ' 次' : '新收录'; ?></span>
-                                                    <?php if ($monitorEnabled && $showSpeedLabel): ?>
-                                                        <span class="site-speed"
-                                                              data-state="<?php echo $link['check_status'] === 'unknown' ? 'pending' : 'ok'; ?>"
-                                                              <?php if ($link['latency_ms']): ?>data-level="<?php echo $link['latency_ms'] < 300 ? 'fast' : ($link['latency_ms'] > 1000 ? 'slow' : 'mid'); ?>"<?php endif; ?>>
-                                                            <?php
-                                                            if ($link['latency_ms']) {
-                                                                echo (int) $link['latency_ms'] . ' 毫秒';
-                                                            } else {
-                                                                echo '检测中';
-                                                            }
-                                                            ?>
-                                                        </span>
-                                                    <?php endif; ?>
-                                                </span>
-                                            </span>
-
-                                            <span class="card-corner" role="toolbar" aria-label="卡片操作">
-                                                <span class="card-star" role="button" tabindex="0" aria-label="<?php echo !empty($link['is_starred']) ? '取消收藏' : '收藏'; ?>" title="<?php echo !empty($link['is_starred']) ? '取消收藏' : '收藏'; ?>">
-                                                    <svg viewBox="0 0 24 24" fill="<?php echo !empty($link['is_starred']) ? 'currentColor' : 'none'; ?>" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                                                    </svg>
-                                                </span>
-                                                <?php if ($isOwner): ?>
-                                                <span class="card-actions">
-                                                    <span class="card-action" data-action="edit" role="button" tabindex="0" aria-label="编辑" title="编辑">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4z"></path><path d="M14 6l4 4"></path></svg>
-                                                    </span>
-                                                    <span class="card-action" data-action="copy" role="button" tabindex="0" aria-label="复制链接" title="复制链接">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                                                    </span>
-                                                    <span class="card-action" data-action="qrcode" role="button" tabindex="0" aria-label="二维码" title="二维码">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3M21 14v7M14 21h3M17 17h4"></path></svg>
-                                                    </span>
-                                                    <span class="card-action" data-action="move" role="button" tabindex="0" aria-label="移动分组" title="移动分组">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14M5 12h14M5 20h14"></path><path d="M9 8l3-3 3 3M9 16l3 3 3-3"></path></svg>
-                                                    </span>
-                                                    <span class="card-action card-action-danger" data-action="delete" role="button" tabindex="0" aria-label="删除" title="删除">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path></svg>
-                                                    </span>
-                                                </span>
-                                                <?php endif; ?>
-                                            </span>
-                                        </a>
                                     <?php endforeach; ?>
                                 </div>
+                                <?php if ($child['count'] > count($child['cards'])): ?>
+                                    <div class="group-more" data-group-more="<?php echo (int) $child['id']; ?>">
+                                        <button type="button"
+                                                class="group-more-btn"
+                                                data-more-category="<?php echo (int) $child['id']; ?>"
+                                                data-more-offset="<?php echo count($child['cards']); ?>"
+                                                data-more-total="<?php echo (int) $child['count']; ?>">
+                                            加载更多（还有 <?php echo (int) $child['count'] - count($child['cards']); ?> 个）
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
                             <?php endforeach; ?>
                         </section>
                     <?php endforeach; ?>

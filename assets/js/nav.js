@@ -827,6 +827,7 @@
 
         state.query = '';
         updateSearchClear();
+        restoreGroups();
         setCategory('all', true);
     }
 
@@ -857,6 +858,136 @@
         }
     }
 
+    /* ----------------------------------------------------------------------
+       服务端搜索（v2.18.1）
+       首页只渲染每组前 12 条，原来的纯 DOM 过滤只能搜到已加载的那部分，
+       关键词改为请求 api/home_list.php?q=，命中结果替换掉分组区，
+       清空关键词时把原始分组 DOM 还原回来（不用重新请求）。
+       ---------------------------------------------------------------------- */
+
+    var searchState = { seq: 0, active: false, saving: null };
+
+    function searchResultsBox() {
+        var box = document.getElementById('searchResults');
+
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'searchResults';
+            box.className = 'link-sections';
+            box.hidden = true;
+
+            var sections = document.getElementById('linkSections');
+
+            if (sections && sections.parentNode) {
+                sections.parentNode.insertBefore(box, sections);
+            }
+        }
+
+        return box;
+    }
+
+    function restoreGroups() {
+        var sections = document.getElementById('linkSections');
+        var box = document.getElementById('searchResults');
+
+        if (box) {
+            box.hidden = true;
+            box.innerHTML = '';
+        }
+
+        if (sections) {
+            sections.hidden = false;
+        }
+
+        searchState.active = false;
+
+        var empty = document.getElementById('emptyState');
+        if (empty) {
+            empty.hidden = true;
+        }
+    }
+
+    function renderSearchResults(keyword, data) {
+        var sections = document.getElementById('linkSections');
+        var box = searchResultsBox();
+
+        if (!box) {
+            return;
+        }
+
+        if (sections) {
+            sections.hidden = true;
+        }
+
+        box.innerHTML = data.html || '';
+        box.hidden = false;
+        searchState.active = true;
+
+        var found = toArray(qsa('.site-card', box));
+        found.forEach(function (card) {
+            cards.push(card);
+            watchCard(card);
+        });
+
+        initFavicons();
+
+        var empty = document.getElementById('emptyState');
+        if (empty) {
+            empty.hidden = found.length > 0;
+        }
+
+        if (emptyTitle && found.length === 0) {
+            emptyTitle.textContent = '没有找到匹配的网站';
+            emptyText.textContent = '换个关键词试试，或清除筛选查看全部网站。';
+        }
+
+        if (sectionCount) {
+            sectionCount.textContent = (data.total || 0) + ' 个网站';
+        }
+
+        if (sectionTitle) {
+            sectionTitle.style.display = 'none';
+        }
+    }
+
+    function runSearch(keyword) {
+        var text = (keyword || '').trim();
+
+        if (text === '') {
+            restoreGroups();
+            applyFilters();
+            return;
+        }
+
+        if (text.length > 60) {
+            text = text.slice(0, 60);
+        }
+
+        var seq = ++searchState.seq;
+
+        fetch('api/home_list.php?q=' + encodeURIComponent(text) + '&limit=50', {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+        }).then(function (resp) {
+            if (!resp.ok) { throw new Error('HTTP ' + resp.status); }
+            return resp.json();
+        }).then(function (data) {
+            // 只认最后一次输入，防止慢请求把新结果覆盖掉
+            if (seq !== searchState.seq || !data || !data.ok) {
+                return;
+            }
+
+            state.query = text.toLowerCase();
+            renderSearchResults(text, data);
+        }).catch(function () {
+            if (seq === searchState.seq) {
+                // 接口挂了退回本地过滤，至少还能用已有卡片搜
+                state.query = text.toLowerCase();
+                applyFilters();
+            }
+        });
+    }
+
     function commitSearch() {
         if (!searchInput) {
             return;
@@ -867,8 +998,7 @@
             searchTimer = null;
         }
 
-        state.query = searchInput.value.trim().toLowerCase();
-        applyFilters();
+        runSearch(searchInput.value);
     }
 
     /* ----------------------------------------------------------------------
@@ -1133,13 +1263,15 @@
                 return;
             }
 
-            searchTimer = setTimeout(commitSearch, 110);
+            // v2.18.1：搜索改走服务端，防抖放宽到 300ms，避免每敲一个字就打一次接口
+            searchTimer = setTimeout(commitSearch, 300);
         });
 
         searchInput.addEventListener('search', function () {
             if (!searchInput.value) {
                 state.query = '';
                 updateSearchClear();
+                restoreGroups();
                 applyFilters();
             }
         });
@@ -1178,6 +1310,7 @@
                     searchInput.value = '';
                     state.query = '';
                     updateSearchClear();
+                    restoreGroups();
                     applyFilters();
                     return;
                 }
@@ -1197,6 +1330,7 @@
 
             state.query = '';
             updateSearchClear();
+            restoreGroups();
             applyFilters();
         });
     }
@@ -1295,6 +1429,7 @@
 
             state.query = '';
             updateSearchClear();
+            restoreGroups();
             setCategory('all', true);
         });
     }
@@ -1452,6 +1587,107 @@
     }
 
     /* ----------------------------------------------------------------------
+       分组「加载更多」（v2.18.1）
+       首屏每组只给 12 条，剩下的按需向 api/home_list.php 取，
+       卡片 HTML 由服务端用同一个模板生成，直接插进现有网格即可复用懒加载。
+       ---------------------------------------------------------------------- */
+
+    function appendCards(grid, html) {
+        var holder = document.createElement('div');
+        holder.innerHTML = html;
+
+        var added = toArray(holder.children);
+
+        added.forEach(function (card, index) {
+            card.style.setProperty('--enter-index', String(index % 12));
+            grid.appendChild(card);
+            cards.push(card);
+            totalCards++;
+        });
+
+        return added;
+    }
+
+    function initGroupMore() {
+        qsa('.group-more-btn').forEach(function (btn) {
+            if (btn.getAttribute('data-bound') === '1') {
+                return;
+            }
+
+            btn.setAttribute('data-bound', '1');
+
+            btn.addEventListener('click', function (event) {
+                // 按钮在分组标题区的操作条附近，冒泡上去会被分类/排序等委托监听当成一次空白点击
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (btn.getAttribute('data-busy') === '1') {
+                    return;
+                }
+
+                var category = btn.getAttribute('data-more-category') || '0';
+                var offset = parseInt(btn.getAttribute('data-more-offset') || '0', 10);
+                var total = parseInt(btn.getAttribute('data-more-total') || '0', 10);
+                var grid = qsa('.site-grid[data-grid-category="' + category + '"]')[0];
+                var box = btn.parentNode;
+
+                if (!grid) {
+                    return;
+                }
+
+                btn.setAttribute('data-busy', '1');
+                btn.disabled = true;
+                btn.textContent = '加载中…';
+
+                var done = function () {
+                    btn.removeAttribute('data-busy');
+                    btn.disabled = false;
+                };
+
+                fetch('api/home_list.php?group=' + encodeURIComponent(category) +
+                    '&offset=' + offset + '&limit=12', {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                }).then(function (resp) {
+                    if (!resp.ok) { throw new Error('HTTP ' + resp.status); }
+                    return resp.json();
+                }).then(function (data) {
+                    if (!data || !data.ok) { throw new Error('bad'); }
+
+                    var added = appendCards(grid, data.html || '');
+
+                    added.forEach(watchCard);
+
+                    initFavicons();
+
+                    var next = offset + added.length;
+                    btn.setAttribute('data-more-offset', String(next));
+                    btn.setAttribute('data-more-total', String(data.total || total));
+
+                    if (grid.hasAttribute('hidden')) {
+                        grid.hidden = false;
+                    }
+
+                    if (!data.has_more || added.length === 0) {
+                        box.hidden = true;
+                    }
+
+                    btn.textContent = '加载更多（还有 ' + Math.max(0, (data.total || total) - next) + ' 个）';
+                    done();
+
+                    // 新卡片要按当前筛选/分类重新判定一次显隐
+                    applyFilters();
+                }).catch(function () {
+                    btn.textContent = '加载失败，点击重试';
+                    done();
+                });
+            });
+        });
+    }
+
+    initGroupMore();
+
+    /* ----------------------------------------------------------------------
        可用性 / 速度检测
        ---------------------------------------------------------------------- */
 
@@ -1537,6 +1773,13 @@
     function probeStatus(card) {
         var url = card.getAttribute('data-url');
 
+        // v2.18.1 · 内网 / 后台勾选「跳过检测」的条目：不发请求，保持灰色「内网」
+        var preset = card.getAttribute('data-check-status') || '';
+
+        if (preset === 'skipped' || preset === 'internal') {
+            return Promise.resolve();
+        }
+
         if (!url) {
             setStatus(card, 'offline');
             return Promise.resolve();
@@ -1600,6 +1843,11 @@
             card.classList.add('is-offline');
         } else {
             card.classList.remove('is-offline');
+        }
+
+        /* 内网 / 跳过检测的条目不做探测（服务端已标记 skipped） */
+        if (card.getAttribute('data-status') === 'skipped') {
+            return;
         }
 
         if (statusEl) {
@@ -2322,6 +2570,14 @@
             }
         }
 
+        /** 取卡片图标当前的可信地址（本地缓存图标优先） */
+        function cardIconSource(card) {
+            var img = card.querySelector('.site-favicon');
+            var src = img ? (img.currentSrc || img.getAttribute('src') || img.getAttribute('data-src') || '') : '';
+            // 只把站内绝对地址当成 logo 存库，外链兜底图不入库
+            return src && src.indexOf('http') === 0 && src.indexOf('api.iowen.cn') === -1 ? src : '';
+        }
+
         function cardData(card) {
             return {
                 id: card.getAttribute('data-id') || '',
@@ -2330,9 +2586,11 @@
                 category: card.getAttribute('data-category') || '0',
                 description: card.getAttribute('data-description') || '',
                 tags: card.getAttribute('data-tags') || '',
-                logo: card.getAttribute('data-logo') || '',
+                // v2.18.1 · data-logo 已从 DOM 移除（与图标 img 的 data-src 重复），改为读图标本身
+                logo: card.getAttribute('data-logo') || cardIconSource(card),
                 starred: card.getAttribute('data-starred') === '1',
-                owner: card.getAttribute('data-owner') === '1'
+                // 有无卡片操作区即代表是否本人数据
+                owner: !!card.querySelector('.card-actions')
             };
         }
 
@@ -2648,6 +2906,7 @@
             }
 
             state.query = '';
+            restoreGroups();
 
             if (typeof updateSearchClear === 'function') {
                 updateSearchClear();
@@ -2748,6 +3007,7 @@
                 var img = document.createElement('img');
                 img.className = 'site-favicon';
                 img.alt = '';
+                img.setAttribute('aria-hidden', 'true');
                 img.width = 44;
                 img.height = 44;
                 img.loading = 'lazy';

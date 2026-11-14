@@ -565,7 +565,7 @@ function sendRejectionEmail($data) {
             color: #721c24;
         }
     </style>
-    <link href="../assets/css/admin.css?v=2.18.0" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.1" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -627,14 +627,14 @@ function sendRejectionEmail($data) {
                     <?php if ($message): ?>
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <i class="fas fa-check-circle me-2"></i> <?php echo $functions->escape($message); ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
                         </div>
                     <?php endif; ?>
                     
                     <?php if ($error): ?>
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <i class="fas fa-exclamation-circle me-2"></i> <?php echo $functions->escape($error); ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
                         </div>
                     <?php endif; ?>
                     
@@ -654,7 +654,7 @@ function sendRejectionEmail($data) {
                                 <br>• application_rejected.html
                                 <br>• application_rejected.txt
                             </p>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
                         </div>
                     <?php endif; ?>
                     

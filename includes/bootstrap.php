@@ -23,7 +23,7 @@ if (is_file($navVersionFile)) {
 }
 
 if (!defined('APP_VERSION')) {
-    define('APP_VERSION', '2.18.0');
+    define('APP_VERSION', '2.18.1');
 }
 
 if (!defined('APP_RELEASE')) {
@@ -154,4 +154,175 @@ if (!function_exists('navMaybeGzip')) {
     }
 }
 
+/**
+ * v2.18.1 · 站点基础地址（canonical / og:image / sitemap 用）。
+ * 协议与域名都取当前实际请求，不写死。
+ */
+if (!function_exists('navSiteBaseUrl')) {
+    function navSiteBaseUrl()
+    {
+        static $base = null;
+
+        if ($base !== null) {
+            return $base;
+        }
+
+        $https = (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
+            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
+            || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);
+
+        $host = (string) ($_SERVER['HTTP_HOST'] ?? 'localhost');
+        $port = (string) ($_SERVER['SERVER_PORT'] ?? '');
+
+        if ($port !== '' && !in_array((int) $port, [80, 443], true) && strpos($host, ':') === false) {
+            $host .= ':' . $port;
+        }
+
+        // 站点可能部署在子目录；直接取请求目录（/admin/xx.php → /admin），不做正则推断
+        $script = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+        $dir = rtrim(dirname($script), '/');
+
+        if ($dir === '.' || $dir === '/') {
+            $dir = '';
+        }
+
+        $base = ($https ? 'https://' : 'http://') . $host . $dir;
+
+        return $base;
+    }
+}
+
+/**
+ * v2.18.1 · 匿名页短缓存 + ETag。
+ *
+ * 默认 session_start() 会给所有响应带上 `Cache-Control: no-store`，
+ * 匿名访客的公开页面因此完全无法被浏览器 / CDN 缓存。
+ * 这里只对「未登录 + 只读公开页」放开 60 秒短缓存：
+ *   - 加 Vary: Cookie，任何带 session 的响应都会被缓存层单独存放，
+ *     不会把别人登录后的页面发给访客；
+ *   - 输出缓冲结束时按最终 HTML 计算 ETag，命中 If-None-Match 返回 304；
+ *   - 登录态、my.php、admin/、其它接口一律维持 no-store（不动 session 默认行为）。
+ */
+/**
+ * 整页 HTML 空白压缩：只压标签之间的缩进与换行。
+ * <pre>/<textarea>/<script>/<style> 内容原样保留（占位后再还原）。
+ */
+if (!function_exists('navMinifyHtml')) {
+    function navMinifyHtml($html)
+    {
+        if (!is_string($html) || strlen($html) < 2048) {
+            return $html;
+        }
+
+        $hold = [];
+        $html = preg_replace_callback(
+            '#<(pre|textarea|script|style)\b[^>]*>.*?</\1>#is',
+            function ($match) use (&$hold) {
+                $key = "\x01NAVHOLD" . count($hold) . "\x01";
+                $hold[$key] = $match[0];
+
+                return $key;
+            },
+            $html
+        );
+
+        if (!is_string($html)) {
+            return $html;
+        }
+
+        $html = preg_replace('/>\s+</', '><', $html);
+
+        if ($hold) {
+            $html = strtr($html, $hold);
+        }
+
+        return $html;
+    }
+}
+
+if (!function_exists('navPublicCache')) {
+    function navPublicCache()
+    {
+        // 注意：php -S 的 SAPI 也是 cli-server，只排除纯命令行（cli），否则本地调试永远看不到缓存头
+        // 只排除纯命令行；php -S 的 SAPI 是 cli-server，本地调试也要能验证缓存头。
+        if (PHP_SAPI === 'cli' || isset($_GET['nocache']) || isset($_GET['preview'])) {
+            return;
+        }
+
+        // 登录用户（$_SESSION 里有身份信息）一律不缓存
+        if (session_status() !== PHP_SESSION_ACTIVE
+            || !empty($_SESSION['user_id'])
+            || !empty($_SESSION['username'])
+            || !empty($_SESSION['admin_id'])
+        ) {
+            return;
+        }
+
+        if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET') {
+            return;
+        }
+
+        // 只读公开页白名单（按脚本文件名，子目录也算）
+        $script = strtolower(basename((string) ($_SERVER['SCRIPT_NAME'] ?? '')));
+        $publicScripts = ['index.php', 'about.php', 'contact.php', 'apply.php', 'detail.php', 'share.php'];
+
+        if (!in_array($script, $publicScripts, true)) {
+            return;
+        }
+
+        if (!headers_sent()) {
+            header_remove('Expires');
+            header_remove('Pragma');
+            header('Cache-Control: public, max-age=60, s-maxage=60');
+            // 覆盖 session_start 的 no-store，同时保证 Vary 里只出现一次 Cookie
+            header('Vary: Cookie');
+        }
+
+        ob_start(function ($buffer) {
+            if (!is_string($buffer) || $buffer === '' || headers_sent()) {
+                return $buffer;
+            }
+
+            // 先做整页空白压缩，再算 ETag：ETag 必须对「真正发出去的内容」取摘要，
+            // 否则压缩前后内容不同、ETag 却一样，304 判断会失真。
+            // <pre>/<textarea>/<script>/<style> 里的空白有语义（排版、模板字符串），
+            // 先挖出来占位，压完再填回去，不能整页跳过——首页确实带 <textarea>。
+            $buffer = navMinifyHtml($buffer);
+
+            // gzip 层可能已经压过，这类响应跳过 ETag（内容不可逆）
+            foreach (headers_list() as $header) {
+                if (stripos($header, 'Content-Encoding:') === 0) {
+                    return $buffer;
+                }
+            }
+
+            $etag = '"' . md5($buffer) . '"';
+            $modified = gmdate('D, d M Y H:i:s') . ' GMT';
+            $inline = !empty($_SERVER['HTTP_IF_NONE_MATCH'])
+                && trim((string) $_SERVER['HTTP_IF_NONE_MATCH']) === $etag;
+
+            header('ETag: ' . $etag);
+            header('Last-Modified: ' . $modified);
+
+            if ($inline) {
+                http_response_code(304);
+                header('Content-Length: 0');
+
+                return '';
+            }
+
+            header('Content-Length: ' . strlen($buffer));
+
+            return $buffer;
+        });
+    }
+}
+
 navMaybeGzip();
+
+if (!isset($GLOBALS['navPublicCacheStarted'])) {
+    $GLOBALS['navPublicCacheStarted'] = true;
+
+    // gzip 层先注册，本层后注册：后注册的先执行，即先算 ETag，再交给 gzip 压缩
+    navPublicCache();
+}

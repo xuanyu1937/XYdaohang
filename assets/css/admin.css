@@ -3332,3 +3332,10 @@ html[data-theme="dark"] .sidebar-footer .site-quick-links.is-admin { color: #9aa
     font-size: 11px;
     letter-spacing: .3px;
 }
+
+/* v2.18.1 · 统一键盘焦点环（后台） */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible,
+:where(.btn, .nav-link, .page-link, .dropdown-item, .btn-action):focus-visible {
+    outline: 2px solid var(--admin-primary);
+    outline-offset: 2px;
+}

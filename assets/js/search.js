@@ -902,10 +902,10 @@
             chain.push(site.logo);
         }
 
+        // v2.18.1 · 与首页一致：本地图标 → 站点自身 → 仅一个第三方兜底
         if (site.host) {
             chain.push('https://' + site.host + '/favicon.ico');
             chain.push('https://api.iowen.cn/favicon/' + site.host + '.png');
-            chain.push('https://www.google.com/s2/favicons?sz=64&domain=' + encodeURIComponent(site.host));
         }
 
         return chain;
@@ -926,6 +926,7 @@
         var img = document.createElement('img');
         img.className = 'ss-ico-img';
         img.alt = '';
+        img.setAttribute('aria-hidden', 'true');
         img.loading = 'lazy';
         img.decoding = 'async';
         img.referrerPolicy = 'no-referrer';

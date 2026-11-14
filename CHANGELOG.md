@@ -1,5 +1,34 @@
 # 轩宇-导航 · 版本记录
 
+## v2.18.1（2026-11-14）
+
+> **六类问题集中修复**：自定义 404 / SEO 四件套 / 无障碍 / 外链图标治理 / 首页按需加载 / 匿名短缓存 / 内网误判离线。**需要执行 `upgrade_v2.18.1.sql`**（新增 `skip_check` 列并给 `check_status` 增加 `skipped` 取值）。
+
+### 修复
+
+- **内网站点被误判「无法访问」**（`includes/Services.php` `HealthCheckService`）
+  - 新增 `classifyHost()`：`127/8`、`10/8`、`172.16/12`、`192.168/16`、`169.254/16`、`::1`、`fc00::/7`、`fe80::/10`，以及 `localhost`、`*.local`、`*.lan`、`*.internal` 和 DNS 解析失败的域名，直接返回 `skipped`，**一次请求都不发**。
+  - 后台编辑表单新增「跳过可用性检测（内网 / 常关设备）」开关；这批条目在列表里显示灰色「内网」，永远不变红。
+  - 批量检测与 cron 汇总把 `skipped` 单独计数，不再计入失败。
+  - 前台卡片显示灰色「内网」，不再出现「无法访问」。
+  - 开放 API 列表 / 详情返回 `skip_check`，PUT 支持修改。
+- **`check_status` 枚举缺 `skipped`**：只加列不改枚举时，写入会被 MySQL 截断成空串，前台退化成「未知状态」。升级脚本与 `install/install.sql` 均已补上该取值。
+- **`php -S` 下匿名缓存不生效**：`navPublicCache()` 原本用 `PHP_SAPI === 'cli'` 跳过命令行，而 `php -S` 的 SAPI 是 `cli-server`，本地永远看不到缓存头，掩盖了真实行为。
+
+### 新增
+
+- **自定义 404 / 500 页面**：`404.php` 带真实 404 状态码，只有「页面不存在」「搜索框」「返回首页」，不泄露堆栈、物理路径、PHP/IIS 版本。`web.config` 配 `httpErrors`，`.htaccess` 配 `ErrorDocument`，并移除 `X-Powered-By` 响应头。
+- **SEO 四件套**：根目录静态 `robots.txt` 与 `sitemap.xml`；`index.php` 的 canonical 丢掉全部查询参数；补 `og:image`（`icon-512.png`，512×512）、`twitter:card`；公开页统一补 canonical。
+- **后台「批量补齐本地图标」**（系统工具 → 本地图标）：把站点图标下载到 `uploads/icons/`，`md5(host+图标地址)` 命名，单张 64KB 上限，只收图片类型，写回 `nav_links.logo`，失败留空。每批 10 条，带进度与失败清单。
+- **首页按需加载**：`api/home_list.php`（只读公共接口，`group` / `offset` / `limit` / `q`，`limit` 上限 50，公开字段 + 服务端渲染好的卡片 HTML，60 秒公共缓存 + ETag）。首屏每个分组只渲染 12 条，底部「加载更多」按需续拉；搜索改为请求该接口（300ms 防抖），清空关键词还原分组视图。
+
+### 优化
+
+- **首页 HTML 体积 720KB → 143KB**（-80%）：每分组 12 条首屏 + 整页标签间空白压缩（`<pre>/<textarea>/<script>/<style>` 内容原样保留）+ 卡片 `data-description` 只存前 120 字（全文仍在 `.site-desc`）。
+- **图标请求治理**：兜底链收敛为「本地缓存 → 站点自身 → 一个第三方」，本地图标命中后不再输出第三方兜底；所有外链图标带 `referrerpolicy="no-referrer"`。
+- **匿名页短缓存**：未登录访问 `index / about / contact / apply / detail / share` 返回 `Cache-Control: public, max-age=60, s-maxage=60` + `Vary: Cookie` + `ETag`，命中 `If-None-Match` 回 304（0 字节）；登录态、`my.php`、`admin/`、`api/` 维持 `no-store`。
+- **无障碍**：全站每页恰好一个 `h1`；站点图标 `alt` 为站点名、卡片 favicon `alt=""` + `aria-hidden`、头像 `alt="<用户名> 头像"`、二维码 `alt="网址二维码"`；纯图标按钮补 `aria-label`（含后台表格行操作），有可见文字的按钮不再重复加；统一 `:focus-visible` 焦点环（2px + 2px 偏移）。
+
 ## v2.18.0（2026-11-14）
 
 > **图标抓取重写 + 开放 API 收录对齐 + 首页首屏瘦身 + 可添加到手机桌面**。本版解决三件长期存在的问题：API 收录的网站没有图标、不自动分组、标签被丢弃；以及首页站点一多就卡。**无数据库变更，覆盖文件即可。**

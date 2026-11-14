@@ -11,10 +11,21 @@ DirectoryIndex index.php index.html
     RewriteRule ^api/sites/?$ api/sites.php [L,QSA]
 </IfModule>
 
+# v2.18.1 · 自定义错误页
+# 说明：PHP 内置开发服务器不支持 ErrorDocument，本地只能用 Apache 或直接在容器里
+# 直接访问 /404.php 验证页面本身；生产环境（IIS/Apache）才会真正接管不存在的路径。
+ErrorDocument 404 /404.php
+ErrorDocument 500 /500.php
+
+# v2.18.1 · 去掉 PHP 版本暴露
+<IfModule mod_headers.c>
+    Header unset X-Powered-By
+</IfModule>
+
 # 阻止直接访问敏感目录（PHP 内部 include 不受影响）
 RedirectMatch 403 ^/?(config|includes|install|backups|logs|cache|vendor)(/|$)
 
-# 阻止下载源码/备份/日志类文件
+# 阻止下载源码/备份/日志类文件（robots.txt 由下方 <Files> 单独放行）
 <FilesMatch "\.(log|sql|lock|ini|bak|zip|dist|md|txt)$">
     <IfModule mod_authz_core.c>
         Require all denied
@@ -24,3 +35,9 @@ RedirectMatch 403 ^/?(config|includes|install|backups|logs|cache|vendor)(/|$)
         Deny from all
     </IfModule>
 </FilesMatch>
+
+<Files "robots.txt">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+</Files>

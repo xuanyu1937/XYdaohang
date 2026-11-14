@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /includes/
+Disallow: /config/
+Disallow: /install/
+Disallow: /login.php
+Disallow: /my.php
+Disallow: /forgot.php
+Disallow: /reset.php
+Sitemap: http://dh.pxyblog.top/sitemap.xml

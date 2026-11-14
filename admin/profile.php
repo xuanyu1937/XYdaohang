@@ -439,7 +439,7 @@ $recentLogins = $recentStmt->fetchAll();
         .strength-good { width: 75%; background: #3b82f6; }
         .strength-strong { width: 100%; background: #10b981; }
     </style>
-    <link href="../assets/css/admin.css?v=2.18.0" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.1" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -480,7 +480,7 @@ $recentLogins = $recentStmt->fetchAll();
                         <p class="mb-0"><?php echo $functions->escape($message); ?></p>
                     </div>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" aria-label="关闭"></button>
             </div>
         <?php endif; ?>
         
@@ -493,7 +493,7 @@ $recentLogins = $recentStmt->fetchAll();
                         <p class="mb-0"><?php echo $functions->escape($error); ?></p>
                     </div>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" aria-label="关闭"></button>
             </div>
         <?php endif; ?>
         
@@ -608,7 +608,7 @@ $recentLogins = $recentStmt->fetchAll();
                                            placeholder="请输入当前密码">
                                     <button type="button" 
                                             class="btn btn-outline-secondary password-toggle"
-                                            onclick="togglePassword('currentPasswordInput')">
+                                            onclick="togglePassword('currentPasswordInput')" aria-label="显示/隐藏密码">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
@@ -628,7 +628,7 @@ $recentLogins = $recentStmt->fetchAll();
                                            oninput="checkPasswordStrength()">
                                     <button type="button" 
                                             class="btn btn-outline-secondary password-toggle"
-                                            onclick="togglePassword('newPasswordInput')">
+                                            onclick="togglePassword('newPasswordInput')" aria-label="显示/隐藏密码">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
@@ -650,7 +650,7 @@ $recentLogins = $recentStmt->fetchAll();
                                            placeholder="请再次输入新密码">
                                     <button type="button" 
                                             class="btn btn-outline-secondary password-toggle"
-                                            onclick="togglePassword('confirmPasswordInput')">
+                                            onclick="togglePassword('confirmPasswordInput')" aria-label="显示/隐藏密码">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>

@@ -67,6 +67,7 @@ $hasRemark      = nav_links_has_column($db, 'remark');
 $hasClicks      = nav_links_has_column($db, 'clicks');
 $hasAlias       = nav_links_has_column($db, 'alias');
 $hasTags        = nav_links_has_column($db, 'tags');
+$hasSkipCheck   = nav_links_has_column($db, 'skip_check');
 $hasUsersTable  = $hasUserId && nav_links_has_table($db, 'users');
 
 if (!function_exists('navLinkCategoryLabel')) {
@@ -129,6 +130,11 @@ if (!function_exists('navLinkHealthMeta')) {
             return ['超时无响应', 'bg-danger', '连接超时或无法建立连接'];
         }
 
+        // v2.18.1 · 内网 / 手动跳过：灰色「内网」，绝不显示成失败
+        if ($status === 'skipped') {
+            return ['内网', 'bg-secondary', '内网地址或已设置「跳过检测」，不参与可用性统计'];
+        }
+
         return ['未检测', 'bg-secondary', '尚未进行健康检测'];
     }
 }
@@ -189,6 +195,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_nav_link'])) {
                 $insertFields .= ', tags';
                 $insertPlaceholders .= ', ?';
                 $insertValues[] = $tags;
+            }
+
+            // v2.18.1 · 内网 / 常关设备可跳过可用性检测
+            if ($hasSkipCheck) {
+                $insertFields .= ', skip_check';
+                $insertPlaceholders .= ', ?';
+                $insertValues[] = !empty($_POST['skip_check']) ? 1 : 0;
             }
 
             $stmt = $db->prepare("
@@ -265,6 +278,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_nav_link'])) {
             if ($hasTags) {
                 $updateSet .= ', tags = ?';
                 $updateValues[] = $tags;
+            }
+
+            // v2.18.1 · 跳过检测开关
+            if ($hasSkipCheck) {
+                $updateSet .= ', skip_check = ?';
+                $updateValues[] = !empty($_POST['skip_check']) ? 1 : 0;
             }
 
             $stmt = $db->prepare("
@@ -959,8 +978,8 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
             }
         }
     </style>
-    <link href="../assets/css/admin.css?v=2.18.0" rel="stylesheet">
-    <link href="../assets/css/category-quick-add.css?v=2.18.0" rel="stylesheet">
+    <link href="../assets/css/admin.css?v=2.18.1" rel="stylesheet">
+    <link href="../assets/css/category-quick-add.css?v=2.18.1" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -991,14 +1010,14 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                     <?php if ($message): ?>
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <?php echo $functions->escape($message); ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
                         </div>
                     <?php endif; ?>
                     
                     <?php if ($error): ?>
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <?php echo $functions->escape($error); ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
                         </div>
                     <?php endif; ?>
                     
@@ -1164,6 +1183,19 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                                     </label>
                                                 </div>
                                             </div>
+
+                                            <?php if ($hasSkipCheck): ?>
+                                            <div class="mb-3">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" name="skip_check" id="skip_check" value="1"
+                                                           <?php echo !empty($editNavLink['skip_check']) ? 'checked' : ''; ?>>
+                                                    <label class="form-check-label" for="skip_check">
+                                                        跳过可用性检测（内网 / 常关设备）
+                                                    </label>
+                                                </div>
+                                                <small class="text-muted">开启后不再探测响应时间，状态显示为灰色「内网」，也不计入失败统计。</small>
+                                            </div>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                         
                                         <div class="d-grid gap-2">
@@ -1557,13 +1589,13 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
                                                         <td>
                                                             <form method="POST" class="d-inline" onsubmit="return confirm('确定要恢复该导航链接吗？');">
                                                                 <input type="hidden" name="restore_id" value="<?php echo (int) $link['id']; ?>">
-                                                                <button type="submit" class="btn btn-sm btn-outline-success" title="恢复">
+                                                                <button type="submit" class="btn btn-sm btn-outline-success" title="恢复" aria-label="恢复">
                                                                     <i class="fas fa-rotate-left"></i>
                                                                 </button>
                                                             </form>
                                                             <form method="POST" class="d-inline" onsubmit="return confirm('彻底删除后不可恢复，确定要删除吗？');">
                                                                 <input type="hidden" name="purge_id" value="<?php echo (int) $link['id']; ?>">
-                                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="彻底删除">
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="彻底删除" aria-label="彻底删除">
                                                                     <i class="fas fa-trash"></i>
                                                                 </button>
                                                             </form>
@@ -2184,7 +2216,7 @@ if ($baseUrl == '/admin' || $baseUrl == '\\admin') {
     })();
     </script>
 
-    <script src="../assets/js/category-quick-add.js?v=2.18.0"></script>
+    <script src="../assets/js/category-quick-add.js?v=2.18.1"></script>
     <script>
     /* v2.12.0 · 导航管理页「添加分类」：与分类管理用同一个组件、同一套字段和校验 */
     (function () {

@@ -271,6 +271,8 @@ svg {
 
 .brand-title {
     margin: 0;
+    /* v2.18.1：该元素由 <span> 升为 <h1>，浏览器默认 font-size/margin/bold 由上面几行覆盖，这里补 reset */
+    padding: 0;
     color: var(--text);
     font-size: 25px;
     font-weight: 700;
@@ -1186,6 +1188,16 @@ body[data-monitor="0"] .site-clicks {
     animation: status-pulse 1.7s ease-in-out infinite;
 }
 
+/* v2.18.1 · 内网 / 跳过检测：灰点，无动画，绝不显示成失败 */
+.site-status[data-state="skipped"] .status-dot {
+    background: var(--muted-2);
+    animation: none;
+}
+
+.site-speed[data-state="skipped"] {
+    color: var(--muted);
+}
+
 @keyframes status-pulse {
     0%,
     100% {
@@ -2053,7 +2065,7 @@ body[data-monitor="0"] .site-clicks {
     margin-bottom: 12px;
 }
 
-.group-head h3 {
+.group-head h3, .group-head .group-title {
     display: flex;
     align-items: center;
     gap: 9px;
@@ -2064,7 +2076,7 @@ body[data-monitor="0"] .site-clicks {
     letter-spacing: -0.015em;
 }
 
-.group-head h3::before {
+.group-head h3::before, .group-head .group-title::before {
     width: 6px;
     height: 6px;
     border-radius: 50%;
@@ -2093,7 +2105,7 @@ body[data-monitor="0"] .site-clicks {
     border-left: 2px solid var(--border-strong);
 }
 
-.group-subhead h4 {
+.group-subhead h4, .group-subhead .group-subtitle {
     margin: 0;
     color: var(--text-2);
     font-size: 14px;
@@ -2633,7 +2645,7 @@ html[data-theme="dark"][data-skin="mint"] {
         min-height: 106px;
     }
 
-    .group-head h3 {
+    .group-head h3, .group-head .group-title {
         font-size: 15px;
     }
 
@@ -2729,7 +2741,7 @@ html {
 }
 
 /* 标题避免孤字 */
-.group-head h3,
+.group-head h3, .group-head .group-title,
 .section-title h2,
 .brand-title {
     text-wrap: balance;
@@ -4726,7 +4738,7 @@ html[data-theme="dark"] h2,
 html[data-theme="dark"] h3,
 html[data-theme="dark"] .site-name,
 html[data-theme="dark"] .brand-title,
-html[data-theme="dark"] .group-head h3,
+html[data-theme="dark"] .group-head h3, .group-head .group-title,
 html[data-theme="dark"] strong,
 html[data-theme="dark"] b {
     font-weight: var(--fw-semibold);
@@ -6931,4 +6943,81 @@ html.is-touch-ui .card-actions .card-action {
 #editFetchBtn {
     flex: none;
     white-space: nowrap;
+}
+
+/* ==========================================================================
+   v2.18.1 · 统一键盘焦点环（可访问性）
+   规则：所有可交互元素在键盘聚焦（:focus-visible）时给出 2px 强调色描边 +
+   2px 偏移；鼠标点击不触发，避免视觉噪音。
+   已有的 :focus-visible 规则优先（本段放在文件末尾但用 :where 降低优先级，
+   不覆盖各组件已有的更精细焦点样式）。
+   ========================================================================== */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible,
+:where(.card-action, .site-card, .mode-btn, .tool-btn, .chip):focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* 搜索框的焦点环画在外层 .search-bar 上（::before 叠层），内层输入不再叠一层 */
+.search-bar:focus-within {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* 深色主题下描边用更亮的蓝，保证对比度 */
+html[data-theme="dark"] :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline-color: #6ea8fe;
+}
+
+/* ----------------------------------------------------------------------
+   v2.18.1 · 分组「加载更多」与搜索结果容器
+   ---------------------------------------------------------------------- */
+
+.group-more {
+    display: flex;
+    justify-content: center;
+    margin: 4px 0 18px;
+}
+
+.group-more[hidden] {
+    display: none;
+}
+
+.group-more-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 0 18px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface, #fff);
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.16s ease, border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.group-more-btn:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-soft);
+}
+
+.group-more-btn:disabled {
+    cursor: progress;
+    opacity: 0.7;
+}
+
+#searchResults {
+    margin-bottom: 8px;
+}
+
+#searchResults .group-head {
+    margin-top: 0;
+}
+
+html[data-theme="dark"] .group-more-btn {
+    background: var(--surface, #1b1b1d);
 }

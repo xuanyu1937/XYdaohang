@@ -98,7 +98,7 @@ $tokenParam = rawurlencode($token);
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.0">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.1">
     <link rel="stylesheet" href="assets/css/page.css?v=<?php echo APP_VERSION; ?>">
 </head>
 <body data-monitor="0">
@@ -311,6 +311,6 @@ $tokenParam = rawurlencode($token);
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.18.0" defer></script>
+<script src="assets/js/search.js?v=2.18.1" defer></script>
 </body>
 </html>
