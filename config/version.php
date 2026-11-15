@@ -10,4 +10,4 @@ if (basename((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === basename(__FILE__
 
 define('APP_VERSION', '2.18.8');
 define('APP_RELEASE', '2026-11-15');
-define('APP_UPDATE_TIME', '2026-11-15 15:11:03);
+define('APP_UPDATE_TIME', '2026-11-15 15:11:03');
