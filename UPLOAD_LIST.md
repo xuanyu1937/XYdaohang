@@ -1,32 +1,44 @@
-# 轩宇-导航 部署清单（当前版本 v2.18.6）
+# 轩宇-导航 部署清单（当前版本 v2.18.7）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：**v2.18.6**（2026-11-14）
+当前版本：**v2.18.7**（2026-11-15）
 
-> **v2.18.6 三处收尾**：卡片长按/右键菜单两页统一为 7 项并修手机端缺项、手机端 logo 放大、顶部按钮与用户下拉菜单风格跨页统一；顺带修「我的导航」星标状态渲染与暗色主题 3 处对比度遗留。
-> **无数据库变更，无需执行 SQL**；已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，从 v2.18.2 一路覆盖到 v2.18.6 都不用再跑 SQL。
+> **v2.18.7 移动端首屏节奏**：收紧搜索区到分类标签的垂直间距，390px 下从 54px 压到 12px，首屏多露出约一张卡片高度；sticky 分类条吸顶无跳变、无缝隙；桌面 1280px 间距保持不变。
+> **无数据库变更，无需执行 SQL**；已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，从 v2.18.2 一路覆盖到 v2.18.7 都不用再跑 SQL。
 
 ## ⚠️ 升级须知（三步）
 
-1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.6 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
-2. **后台「系统工具 → 在线更新」上传 v2.18.6 更新包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
-3. **清一次浏览器缓存**（Ctrl+F5）。18 个 PHP 文件的 33 处资源参数已升到 `?v=2.18.6`；`sw.js` 缓存名 `xy-nav-pwa-v2.18.6` 激活时自动清掉旧 PWA 缓存。
+1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.7 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
+2. **后台「系统工具 → 在线更新」上传 v2.18.7 更新包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
+3. **清一次浏览器缓存**（Ctrl+F5）。18 个 PHP 文件的 33 处资源参数已升到 `?v=2.18.7`；`sw.js` 缓存名 `xy-nav-pwa-v2.18.7` 激活时自动清掉旧 PWA 缓存。
 
 **验证是否生效**
 
-- `/api/index.php` 徽章显示 `v2.18.6`；`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php` 均为 2.18.6；
-- 390px 登录态首页长按：7 项齐全（新标签打开 / 复制链接 / 二维码 / 收藏 / 编辑 / 移动分组 / 删除），编辑、移动、删除分别打开弹窗与二次确认；「加载更多」出来的卡片同样 7 项；
-- 访客长按 4 项，点收藏提示「请先登录后再收藏」；登录用户看非本人数据 4 项，不出现编辑/移动/删除；
-- `my.php` 长按 7 项，收藏/取消收藏文案与行内星标同步、刷新保持；
-- 首页与 `my.php` 顶部各 3 枚图标按钮同高、同圆角、同边框与阴影，工具条无裸文字按钮；
-- 360 / 390 / 430 三档：logo ≥38px、标题单行省略、头部不换行不溢出；
-- 用户下拉 8 项全部内联 SVG、文字左对齐、3 条分组分隔线、当前页左侧主色竖条、「打开方式」右对齐状态徽标；
-- 键盘 Tab 可依次聚焦按钮与菜单项，Esc 关闭下拉/右键菜单并归还焦点；
-- axe-core 明暗双主题扫描首页与 `my.php`：`color-contrast=0`；
+- `/api/index.php` 徽章显示 `v2.18.7`；`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php` 均为 2.18.7；
+- 390px 首页：搜索框底边到分类标签条上沿约 12px（≤16px），四层间距 computed 为 `6 / 6 / 0 / 6`；
+- 滚动后分类标签条贴住视口顶部，上方无搜索区空白缝隙、无跳变；
+- 1280px 桌面：`.search-section margin: 20px 0 22px`、`.site-body padding-top: 18px`、`.site-main padding-top: 16px` 保持不变；
+- 首屏可见内容比改前多约 92px（list / compact 视图完全可见卡片 +1）；360 / 390 / 430 三档 gap 一致 12px、无横向溢出；
+- axe-core 明暗双主题扫描首页与登录态 `my.php`：`color-contrast=0`（共 4 次扫描 0 违规）；
 - `curl -D -` 看首页：四条安全头各一次、`Content-Security-Policy-Report-Only`、匿名 `public, max-age=60`、带 `ETag`、`Vary: Cookie, Accept-Encoding`；登录态仍 `no-store`。
 
-## 本次 v2.18.6 变动文件（5 个功能文件 + 版本同步，无新增文件，无 SQL）
+## 本次 v2.18.7 变动文件（1 个功能文件 + 版本同步，无新增文件，无 SQL）
+
+| 文件 | 说明 |
+| --- | --- |
+| `assets/css/nav.css` | `≤920px` 的 `.search-section` margin 改 `6px 0 6px !important`；`≤960px` 的 `.site-body` padding-top 改 `6px` 并新增 `.site-main { padding-top: 0 }`；`.mobile-cats` padding 改 `6px 12px 6px 16px`（margin-bottom 保持 14px、不加 margin-top）。顺带把 `.mcat.is-active` 并入已有暗色补强规则，修 1 处 3.67:1 对比度遗留。桌面 `min-width:961px` 块完全未动 |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` / `sw.js` | 版本号升至 2.18.7、PWA 缓存名同步 |
+| 18 个 PHP 页面（33 处） | `?v=2.18.7` |
+| `CHANGELOG.md` / `README.md` / `UPLOAD_LIST.md` / `FAQ.md` / `API_TEST_REPORT.md` | 文档同步 |
+
+> 约束核对：功能改动仅 `assets/css/nav.css` 一个文件的移动端断点；CSS 净增 518 字节；无新增文件、无 SQL、不引第三方库、不改任何接口字段与权限。
+
+> 本地已用 Chromium + Playwright 完成 390px / 1280px 改前改后对比量取、sticky 吸顶采样、三视图首屏卡片数与 360/390/430 档位检查，逐项结果见 `v2.18.7-验收与发版报告.md` 与 `v2.18.7-验收日志.txt`；验收工具只装在本地临时目录，不在交付包内。
+
+## 历史变动文件
+
+### v2.18.6 · 三处收尾（5 个功能文件 + 版本同步，无新增文件，无 SQL）
 
 | 文件 | 说明 |
 | --- | --- |
@@ -39,11 +51,7 @@
 | 18 个 PHP 页面（33 处） | `?v=2.18.6` |
 | `CHANGELOG.md` / `README.md` / `UPLOAD_LIST.md` / `FAQ.md` | 文档同步 |
 
-> 约束核对：功能改动仅限 5 个点名前端文件（版本同步与文档属发版必需）；CSS 净增 7,547 字节 ≤40KB、JS 净增 2,607 字节 ≤5KB；不引第三方库、图标全内联 SVG、系统字体栈；**未改任何接口字段与权限**。
-
-> 本地已用 Chromium + axe-core 4.10.3 全量验收，71 项断言 0 FAIL（含明暗双主题、360/390/430 三档、访客态、加载更多、真实星标持久化、Tab/Esc 焦点），逐项结果见 `CHANGELOG.md` → v2.18.6「本地验收结果」与 `v2.18.6-验收日志.txt`；验收工具只装在本地临时目录，不在交付包内。
-
-## 历史变动文件
+> 本地 Chromium + axe-core 4.10.3 全量验收，71 项断言 0 FAIL；逐项结果见 `CHANGELOG.md` → v2.18.6「本地验收结果」与 `v2.18.6-验收日志.txt`。
 
 ### v2.18.5 · 8 项遗留问题集中修复（11 个功能文件，无新增文件，无 SQL）
 

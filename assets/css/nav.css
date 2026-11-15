@@ -2437,7 +2437,14 @@ html[data-theme="dark"][data-skin="mint"] {
     .site-body {
         grid-template-columns: minmax(0, 1fr);
         gap: 0;
-        padding-top: 18px;
+        padding-top: 6px;
+    }
+
+    /* v2.18.7：移动端清掉 .site-main 顶部基础 22px 内边距，避免与搜索区
+       下边距、.site-body 上内边距三重叠加；同时也是 sticky 分类条吸顶时
+       上方不残留空白缝隙的前提（桌面 min-width:961px 的 16px 保持不变）。*/
+    .site-main {
+        padding-top: 0;
     }
 
     /* 移动端改为横向分类条，抽屉只作为「全部分类」入口保留 */
@@ -2453,7 +2460,7 @@ html[data-theme="dark"][data-skin="mint"] {
         top: 0;
         z-index: 30;
         margin: 0 -16px 14px;
-        padding: 8px 12px 8px 16px;
+        padding: 6px 12px 6px 16px;
         background: color-mix(in srgb, var(--bg) 86%, transparent);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
@@ -4359,7 +4366,7 @@ dialog.my-dialog::backdrop {
     }
 
     .search-section {
-        margin: 6px 0 14px !important;
+        margin: 6px 0 6px !important;
         padding-top: 0 !important;
     }
 
@@ -7233,10 +7240,11 @@ body .my-group-tab .mgt-count {
 /* --------------------------------------------------------------------------
    v2.18.6 · 暗色主题对比度补强（既有遗留，非本次改动引入）
    html[data-theme="dark"] 的 --primary 为 #3b82f6：
-     · 作背景承载白字时对比度仅 3.67:1（#addBtn / 激活分组 tab）
+     · 作背景承载白字时对比度仅 3.67:1（#addBtn / 激活分组 tab / 移动端分类条 .mcat.is-active）
      · 作文字落在 #1a2332 上时仅 4.29:1（分组工具标签）
    均低于 WCAG 2.1 AA 的 4.5:1。分别改用深蓝底与亮蓝字，
    不动亮色主题、不动其它 skin，也不改 --primary 本身以免影响全局。
+   v2.18.7 顺带补上移动端 .mcat.is-active（仅在 ≤960px 出现，桌面不受影响）。
    -------------------------------------------------------------------------- */
 html[data-theme="dark"] {
     --primary-solid-dark: #1d4ed8;
@@ -7245,7 +7253,8 @@ html[data-theme="dark"] {
 
 html[data-theme="dark"] body .my-btn.is-primary,
 html[data-theme="dark"] body #addBtn,
-html[data-theme="dark"] body .my-group-tab.is-active {
+html[data-theme="dark"] body .my-group-tab.is-active,
+html[data-theme="dark"] body .mcat.is-active {
     background: var(--primary-solid-dark);
     color: #fff;
 }
