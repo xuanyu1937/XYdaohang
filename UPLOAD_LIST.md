@@ -1,34 +1,30 @@
-# 轩宇-导航 部署清单（当前版本 v2.18.7）
+# 轩宇-导航 部署清单（当前版本 v2.18.8）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：**v2.18.7**（2026-11-15）
+当前版本：**v2.18.8**（2026-11-15）
 
-> **v2.18.7 移动端首屏节奏**：收紧搜索区到分类标签的垂直间距，390px 下从 54px 压到 12px，首屏多露出约一张卡片高度；sticky 分类条吸顶无跳变、无缝隙；桌面 1280px 间距保持不变。
-> **无数据库变更，无需执行 SQL**；已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，从 v2.18.2 一路覆盖到 v2.18.7 都不用再跑 SQL。
+> **v2.18.8 全站苹果风格统一改造**：新建 `assets/css/apple-tokens.css` 作为唯一设计变量源，`nav.css` / `auth.css` / `page.css` / `admin.css` / `category-quick-add.css` 的重复 `:root` 全部清零；交互色收敛到 `#0066cc`，装饰渐变 0、卡片阴影 0（仅 LOGO 一处）、3D 与 spring 动效下线、圆角归并 `0/8/11/18/999`、正文 17px/1.47、状态点改灰阶。
+> **无数据库变更，无需执行 SQL**；已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，从 v2.18.2 一路覆盖到 v2.18.8 都不用再跑 SQL。
 
 ## ⚠️ 升级须知（三步）
 
-1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.7 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
-2. **后台「系统工具 → 在线更新」上传 v2.18.7 更新包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
-3. **清一次浏览器缓存**（Ctrl+F5）。18 个 PHP 文件的 33 处资源参数已升到 `?v=2.18.7`；`sw.js` 缓存名 `xy-nav-pwa-v2.18.7` 激活时自动清掉旧 PWA 缓存。
+1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.8 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
+2. **后台「系统工具 → 在线更新」上传 v2.18.8 更新包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
+3. **清一次浏览器缓存**（Ctrl+F5）。22 个 PHP 文件的 55 处资源参数已升到 `?v=2.18.8`；`sw.js` 缓存名 `xy-nav-pwa-v2.18.8` 激活时自动清掉旧 PWA 缓存。
 
 **验证是否生效**
 
-- `/api/index.php` 徽章显示 `v2.18.7`；`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php` 均为 2.18.7；
-- 390px 首页：搜索框底边到分类标签条上沿约 12px（≤16px），四层间距 computed 为 `6 / 6 / 0 / 6`；
-- 滚动后分类标签条贴住视口顶部，上方无搜索区空白缝隙、无跳变；
-- 1280px 桌面：`.search-section margin: 20px 0 22px`、`.site-body padding-top: 18px`、`.site-main padding-top: 16px` 保持不变；
-- 首屏可见内容比改前多约 92px（list / compact 视图完全可见卡片 +1）；360 / 390 / 430 三档 gap 一致 12px、无横向溢出；
-- axe-core 明暗双主题扫描首页与登录态 `my.php`：`color-contrast=0`（共 4 次扫描 0 违规）；
-- `curl -D -` 看首页：四条安全头各一次、`Content-Security-Policy-Report-Only`、匿名 `public, max-age=60`、带 `ETag`、`Vary: Cookie, Accept-Encoding`；登录态仍 `no-store`。
+- `/api/index.php` 徽章显示 `v2.18.8`；`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php` 均为 2.18.8；
+- 首页 `<head>` 第一个项目样式为 `apple-tokens.css?v=2.18.8`，其后才是 `nav.css?v=2.18.8`；
+- 按钮/链接只有一种蓝 `#0066cc`，页面不再有紫/橙/青皮肤色与渐变 LOGO；
+- 卡片无阴影、圆角统一；正文 17px，行高约 1.47；
+- 在线速度文字与状态点为灰阶（错误态为低调深红）；
+- 首页分组出现明暗交替背景（奇数组白底区块、偶数组米白）；
+- axe-core 扫描首页明暗双主题、登录页、`my.php`、`about.php`、后台仪表盘与设置页：`color-contrast=0`；
+- 360 / 390 / 430 / 1280 四档无横向溢出。
 
-## 本次 v2.18.7 变动文件（1 个功能文件 + 版本同步，无新增文件，无 SQL）
-
-| 文件 | 说明 |
-| --- | --- |
-| `assets/css/nav.css` | `≤920px` 的 `.search-section` margin 改 `6px 0 6px !important`；`≤960px` 的 `.site-body` padding-top 改 `6px` 并新增 `.site-main { padding-top: 0 }`；`.mobile-cats` padding 改 `6px 12px 6px 16px`（margin-bottom 保持 14px、不加 margin-top）。顺带把 `.mcat.is-active` 并入已有暗色补强规则，修 1 处 3.67:1 对比度遗留。桌面 `min-width:961px` 块完全未动 |
-| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` / `sw.js` | 版本号升至 2.18.7、PWA 缓存名同步 |
+8.7、PWA 缓存名同步 |
 | 18 个 PHP 页面（33 处） | `?v=2.18.7` |
 | `CHANGELOG.md` / `README.md` / `UPLOAD_LIST.md` / `FAQ.md` / `API_TEST_REPORT.md` | 文档同步 |
 

@@ -1,0 +1,510 @@
+/* ==========================================================================
+   轩宇-导航 · Apple 设计语言 · 唯一变量源
+   --------------------------------------------------------------------------
+   依据：项目根目录 DESIGN.md（VoltAgent/awesome-design-md · design-md/apple）
+   本文件是全站唯一的 :root / data-theme 设计变量定义处。nav.css / auth.css /
+   page.css / admin.css / category-quick-add.css 中的重复变量块已移除，只保留
+   组件样式，值一律通过 var(--*) 引用本文件。
+
+   设计契约（导航站密度适配版）：
+   · 唯一交互色 --primary: #0066cc；focus 环 #0071e3；暗底行内链接 #2997ff
+   · 无第二品牌色、无装饰渐变、无皮肤色、无彩色状态色
+   · 圆角只有 0 / 8 / 11 / 18 / 999 五档
+   · 字重阶梯 400 / 600 / 700（禁止 500 及 360/460/560/640）
+   · 全站唯一阴影 rgba(0,0,0,.22) 3px 5px 30px，仅用于 favicon / LOGO
+   · 正文 17px / 1.47；标题 600 + 负字距；正文行高不低于 1.47
+   · 只定义 Default 与 Pressed(scale .95)，不写 hover 位移/放大/抬升
+   · 密度适配：保留三列网格与效率入口，tile 留白不放大到 100vh
+   ========================================================================== */
+
+:root {
+    color-scheme: light;
+
+    /* ---- 1. Apple 原子色板（唯一 hex 定义处） ------------------------- */
+    --a-primary:          #0066cc;   /* Action Blue：唯一交互色 */
+    --a-primary-hover:    #0058b3;
+    --a-focus:            #0071e3;   /* 键盘 focus 环 */
+    --a-link-on-dark:     #2997ff;   /* 仅暗底行内链接 */
+    --a-on-primary:       #ffffff;
+
+    --a-canvas:           #ffffff;   /* 主画布 / 卡片 */
+    --a-parchment:        #f5f5f7;   /* 米白：交替区块 / 页脚 / 磨砂子导航 */
+    --a-pearl:            #fafafc;   /* Pearl 幽灵按钮 */
+    --a-surface-soft:     #f0f0f2;
+    --a-surface-sunken:   #ebebed;
+    --a-black:            #000000;   /* 仅全局导航 / 播放器 */
+
+    --a-tile-1:           #272729;   /* 暗色主表面 */
+    --a-tile-2:           #2a2a2c;
+    --a-tile-3:           #252527;
+    --a-tile-hover:       #323235;
+
+    --a-ink:              #1d1d1f;   /* 近黑文字 */
+    --a-ink-80:           #333333;
+    --a-ink-48:           #6e6e73;   /* 次级/禁用（对白 5.0:1，对米白 4.7:1） */
+    --a-ink-48-strong:    #5b5b60;   /* 米白底上确保 ≥4.5:1 */
+    --a-white:            #ffffff;
+    --a-muted-on-dark:    #cccccc;
+
+    --a-hairline:         #e0e0e0;   /* 1px 细线 */
+    --a-line-soft:        rgba(0, 0, 0, 0.08);
+    --a-line-soft-strong: rgba(0, 0, 0, 0.13);
+    --a-divider-soft:     #f0f0f0;
+
+    /* 状态色中性化：灰阶点 + 文字标签；错误态保留低调中性深红 */
+    --a-state:            #8a8a8f;   /* 在线 / 检测中 / 跳过 统一灰点 */
+    --a-state-soft:       rgba(0, 0, 0, 0.06);
+    --a-state-pending:    #b0b0b5;
+    --a-danger:           #a5271f;   /* 对白 6.4:1，低调中性深红 */
+    --a-danger-soft:      rgba(165, 39, 31, 0.08);
+    --a-danger-border:    rgba(165, 39, 31, 0.28);
+
+    /* ---- 2. 排版阶梯 --------------------------------------------------- */
+    --a-font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont,
+                      "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+                      "Microsoft YaHei", system-ui, sans-serif;
+    --a-font-text:    "SF Pro Text", -apple-system, BlinkMacSystemFont,
+                      "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+                      "Microsoft YaHei", system-ui, sans-serif;
+
+    --a-fs-body:      17px;   /* Apple 正文，不是 16px */
+    --a-fs-caption:   14px;
+    --a-fs-fine:      12px;
+    --a-fs-micro:     11px;
+    --a-fs-title:     18px;
+    --a-fs-title-lg:  20px;
+    --a-fs-heading:   22px;
+    --a-fs-display:   25px;
+    --a-fs-lead:      28px;
+    --a-fs-tagline:   21px;
+    --a-fs-section:   40px;
+    --a-fs-hero:      56px;
+
+    --a-lh-body:      1.47;
+    --a-lh-display:   1.10;
+    --a-lh-dense:     2.41;   /* 页脚链接列 */
+    --a-tracking-display: -0.374px;
+    --a-tracking-caption: -0.224px;
+    --a-tracking-hero:    -0.28px;
+
+    --a-fw-normal:    400;
+    --a-fw-medium:    600;
+    --a-fw-bold:      700;
+
+    /* ---- 3. 空间 / 形状 / 深度 ----------------------------------------- */
+    --a-sp-xxs: 4px;  --a-sp-xs: 8px;   --a-sp-sm: 12px;  --a-sp-md: 17px;
+    --a-sp-lg: 24px;  --a-sp-xl: 32px;  --a-sp-xxl: 48px; --a-sp-section: 80px;
+
+    --a-radius-none: 0;      --a-radius-sm: 8px;    --a-radius-md: 11px;
+    --a-radius-lg:   18px;   --a-radius-pill: 999px;
+
+    --a-shadow-product: rgba(0, 0, 0, 0.22) 3px 5px 30px 0; /* 唯一阴影 */
+    --a-frosted: saturate(180%) blur(20px);
+    --a-hit-min: 44px;
+    --a-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ---- 4. 项目既有变量名 → Apple 值（全站映射层） -------------------
+       下面这些名字在 nav.css / auth.css / page.css / admin.css /
+       category-quick-add.css 中被 var() 引用；在此统一赋值，业务样式无需改。 */
+    --primary:              var(--a-primary);
+    --primary-hover:        var(--a-primary-hover);
+    --primary-filled-hover: var(--a-primary-hover);
+    --primary-contrast:     var(--a-on-primary);
+    --primary-soft:         rgba(0, 102, 204, 0.08);
+    --primary-border:       rgba(0, 102, 204, 0.28);
+    --primary-solid-dark:   var(--a-primary);
+    --primary-text-dark:    var(--a-link-on-dark);
+
+    /* 语义色：状态一律灰阶，错误态低调深红 */
+    --success:        var(--a-state);
+    --success-text:   var(--a-ink-48-strong);
+    --success-soft:   var(--a-state-soft);
+    --danger:         var(--a-danger);
+    --danger-soft:    var(--a-danger-soft);
+    --danger-border:  var(--a-danger-border);
+    --warning:        var(--a-ink-48-strong);   /* 速度"一般"等文字，对白 4.7:1 */
+    --warning-soft:   var(--a-state-soft);
+
+    /* 光晕 / LOGO 渐变下线：全部退化为纯色或透明 */
+    --glow:           transparent;
+    --brand-from:     var(--a-primary);
+    --brand-to:       var(--a-primary);
+    --brand-shadow:   transparent;
+
+    /* 表面（浅色） */
+    --bg:             var(--a-parchment);
+    --bg-card:        var(--a-canvas);
+    --bg-input:       var(--a-canvas);
+    --bg-soft:        var(--a-parchment);
+    --surface:        var(--a-canvas);
+    --surface-2:      var(--a-pearl);
+    --surface-hover:  var(--a-surface-soft);
+    --surface-sunken: var(--a-surface-sunken);
+    --tab-bg:         var(--a-surface-soft);
+    --tab-bg-hover:   var(--a-surface-sunken);
+
+    /* 文字（浅色） */
+    --text:           var(--a-ink);
+    --text-2:         var(--a-ink-80);
+    --muted:          var(--a-ink-48-strong);
+    --muted-2:        var(--a-ink-48);
+
+    /* 细线（浅色） */
+    --border:         var(--a-hairline);
+    --border-strong:  var(--a-line-soft-strong);
+    --hairline:       var(--a-line-soft);
+    --hairline-color: var(--a-hairline);
+
+    /* 圆角：五档 */
+    --radius-xs:      var(--a-radius-sm);
+    --radius-compact: var(--a-radius-sm);
+    --radius-sm:      var(--a-radius-sm);
+    --radius-md:      var(--a-radius-sm);
+    --radius:         var(--a-radius-md);
+    --radius-lg:      var(--a-radius-lg);
+    --radius-xl:      var(--a-radius-lg);
+    --radius-pill:    var(--a-radius-pill);
+    --ctl-radius:     var(--a-radius-sm);
+    --ctl-radius-sm:  var(--a-radius-sm);
+
+    /* 字号：正文 17px / 1.47，导航站密度适配（标题 600 + 负字距） */
+    --fs-micro:       var(--a-fs-micro);
+    --fs-caption:     var(--a-fs-fine);
+    --fs-sm:          var(--a-fs-caption);
+    --fs-body:        var(--a-fs-body);
+    --fs-body-lg:     var(--a-fs-title);
+    --fs-title-sm:    var(--a-fs-title);
+    --fs-title:       var(--a-fs-title-lg);
+    --fs-title-lg:    var(--a-fs-heading);
+    --fs-heading:     var(--a-fs-lead);
+    --fs-display:     var(--a-fs-section);
+
+    /* 间距：4/8/12/17/24/32/48/80 */
+    --sp-xxs: var(--a-sp-xxs);  --sp-xs:  var(--a-sp-xs);
+    --sp-sm:  var(--a-sp-sm);   --sp-md:  var(--a-sp-md);
+    --sp-lg:  var(--a-sp-lg);   --sp-xl:  var(--a-sp-xl);
+    --sp-xxl: var(--a-sp-xxl);  --sp-section: var(--a-sp-section);
+
+    --hit-min:   var(--a-hit-min);
+    --max-width: 1360px;
+
+    /* 阴影：卡片/按钮/弹层一律无阴影，仅 favicon/LOGO 用 --shadow-product */
+    --shadow-sm:  none;
+    --shadow-md:  none;
+    --shadow-lg:  none;
+    --shadow-card:none;
+    --ctl-shadow: none;
+    --ctl-bg:     var(--a-canvas);
+    --ctl-border: 1px solid var(--a-hairline);
+
+    /* 字重：无 500 */
+    --fw-normal:   400;
+    --fw-medium:   600;
+    --fw-semibold: 600;
+    --fw-bold:     700;
+
+    /* 动效：删除 spring，统一标准曲线 */
+    --ease-stream:       var(--a-ease);
+    --ease-spring-drag:  var(--a-ease);
+    --ease-spring-soft:  var(--a-ease);
+    --ease-enter:        var(--a-ease);
+
+    /* 控件/搜索尺寸（JS 读取，保留数值） */
+    --ctl-size:        var(--a-hit-min);
+    --search-size:     44px;
+    --search-inset:    20px;
+    --search-action-w: 92px;
+    --tool-icon:       18px;
+
+    /* ---- 5. 后台变量（admin.css）同源 --------------------------------- */
+    --admin-primary:         var(--a-primary);
+    --admin-primary-hover:   var(--a-primary-hover);
+    --admin-primary-soft:    #e8f1fd;
+    --admin-primary-border:  rgba(0, 102, 204, 0.28);
+    --admin-navy-900:        #1d1d1f;
+    --admin-navy-800:        #272729;
+    --admin-bg:              var(--a-parchment);
+    --admin-surface:         var(--a-canvas);
+    --admin-surface-2:       var(--a-pearl);
+    --admin-surface-hover:   var(--a-surface-soft);
+    --admin-raised:          var(--a-canvas);
+    --admin-border:          var(--a-hairline);
+    --admin-border-strong:   var(--a-line-soft-strong);
+    --admin-border-soft:     var(--a-divider-soft);
+    --admin-text:            var(--a-ink);
+    --admin-text-secondary:  var(--a-ink-80);
+    --admin-muted:           var(--a-ink-48-strong);
+    --admin-secondary-text:  var(--a-ink-80);
+    --admin-success:         var(--a-state);
+    --admin-success-soft:    var(--a-state-soft);
+    --admin-success-text:    var(--a-ink-80);
+    --admin-danger:          var(--a-danger);
+    --admin-danger-soft:     var(--a-danger-soft);
+    --admin-danger-text:     var(--a-danger);
+    --admin-warning:         var(--a-state);
+    --admin-warning-soft:    var(--a-state-soft);
+    --admin-warning-text:    var(--a-ink-80);
+    --admin-info:            var(--a-ink-48-strong);
+    --admin-info-soft:       var(--a-state-soft);
+    --admin-info-text:       var(--a-ink-80);
+    --admin-shadow:          none;
+    --admin-shadow-hover:    none;
+    --admin-radius:          var(--a-radius-lg);
+    --admin-radius-md:       var(--a-radius-md);
+    --admin-radius-sm:       var(--a-radius-sm);
+    --admin-sidebar-width:   260px;
+    --admin-sidebar-collapsed: 72px;
+    --admin-ease:            var(--a-ease);
+    --admin-transition:      background-color .2s var(--a-ease), color .2s var(--a-ease), border-color .2s var(--a-ease);
+
+    /* ---- 6. 快捷收录弹层（category-quick-add.css）同源 ---------------- */
+    --xycq-bg:           var(--a-canvas);
+    --xycq-surface:      var(--a-parchment);
+    --xycq-text:         var(--a-ink);
+    --xycq-muted:        var(--a-ink-48-strong);
+    --xycq-border:       var(--a-hairline);
+    --xycq-primary:      var(--a-primary);
+    --xycq-primary-text: var(--a-on-primary);
+    --xycq-danger:       var(--a-danger);
+}
+
+/* ==========================================================================
+   暗色主题：唯一例外定义处。近黑 #272729 系列，不铺纯黑。
+   ========================================================================== */
+html[data-theme="dark"] {
+    color-scheme: dark;
+
+    --primary:              var(--a-primary);       /* 主 CTA 仍 Action Blue */
+    --primary-hover:        #3d8bdb;
+    --primary-filled-hover: #3d8bdb;
+    --primary-contrast:     var(--a-on-primary);
+    --primary-soft:         rgba(41, 151, 255, 0.16);
+    --primary-border:       rgba(41, 151, 255, 0.36);
+    --primary-solid-dark:   var(--a-primary);
+    --primary-text-dark:    var(--a-link-on-dark);
+
+    --bg:             #1c1c1e;
+    --bg-card:        var(--a-tile-1);
+    --bg-input:       var(--a-tile-2);
+    --bg-soft:        var(--a-tile-3);
+    --surface:        var(--a-tile-1);
+    --surface-2:      var(--a-tile-2);
+    --surface-hover:  var(--a-tile-hover);
+    --surface-sunken: var(--a-tile-3);
+    --tab-bg:         var(--a-tile-2);
+    --tab-bg-hover:   var(--a-tile-hover);
+
+    --text:           #f5f5f7;      /* 不用纯白，防字发胖 */
+    --text-2:         var(--a-muted-on-dark);
+    --muted:          #a1a1a6;      /* 对 #272729 ≥6:1 */
+    --muted-2:        #8e8e93;      /* 对 #272729 ≥4.9:1 */
+
+    --border:         rgba(255, 255, 255, 0.12);
+    --border-strong:  rgba(255, 255, 255, 0.20);
+    --hairline:       rgba(255, 255, 255, 0.08);
+    --hairline-color: rgba(255, 255, 255, 0.12);
+
+    --success:        #9a9a9f;
+    --success-text:   #c9c9ce;
+    --success-soft:   rgba(255, 255, 255, 0.07);
+    --danger:         #e88a83;      /* 对 #272729 ≥5:1 */
+    --danger-soft:    rgba(232, 138, 131, 0.12);
+    --danger-border:  rgba(232, 138, 131, 0.34);
+    --warning:        #9a9a9f;
+    --warning-soft:   rgba(255, 255, 255, 0.07);
+
+    --glow:           transparent;
+    --brand-from:     var(--a-primary);
+    --brand-to:       var(--a-primary);
+    --brand-shadow:   transparent;
+
+    --shadow-sm: none; --shadow-md: none; --shadow-lg: none;
+    --shadow-card: none; --ctl-shadow: none;
+    --ctl-bg: var(--a-tile-1);
+    --ctl-border: 1px solid rgba(255, 255, 255, 0.12);
+
+    /* 暗色字重回落标准阶梯（禁止 360/460/560/640） */
+    --fw-normal: 400; --fw-medium: 600; --fw-semibold: 600; --fw-bold: 700;
+
+    --admin-bg:             #1c1c1e;
+    --admin-surface:        var(--a-tile-1);
+    --admin-surface-2:      var(--a-tile-2);
+    --admin-surface-hover:  var(--a-tile-hover);
+    --admin-raised:         var(--a-tile-2);
+    --admin-navy-900:       #1c1c1e;
+    --admin-navy-800:       var(--a-tile-2);
+    --admin-border:         rgba(255, 255, 255, 0.12);
+    --admin-border-strong:  rgba(255, 255, 255, 0.20);
+    --admin-border-soft:    rgba(255, 255, 255, 0.07);
+    --admin-text:           #f5f5f7;
+    --admin-text-secondary: var(--a-muted-on-dark);
+    --admin-muted:          #a1a1a6;
+    --admin-secondary-text: var(--a-muted-on-dark);
+    --admin-primary:        #5aa9ff;   /* 暗底后台交互色对 tile 有足够对比 */
+    --admin-primary-hover:  #82bfff;
+    --admin-primary-soft:   rgba(41, 151, 255, 0.16);
+    --admin-primary-border: rgba(41, 151, 255, 0.36);
+    --admin-success:        #9a9a9f;  --admin-success-soft: rgba(255,255,255,.07);
+    --admin-success-text:   #c9c9ce;
+    --admin-danger:         #e88a83;  --admin-danger-soft:  rgba(232,138,131,.12);
+    --admin-danger-text:    #e88a83;
+    --admin-warning:        #9a9a9f;  --admin-warning-soft: rgba(255,255,255,.07);
+    --admin-warning-text:   #c9c9ce;
+    --admin-info:           #a1a1a6;  --admin-info-soft:    rgba(255,255,255,.07);
+    --admin-info-text:      #c9c9ce;
+    --admin-shadow: none; --admin-shadow-hover: none;
+
+    --xycq-bg:      var(--a-tile-1);
+    --xycq-surface: var(--a-tile-2);
+    --xycq-text:    #f5f5f7;
+    --xycq-muted:   #a1a1a6;
+    --xycq-border:  rgba(255, 255, 255, 0.12);
+    --xycq-primary: var(--a-primary);
+    --xycq-primary-text: var(--a-on-primary);
+    --xycq-danger:  #e88a83;
+}
+
+/* ==========================================================================
+   皮肤收敛：4 套皮肤全部映射到同一 Action Blue 明度档。
+   保留 data-skin 属性与设置项（JS 不报错），只是不再产生色彩漂移。
+   ========================================================================== */
+html[data-skin="purple"],
+html[data-skin="orange"],
+html[data-skin="mint"] {
+    --primary: var(--a-primary);
+    --primary-hover: var(--a-primary-hover);
+    --primary-filled-hover: var(--a-primary-hover);
+    --primary-soft: rgba(0, 102, 204, 0.08);
+    --primary-border: rgba(0, 102, 204, 0.28);
+    --glow: transparent;
+    --brand-from: var(--a-primary);
+    --brand-to: var(--a-primary);
+    --brand-shadow: transparent;
+}
+html[data-theme="dark"][data-skin="purple"],
+html[data-theme="dark"][data-skin="orange"],
+html[data-theme="dark"][data-skin="mint"] {
+    --primary: var(--a-primary);
+    --primary-hover: #3d8bdb;
+    --primary-filled-hover: #3d8bdb;
+    --primary-soft: rgba(41, 151, 255, 0.16);
+    --primary-border: rgba(41, 151, 255, 0.36);
+    --glow: transparent;
+    --brand-from: var(--a-primary);
+    --brand-to: var(--a-primary);
+    --brand-shadow: transparent;
+}
+
+/* 响应式控件尺寸（原 nav.css 在 @media(max-width:920px) 的 :root 覆盖，
+   变量块移除后在此统一保留，避免桌面 44 / 移动 40 的既有验收值回退） */
+@media (max-width: 920px) {
+    :root { --ctl-size: 40px; }
+}
+
+/* ==========================================================================
+   全站共用组件契约（Apple 设计语言）
+   业务页面复用这些类；同一语义元素全站只有一套实现。
+   ========================================================================== */
+
+/* 唯一阴影：只给 favicon / 站点 LOGO（落在表面上的内容图） */
+.site-icon,
+.brand-mark,
+.favicon {
+    box-shadow: var(--a-shadow-product);
+}
+
+/* 键盘 focus：统一 2px #0071e3 */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--a-focus);
+    outline-offset: 2px;
+}
+
+/* 按下统一 scale(.95)；不写 hover 位移/放大/抬升 */
+:where(button, .btn, .my-btn, .mcat, .mode-btn, .chip, [role="button"]):active {
+    transform: scale(0.95);
+}
+
+/* 主 CTA：蓝底白字胶囊；次 CTA：透明底 + 1px 蓝描边胶囊 */
+.apple-btn-primary,
+.apple-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 8px 22px;
+    font-family: var(--a-font-text);
+    font-size: var(--a-fs-body);
+    font-weight: 400;
+    line-height: var(--a-lh-body);
+    border-radius: var(--a-radius-pill);
+    background: var(--a-primary);
+    color: var(--a-on-primary);
+    border: 1px solid var(--a-primary);
+    cursor: pointer;
+}
+.apple-btn-secondary {
+    background: transparent;
+    color: var(--a-primary);
+}
+.apple-btn-primary:active,
+.apple-btn-secondary:active { transform: scale(0.95); }
+
+/* 搜索输入：白底胶囊 44px 高 */
+.apple-input {
+    height: 44px;
+    padding: 8px 20px;
+    background: var(--a-canvas);
+    color: var(--a-ink);
+    border: 1px solid var(--a-line-soft);
+    border-radius: var(--a-radius-pill);
+    font-family: var(--a-font-text);
+    font-size: var(--a-fs-body);
+    line-height: var(--a-lh-body);
+}
+html[data-theme="dark"] .apple-input {
+    background: var(--a-tile-1);
+    color: var(--a-white);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* 卡片：白底 + 1px 细线 + 18px 圆角 + 24px 内边距，无阴影 */
+.apple-card {
+    background: var(--a-canvas);
+    border: 1px solid var(--a-hairline);
+    border-radius: var(--a-radius-lg);
+    padding: var(--a-sp-lg);
+    box-shadow: none;
+}
+html[data-theme="dark"] .apple-card {
+    background: var(--a-tile-1);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* 页脚：米白 + 密集链接列（松行高 2.41） */
+.apple-footer {
+    background: var(--a-parchment);
+    color: var(--a-ink-80);
+    padding: var(--a-sp-xxl) var(--a-sp-lg);
+}
+.apple-footer a { color: var(--a-ink-80); line-height: var(--a-lh-dense); }
+html[data-theme="dark"] .apple-footer {
+    background: var(--a-tile-3);
+    color: var(--a-muted-on-dark);
+}
+html[data-theme="dark"] .apple-footer a { color: var(--a-muted-on-dark); }
+
+/* 分组明暗交替：满屏直角区块，颜色切换即分隔线（导航站密度适配：
+   只在分组区块之间交替，不把每张卡片做成整屏 tile） */
+.apple-band { border-radius: 0; }
+.apple-band--light     { background: var(--a-canvas); }
+.apple-band--parchment { background: var(--a-parchment); }
+.apple-band--dark      { background: var(--a-tile-1); color: var(--a-white); }
+
+/* 动效降级 */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+}

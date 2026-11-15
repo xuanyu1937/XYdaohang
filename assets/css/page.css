@@ -13,7 +13,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: var(--surface);
-    box-shadow: var(--shadow-sm);
+
 }
 
 .page-card + .page-card {
@@ -37,7 +37,8 @@
     height: 6px;
     border-radius: 50%;
     background: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-soft);
+    outline: 3px solid var(--primary-soft);
+    outline-offset: 0;
     content: "";
 }
 
@@ -63,7 +64,7 @@
     margin: 0 0 20px;
     padding: 10px 13px;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 11px;
     background: var(--surface-2);
     color: var(--muted);
     font-size: 12.5px;
@@ -83,11 +84,11 @@
     height: 40px;
     padding: 0 16px;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 11px;
     background: var(--surface);
     color: var(--text-2);
     font-size: 13.5px;
-    font-weight: 500;
+    font-weight: 600;
     font-family: inherit;
     cursor: pointer;
     transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease;
@@ -103,7 +104,7 @@
     border-color: var(--primary);
     background: var(--primary);
     color: var(--primary-contrast);
-    box-shadow: 0 10px 22px -14px var(--brand-shadow);
+
 }
 
 .page-btn.is-primary:hover {
@@ -141,13 +142,13 @@
     width: 100%;
     padding: 10px 13px;
     border: 1px solid var(--border-strong);
-    border-radius: 10px;
+    border-radius: 11px;
     background: var(--surface-2);
     color: var(--text);
     font-size: 13.5px;
     font-family: inherit;
     outline: none;
-    transition: border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+    transition: border-color 0.16s ease, background-color 0.16s ease;
 }
 
 .page-field textarea {
@@ -160,7 +161,8 @@
 .page-field textarea:focus {
     border-color: var(--primary);
     background: var(--surface);
-    box-shadow: 0 0 0 3px var(--primary-soft);
+    outline: 2px solid var(--a-focus);
+    outline-offset: 2px;
 }
 
 .page-field input::placeholder,
@@ -178,7 +180,7 @@
     padding: 1px 6px;
     border: 1px solid var(--border-strong);
     border-bottom-width: 2px;
-    border-radius: 5px;
+    border-radius: 0px;
     background: var(--surface-2);
     color: var(--text-2);
     font-size: 12px;
@@ -188,7 +190,7 @@
 .page-alert {
     margin: 0 0 18px;
     padding: 11px 13px;
-    border-radius: 10px;
+    border-radius: 11px;
     font-size: 13px;
     line-height: 1.7;
 }
@@ -229,12 +231,12 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     background: var(--surface);
-    transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+    transition: border-color 0.16s ease, transform 0.16s ease;
 }
 
 .share-item:hover {
     border-color: var(--primary-border);
-    box-shadow: var(--shadow-md);
+
     transform: translateY(-2px);
 }
 
@@ -247,7 +249,7 @@
     flex: 0 0 36px;
     overflow: hidden;
     border: 1px solid var(--border);
-    border-radius: 9px;
+    border-radius: 8px;
     background: var(--surface-2);
 }
 
@@ -347,7 +349,7 @@
 
 .about-version code {
     padding: 2px 7px;
-    border-radius: 6px;
+    border-radius: 0px;
     background: var(--surface-2);
     color: var(--text-2);
     font-size: 12px;
@@ -495,4 +497,12 @@
         max-width: 100%;
         box-sizing: border-box;
     }
+}
+
+/* 正文内链接：不只靠颜色区分（WCAG 1.4.1），补下划线 */
+.about-body a,
+.page-card p a,
+.page-desc a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
