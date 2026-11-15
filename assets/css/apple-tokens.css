@@ -123,6 +123,7 @@
     --primary-border:       rgba(0, 102, 204, 0.28);
     --primary-solid-dark:   var(--a-primary);
     --primary-text-dark:    var(--a-link-on-dark);
+    --link:                 var(--a-primary);        /* 明底文字链接 #0066cc */
 
     /* 语义色：状态一律灰阶，错误态低调深红 */
     --success:        var(--a-state);
@@ -291,6 +292,7 @@ html[data-theme="dark"] {
     --primary-border:       rgba(41, 151, 255, 0.36);
     --primary-solid-dark:   var(--a-primary);
     --primary-text-dark:    var(--a-link-on-dark);
+    --link:                 var(--a-link-on-dark);  /* 暗底文字链接 #2997ff */
 
     --bg:             #1c1c1e;
     --bg-card:        var(--a-tile-1);

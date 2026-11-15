@@ -97,7 +97,7 @@
 .page-btn:hover {
     border-color: var(--primary-border);
     background: var(--primary-soft);
-    color: var(--primary);
+    color: var(--link);
 }
 
 .page-btn.is-primary {
@@ -254,7 +254,7 @@
 }
 
 .share-icon-letter {
-    color: var(--primary);
+    color: var(--link);
     font-size: var(--a-fs-caption);
     font-weight: 700;
     line-height: 1;
@@ -328,7 +328,7 @@
 }
 
 .about-body a {
-    color: var(--primary);
+    color: var(--link);
 }
 
 .about-body a:hover {
@@ -389,9 +389,17 @@
     padding: 2px 10px;
     border-radius: 999px;
     background: var(--primary-soft);
-    color: var(--primary);
+    color: var(--link);
     font-size: var(--a-fs-caption);
     font-weight: 700;
+}
+
+/* v2.18.9：暗色下 --primary-soft 叠在 #272729 上得 #27394b，
+   #2997ff 对它的对比只有约 3.98:1。改为描边式徽章，让文字落在近黑底上
+   （#2997ff 对 #272729 约 6.4:1）。 */
+html[data-theme="dark"] .changelog-version {
+    background: transparent;
+    border: 1px solid var(--primary-border);
 }
 
 .changelog-date {

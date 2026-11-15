@@ -43,7 +43,7 @@ header('X-Robots-Tag: noindex, nofollow');
             color: var(--muted, #8a8f98); margin: 0 0 12px;
         }
         .error-title { font-size: 22px; font-weight: 600; margin: 0 0 10px; color: var(--text); }
-        .error-desc { font-size: var(--a-fs-body); line-height: var(--a-lh-body); color: var(--a-ink-48-strong); margin: 0 0 26px; }
+        .error-desc { font-size: var(--a-fs-body); line-height: var(--a-lh-body); color: var(--muted); margin: 0 0 26px; }
         .error-home {
             display: inline-block; padding: 11px 22px;
             font-size: var(--a-fs-body); font-weight: var(--a-fw-medium);

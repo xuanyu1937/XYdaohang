@@ -279,7 +279,7 @@ html[data-theme="dark"] .auth-theme .icon-sun {
 }
 
 .auth-forgot a {
-    color: var(--primary);
+    color: var(--link);
     text-decoration: none;
 }
 
@@ -336,13 +336,16 @@ html[data-theme="dark"] .auth-theme .icon-sun {
 }
 
 .auth-switch a {
-    color: var(--primary);
+    color: var(--link);
     font-weight: 600;
 }
 
 .auth-switch a:hover {
     text-decoration: underline;
 }
+
+/* v2.18.9：文字链接统一走 --link（明 #0066cc / 暗 #2997ff）。
+   暗底 #272729 上用 #0066cc 仅 2.67:1 —— 填充按钮背景仍用 --primary，不受影响。 */
 
 .auth-foot {
     margin: 18px 0 0;

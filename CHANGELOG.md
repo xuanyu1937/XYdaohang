@@ -2,7 +2,7 @@
 
 ## v2.18.9（2026-11-15）
 
-> **无障碍收尾补丁**：v2.18.8 上线后对线上 11 页做浏览器级 axe 复扫，发现 2 处 v2.18.8 遗留违规。顺着把**此前验收未覆盖的 12 个页面**（`admin/login.php`、`sites.php`、`detail.php`、`apply.php`、`admin/categories.php`、`install.php`、`admin/profile.php` 等）全部纳入扫描，又清出 4 类问题。本版**只改颜色值与表单关联属性，不动任何业务逻辑，无 SQL 变更**。
+> **无障碍收尾补丁**：v2.18.8 上线后对线上 11 页做浏览器级 axe 复扫，发现 2 处 v2.18.8 遗留违规。顺着把**此前验收未覆盖的 12 个页面**（`admin/login.php`、`sites.php`、`detail.php`、`apply.php`、`admin/categories.php`、`install.php`、`admin/profile.php` 等）全部纳入扫描，又清出 4 类问题。随后 28 页全量复扫又暴露**暗色主题的系统性缺陷**：`--primary` 同时兼任「填充背景」和「文字链接」，导致暗底文字链接只有 2.67:1——本版拆出 `--link` 语义变量彻底解决。本版**只改颜色值与表单关联属性，不动任何业务逻辑，无 SQL 变更**。
 
 ### 一、线上复扫发现的问题
 
@@ -51,7 +51,33 @@
 .crumb a { text-decoration: underline; text-underline-offset: 2px; }
 ```
 
-### 三、验收
+### 三、暗色主题补充修复（同一批）
+
+首次上线 2.18.9 后对线上做 28 页扫描，`my.php` 未登录态暴露 2 处——排查发现根因是 **v2.18.8 的 token 设计缺陷**：`--primary` 一个变量同时承担「填充按钮背景」和「文字链接」两种角色。填充背景必须 `#0066cc`（白字才够对比），但**暗底上的文字链接**必须 `#2997ff`（`#0066cc` 对 `#272729` 只有 **2.67:1**）。
+
+之前没暴露，是因为本地验收扫的是登录态 `my.php`，跳过了未登录分支。
+
+**解法：拆出语义变量 `--link`**，让两种角色解耦：
+
+```css
+/* 明色 */
+--link: var(--a-primary);        /* #0066cc */
+/* 暗色 */
+--link: var(--a-link-on-dark);   /* #2997ff */
+```
+
+然后把「文字链接」统一切到 `--link`（填充背景继续用 `--primary`，不受影响）：
+
+| 文件 | 改动 |
+| --- | --- |
+| `assets/css/apple-tokens.css` | 新增 `--link` 明暗两份；`--primary` 语义收窄为「填充」 |
+| `assets/css/page.css` | `.page-btn:hover` / `.share-icon-letter` / `.about-body a` / `.changelog-version` 文字色 → `var(--link)` |
+| `assets/css/auth.css` | `.auth-forgot a` / `.auth-switch a` → `var(--link)`（`input:focus` 的边框仍用 `--primary`） |
+| `404.php` / `500.php` | `.error-desc` 的 `--a-ink-48-strong`（浅色值）→ `var(--muted)`（明暗自适应）；`.error-links a` → `var(--link)` |
+
+**另修一处**：`.changelog-version` 徽章在暗色下背景为 `--primary-soft` 叠出的 `#27394b`，`#2997ff` 对它的对比只有 3.98:1。改为**描边式徽章**（透明底 + `--primary-border` 描边），文字落在近黑底上，对比 6.4:1。
+
+### 四、验收
 
 | 项目 | 结果 |
 | --- | --- |
@@ -59,13 +85,16 @@
 | 盲区 12 页 axe 扫描（修复前） | 7 PASS / 5 FAIL |
 | 修复后 12 页盲区复扫 | **12 / 12 PASS，0 违规** |
 | v2.18.8 原 16 页复扫（回归确认） | **16 / 16 PASS** |
+| **全量扫描（28 页 × 明暗 = 56 项）** | **56 / 56 PASS，0 违规** |
 | 机械指标 12 项 | **12 / 12 PASS**（未因本版改动退化） |
 | 功能回归 | **21 / 21 PASS** |
 | PHP 语法 | 全部 `php -l` 通过 |
 
+> 扫描口径：注入 `animation:none / transition:none` 后等待稳态，避免淡入中间态误报；规则集 `wcag2a + wcag2aa + wcag21a + wcag21aa`。
+
 **累计无障碍覆盖：28 个页面 × 明暗主题，0 违规。**
 
-### 四、升级说明
+### 五、升级说明
 
 - **无需执行 SQL**
 - 覆盖文件后 `Ctrl+F5` 清缓存；PWA 缓存名升至 `xy-nav-pwa-v2.18.9`，Service Worker 激活时自动清旧缓存

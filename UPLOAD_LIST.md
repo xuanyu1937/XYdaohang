@@ -27,7 +27,7 @@
 
 ## 本版变动文件
 
-### v2.18.9 · 无障碍收尾补丁（8 个文件 + 版本同步，无新增文件，无 SQL）
+### v2.18.9 · 无障碍收尾补丁（12 个文件 + 版本同步，无新增文件，无 SQL）
 
 | 文件 | 说明 |
 | --- | --- |
@@ -38,6 +38,10 @@
 | `install.php` | `#64748b`×2 → `#475569`（4.23:1 → 5.9:1）；`code` 补显式 `color: #334155` |
 | `sites.php` | `.crumb a` 常态补下划线（修 `link-in-text-block`） |
 | `my.php` | `.ai-cat-arrow` 的 `--my-muted` 兜底值 `#9ca3af` → `#5b5b60` |
+| `assets/css/apple-tokens.css` | **新增 `--link` 语义变量**（明 `#0066cc` / 暗 `#2997ff`），把「填充背景」与「文字链接」解耦 |
+| `assets/css/page.css` | 4 处文字色 → `var(--link)`；`.changelog-version` 暗色改描边式徽章 |
+| `assets/css/auth.css` | `.auth-forgot a` / `.auth-switch a` → `var(--link)`；`input:focus` 边框仍用 `--primary` |
+| `404.php` / `500.php` | `.error-desc` → `var(--muted)`（明暗自适应）；`.error-links a` → `var(--link)` |
 | `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` / `sw.js` | 版本号 2.18.9、PWA 缓存名 `xy-nav-pwa-v2.18.9`、57 处资源参数 `?v=2.18.9` |
 
 ### v2.18.8 · 全站苹果风格统一改造（17 个功能文件 + 版本同步，新增 1 个 CSS，无 SQL）

@@ -83,7 +83,7 @@ $escape = static function ($value) {
         .error-desc {
             font-size: var(--a-fs-body);
             line-height: var(--a-lh-body);
-            color: var(--a-ink-48-strong);
+            color: var(--muted);
             margin: 0 0 28px;
         }
         .error-form {
@@ -132,7 +132,7 @@ $escape = static function ($value) {
             color: var(--muted);
         }
         .error-links a {
-            color: var(--primary);
+            color: var(--link);
             text-decoration: underline;
             text-underline-offset: 2px;
         }
