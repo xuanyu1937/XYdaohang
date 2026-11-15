@@ -239,8 +239,9 @@ function navVerifyAdminUser($functions, $account, $password)
         .foot {
             margin: 22px 0 0;
             padding-top: 16px;
-            border-top: 1px solid #eef2f8;
-            color: #94a3b8;
+            border-top: 1px solid var(--a-hairline);
+            /* v2.18.9：原 #94a3b8 对白仅 2.6:1，改 token 后 4.5:1+ */
+            color: var(--a-ink-48-strong);
             font-size: 11px;
             text-align: center;
         }

@@ -889,7 +889,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
                 <input type="hidden" name="auto_fetch_logo" id="auto_fetch_logo" value="0">
                 
                 <div>
-                    <label class="block text-gray-700 mb-2 font-medium">
+                    <label class="block text-gray-700 mb-2 font-medium" for="site_url">
                         <i class="fas fa-link mr-2"></i>网站网址 *
                     </label>
                     <div class="url-input-wrapper">
@@ -902,7 +902,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <button type="button" 
                                 id="fetchSiteInfoBtn"
-                                class="fetch-btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-md text-sm font-medium transition duration-200 mr-1">
+                                class="fetch-btn bg-blue-600 hover:bg-blue-600 text-white px-4 py-1.5 rounded-md text-sm font-medium transition duration-200 mr-1">
                             <i class="fas fa-magic mr-1"></i>自动获取
                         </button>
                     </div>
@@ -910,8 +910,8 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
                 </div>
                 
                 <div>
-                    <label class="block text-gray-700 mb-2 font-medium">
-                        <i class="fas fa-globe mr-2"></i>网站名称 <span class="text-gray-400 text-sm font-normal">（选填，留空自动获取）</span>
+                    <label class="block text-gray-700 mb-2 font-medium" for="site_name">
+                        <i class="fas fa-globe mr-2"></i>网站名称 <span class="text-gray-600 text-sm font-normal">（选填，留空自动获取）</span>
                     </label>
                     <div class="relative">
                         <input type="text"
@@ -924,8 +924,8 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
                 </div>
                 
                 <div>
-                    <label class="block text-gray-700 mb-2 font-medium">
-                        <i class="fas fa-envelope mr-2"></i>联系邮箱 <span class="text-gray-400 text-sm font-normal">（选填）</span>
+                    <label class="block text-gray-700 mb-2 font-medium" for="email">
+                        <i class="fas fa-envelope mr-2"></i>联系邮箱 <span class="text-gray-600 text-sm font-normal">（选填）</span>
                     </label>
                     <input type="email"
                            name="email"
@@ -937,7 +937,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
                 </div>
                 
                 <div>
-                    <label class="block text-gray-700 mb-2 font-medium">
+                    <label class="block text-gray-700 mb-2 font-medium" for="site_logo">
                         <i class="fas fa-image mr-2"></i>网站Logo
                     </label>
                     <div class="logo-row">
@@ -955,7 +955,7 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
                 </div>
                 
                 <div>
-                    <label class="block text-gray-700 mb-2 font-medium">
+                    <label class="block text-gray-700 mb-2 font-medium" for="description">
                         <i class="fas fa-align-left mr-2"></i>网站描述
                     </label>
                     <textarea name="description" 
@@ -968,11 +968,12 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
                 </div>
                 
                 <div>
-                    <label class="block text-gray-700 mb-2 font-medium">
+                    <label class="block text-gray-700 mb-2 font-medium" for="category_id">
                         <i class="fas fa-folder mr-2"></i>网站分类
                     </label>
                     <select name="category_id" 
                             id="category_id"
+                            aria-label="网站分类"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">请选择分类（可选）</option>
                         <?php foreach ($categories as $category): ?>

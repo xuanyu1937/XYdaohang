@@ -301,7 +301,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
         .wrap { width: min(860px, 100%); margin: 0 auto; }
         .head { margin-bottom: 18px; }
         .head h1 { margin: 0 0 6px; font-size: 24px; }
-        .head p { margin: 0; color: #64748b; font-size: 13px; }
+        .head p { margin: 0; color: #475569; font-size: 13px; }
         .card { background: #fff; border: 1px solid #e3eaf4; border-radius: 16px; box-shadow: none; overflow: hidden; }
         .checks { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 20px; background: #f8fafc; border-bottom: 1px solid #edf2f8; }
         .check { font-size: 12px; padding: 5px 9px; border-radius: 999px; background: #eef4ff; color: #1d4ed8; }
@@ -315,7 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
         input { width: 100%; padding: 10px 12px; border: 1px solid #d8e1ee; border-radius: 9px; font-size: 14px; outline: none; background: #fff; }
         input:focus { border-color: #2563eb; outline: 3px solid rgba(37, 99, 235, .12);
  outline-offset: 1px; }
-        .hint { margin-top: 5px; color: #94a3b8; font-size: 12px; }
+        .hint { margin-top: 5px; color: #5b5b60; font-size: 12px; }
         button { width: 100%; margin-top: 24px; padding: 12px; border: 0; border-radius: 10px; background: #2563eb; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
         button:hover { background: #1d4ed8; }
         .msg { margin: 0 22px 0; padding: 11px 13px; border-radius: 10px; font-size: 13px; line-height: 1.7; }
@@ -325,10 +325,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
         .msg ul { margin: 6px 0 0 18px; padding: 0; }
         .done { padding: 30px 24px; text-align: center; }
         .done h2 { border: 0; padding: 0; font-size: 21px; }
-        .done p { color: #64748b; font-size: 14px; line-height: 1.8; }
+        .done p { color: #475569; font-size: 14px; line-height: 1.8; }
         .done a { display: inline-block; margin: 8px 6px; padding: 10px 16px; border-radius: 9px; background: #2563eb; color: #fff; text-decoration: none; font-size: 14px; }
         .done a.alt { background: #eef4ff; color: #1d4ed8; }
-        code { background: #f1f5f9; padding: 1px 6px; border-radius: 4px; }
+        code { background: #f1f5f9; color: #334155; padding: 1px 6px; border-radius: 4px; }
         @media (max-width: 620px) { .grid { grid-template-columns: 1fr; } .full { grid-column: auto; } }
     </style>
 </head>

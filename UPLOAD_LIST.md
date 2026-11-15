@@ -1,31 +1,44 @@
-# 轩宇-导航 部署清单（当前版本 v2.18.8）
+# 轩宇-导航 部署清单（当前版本 v2.18.9）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：**v2.18.8**（2026-11-15）
+当前版本：**v2.18.9**（2026-11-15）
 
-> **v2.18.8 全站苹果风格统一改造**：新建 `assets/css/apple-tokens.css` 作为唯一设计变量源，`nav.css` / `auth.css` / `page.css` / `admin.css` / `category-quick-add.css` 的重复 `:root` 全部清零；交互色收敛到 `#0066cc`，装饰渐变 0、卡片阴影 0（仅 LOGO 一处）、3D 与 spring 动效下线、圆角归并 `0/8/11/18/999`、正文 17px/1.47、状态点改灰阶。
-> **无数据库变更，无需执行 SQL**；已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，从 v2.18.2 一路覆盖到 v2.18.8 都不用再跑 SQL。
+> **v2.18.9 无障碍收尾补丁**：v2.18.8 上线后把**此前未覆盖的 12 个页面**纳入浏览器级 axe 扫描，清出 8 类问题，其中 `apply.php` 有 **4 个 critical**（6 个表单标签无 `for` 关联、分类下拉框无可访问名称——点标签无法聚焦、读屏读不出名称）。本版只改颜色值与表单关联属性，**不动业务逻辑，无 SQL 变更**。
+> **累计无障碍覆盖 28 页 × 明暗主题，0 违规。**
 
 ## ⚠️ 升级须知（三步）
 
-1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.8 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
-2. **后台「系统工具 → 在线更新」上传 v2.18.8 更新包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
-3. **清一次浏览器缓存**（Ctrl+F5）。22 个 PHP 文件的 55 处资源参数已升到 `?v=2.18.8`；`sw.js` 缓存名 `xy-nav-pwa-v2.18.8` 激活时自动清掉旧 PWA 缓存。
+1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.9 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
+2. **后台「系统工具 → 在线更新」上传 v2.18.9 更新包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
+3. **清一次浏览器缓存**（Ctrl+F5）。22 个 PHP 文件的 57 处资源参数已升到 `?v=2.18.9`；`sw.js` 缓存名 `xy-nav-pwa-v2.18.9` 激活时自动清掉旧 PWA 缓存。
 
 **验证是否生效**
 
-- `/api/index.php` 徽章显示 `v2.18.8`；`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php` 均为 2.18.8；
-- 首页 `<head>` 第一个项目样式为 `apple-tokens.css?v=2.18.8`，其后才是 `nav.css?v=2.18.8`；
+- `/api/index.php` 徽章显示 `v2.18.9`；`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php` 均为 2.18.9；
+- 首页 `<head>` 第一个项目样式为 `apple-tokens.css?v=2.18.9`，其后才是 `nav.css?v=2.18.9`；
 - 按钮/链接只有一种蓝 `#0066cc`，页面不再有紫/橙/青皮肤色与渐变 LOGO；
 - 卡片无阴影、圆角统一；正文 17px，行高约 1.47；
 - 在线速度文字与状态点为灰阶（错误态为低调深红）；
 - 首页分组出现明暗交替背景（奇数组白底区块、偶数组米白）；
-- axe-core 扫描 16 个页面（前台 12 + 后台 4，含明暗双主题）：全部 `0` 违规；
+- axe-core 扫描 28 个页面（含明暗双主题）：全部 `0` 违规；
 - 360 / 390 / 430 / 768 / 1024 / 1280 / 1366 / 1440 / 1680 / 1920 十档无横向溢出；
 - 全站无装饰渐变、无卡片投影（仅 LOGO 与 favicon 保留规范允许的那一处）。
 
 ## 本版变动文件
+
+### v2.18.9 · 无障碍收尾补丁（8 个文件 + 版本同步，无新增文件，无 SQL）
+
+| 文件 | 说明 |
+| --- | --- |
+| `apply(1).php` | 6 处 `<label>` 补 `for`（`site_url`/`site_name`/`email`/`site_logo`/`description`/`category_id`）；`<select>` 补 `aria-label="网站分类"`（修 4 个 critical）；`text-gray-400`×2 → `600`、`bg-blue-500` → `600` |
+| `detail.php` | 白卡片内 `text-gray-400` → `600`（更深）；深色页脚版权行 `text-gray-500` → `400`（**更亮**，方向相反） |
+| `admin/login.php` | `.foot` 的 `#94a3b8` → `var(--a-ink-48-strong)`（2.6:1 → 5.2:1）；`#eef2f8` → `var(--a-hairline)` |
+| `admin/categories.php` | `.category-remark` 的 `#94a3b8` → `var(--admin-muted)` |
+| `install.php` | `#64748b`×2 → `#475569`（4.23:1 → 5.9:1）；`code` 补显式 `color: #334155` |
+| `sites.php` | `.crumb a` 常态补下划线（修 `link-in-text-block`） |
+| `my.php` | `.ai-cat-arrow` 的 `--my-muted` 兜底值 `#9ca3af` → `#5b5b60` |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` / `sw.js` | 版本号 2.18.9、PWA 缓存名 `xy-nav-pwa-v2.18.9`、57 处资源参数 `?v=2.18.9` |
 
 ### v2.18.8 · 全站苹果风格统一改造（17 个功能文件 + 版本同步，新增 1 个 CSS，无 SQL）
 

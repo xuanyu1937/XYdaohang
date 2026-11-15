@@ -498,10 +498,10 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.8">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.8">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.8">
-    <script src="assets/js/category-quick-add.js?v=2.18.8" defer></script>
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.9">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.9">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.9">
+    <script src="assets/js/category-quick-add.js?v=2.18.9" defer></script>
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -2148,7 +2148,7 @@ $hasLinks = $totalLinks > 0;
             color: var(--my-primary, #2563eb);
         }
 
-        .ai-cat-arrow { flex: none; color: var(--my-muted, #9ca3af); }
+        .ai-cat-arrow { flex: none; color: var(--my-muted, #5b5b60); }
 
         /* 列表滚动区与底部按钮之间加一道分隔，滚动时不会糊在一起 */
         .ai-cat-actions {
@@ -7694,6 +7694,6 @@ DELETE /api/sites.php       删除网址</code></pre>
         })();
     </script>
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.18.8" defer></script>
+<script src="assets/js/search.js?v=2.18.9" defer></script>
 </body>
 </html>

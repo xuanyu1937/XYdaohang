@@ -622,7 +622,7 @@ $detailJsonLd = [
                                             <?php echo $functions->escape($related['description'] ?: '暂无描述'); ?>
                                         </p>
                                         <div class="flex items-center justify-between">
-                                            <span class="text-gray-400 text-xs">
+                                            <span class="text-gray-600 text-xs">
                                                 <i class="fas fa-eye mr-1"></i>
                                                 <?php echo number_format($related['clicks'] ?? 0); ?>
                                             </span>
@@ -660,7 +660,7 @@ $detailJsonLd = [
                 </p>
             <?php endif; ?>
             
-            <p class="text-gray-500 text-sm">
+            <p class="text-gray-400 text-sm">
                 &copy; <?php echo date('Y'); ?> <?php echo $functions->escape($siteTitle); ?>.
             </p>
         </div>

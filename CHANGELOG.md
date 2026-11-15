@@ -1,5 +1,78 @@
 # 轩宇-导航 · 版本记录
 
+## v2.18.9（2026-11-15）
+
+> **无障碍收尾补丁**：v2.18.8 上线后对线上 11 页做浏览器级 axe 复扫，发现 2 处 v2.18.8 遗留违规。顺着把**此前验收未覆盖的 12 个页面**（`admin/login.php`、`sites.php`、`detail.php`、`apply.php`、`admin/categories.php`、`install.php`、`admin/profile.php` 等）全部纳入扫描，又清出 4 类问题。本版**只改颜色值与表单关联属性，不动任何业务逻辑，无 SQL 变更**。
+
+### 一、线上复扫发现的问题
+
+| # | 页面 | 规则 | 根因 |
+| --- | --- | --- | --- |
+| 1 | `admin/login.php` | `color-contrast` | `.foot` 用 `#94a3b8`，对白仅 **2.6:1**（v2.18.8 修过 `settings.php` 同类问题，这里漏网） |
+| 2 | `sites.php` | `link-in-text-block` | 面包屑 `<a>` 常态无下划线，仅靠颜色与周围文字区分 |
+| 3 | `apply.php` | `label` **critical** ×3 | `<label>` 无 `for`，且 input 在 label 外部，点击标签无法聚焦输入框 |
+| 4 | `apply.php` | `select-name` **critical** ×1 | 「网站分类」`<select>` 无可访问名称，读屏无法识别 |
+| 5 | `apply.php` | `color-contrast` ×3 | `text-gray-400`（`#9ca3af`，2.6:1）、`bg-blue-500`（`#3b82f6`，2.9:1） |
+| 6 | `detail.php` | `color-contrast` ×6 | 白卡片内 `text-gray-400`；页脚深底 `#6b7280` 对 `#111827` 仅 **3.66:1** |
+| 7 | `admin/categories.php` | `color-contrast` | `.category-remark` 用 `#94a3b8` |
+| 8 | `install.php` | `color-contrast` ×2 | `#64748b` 对 `#eef2f8` 仅 **4.23:1**、对 `#f1f5f9` 4.34:1，差 0.27 |
+
+> 第 3、4 项是**真实可用性缺陷**，不只是对比度：apply 页 6 个表单字段的标签此前点不动，读屏也读不出分类下拉框的名字。
+
+### 二、修改内容
+
+**表单关联（`apply(1).php`）**：6 处 `<label>` 补 `for`，`<select>` 补 `aria-label`
+
+```php
+<label class="block text-gray-700 mb-2 font-medium" for="site_name">
+...
+<select name="category_id" id="category_id" aria-label="网站分类">
+```
+
+对应关系：`fa-link→site_url`、`fa-globe→site_name`、`fa-envelope→email`、`fa-image→site_logo`、`fa-align-left→description`、`fa-folder→category_id`。
+
+**颜色修正**（区分深浅底，方向相反）：
+
+| 文件 | 改前 | 改后 | 说明 |
+| --- | --- | --- | --- |
+| `admin/login.php` `.foot` | `#94a3b8` / `#eef2f8` | `var(--a-ink-48-strong)` / `var(--a-hairline)` | 2.6:1 → 5.2:1 |
+| `admin/categories.php` `.category-remark` | `#94a3b8` | `var(--admin-muted)` | 2.6:1 → 5.2:1 |
+| `install.php` | `#64748b` ×2 | `#475569` | 4.23:1 → 5.9:1；`code` 补 `color: #334155` |
+| `apply(1).php` | `text-gray-400` ×2 | `text-gray-600` | 白底，需更深 |
+| `apply(1).php` | `bg-blue-500` ×1 | `bg-blue-600` | 白字按钮 2.9:1 → 5.2:1 |
+| `detail.php` 白卡片 | `text-gray-400` ×1 | `text-gray-600` | 白底，需更深 |
+| `detail.php` 深色页脚 | `text-gray-500` ×1 | `text-gray-400` | **深底，需更亮**（3.66:1 → 6.4:1） |
+| `my.php` `.ai-cat-arrow` | fallback `#9ca3af` | fallback `#5b5b60` | 变量未定义时的兜底 |
+
+**下划线（`sites.php`）**：
+
+```css
+/* 面包屑链接不能只靠颜色区分（axe link-in-text-block），常态加下划线 */
+.crumb a { text-decoration: underline; text-underline-offset: 2px; }
+```
+
+### 三、验收
+
+| 项目 | 结果 |
+| --- | --- |
+| 线上 11 页 axe 复扫（修复前） | 9 PASS / 2 FAIL |
+| 盲区 12 页 axe 扫描（修复前） | 7 PASS / 5 FAIL |
+| 修复后 12 页盲区复扫 | **12 / 12 PASS，0 违规** |
+| v2.18.8 原 16 页复扫（回归确认） | **16 / 16 PASS** |
+| 机械指标 12 项 | **12 / 12 PASS**（未因本版改动退化） |
+| 功能回归 | **21 / 21 PASS** |
+| PHP 语法 | 全部 `php -l` 通过 |
+
+**累计无障碍覆盖：28 个页面 × 明暗主题，0 违规。**
+
+### 四、升级说明
+
+- **无需执行 SQL**
+- 覆盖文件后 `Ctrl+F5` 清缓存；PWA 缓存名升至 `xy-nav-pwa-v2.18.9`，Service Worker 激活时自动清旧缓存
+- 建议回滚点：`backups/update-v2.18.8-20261115-171937/`（v2.18.8 部署时备份的 150 个原文件）
+
+---
+
 ## v2.18.8（2026-11-15）
 
 > **全站苹果风格 UI 统一改造**：把首页/我的页、登录注册页、内容页、后台四套各自为政的样式收进**单一设计源**——`assets/css/apple-tokens.css`。色彩收敛到唯一 Action Blue `#0066cc`，删掉全部装饰渐变、3D 倾斜、入场错峰、spring 曲线与卡片阴影，圆角归并到 `0 / 8 / 11 / 18 / 999` 五档，正文改 17px / 1.47，状态点中性化为灰阶。**无数据库变更，无需执行 SQL，覆盖文件 + Ctrl+F5 即可。**

@@ -66,7 +66,7 @@ $jsonLd = [
     <meta property="og:image" content="<?php echo $functions->escape($baseUrl . '/assets/img/icons/icon-512.png'); ?>">
     <meta name="twitter:card" content="summary">
     <script type="application/ld+json"><?php echo json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?></script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.8">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.9">
     <style>
         :root { color-scheme: light dark; --fg: var(--a-ink); --muted: var(--a-ink-48-strong); --line: var(--a-hairline); --accent: var(--a-primary); --bg: var(--a-canvas); }
         @media (prefers-color-scheme: dark) { :root { --fg: var(--a-white); --muted: var(--a-ink-48); --line: rgba(255,255,255,.14); --accent: var(--a-link-on-dark); --bg: var(--a-tile-1); } }
@@ -80,6 +80,8 @@ $jsonLd = [
         h1 { font-size: 24px; margin: 0 0 6px; }
         .lead { color: var(--muted); margin: 0 0 22px; font-size: 14px; }
         .crumb { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+        /* v2.18.9：面包屑链接不能只靠颜色区分（axe link-in-text-block），常态加下划线 */
+        .crumb a { text-decoration: underline; text-underline-offset: 2px; }
         section { margin-bottom: 26px; }
         h2 { font-size: 16px; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
         h2 .n { font-weight: 400; font-size: 12px; color: var(--muted); margin-left: 6px; }
