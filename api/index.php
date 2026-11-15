@@ -49,23 +49,24 @@ header('Referrer-Policy: strict-origin-when-cross-origin');
 <title>开放 API 文档 · 轩宇导航</title>
 <?php /* v2.18.1 · canonical（doc 页只有这一个地址，无查询参数变体） */ ?>
 <link rel="canonical" href="<?php echo $esc(str_replace('/api/', '/api/index.php', $baseUrl)); ?>">
+<link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.8">
 <style>
 :root {
-    --primary: #1d4ed8;
-    --primary-soft: rgba(29, 78, 216, .09);
-    --primary-border: rgba(29, 78, 216, .22);
-    --bg: #f7f8fa;
-    --surface: #ffffff;
-    --surface-2: #f2f4f7;
-    --text: #1b1f27;
-    --muted: #61656e;
-    --faint: #8a8f99;
-    --border: #e5e7ec;
-    --border-strong: #d3d7df;
+    --primary: var(--a-primary);
+    --primary-soft: var(--a-primary-soft);
+    --primary-border: var(--a-primary-border);
+    --bg: var(--a-parchment);
+    --surface: var(--a-canvas);
+    --surface-2: var(--a-surface-soft);
+    --text: var(--a-ink);
+    --muted: var(--a-ink-48-strong);
+    --faint: var(--a-ink-48);
+    --border: var(--a-hairline);
+    --border-strong: var(--a-hairline-strong);
     --code-bg: #111827;
     --code-text: #e5e7eb;
-    --shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 24px rgba(16, 24, 40, .05);
-    --radius: 12px;
+    --shadow: none;
+    --radius: var(--a-radius-md);
 }
 :root[data-theme="dark"] {
     --primary: #a78bfa;
@@ -126,7 +127,7 @@ code, pre, .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, 
 }
 .mark {
     width: 30px; height: 30px; flex: 0 0 30px; border-radius: 9px;
-    background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+    background: var(--primary);
     display: grid; place-items: center; color: #fff; font-size: 15px; font-weight: 700;
 }
 .brand-text { font-weight: 650; letter-spacing: -.01em; white-space: nowrap; }
@@ -169,7 +170,7 @@ code, pre, .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, 
 .basebar {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 10px 12px 10px 16px; box-shadow: var(--shadow); margin-bottom: 22px;
+    padding: 10px 12px 10px 16px; box-shadow: none; margin-bottom: 22px;
 }
 .basebar-label { font-size: 11px; font-weight: 700; color: var(--faint); letter-spacing: .08em; text-transform: uppercase; }
 .basebar code { font-size: 13px; color: var(--text); word-break: break-all; flex: 1 1 240px; }
@@ -196,7 +197,7 @@ h3 { font-size: 15px; margin: 24px 0 10px; }
 p { margin: 10px 0; }
 
 .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: none; }
 .step-num { width: 24px; height: 24px; border-radius: 7px; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; font-size: 12px; font-weight: 700; margin-bottom: 10px; }
 .step h4 { margin: 0 0 6px; font-size: 14px; }
 .step p { margin: 0; font-size: 13px; color: var(--muted); }

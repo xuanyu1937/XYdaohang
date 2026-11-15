@@ -842,8 +842,8 @@ $tableLabels = [
                                         <input type="hidden" name="action" value="import_backup">
 
                                         <div class="mb-3">
-                                            <label class="form-label">选择备份文件（.json，≤ 5MB）*</label>
-                                            <input type="file" name="backup_file" class="form-control" accept=".json,application/json" required>
+                                            <label class="form-label" for="backupFileInput">选择备份文件（.json，≤ 5MB）*</label>
+                                            <input type="file" id="backupFileInput" name="backup_file" class="form-control" accept=".json,application/json" required>
                                         </div>
 
                                         <div class="form-check mb-3">

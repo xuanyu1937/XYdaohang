@@ -149,7 +149,7 @@ svg {
     height: 52px;
     flex: 0 0 52px;
     overflow: hidden;
-    border-radius: 18px;
+    border-radius: var(--a-radius-lg);
     background: var(--a-primary);
     box-shadow: var(--a-shadow-product);
     color: var(--a-white);
@@ -199,20 +199,20 @@ svg {
 .brand-subtitle {
     margin-top: 1px;
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     line-height: 1.5;
 }
 
 .brand-stats {
     margin-top: 5px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     line-height: 1.4;
 }
 
 .brand-stats strong {
     color: var(--primary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 700;
 }
 
@@ -306,7 +306,7 @@ svg {
     border-radius: 999px;
     background: var(--a-primary);
     color: var(--a-white);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     font-family: inherit;
     white-space: nowrap;
@@ -353,7 +353,7 @@ svg {
     border-radius: 0;
     background: transparent;
     color: var(--text);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     outline: none;
     /* 占位符过长时先收缩字号，而不是直接切掉半句话 */
     text-overflow: ellipsis;
@@ -422,7 +422,7 @@ svg {
     border-radius: 999px;
     background: transparent;
     color: var(--text-2);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     font-family: inherit;
     white-space: nowrap;
@@ -471,7 +471,7 @@ svg {
     width: 180px;
     padding: 5px;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface);
 
     z-index: 70;
@@ -485,10 +485,10 @@ svg {
     width: 100%;
     padding: 9px 10px;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: transparent;
     color: var(--text);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-family: inherit;
     text-align: left;
     cursor: pointer;
@@ -509,7 +509,7 @@ svg {
 }
 
 .search-engine-desc {
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
     color: var(--muted);
 }
 
@@ -526,7 +526,7 @@ svg {
     height: 44px;
     padding: 0;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface);
     color: var(--text-2);
 
@@ -635,7 +635,7 @@ html[data-theme="light"] .theme-toggle .icon-sun {
     gap: 8px;
     padding: 2px 10px 10px;
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     letter-spacing: 0.09em;
 }
@@ -647,7 +647,7 @@ html[data-theme="light"] .theme-toggle .icon-sun {
     height: 26px;
     padding: 0;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: transparent;
     color: var(--muted);
 }
@@ -671,10 +671,10 @@ html[data-theme="light"] .theme-toggle .icon-sun {
     width: 100%;
     padding: 8px 10px;
     border: 1px solid transparent;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: transparent;
     color: var(--text-2);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     line-height: 1.4;
     text-align: left;
@@ -704,7 +704,7 @@ html[data-theme="light"] .theme-toggle .icon-sun {
 .rail-count {
     flex: 0 0 auto;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-variant-numeric: tabular-nums;
 }
 
@@ -735,7 +735,7 @@ html[data-theme="light"] .theme-toggle .icon-sun {
 
 .rail-item.is-sub {
     padding: 6px 9px;
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 400;
 }
 
@@ -772,7 +772,7 @@ html[data-theme="light"] .theme-toggle .icon-sun {
     gap: 9px;
     margin: 0;
     color: var(--text);
-    font-size: 17px;
+    font-size: var(--a-fs-title);
     font-weight: 600;
     line-height: 1.4;
     letter-spacing: -0.015em;
@@ -790,7 +790,7 @@ html[data-theme="light"] .theme-toggle .icon-sun {
 
 .section-count {
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     white-space: nowrap;
 }
 
@@ -799,7 +799,7 @@ html[data-theme="light"] .theme-toggle .icon-sun {
     align-items: center;
     gap: 6px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     white-space: nowrap;
 }
 
@@ -816,6 +816,9 @@ html[data-theme="light"] .theme-toggle .icon-sun {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 360px));
     justify-content: center;
+    align-items: stretch;
+    /* 同一行的卡片拉齐到底边：避免"简介一行 / 两行"混排时出现锯齿 */
+    grid-auto-rows: 1fr;
     gap: 16px;
 }
 
@@ -868,9 +871,14 @@ html[data-mode="compact"] .site-grid > .site-card {
     outline-offset: 2px;
 }
 
+/* 离线卡：靠"表面略暗 + 去饱和"表达失效，不用 opacity（会拖低文字对比度） */
 .site-card.is-offline {
     filter: grayscale(0.2);
-    background: var(--a-pearl);
+    background: var(--a-surface-soft);
+}
+
+html[data-theme="dark"] .site-card.is-offline {
+    background: var(--a-tile-3);
 }
 
 .site-card.is-offline:hover {
@@ -900,7 +908,7 @@ html[data-mode="compact"] .site-grid > .site-card {
     flex: 0 0 44px;
     overflow: hidden;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface-2);
 }
 
@@ -915,7 +923,7 @@ html[data-mode="compact"] .site-grid > .site-card {
        统一灰阶，避免每张卡出现不同色相破坏单一交互色。 */
     background: var(--a-surface-soft);
     color: var(--a-ink-48-strong);
-    font-size: 18px;
+    font-size: var(--a-fs-title);
     font-weight: 700;
     line-height: 1;
     user-select: none;
@@ -947,7 +955,7 @@ html[data-mode="compact"] .site-grid > .site-card {
     display: block;
     overflow: hidden;
     color: var(--text);
-    font-size: 15px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     line-height: 1.45;
     /* 中文标题不加负字距：em 负字距会让文本测量宽度小于渲染宽度，
@@ -969,10 +977,13 @@ html[data-mode="compact"] .site-grid > .site-card {
     justify-content: space-between;
     gap: 10px;
     min-width: 0;
-    margin-top: 14px;
+    /* 卡片是 flex 列容器：底部信息用 auto 上边距吸底，
+       这样简介一行 / 两行的卡片在同一行里高度一致，底边对齐 */
+    margin-top: auto;
+    padding-top: 14px;
     padding-right: 2px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     line-height: 1.4;
 }
 
@@ -1118,16 +1129,15 @@ body[data-monitor="0"] .site-clicks {
     color: var(--muted);
 }
 
+/* 检测中：只做明暗呼吸，不做缩放，避免出现近似 3D 的放大回弹观感 */
 @keyframes status-pulse {
     0%,
     100% {
         opacity: 0.45;
-        transform: scale(0.86);
     }
 
     50% {
         opacity: 1;
-        transform: scale(1.08);
     }
 }
 
@@ -1139,7 +1149,7 @@ body[data-monitor="0"] .site-clicks {
     border-radius: 0px;
     background: var(--text);
     color: var(--surface);
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     line-height: 1.5;
     white-space: nowrap;
@@ -1177,7 +1187,7 @@ body[data-monitor="0"] .site-clicks {
     width: 52px;
     height: 52px;
     margin-bottom: 14px;
-    border-radius: 18px;
+    border-radius: var(--a-radius-lg);
     background: var(--surface-2);
     color: var(--muted);
 }
@@ -1190,14 +1200,14 @@ body[data-monitor="0"] .site-clicks {
 .empty-state h3 {
     margin: 0 0 6px;
     color: var(--text);
-    font-size: 15px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
 }
 
 .empty-state p {
     margin: 0;
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 /* 空状态里的操作链接（如登录用户前往「我的导航」添加网址） */
@@ -1216,7 +1226,7 @@ body[data-monitor="0"] .site-clicks {
     border-radius: var(--radius-sm);
     background: var(--surface);
     color: var(--text-2);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 .empty-reset:hover {
@@ -1233,7 +1243,7 @@ body[data-monitor="0"] .site-clicks {
     padding: 26px 0 32px;
     border-top: 1px solid var(--border);
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     text-align: center;
 }
 
@@ -1270,7 +1280,7 @@ body[data-monitor="0"] .site-clicks {
     height: 38px;
     padding: 0;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface);
     color: var(--text-2);
 
@@ -1328,18 +1338,18 @@ body[data-monitor="0"] .site-clicks {
     }
 
     .brand-title {
-        font-size: 22px;
+        font-size: var(--a-fs-heading);
     }
 
     .brand-mark {
         width: 46px;
         height: 46px;
         flex-basis: 46px;
-        border-radius: 11px;
+        border-radius: var(--a-radius-md);
     }
 
     .brand-stats {
-        font-size: 12px;
+        font-size: var(--a-fs-fine);
     }
 
     .search-section {
@@ -1359,24 +1369,24 @@ body[data-monitor="0"] .site-clicks {
     .search-engine-toggle {
         height: calc(var(--search-size) - 12px);
         padding: 0 6px 0 10px;
-        font-size: 13px;
+        font-size: var(--a-fs-caption);
     }
 
     .search-input {
         height: var(--search-size);
-        font-size: 13px;
+        font-size: var(--a-fs-caption);
     }
 
     .search-submit {
         height: calc(var(--search-size) - 8px);
         padding: 0;
-        font-size: 13px;
+        font-size: var(--a-fs-caption);
     }
 
     .category-tab {
         height: 34px;
         padding: 0 12px;
-        font-size: 13px;
+        font-size: var(--a-fs-caption);
     }
 
     .section-head {
@@ -1406,11 +1416,11 @@ body[data-monitor="0"] .site-clicks {
 
 @media (max-width: 400px) {
     .brand-subtitle {
-        font-size: 12px;
+        font-size: var(--a-fs-fine);
     }
 
     .search-input {
-        font-size: 13px;
+        font-size: var(--a-fs-caption);
     }
 
     .search-submit {
@@ -1471,10 +1481,10 @@ body[data-monitor="0"] .site-clicks {
     left: -9999px;
     z-index: 100;
     padding: 10px 15px;
-    border-radius: 0 0 11px 0;
+    border-radius: 0 0 var(--a-radius-md) 0;
     background: var(--primary);
     color: var(--primary-contrast);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 .skip-link:focus {
@@ -1494,10 +1504,10 @@ body[data-monitor="0"] .site-clicks {
     min-width: 44px;
     padding: 0 12px;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface);
     color: var(--text-2);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     font-family: inherit;
 
@@ -1517,7 +1527,7 @@ body[data-monitor="0"] .site-clicks {
 
 .tool-text {
     padding: 0 15px;
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
 }
 
 .tool-text.is-primary {
@@ -1556,7 +1566,7 @@ body[data-monitor="0"] .site-clicks {
     min-width: 150px;
     padding: 6px;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface);
 
 }
@@ -1571,10 +1581,10 @@ body[data-monitor="0"] .site-clicks {
     gap: 9px;
     padding: 8px 10px;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: transparent;
     color: var(--text-2);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-family: inherit;
     text-align: left;
 }
@@ -1618,7 +1628,7 @@ body[data-monitor="0"] .site-clicks {
     gap: 2px;
     padding: 3px;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface-2);
 
 }
@@ -1630,7 +1640,7 @@ body[data-monitor="0"] .site-clicks {
     height: 36px;
     padding: 0;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: transparent;
     color: var(--muted);
     transition: background-color 0.16s ease, color 0.16s ease;
@@ -1684,10 +1694,10 @@ body[data-monitor="0"] .site-clicks {
     width: 26px;
     height: 26px;
     flex: 0 0 26px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--a-primary);
     color: var(--a-white);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 700;
 }
 
@@ -1695,7 +1705,7 @@ body[data-monitor="0"] .site-clicks {
     width: 26px;
     height: 26px;
     flex: 0 0 26px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     object-fit: cover;
 }
 
@@ -1732,7 +1742,7 @@ body[data-monitor="0"] .site-clicks {
     min-width: 172px;
     padding: 6px;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface);
 
 }
@@ -1744,10 +1754,10 @@ body[data-monitor="0"] .site-clicks {
     width: 100%;
     padding: 9px 11px;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: transparent;
     color: var(--text-2);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-family: inherit;
     text-align: left;
     text-decoration: none;
@@ -1800,7 +1810,7 @@ body[data-monitor="0"] .site-clicks {
     padding: 11px 16px 11px 14px;
     border: 1px solid var(--primary-border);
     border-left: 3px solid var(--primary);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--primary-soft);
 
     overflow: hidden;
@@ -1813,7 +1823,7 @@ body[data-monitor="0"] .site-clicks {
     place-items: center;
     width: 26px;
     height: 26px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--primary);
     color: var(--primary-contrast);
 }
@@ -1829,7 +1839,7 @@ body[data-monitor="0"] .site-clicks {
     border-radius: 0px;
     background: var(--surface);
     color: var(--primary);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 700;
     letter-spacing: 0.04em;
 }
@@ -1843,7 +1853,7 @@ body[data-monitor="0"] .site-clicks {
 .announce-text {
     display: inline-block;
     color: var(--text);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     white-space: nowrap;
 }
@@ -1873,12 +1883,18 @@ body[data-monitor="0"] .site-clicks {
    -------------------------------------------------------------------------- */
 
 .hot-strip {
-    margin-bottom: 24px;
-    padding: 14px 16px 15px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    --band-bleed: min(18px, max(0px, (100vw - min(100vw, var(--max-width))) / 2));
+    margin: 0 calc(var(--band-bleed) * -1) 10px;
+    padding: 18px var(--band-bleed) 20px;
+    border: 0;
+    border-radius: 0;
     background: var(--surface);
+}
 
+@media (min-width: 1326px) {
+    .hot-strip {
+        --band-bleed: 32px;
+    }
 }
 
 .hot-title {
@@ -1887,7 +1903,7 @@ body[data-monitor="0"] .site-clicks {
     gap: 7px;
     margin: 0 0 12px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     letter-spacing: 0.02em;
 }
@@ -1910,17 +1926,16 @@ body[data-monitor="0"] .site-clicks {
     gap: 7px;
     max-width: 250px;
     padding: 5px 10px 5px 5px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface-2);
+    border: 0;
+    border-radius: var(--a-radius-sm);
+    background: transparent;
     color: var(--text-2);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease;
 }
 
 .hot-item:hover {
-    border-color: var(--primary-border);
-    background: var(--primary-soft);
+    background: transparent;
     color: var(--primary);
 }
 
@@ -1933,7 +1948,7 @@ body[data-monitor="0"] .site-clicks {
     border-radius: 0px;
     background: var(--surface);
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
     font-weight: 700;
 }
 
@@ -1962,7 +1977,7 @@ body[data-monitor="0"] .site-clicks {
 .hot-count {
     flex: 0 0 auto;
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
     font-variant-numeric: tabular-nums;
 }
 
@@ -1991,7 +2006,7 @@ body[data-monitor="0"] .site-clicks {
     gap: 9px;
     margin: 0;
     color: var(--text);
-    font-size: 16px;
+    font-size: var(--a-fs-body);
     font-weight: 600;
     letter-spacing: -0.015em;
 }
@@ -2016,7 +2031,7 @@ body[data-monitor="0"] .site-clicks {
     border-radius: 999px;
     background: var(--tab-bg);
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
 }
 
@@ -2029,7 +2044,7 @@ body[data-monitor="0"] .site-clicks {
 .group-subhead h4, .group-subhead .group-subtitle {
     margin: 0;
     color: var(--text-2);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
 }
 
@@ -2072,7 +2087,7 @@ html[data-mode="list"] .site-desc {
     margin-top: 3px;
     overflow: hidden;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -2108,15 +2123,15 @@ html[data-mode="compact"] .site-icon {
     width: 30px;
     height: 30px;
     flex-basis: 30px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
 }
 
 html[data-mode="compact"] .site-icon-letter {
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 html[data-mode="compact"] .site-name {
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 html[data-mode="compact"] .site-status {
@@ -2162,7 +2177,7 @@ html[data-mode="compact"] .status-dot {
     height: 40px;
     padding: 0;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface);
     color: var(--text-2);
 
@@ -2312,7 +2327,7 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
         border-radius: 999px;
         background: var(--surface);
         color: var(--text-2);
-        font-size: 13px;
+        font-size: var(--a-fs-caption);
         font-weight: 600;
         white-space: nowrap;
         scroll-snap-align: start;
@@ -2320,7 +2335,7 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
     }
 
     .mcat:active {
-        transform: scale(0.96);
+        transform: scale(0.95);
     }
 
     .mcat.is-active {
@@ -2331,7 +2346,7 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
     }
 
     .mcat-count {
-        font-size: 11px;
+        font-size: var(--a-fs-fine);
         font-variant-numeric: tabular-nums;
         opacity: 0.65;
     }
@@ -2404,10 +2419,10 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
         height: 38px;
         padding: 0 13px;
         border: 1px solid var(--border);
-        border-radius: 11px;
+        border-radius: var(--a-radius-md);
         background: var(--surface);
         color: var(--text-2);
-        font-size: 13px;
+        font-size: var(--a-fs-caption);
 
     }
 
@@ -2423,7 +2438,7 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
 
     .rail-current {
         color: var(--muted);
-        font-size: 13px;
+        font-size: var(--a-fs-caption);
     }
 
     .rail-backdrop {
@@ -2474,7 +2489,7 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
     }
 
     .group-head h3, .group-head .group-title {
-        font-size: 15px;
+        font-size: var(--a-fs-caption);
     }
 
     .float-bar {
@@ -2488,7 +2503,7 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
     }
 
     .announce-text {
-        font-size: 13px;
+        font-size: var(--a-fs-caption);
     }
 
     /* 手机端：禁止横向滚动动画，改为正常换行 + 纵向自动高度；
@@ -2603,7 +2618,7 @@ dialog.auth-modal {
     width: min(420px, calc(100vw - 32px));
     padding: 0;
     border: 1px solid var(--border);
-    border-radius: 18px;
+    border-radius: var(--a-radius-lg);
     background: var(--surface);
     color: var(--text);
 
@@ -2627,16 +2642,16 @@ dialog.auth-modal::backdrop {
     gap: 4px;
     padding: 4px;
     background: var(--surface-2);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
 }
 
 .auth-tab {
     padding: 7px 16px;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: transparent;
     color: var(--muted);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
@@ -2656,7 +2671,7 @@ dialog.auth-modal::backdrop {
     height: 32px;
     padding: 0;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: transparent;
     color: var(--muted);
     cursor: pointer;
@@ -2676,10 +2691,10 @@ dialog.auth-modal::backdrop {
 .auth-error {
     margin: 16px 20px 0;
     padding: 10px 12px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--danger-soft);
     color: var(--danger);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     line-height: 1.6;
 }
 
@@ -2701,7 +2716,7 @@ dialog.auth-modal::backdrop {
 }
 
 .auth-field > span {
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     color: var(--text-2);
 }
@@ -2710,10 +2725,10 @@ dialog.auth-modal::backdrop {
     height: 40px;
     padding: 0 12px;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--surface);
     color: var(--text);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-family: inherit;
     outline: none;
     transition: border-color 0.18s ease;
@@ -2733,10 +2748,10 @@ dialog.auth-modal::backdrop {
     height: 42px;
     margin-top: 4px;
     border: 0;
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--a-primary);
     color: var(--a-white);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
@@ -2757,7 +2772,7 @@ dialog.auth-modal::backdrop {
 .auth-forgot {
     align-self: center;
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     text-decoration: none;
     transition: color 0.18s ease;
 }
@@ -2769,7 +2784,7 @@ dialog.auth-modal::backdrop {
 @media (max-width: 480px) {
     dialog.auth-modal {
         width: calc(100vw - 24px);
-        border-radius: 18px;
+        border-radius: var(--a-radius-lg);
     }
 
     .auth-modal-head {
@@ -2802,7 +2817,7 @@ dialog.auth-modal::backdrop {
     overflow-y: auto;
     padding: 6px;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface);
 
 }
@@ -2810,7 +2825,7 @@ dialog.auth-modal::backdrop {
 .ss-label {
     padding: 8px 10px 4px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     letter-spacing: 0.04em;
 }
@@ -2818,10 +2833,10 @@ dialog.auth-modal::backdrop {
 .ss-hint {
     margin: 4px 6px 2px;
     padding: 7px 10px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--primary-soft);
     color: var(--primary);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
 }
 
 .ss-item {
@@ -2829,7 +2844,7 @@ dialog.auth-modal::backdrop {
     align-items: center;
     gap: 10px;
     padding: 8px 10px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     cursor: pointer;
     transition: background-color 0.12s ease;
 }
@@ -2846,10 +2861,10 @@ dialog.auth-modal::backdrop {
     flex: 0 0 auto;
     width: 34px;
     height: 34px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--primary-soft);
     color: var(--primary);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-weight: 700;
     overflow: hidden;
 }
@@ -2888,7 +2903,7 @@ dialog.auth-modal::backdrop {
 
 .ss-name {
     color: var(--text);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
@@ -2897,7 +2912,7 @@ dialog.auth-modal::backdrop {
 
 .ss-sub {
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2914,7 +2929,7 @@ dialog.auth-modal::backdrop {
 .ss-domain {
     max-width: 150px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2922,7 +2937,7 @@ dialog.auth-modal::backdrop {
 
 .ss-clicks {
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
     white-space: nowrap;
 }
 
@@ -2948,7 +2963,7 @@ dialog.auth-modal::backdrop {
 
 .ss-head-title {
     color: var(--text);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
 }
 
@@ -2963,7 +2978,7 @@ dialog.auth-modal::backdrop {
     align-items: center;
     gap: 5px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     cursor: pointer;
     user-select: none;
 }
@@ -2976,10 +2991,10 @@ dialog.auth-modal::backdrop {
 .ss-head-clear {
     padding: 4px 9px;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--surface-2);
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     transition: background-color 0.14s ease, color 0.14s ease;
 }
 
@@ -2991,7 +3006,7 @@ dialog.auth-modal::backdrop {
 .ss-empty-hint {
     padding: 18px 12px;
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     text-align: center;
 }
 
@@ -3003,14 +3018,14 @@ dialog.auth-modal::backdrop {
 
 .ss-empty-title {
     color: var(--text);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
 }
 
 .ss-empty-text {
     margin-top: 4px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
 }
 
 .ss-empty-actions {
@@ -3024,10 +3039,10 @@ dialog.auth-modal::backdrop {
 .ss-action {
     padding: 8px 14px;
     border: 1px solid var(--primary-border);
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--primary-soft);
     color: var(--primary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     transition: filter 0.14s ease, transform 0.14s ease;
 }
@@ -3060,7 +3075,7 @@ dialog.auth-modal::backdrop {
     height: 40px;
     padding: 0;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface);
     color: var(--text-2);
     transition: border-color 0.16s ease, color 0.16s ease, background-color 0.16s ease;
@@ -3085,7 +3100,7 @@ dialog.auth-modal::backdrop {
     width: min(540px, calc(100vw - 24px));
     padding: 10px;
     border: 1px solid var(--border);
-    border-radius: 18px;
+    border-radius: var(--a-radius-lg);
     background: var(--surface);
 
 }
@@ -3118,10 +3133,10 @@ dialog.auth-modal::backdrop {
     height: 42px;
     padding: 0 12px 0 36px;
     border: 1px solid var(--border-strong);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface-2);
     color: var(--text);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     outline: none;
     transition: border-color 0.16s ease;
 }
@@ -3200,7 +3215,7 @@ dialog.auth-modal::backdrop {
     height: 28px;
     padding: 0;
     border: 1px solid transparent;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: color-mix(in srgb, var(--surface) 90%, transparent);
     -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
@@ -3225,8 +3240,6 @@ dialog.auth-modal::backdrop {
     color: var(--warning);
     background: var(--surface);
     border-color: var(--border);
-    transform: scale(1.08);
-
 }
 
 .site-card[data-starred="1"] .card-star {
@@ -3245,7 +3258,7 @@ dialog.auth-modal::backdrop {
     gap: 2px;
     padding: 4px;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: color-mix(in srgb, var(--surface) 88%, transparent);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
@@ -3271,7 +3284,7 @@ dialog.auth-modal::backdrop {
     height: 28px;
     padding: 0;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: transparent;
     color: var(--muted);
     cursor: pointer;
@@ -3292,7 +3305,6 @@ dialog.auth-modal::backdrop {
 .card-action:hover {
     color: var(--primary);
     background: var(--primary-soft);
-    transform: scale(1.1);
 }
 
 .card-action-danger:hover {
@@ -3311,7 +3323,7 @@ dialog.auth-modal::backdrop {
     min-width: 158px;
     padding: 5px;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface);
 
 }
@@ -3323,10 +3335,10 @@ dialog.auth-modal::backdrop {
     width: 100%;
     padding: 8px 11px;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: transparent;
     color: var(--text-2);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     text-align: left;
     cursor: pointer;
     transition: background 0.12s ease, color 0.12s ease;
@@ -3363,7 +3375,7 @@ dialog.auth-modal::backdrop {
     gap: 12px;
     padding: 12px;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface-2);
 }
 
@@ -3377,7 +3389,7 @@ dialog.auth-modal::backdrop {
     width: 40px;
     height: 40px;
     overflow: hidden;
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--a-primary);
 }
 
@@ -3387,7 +3399,7 @@ dialog.auth-modal::backdrop {
     width: 100%;
     height: 100%;
     color: var(--a-white);
-    font-size: 17px;
+    font-size: var(--a-fs-title);
     font-weight: 700;
     text-transform: uppercase;
 }
@@ -3408,7 +3420,7 @@ dialog.auth-modal::backdrop {
 }
 
 .qa-name {
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     color: var(--text);
     overflow: hidden;
@@ -3418,7 +3430,7 @@ dialog.auth-modal::backdrop {
 
 .qa-desc {
     margin-top: 2px;
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     color: var(--muted);
     overflow: hidden;
     display: -webkit-box;
@@ -3438,13 +3450,13 @@ dialog.auth-modal::backdrop {
     width: 220px;
     height: 220px;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--a-canvas);
 }
 
 .qr-url {
     max-width: 100%;
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     color: var(--muted);
     word-break: break-all;
     text-align: center;
@@ -3508,7 +3520,7 @@ dialog.auth-modal::backdrop {
     background: var(--surface);
 
     color: var(--text);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     text-align: center;
     opacity: 0;
     pointer-events: none;
@@ -3532,10 +3544,10 @@ dialog.auth-modal::backdrop {
     height: 38px;
     padding: 0 14px;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface);
     color: var(--text-2);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     font-family: inherit;
 
@@ -3590,7 +3602,7 @@ dialog.auth-modal::backdrop {
     height: 34px;
     padding: 0;
     border: 1px solid transparent;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: transparent;
     color: var(--muted);
     transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease;
@@ -3617,7 +3629,7 @@ dialog.my-dialog {
     width: min(520px, calc(100vw - 32px));
     padding: 0;
     border: 1px solid var(--border);
-    border-radius: 18px;
+    border-radius: var(--a-radius-lg);
     background: var(--surface);
     color: var(--text);
 
@@ -3639,7 +3651,7 @@ dialog.my-dialog::backdrop {
 
 .my-dialog-head h3 {
     margin: 0;
-    font-size: 15px;
+    font-size: var(--a-fs-caption);
     font-weight: 700;
 }
 
@@ -3667,7 +3679,7 @@ dialog.my-dialog::backdrop {
     display: block;
     margin-bottom: 6px;
     color: var(--text-2);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
 }
 
@@ -3677,10 +3689,10 @@ dialog.my-dialog::backdrop {
     width: 100%;
     padding: 9px 12px;
     border: 1px solid var(--border-strong);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface-2);
     color: var(--text);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-family: inherit;
     outline: none;
     transition: border-color 0.16s ease;
@@ -3713,8 +3725,8 @@ dialog.my-dialog::backdrop {
     display: none;
     margin: 0 0 14px;
     padding: 10px 12px;
-    border-radius: 11px;
-    font-size: 13px;
+    border-radius: var(--a-radius-md);
+    font-size: var(--a-fs-caption);
     line-height: 1.6;
 }
 
@@ -3760,7 +3772,7 @@ dialog.my-dialog::backdrop {
     display: flex;
     flex-direction: column;
     background: var(--bg-card);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
 
     overflow: hidden;
 }
@@ -3775,14 +3787,14 @@ dialog.my-dialog::backdrop {
 
 .se-modal-header h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: var(--a-fs-body);
     font-weight: 600;
 }
 
 .se-modal-close {
     background: none;
     border: none;
-    font-size: 22px;
+    font-size: var(--a-fs-heading);
     cursor: pointer;
     color: var(--muted);
     padding: 0 4px;
@@ -3809,7 +3821,7 @@ dialog.my-dialog::backdrop {
     padding: 8px 10px;
     border: 1px solid var(--border);
     border-radius: 0px;
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     background: var(--bg-input);
     color: var(--text);
     min-width: 0;
@@ -3821,7 +3833,7 @@ dialog.my-dialog::backdrop {
     color: var(--a-white);
     border: none;
     border-radius: 0px;
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     cursor: pointer;
     white-space: nowrap;
 }
@@ -3842,7 +3854,7 @@ dialog.my-dialog::backdrop {
 .se-empty {
     text-align: center;
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     padding: 24px 0;
 }
 
@@ -3852,7 +3864,7 @@ dialog.my-dialog::backdrop {
     gap: 12px;
     padding: 10px 12px;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--bg-soft);
     cursor: default;
     transition: border-color 0.15s;
@@ -3863,7 +3875,7 @@ dialog.my-dialog::backdrop {
 }
 
 .se-item-icon {
-    font-size: 20px;
+    font-size: var(--a-fs-title-lg);
     flex-shrink: 0;
 }
 
@@ -3873,12 +3885,12 @@ dialog.my-dialog::backdrop {
 }
 
 .se-item-info strong {
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
 }
 
 .se-item-info small {
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
     word-break: break-all;
 }
 
@@ -3894,7 +3906,7 @@ dialog.my-dialog::backdrop {
     border-radius: 0px;
     background: var(--bg-card);
     color: var(--text);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     cursor: pointer;
 }
 
@@ -3918,7 +3930,7 @@ dialog.my-dialog::backdrop {
 
 .se-hint {
     margin: 16px 0 0;
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     color: var(--muted);
     text-align: center;
 }
@@ -3930,7 +3942,7 @@ dialog.my-dialog::backdrop {
     gap: 6px;
     padding: 10px 12px;
     border: 1px solid var(--primary);
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--bg-card);
 }
 
@@ -3938,7 +3950,7 @@ dialog.my-dialog::backdrop {
     padding: 6px 8px;
     border: 1px solid var(--border);
     border-radius: 0px;
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     min-width: 0;
     background: var(--bg-input);
     color: var(--text);
@@ -3946,12 +3958,12 @@ dialog.my-dialog::backdrop {
 
 .se-edit-form .se-btn {
     padding: 6px 10px;
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
 }
 
 .se-item-global-tag {
     display: inline-block;
-    font-size: 10px;
+    font-size: var(--a-fs-micro);
     color: var(--muted);
     margin-left: 6px;
     font-weight: normal;
@@ -3981,14 +3993,14 @@ dialog.my-dialog::backdrop {
     .se-add-form input {
         width: 100%;
         padding: 10px 12px;
-        font-size: 14px;
+        font-size: var(--a-fs-caption);
         box-sizing: border-box;
     }
 
     .se-add-form button {
         width: 100%;
         padding: 10px;
-        font-size: 14px;
+        font-size: var(--a-fs-caption);
     }
 
     /* 列表项：紧凑布局 */
@@ -4022,19 +4034,19 @@ dialog.my-dialog::backdrop {
     .se-edit-form input {
         width: 100%;
         padding: 10px 12px;
-        font-size: 14px;
+        font-size: var(--a-fs-caption);
         box-sizing: border-box;
     }
 
     .se-edit-form .se-btn {
         width: 100%;
         padding: 10px;
-        font-size: 14px;
+        font-size: var(--a-fs-caption);
     }
 
     .se-btn {
         padding: 6px 12px;
-        font-size: 13px;
+        font-size: var(--a-fs-caption);
     }
 }
 
@@ -4072,8 +4084,8 @@ dialog.my-dialog::backdrop {
     gap: 6px;
     height: 38px;
     padding: 0 18px;
-    border-radius: 11px;
-    font-size: 14px;
+    border-radius: var(--a-radius-md);
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
@@ -4094,7 +4106,7 @@ dialog.my-dialog::backdrop {
 
 .empty-primary:active,
 .empty-secondary:active {
-    transform: scale(0.97);
+    transform: scale(0.95);
 }
 
 .empty-secondary {
@@ -4145,11 +4157,11 @@ dialog.my-dialog::backdrop {
         width: 38px;
         height: 38px;
         flex-basis: 38px;
-        border-radius: 11px;
+        border-radius: var(--a-radius-md);
     }
 
     .brand-title {
-        font-size: 17px;
+        font-size: var(--a-fs-title);
         line-height: 1.2;
     }
 
@@ -4161,7 +4173,7 @@ dialog.my-dialog::backdrop {
     .header-tools .tool-btn {
         width: 40px;
         height: 40px;
-        border-radius: 11px;
+        border-radius: var(--a-radius-md);
     }
 
     .header-tools .mode-switch {
@@ -4180,7 +4192,7 @@ dialog.my-dialog::backdrop {
 
     .auth-trigger span {
         display: inline;
-        font-size: 13px;
+        font-size: var(--a-fs-caption);
     }
 
     .search-section {
@@ -4226,7 +4238,7 @@ dialog.my-dialog::backdrop {
     gap: 4px;
     padding: 3px;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface);
     color: var(--muted);
 }
@@ -4239,10 +4251,10 @@ dialog.my-dialog::backdrop {
     height: 26px;
     padding: 0 9px;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: transparent;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     white-space: nowrap;
     cursor: pointer;
@@ -4362,7 +4374,7 @@ dialog.my-dialog::backdrop {
     margin-bottom: 14px;
     padding: 10px 12px;
     border: 1px solid var(--primary-border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--primary-soft);
 }
 
@@ -4377,11 +4389,11 @@ dialog.my-dialog::backdrop {
     max-width: 100%;
     height: 28px;
     padding: 0 6px 0 10px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--surface);
 
     color: var(--text-2);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     white-space: nowrap;
 }
 
@@ -4415,7 +4427,7 @@ dialog.my-dialog::backdrop {
     border-radius: 0px;
     background: transparent;
     color: var(--muted);
-    font-size: 15px;
+    font-size: var(--a-fs-caption);
     line-height: 1;
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
@@ -4431,10 +4443,10 @@ dialog.my-dialog::backdrop {
     height: 28px;
     padding: 0 10px;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: transparent;
     color: var(--primary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     cursor: pointer;
 }
@@ -4805,26 +4817,21 @@ p,
 
 /* --------------------------------------------------------------------------
    9. 动效性格
-      · 拖拽：过阻尼 spring(1200, 80)，抬起即"咬死"，松手不回弹
-      · 对勾 / 收藏：欠阻尼 spring(380, 18)，轻微过冲后归位
+      · 拖拽：落位即停，不做回弹
+      · 对勾 / 收藏：单次缩放确认，不过冲
    -------------------------------------------------------------------------- */
 
 .card-star.is-pop svg,
 .card-action.is-copied svg,
 #qrCopyBtn.is-copied svg {
-    animation: spring-pop 0.38s var(--a-ease) both;
+    animation: pop-confirm 0.26s var(--a-ease) both;
     transform-origin: center;
 }
 
-@keyframes spring-pop {
+@keyframes pop-confirm {
     0% {
-        transform: scale(0.72);
+        transform: scale(0.92);
         opacity: 0.6;
-    }
-
-    58% {
-        transform: scale(1.14);
-        opacity: 1;
     }
 
     100% {
@@ -4844,11 +4851,11 @@ p,
     transition: transform 0.16s var(--a-ease);
 }
 
+/* 拖拽中：只降透明度标记"被拿起"，不给放大，避免浮起观感 */
 .my-item.is-dragging {
     opacity: 0.5;
-    transform: scale(1.008);
 
-    transition: transform 0.12s var(--a-ease), opacity 0.16s linear;
+    transition: opacity 0.16s linear;
 }
 
 .my-group.is-dragging {
@@ -4907,7 +4914,7 @@ p,
 }
 
 .filter-bar-wrap > .filter-bar {
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 /* ==========================================================================
@@ -4938,7 +4945,7 @@ p,
     min-width: 26px;
     max-width: 26px;
     flex: 0 0 26px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     object-fit: cover;
     object-position: center;
     background: var(--surface-2);
@@ -4996,7 +5003,7 @@ p,
         min-width: 44px;
         height: 36px;
         justify-content: center;
-        border-radius: 11px;
+        border-radius: var(--a-radius-md);
     }
 
     .user-summary .user-name {
@@ -5015,7 +5022,7 @@ p,
         min-width: 26px;
         max-width: 26px;
         flex-basis: 26px;
-        border-radius: 8px;
+        border-radius: var(--a-radius-sm);
     }
 
 }
@@ -5029,7 +5036,7 @@ p,
     padding: 9px 11px 10px;
     margin-bottom: 2px;
     color: var(--muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     border-bottom: 1px solid var(--hairline);
 }
 
@@ -5040,7 +5047,7 @@ p,
     min-width: 26px;
     max-width: 26px;
     flex: 0 0 26px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
 }
 
 .user-account-name {
@@ -5058,7 +5065,7 @@ p,
     border-radius: 0px;
     background: var(--primary-soft);
     color: var(--primary);
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
     line-height: 1.5;
 }
 
@@ -5069,7 +5076,7 @@ p,
     min-width: 24px;
     max-width: 24px;
     flex-basis: 24px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
 }
 
 /* 账号行只在「用户名被隐藏」的窄屏出现，避免桌面端信息重复 */
@@ -5123,12 +5130,12 @@ p,
     justify-content: start;
     margin: 10px 0 0;
     padding: 9px 12px;
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--primary-soft);
     outline: 1px solid var(--primary-border);
     outline-offset: -1px;
     color: var(--text-2);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     line-height: 1.5;
     transition: grid-template-rows 0.28s var(--ease-enter), opacity 0.2s var(--ease-enter),
                 margin-top 0.28s var(--ease-enter), padding 0.28s var(--ease-enter);
@@ -5165,11 +5172,11 @@ p,
 .search-url-hint-action {
     padding: 3px 10px;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--primary);
     color: var(--primary-contrast);
     font-family: inherit;
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     cursor: pointer;
     transition: filter 0.16s ease;
@@ -5197,7 +5204,7 @@ p,
 
     .search-submit.search-save span {
         display: inline;
-        font-size: 12px;
+        font-size: var(--a-fs-fine);
     }
 
     .search-submit.search-save {
@@ -5210,7 +5217,7 @@ p,
     }
 
     .search-url-hint {
-        font-size: 12px;
+        font-size: var(--a-fs-fine);
     }
 }
 
@@ -5266,7 +5273,7 @@ p,
 }
 
 .mode-btn {
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
 }
 
 .mode-btn.is-active {
@@ -5311,13 +5318,13 @@ p,
         gap: 1px;
         padding: 2px;
         height: 36px;
-        border-radius: 11px;
+        border-radius: var(--a-radius-md);
     }
 
     .header-tools .mode-btn {
         width: 27px;
         height: 32px;
-        border-radius: 8px;
+        border-radius: var(--a-radius-sm);
     }
 
     .header-tools .mode-btn svg {
@@ -5399,7 +5406,7 @@ p,
         height: 36px;
         padding: 0 7px;
         gap: 3px;
-        border-radius: 11px;
+        border-radius: var(--a-radius-md);
     }
 
     .user-summary .user-name {
@@ -5424,7 +5431,7 @@ p,
         height: 36px;
         padding: 0 7px;
         gap: 3px;
-        border-radius: 11px;
+        border-radius: var(--a-radius-md);
     }
 
     .user-summary-guest .user-caret {
@@ -5583,7 +5590,7 @@ p,
     gap: 12px;
     margin-bottom: 16px;
     padding: 12px;
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface-2);
 }
 
@@ -5600,7 +5607,7 @@ p,
 
 .qa-site-head .qa-name {
     display: block;
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     color: var(--text);
     overflow: hidden;
@@ -5611,7 +5618,7 @@ p,
 .qa-site-head .qa-desc {
     display: -webkit-box;
     margin-top: 2px;
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     line-height: 1.45;
     color: var(--muted);
     overflow: hidden;
@@ -5625,7 +5632,7 @@ p,
     align-self: flex-start;
     padding: 3px 8px;
     border-radius: 999px;
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     line-height: 1.4;
     white-space: nowrap;
@@ -5645,7 +5652,7 @@ p,
 /* 字段下方的小字说明：推荐理由 / 抓取失败兜底 */
 .qa-hint {
     margin: 6px 0 0;
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     line-height: 1.5;
     color: var(--muted);
 }
@@ -5704,7 +5711,7 @@ p,
 
     .header-tools .my-btn.is-ghost {
         padding: 0 11px;
-        font-size: 13px;
+        font-size: var(--a-fs-caption);
     }
 }
 
@@ -5768,8 +5775,8 @@ html[data-mode="grid"] .site-name {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
-    font-size: 14.5px;
-    font-weight: 650;
+    font-size: var(--a-fs-caption);
+    font-weight: 600;
     line-height: 1.35;
 }
 
@@ -5777,7 +5784,7 @@ html[data-mode="grid"] .site-desc {
     display: -webkit-box;
     overflow: hidden;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     line-height: 1.55;
     word-break: break-word;
     -webkit-box-orient: vertical;
@@ -5896,11 +5903,11 @@ html[data-mode="list"] .site-icon {
     width: 38px;
     height: 38px;
     flex: 0 0 38px;
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
 }
 
 html[data-mode="list"] .site-icon-letter {
-    font-size: 15px;
+    font-size: var(--a-fs-caption);
 }
 
 /* 标题与介绍并排成一行：标题固定不被压缩，介绍吃掉剩余宽度 */
@@ -5917,7 +5924,7 @@ html[data-mode="list"] .site-name {
     flex: 0 1 auto;
     max-width: 40%;
     overflow: hidden;
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     line-height: 1.4;
     text-overflow: ellipsis;
@@ -5930,7 +5937,7 @@ html[data-mode="list"] .site-desc {
     min-width: 0;
     overflow: hidden;
     color: var(--muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     line-height: 1.4;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -6013,11 +6020,11 @@ html[data-mode="compact"] .site-icon {
     width: 26px;
     height: 26px;
     flex: 0 0 26px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
 }
 
 html[data-mode="compact"] .site-icon-letter {
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
 }
 
 html[data-mode="compact"] .site-info {
@@ -6025,8 +6032,8 @@ html[data-mode="compact"] .site-info {
 }
 
 html[data-mode="compact"] .site-name {
-    font-size: 13px;
-    font-weight: 550;
+    font-size: var(--a-fs-caption);
+    font-weight: 600;
     line-height: 1.4;
 }
 
@@ -6101,22 +6108,22 @@ html[data-mode="compact"] .card-action {
         width: 34px;
         height: 34px;
         flex: 0 0 34px;
-        border-radius: 8px;
+        border-radius: var(--a-radius-sm);
     }
 
     html[data-mode="grid"] .site-icon-letter {
-        font-size: 14px;
+        font-size: var(--a-fs-caption);
     }
 
     html[data-mode="grid"] .site-name {
-        font-size: 13.5px;
+        font-size: var(--a-fs-caption);
     }
 
     /* 窄屏只给一行介绍：两行会让一屏可见的卡片数量掉太多 */
     html[data-mode="grid"] .site-desc {
         -webkit-line-clamp: 1;
         line-clamp: 1;
-        font-size: 11.5px;
+        font-size: var(--a-fs-fine);
     }
 
     html[data-mode="grid"] .site-card-main {
@@ -6134,7 +6141,7 @@ html[data-mode="compact"] .card-action {
     }
 
     html[data-mode="grid"] .site-domain {
-        font-size: 11px;
+        font-size: var(--a-fs-fine);
     }
 
     /* 手机列表不放网址：横向空间不够，被截断的网址没有信息量 */
@@ -6165,7 +6172,7 @@ html[data-mode="compact"] .card-action {
 
     html[data-mode="list"] .site-name {
         max-width: 100%;
-        font-size: 13.5px;
+        font-size: var(--a-fs-caption);
     }
 
     html[data-mode="list"] .site-metrics {
@@ -6330,11 +6337,11 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
         width: 42px;
         height: 42px;
         flex-basis: 42px;
-        border-radius: 18px;
+        border-radius: var(--a-radius-lg);
     }
 
     .site-header .brand-title {
-        font-size: 20px;
+        font-size: var(--a-fs-title-lg);
     }
 
     .site-header .header-tools {
@@ -6343,7 +6350,7 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
 
     .site-header .header-tools .my-btn {
         padding: 0 10px;
-        font-size: 12.5px;
+        font-size: var(--a-fs-caption);
     }
 
     /* 主题按钮与搜索框统一到 --ctl-size(40px)，避免一高一矮 */
@@ -6368,7 +6375,7 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
 @media (max-width: 360px) {
     /* v2.18.6：logo 放大后标题不再压到 13px，降到 19px 仍保持单行省略 */
     .site-header .brand-title {
-        font-size: 19px;
+        font-size: var(--a-fs-title-lg);
     }
 
     .site-header .brand {
@@ -6377,7 +6384,7 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
 
     .site-header .header-tools .my-btn {
         padding: 0 8px;
-        font-size: 12px;
+        font-size: var(--a-fs-fine);
     }
 
     .site-header .header-tools {
@@ -6389,7 +6396,7 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
         width: 38px;
         height: 38px;
         flex-basis: 38px;
-        border-radius: 11px;
+        border-radius: var(--a-radius-md);
     }
 }
 
@@ -6501,7 +6508,7 @@ html.is-touch-ui .card-actions .card-action {
     gap: 14px;
     padding: 12px;
     border: 1px solid var(--border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface-2);
 }
 
@@ -6513,7 +6520,7 @@ html.is-touch-ui .card-actions .card-action {
     justify-content: center;
     width: 48px;
     height: 48px;
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--surface);
     outline: 1px solid var(--border);
     outline-offset: -1px;
@@ -6526,12 +6533,12 @@ html.is-touch-ui .card-actions .card-action {
     height: 100%;
     object-fit: contain;
     padding: 6px;
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: transparent;
 }
 
 .icon-preview-letter {
-    font-size: 19px;
+    font-size: var(--a-fs-title-lg);
     font-weight: 700;
     color: var(--muted);
     line-height: 1;
@@ -6594,7 +6601,7 @@ html.is-touch-ui .card-actions .card-action {
     flex: 1;
     min-width: 0;
     padding: 7px 11px;
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 .icon-url-row .my-btn {
@@ -6647,7 +6654,7 @@ html.is-touch-ui .card-actions .card-action {
     border-radius: 999px;
     background: var(--primary-soft);
     color: var(--primary);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     line-height: 1.5;
 }
@@ -6665,7 +6672,7 @@ html.is-touch-ui .card-actions .card-action {
     color: inherit;
     opacity: .68;
     cursor: pointer;
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     line-height: 1;
 }
 
@@ -6727,14 +6734,14 @@ html.is-touch-ui .card-actions .card-action {
    my.php 里原本是内联定义，这里补到公共表，避免首页按钮偏大、提示没样式。 */
 .my-btn.is-small {
     padding: 5px 12px;
-    font-size: 12.5px;
-    border-radius: 8px;
+    font-size: var(--a-fs-caption);
+    border-radius: var(--a-radius-sm);
 }
 
 .my-note {
     margin: 8px 0 0;
     color: var(--muted);
-    font-size: 11.5px;
+    font-size: var(--a-fs-fine);
     line-height: 1.6;
 }
 
@@ -6793,7 +6800,7 @@ html[data-theme="dark"] :where(a, button, input, select, textarea, summary, [tab
     border-radius: 999px;
     background: var(--surface);
     color: var(--muted);
-    font-size: 12.5px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     cursor: pointer;
     transition: color 0.16s ease, border-color 0.16s ease, background-color 0.16s ease;
@@ -6921,7 +6928,7 @@ body .my-group-tab .mgt-count {
     min-height: 40px;
     gap: 0;
     padding: 0 12px;
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
 }
 
@@ -6979,7 +6986,7 @@ body .my-group-tab .mgt-count {
     border-radius: var(--radius-compact);
     background: var(--surface-2);
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     line-height: 1.5;
     white-space: nowrap;
@@ -7001,11 +7008,6 @@ body .my-group-tab .mgt-count {
    不动亮色主题、不动其它 skin，也不改 --primary 本身以免影响全局。
    v2.18.7 顺带补上移动端 .mcat.is-active（仅在 ≤960px 出现，桌面不受影响）。
    -------------------------------------------------------------------------- */
-html[data-theme="dark"] {
-    
-    
-}
-
 html[data-theme="dark"] body .my-btn.is-primary,
 html[data-theme="dark"] body #addBtn,
 html[data-theme="dark"] body .my-group-tab.is-active,
@@ -7027,11 +7029,21 @@ html[data-theme="dark"] .section-tool.is-active .section-tool-label {
    ========================================================================== */
 
 /* 分组明暗交替：奇数组白底区块、偶数组透出米白，靠表面色切换代替分隔线。 */
+/* 分组色带：横向出血到视口边缘，形成 Apple 官网那种整幅明暗交替。
+   出血量随视口收缩，避免 --max-width 生效时 -18px 把色带推出视口产生横向滚动。 */
 .link-sections > .link-group {
-    padding: 20px 18px 4px;
-    margin: 0 -18px 10px;
+    --band-bleed: min(18px, max(0px, (100vw - min(100vw, var(--max-width))) / 2));
+    padding: 20px var(--band-bleed) 4px;
+    margin: 0 calc(var(--band-bleed) * -1) 10px;
     border-radius: 0;
     background: transparent;
+}
+
+/* 桌面宽屏（page-shell 左右各 32px 内边距）时色带贴齐到外壳内边缘即可，无需出血到视口 */
+@media (min-width: 1326px) {
+    .link-sections > .link-group {
+        --band-bleed: 32px;
+    }
 }
 
 .link-sections > .link-group:nth-child(odd) {
@@ -7095,11 +7107,11 @@ html[data-theme="dark"] .rail-item.is-active,
 html[data-theme="dark"] .section-tool.is-active {
     background: var(--a-tile-hover);
     border-color: rgba(255, 255, 255, 0.16);
-    color: #f5f5f7;
+    color: var(--a-white);
 }
 
 html[data-theme="dark"] .rail-item.is-active .rail-label,
 html[data-theme="dark"] .rail-item.is-active .rail-count,
 html[data-theme="dark"] .section-tool.is-active .section-tool-label {
-    color: #f5f5f7;
+    color: var(--a-white);
 }

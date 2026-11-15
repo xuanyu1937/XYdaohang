@@ -43,11 +43,12 @@ header('X-Robots-Tag: noindex, nofollow');
             color: var(--muted, #8a8f98); margin: 0 0 12px;
         }
         .error-title { font-size: 22px; font-weight: 600; margin: 0 0 10px; color: var(--text); }
-        .error-desc { font-size: 14px; line-height: 1.7; color: var(--muted); margin: 0 0 26px; }
+        .error-desc { font-size: var(--a-fs-body); line-height: var(--a-lh-body); color: var(--a-ink-48-strong); margin: 0 0 26px; }
         .error-home {
-            display: inline-block; padding: 11px 22px; font-size: 14px; font-weight: 500;
+            display: inline-block; padding: 11px 22px;
+            font-size: var(--a-fs-body); font-weight: var(--a-fw-medium);
             color: var(--primary-contrast); background: var(--primary);
-            border-radius: var(--radius-sm, 10px); text-decoration: none;
+            border-radius: var(--a-radius-md); text-decoration: none;
         }
         .error-home:hover { background: var(--primary-hover); }
         .error-home:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }

@@ -81,9 +81,9 @@ $escape = static function ($value) {
             color: var(--text);
         }
         .error-desc {
-            font-size: 14px;
-            line-height: 1.7;
-            color: var(--muted);
+            font-size: var(--a-fs-body);
+            line-height: var(--a-lh-body);
+            color: var(--a-ink-48-strong);
             margin: 0 0 28px;
         }
         .error-form {
@@ -96,22 +96,22 @@ $escape = static function ($value) {
             flex: 1 1 auto;
             min-width: 0;
             padding: 11px 14px;
-            font-size: 14px;
+            font-size: var(--a-fs-body);
             color: var(--text);
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: var(--radius-sm, 10px);
+            border-radius: var(--a-radius-md);
         }
         .error-form button,
         .error-home {
             flex: none;
             padding: 11px 20px;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: var(--a-fs-body);
+            font-weight: var(--a-fw-medium);
             color: var(--primary-contrast);
             background: var(--primary);
             border: 0;
-            border-radius: var(--radius-sm, 10px);
+            border-radius: var(--a-radius-md);
             cursor: pointer;
         }
         .error-home {
@@ -128,10 +128,14 @@ $escape = static function ($value) {
         }
         .error-links {
             margin-top: 14px;
-            font-size: 13px;
+            font-size: var(--a-fs-caption);
             color: var(--muted);
         }
-        .error-links a { color: var(--primary); }
+        .error-links a {
+            color: var(--primary);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
     </style>
 </head>
 <body>

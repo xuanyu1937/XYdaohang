@@ -19,13 +19,44 @@
 
 **工程做法**：项目本身已高度变量化（5 个 CSS 共引用 117 个自定义变量），所以不是逐行重写 11,882 行，而是新建 token 层把既有变量名**重映射**到苹果色板——全站 `var(--primary)` 等引用自动切换，业务规则与 JS 钩子零改动。装饰项用受控脚本做减法，每步独立校验。
 
+### 一·补、第二轮补齐（首轮遗漏项）
+
+首轮只处理了 `assets/css/` 下 5 个样式表，**PHP 页内 `<style>` 未纳入范围**，导致机械核对通过但实际观感仍有偏差。第二轮把页内样式全部收编：
+
+| 问题 | 首轮状态 | 第二轮处理 |
+| --- | --- | --- |
+| 后台仪表盘卡片 | 页内 204 行自建体系：紫蓝渐变表头、四色统计块、`translateY(-5px)` 悬浮、双层阴影 | 整体重写为「表面明暗 + 单一蓝 + 无阴影」 |
+| 后台侧栏 | `:root` 自建深蓝渐变 | 变量值重映射，底色走 `--a-tile-1` |
+| 后台登录页 | 双 `radial-gradient` 光晕 + 蓝紫渐变 LOGO | 光晕删除，LOGO 纯蓝，焦点环 `box-shadow` 改 `outline` |
+| `my.php` / `detail.php` / `api` / `sites` | 页内 14 处渐变 | 替换为 token 色；`api` 与 `sites` 补引入 token 层 |
+| 字重 | 118 处非法值（500/550/650/680/800） | 全部归入 400 / 600 / 700 |
+| 字号 | 204 处散落（13px 一项就 104 处） | 收敛到 11 / 12 / 14 / 17 / 18 / 20 / 22 / 25 |
+| 圆角 | 124 处硬编码 8/11/18px | 改为 `var(--a-radius-*)` |
+
+顺带修掉的观感问题：
+
+- **热门访问区**原来是 8 个灰底圆角小胶囊 + 独立圆角卡片，与下方整幅分组色带割裂 → 改为整幅表面 + 无框条目，靠排位序号承载层级
+- **分组色带右侧留白**：`-18px` 负边距在 1360px 以上视口会把色带推出外壳，右侧留一条无法填满的空隙 → 出血量改为随视口收缩的 `clamp` 表达式，10 档视口复测均齐平
+- **卡片底边不齐**：简介一行与两行的卡片混排时高度不一 → `grid-auto-rows: 1fr` + `.site-meta` 吸底，同行卡片完全等高
+- **离线卡白底白字**：`.is-offline` 用了亮色专用的 `--a-pearl`，暗色主题下是近白底而文字仍是近白 → 改表面色并补暗色分档
+- **后台快捷操作按钮逐字折行**：「添加分类」四字在 6 列栅格里正好卡在折行临界值（56px 文本 / 57px 可用）→ 提高选择器特异性至 `a.quick-action-btn` 并 `nowrap`
+- **状态点脉冲缩放**、**拖拽态放大**一并去掉，按下态统一 `scale(.95)`
+
+补齐的 token：`--a-primary-hover` / `--a-primary-soft` / `--a-primary-border` / `--a-hairline-strong`；另外把 Bootstrap 5 的 `--bs-box-shadow*` 令牌与 `.shadow-*` 工具类统一归零（后台大量组件读这四个变量，覆盖一次即全站生效）。
+
+**第二轮验收**：axe 16 页 0 违规（首轮 9 页）；功能回归 21/21；10 档视口 0 横向溢出；全站 14 页无装饰渐变、无外投影（仅 LOGO 与 favicon 保留规范允许的那一处）。
+
 ### 二、页面覆盖
 
 - `index.php` / `my.php`：分组明暗交替（奇数组白底区块、偶数组透出米白，`.link-sections > .link-group:nth-child(odd)`）、卡片标题负字距、图标字母兜底改灰阶
 - `login.php` / `register.php` / `reset.php` / `forgot.php`：删除 `auth.css` 独立变量，表单与前台同源
 - `about.php` / `contact.php` / `share.php`：`page.css` 归并到共用组件，正文链接补下划线（WCAG 1.4.1）
 - `admin/` 14 个页面：`apple-tokens.css` 置于 `admin.css` 之前，后台色板与前台同源；Bootstrap 语义 alert 中性化（表面底 + 近黑正文 + 3px 左色条）
-- `404.php` / `500.php`：同步引入 token 层
+- `404.php` / `500.php`：引入 token 层，正文 17px、按钮圆角与字重归位、错误码链接补下划线
+- `apply.php` / `detail.php` / `install.php`：边缘页同步；`detail.php` 面包屑深蓝渐变改纯蓝
+- `api/index.php`（开放 API 文档）与 `sites.php`（站点地图页）：原本不加载 token 层，各自维护一套变量 → 补引入并改用 token 值
+- `admin/index.php`：页内 204 行紫蓝渐变卡片体系整段重写（第二轮）
+- `admin/profile.php` / `admin/sidebar.php` / `admin/login.php`：`:root` 变量值重映射，保留变量名不动（第二轮）
 - 顶部导航保持单行结构（导航站信息密度需要），未强拆成 44+52 双层
 
 ### 三、验收结果
@@ -43,7 +74,11 @@ font-weight 500/360/460/560/640           0
 body                     17px / 24.99px（=1.47）
 ```
 
-**可访问性**（axe-core 4.x，WCAG 2.1 A/AA，禁用动画后扫描 9 个页面）：`home_light` / `home_dark` / `login_light` / `login_dark` / `mypage_light` / `about_light` / `admin_light` / `admin_dark` / `admin_settings` —— **9/9 全部 0 违规**。过程中修掉 5 类问题：速度文字 mid 档 3.44:1、暗色下蓝字落在深底 1.85–3.06:1、离线卡 `opacity:0.72` 拖低文字对比、后台 `.alert-light` 固定白底、正文链接仅靠颜色区分。
+**可访问性**（axe-core 4.x，WCAG 2.1 A/AA，禁用动画后扫描 **16 个页面**）：`home_light` / `home_dark` / `home_list_dark` / `login_light` / `login_dark` / `register_light` / `mypage_light` / `mypage_dark` / `about_light` / `contact_light` / `share_light` / `notfound_light` / `admin_light` / `admin_dark` / `admin_settings` / `admin_tools_light` —— **16/16 全部 0 违规**。
+
+过程中修掉 9 类问题：速度文字 mid 档 3.44:1、暗色下蓝字落在深底 1.85–3.06:1、离线卡 `opacity:0.72` 拖低文字对比、离线卡在暗色下白底白字（`--a-pearl` 用错档）、后台 `.alert-light` 固定白底、正文链接仅靠颜色区分、`404.php` 页脚链接无下划线、备份文件输入框 `<label>` 未关联、设置页 `.dz-meta` 灰字 2.6:1。
+
+**全站合规**（Playwright 运行时检测 14 个页面）：无装饰性大块渐变、无外投影（仅 `.brand-mark` LOGO 与 `.site-icon` favicon 保留规范允许的那一处）、背景统一 `#f5f5f7`、JS 异常 0。
 
 **功能回归**（Playwright，21 项）
 
@@ -55,7 +90,9 @@ grid/list/compact 三版式切换 · 明暗主题切换 · 星标切换 ·
 my.php 可访问 · login/register/about/contact/share 均可达
 ```
 
-**截图**：浅/深 × grid/list/compact 共 6 张 + 登录页 2 张 + 后台 2 张，逐张目检「像同一个产品」。
+**视口**：360 / 390 / 430 / 768 / 1024 / 1280 / 1366 / 1440 / 1680 / 1920 —— **10 档横向溢出均为 0**，分组色带左右边缘与外壳内边缘齐平。
+
+**截图**：桌面端 10 张（浅/深 × grid/list/compact 共 6 张 + 登录页 2 张 + 后台 2 张）+ 移动端 10 张，逐张目检「像同一个产品」。
 
 ### 四、偏离说明
 

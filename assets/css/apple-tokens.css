@@ -22,7 +22,9 @@
 
     /* ---- 1. Apple 原子色板（唯一 hex 定义处） ------------------------- */
     --a-primary:          #0066cc;   /* Action Blue：唯一交互色 */
-    --a-primary-hover:    #0058b3;
+    --a-primary-hover:    #0058b3;   /* 按下/悬停加深一档 */
+    --a-primary-soft:     rgba(0, 102, 204, 0.08);
+    --a-primary-border:   rgba(0, 102, 204, 0.28);
     --a-focus:            #0071e3;   /* 键盘 focus 环 */
     --a-link-on-dark:     #2997ff;   /* 仅暗底行内链接 */
     --a-on-primary:       #ffffff;
@@ -47,6 +49,7 @@
     --a-muted-on-dark:    #cccccc;
 
     --a-hairline:         #e0e0e0;   /* 1px 细线 */
+    --a-hairline-strong:  #d2d2d7;   /* 需要更实一档的描边（输入框/表格线） */
     --a-line-soft:        rgba(0, 0, 0, 0.08);
     --a-line-soft-strong: rgba(0, 0, 0, 0.13);
     --a-divider-soft:     #f0f0f0;
@@ -98,7 +101,13 @@
     --a-radius-none: 0;      --a-radius-sm: 8px;    --a-radius-md: 11px;
     --a-radius-lg:   18px;   --a-radius-pill: 999px;
 
-    --a-shadow-product: rgba(0, 0, 0, 0.22) 3px 5px 30px 0; /* 唯一阴影 */
+    --a-shadow-product: rgba(0, 0, 0, 0.22) 3px 5px 30px 0;
+    /* Bootstrap 5 的阴影令牌统一归零：后台大量组件（alert/card/dropdown/modal/toast）
+       都读这四个变量，覆盖它们等于一次性关掉全站投影，无需逐个组件声明。 */
+    --bs-box-shadow:      none;
+    --bs-box-shadow-sm:   none;
+    --bs-box-shadow-lg:   none;
+
     --a-frosted: saturate(180%) blur(20px);
     --a-hit-min: 44px;
     --a-ease: cubic-bezier(0.4, 0, 0.2, 1);
@@ -507,4 +516,18 @@ html[data-theme="dark"] .apple-footer a { color: var(--a-muted-on-dark); }
         animation-iteration-count: 1 !important;
         transition-duration: 0.001ms !important;
     }
+}
+
+/* --------------------------------------------------------------------------
+   Bootstrap 阴影工具类压平
+   .shadow-sm / .shadow / .shadow-lg / .shadow-xl 是内联使用的硬编码工具类，
+   不读上面归零的 --bs-box-shadow-* 变量，需要单独覆盖一次。
+   唯一保留的阴影是 .brand-mark（LOGO），见 --a-shadow-product。
+   -------------------------------------------------------------------------- */
+.shadow-sm,
+.shadow,
+.shadow-lg,
+.shadow-xl,
+.shadow-2xl {
+    box-shadow: none !important;
 }

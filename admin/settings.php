@@ -242,13 +242,13 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
         .field-hint {
             flex: 0 0 auto;
             color: var(--admin-muted);
-            font-size: 11.5px;
+            font-size: var(--a-fs-fine);
             font-weight: 400;
         }
 
         .field .form-text {
             margin-top: 6px;
-            font-size: 11.5px;
+            font-size: var(--a-fs-fine);
             line-height: 1.6;
             opacity: 0.92;
         }
@@ -269,7 +269,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
         .char-count {
             flex: 0 0 auto;
             color: var(--admin-muted);
-            font-size: 11.5px;
+            font-size: var(--a-fs-fine);
             font-variant-numeric: tabular-nums;
             line-height: 1.6;
         }
@@ -296,7 +296,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
             gap: 8px;
             margin-bottom: 14px;
             color: var(--admin-text);
-            font-size: 13.5px;
+            font-size: var(--a-fs-caption);
             font-weight: 600;
         }
 
@@ -308,7 +308,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
         .subsection-head .hint {
             margin-left: auto;
             color: var(--admin-muted);
-            font-size: 11.5px;
+            font-size: var(--a-fs-fine);
             font-weight: 400;
         }
 
@@ -334,7 +334,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
 
         .set-row-title {
             color: var(--admin-text);
-            font-size: 13.5px;
+            font-size: var(--a-fs-caption);
             font-weight: 600;
         }
 
@@ -423,7 +423,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
         .logo-path {
             margin-top: 10px;
             color: var(--admin-muted);
-            font-size: 11.5px;
+            font-size: var(--a-fs-fine);
             word-break: break-all;
         }
 
@@ -434,7 +434,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
             border: 1px solid #fef3c7;
             border-radius: 8px;
             color: #92400e;
-            font-size: 11.5px;
+            font-size: var(--a-fs-fine);
         }
 
         .logo-dropzone {
@@ -442,7 +442,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
             padding: 22px 16px;
             cursor: pointer;
             text-align: center;
-            background: linear-gradient(180deg, #f8faff 0%, #ffffff 100%);
+            background: var(--admin-surface-2);
             border: 1.5px dashed #c7d2fe;
             border-radius: var(--admin-radius-md);
             transition: background-color 0.2s ease, border-color 0.2s ease,
@@ -453,7 +453,8 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
         .logo-dropzone.is-dragover {
             background: var(--admin-primary-soft);
             border-color: var(--admin-primary);
-            box-shadow: 0 0 0 3px rgba(59, 91, 219, 0.08);
+            outline: 3px solid rgba(59, 91, 219, 0.08);
+            outline-offset: 1px;
         }
 
         .dz-icon {
@@ -483,7 +484,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
 
         .dz-title {
             color: var(--admin-text);
-            font-size: 13.5px;
+            font-size: var(--a-fs-caption);
             font-weight: 600;
         }
 
@@ -495,8 +496,8 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
 
         .dz-meta {
             margin-top: 8px;
-            color: #94a3b8;
-            font-size: 11.5px;
+            color: var(--admin-muted);
+            font-size: var(--a-fs-fine);
         }
 
         .logo-tips {
@@ -522,7 +523,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
         .logo-file-meta {
             margin-top: 10px;
             color: var(--admin-muted);
-            font-size: 11.5px;
+            font-size: var(--a-fs-fine);
             word-break: break-all;
         }
 
@@ -590,7 +591,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
 
         .form-actions-note {
             color: var(--admin-muted);
-            font-size: 11.5px;
+            font-size: var(--a-fs-fine);
         }
 
         /* v2.12.0 · AI 测试连接结果：绿色成功 / 红色失败，深浅色主题都可读 */
@@ -599,7 +600,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
             padding: 12px 14px;
             border: 1px solid transparent;
             border-radius: 8px;
-            font-size: 12.5px;
+            font-size: var(--a-fs-fine);
             line-height: 1.7;
             word-break: break-word;
         }
@@ -638,7 +639,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
             border: 1px solid #dbeafe;
             border-radius: var(--admin-radius-md);
             color: #0369a1;
-            font-size: 12.5px;
+            font-size: var(--a-fs-fine);
             line-height: 1.65;
         }
 
@@ -682,7 +683,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
             display: block;
             margin: 0 0 3px;
             color: var(--admin-text-secondary);
-            font-size: 12.5px;
+            font-size: var(--a-fs-fine);
             font-weight: 600;
             line-height: 1.5;
         }
@@ -703,7 +704,7 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
 
         .btn-primary:hover {
             transform: translateY(-1px);
-            box-shadow: 0 8px 18px -10px rgba(59, 91, 219, 0.65);
+            box-shadow: none;
         }
 
         .btn-outline-primary {
@@ -716,12 +717,12 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
             border-color: var(--admin-primary);
             color: #ffffff;
             transform: translateY(-1px);
-            box-shadow: 0 8px 18px -10px rgba(59, 91, 219, 0.45);
+            box-shadow: none;
         }
 
         .btn-primary:active {
             transform: translateY(0) scale(0.99);
-            box-shadow: 0 2px 6px rgba(59, 91, 219, 0.3);
+            box-shadow: none;
         }
 
         .btn-outline-secondary:hover,

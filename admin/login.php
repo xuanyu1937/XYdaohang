@@ -130,17 +130,13 @@ function navVerifyAdminUser($functions, $account, $password)
             padding: 24px 14px;
             color: var(--text);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-            background:
-                radial-gradient(900px 500px at 15% 5%, #dbeafe 0%, transparent 60%),
-                radial-gradient(800px 520px at 90% 95%, #e0e7ff 0%, transparent 60%),
-                #f4f7fc;
+            background: var(--a-parchment);
         }
         .login-card {
             width: min(420px, 100%);
-            background: #fff;
-            border: 1px solid #e6edf7;
-            border-radius: 20px;
-            box-shadow: 0 30px 80px -40px rgba(15, 23, 42, .45), 0 2px 8px rgba(15, 23, 42, .04);
+            background: var(--a-canvas);
+            border: 1px solid var(--a-hairline);
+            border-radius: var(--a-radius-lg);
             padding: 32px 30px 26px;
         }
         .brand {
@@ -152,14 +148,13 @@ function navVerifyAdminUser($functions, $account, $password)
         .brand-mark {
             width: 42px;
             height: 42px;
-            border-radius: 12px;
+            border-radius: var(--a-radius-md);
             display: grid;
             place-items: center;
-            color: #fff;
-            font-weight: 800;
-            font-size: 18px;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            box-shadow: 0 8px 20px -8px rgba(37, 99, 235, .65);
+            color: var(--a-canvas);
+            font-weight: 700;
+            font-size: var(--a-fs-title);
+            background: var(--a-primary);
         }
         .brand h1 {
             margin: 0;
@@ -180,7 +175,7 @@ function navVerifyAdminUser($functions, $account, $password)
         .alert {
             margin-bottom: 18px;
             padding: 11px 13px;
-            border-radius: 10px;
+            border-radius: var(--a-radius-md);
             background: var(--danger-soft);
             border: 1px solid #fecaca;
             color: #b91c1c;
@@ -200,21 +195,23 @@ function navVerifyAdminUser($functions, $account, $password)
             height: 44px;
             padding: 0 13px;
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: var(--a-radius-md);
             outline: none;
             font-size: 14px;
             color: var(--text);
-            background: #fbfdff;
-            transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+            background: var(--a-parchment);
+            transition: border-color .18s ease, background .18s ease;
         }
         .field input:focus {
-            border-color: var(--primary);
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+            border-color: var(--a-focus);
+            background: var(--a-canvas);
+            outline: 2px solid var(--a-focus);
+            outline-offset: 1px;
         }
         .field input.invalid {
             border-color: var(--danger);
-            box-shadow: 0 0 0 3px rgba(220, 38, 38, .1);
+            outline: 2px solid var(--danger);
+            outline-offset: 1px;
         }
         .error-text {
             display: none;
@@ -228,18 +225,17 @@ function navVerifyAdminUser($functions, $account, $password)
             height: 45px;
             margin-top: 6px;
             border: 0;
-            border-radius: 10px;
-            color: #fff;
+            border-radius: var(--a-radius-md);
+            color: var(--a-canvas);
             font-size: 15px;
             font-weight: 700;
             letter-spacing: .5px;
             cursor: pointer;
-            background: linear-gradient(135deg, #2563eb, #3b82f6);
-            box-shadow: 0 12px 24px -12px rgba(37, 99, 235, .8);
-            transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+            background: var(--a-primary);
+            transition: background-color .18s ease;
         }
-        .submit:hover { transform: translateY(-1px); filter: brightness(1.04); }
-        .submit:active { transform: translateY(0); }
+        .submit:hover { background: var(--a-primary-hover); }
+        .submit:active { transform: scale(0.95); }
         .foot {
             margin: 22px 0 0;
             padding-top: 16px;

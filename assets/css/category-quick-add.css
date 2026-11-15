@@ -48,9 +48,9 @@ html[data-theme="dark"] .xycq-overlay {
     background: var(--xycq-bg);
     color: var(--xycq-text);
     border: 1px solid var(--xycq-border);
-    border-radius: 18px;
+    border-radius: var(--a-radius-lg);
 
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     line-height: 1.6;
 }
 
@@ -65,8 +65,8 @@ html[data-theme="dark"] .xycq-overlay {
 
 .xycq-head h3 {
     margin: 0;
-    font-size: 15px;
-    font-weight: 650;
+    font-size: var(--a-fs-caption);
+    font-weight: 600;
     line-height: 1.4;
     color: var(--xycq-text);
 }
@@ -76,10 +76,10 @@ html[data-theme="dark"] .xycq-overlay {
     width: 28px;
     height: 28px;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: transparent;
     color: var(--xycq-muted);
-    font-size: 20px;
+    font-size: var(--a-fs-title-lg);
     line-height: 1;
     cursor: pointer;
 }
@@ -91,10 +91,10 @@ html[data-theme="dark"] .xycq-overlay {
 .xycq-note {
     margin: 0 0 14px;
     padding: 9px 11px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--xycq-surface);
     color: var(--xycq-muted);
-    font-size: 11.5px;
+    font-size: var(--a-fs-fine);
 }
 
 .xycq-field { margin-bottom: 14px; }
@@ -104,7 +104,7 @@ html[data-theme="dark"] .xycq-overlay {
     display: block;
     margin-bottom: 6px;
     color: var(--xycq-text);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
 }
 
@@ -116,11 +116,11 @@ html[data-theme="dark"] .xycq-overlay {
     box-sizing: border-box;
     padding: 9px 11px;
     border: 1px solid var(--xycq-border);
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--xycq-bg);
     color: var(--xycq-text);
     font-family: inherit;
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     line-height: 1.5;
     outline: none;
 }
@@ -134,7 +134,7 @@ html[data-theme="dark"] .xycq-overlay {
     align-items: center;
     gap: 8px;
     color: var(--xycq-text);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     cursor: pointer;
 }
 
@@ -143,10 +143,10 @@ html[data-theme="dark"] .xycq-overlay {
 .xycq-error {
     margin: 0 0 12px;
     padding: 8px 10px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: rgba(217, 45, 32, .10);
     color: var(--xycq-danger);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     word-break: break-word;
 }
 
@@ -162,11 +162,11 @@ html[data-theme="dark"] .xycq-overlay {
     min-width: 78px;
     padding: 8px 16px;
     border: 1px solid var(--xycq-border);
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--xycq-bg);
     color: var(--xycq-text);
     font-family: inherit;
-    font-size: 12.5px;
+    font-size: var(--a-fs-caption);
     cursor: pointer;
 }
 
@@ -192,10 +192,10 @@ html[data-theme="dark"] .xycq-overlay {
     transform: translate(-50%, 12px);
     max-width: min(88vw, 420px);
     padding: 10px 16px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--a-state);
     color: var(--a-white);
-    font-size: 12.5px;
+    font-size: var(--a-fs-caption);
     line-height: 1.6;
     text-align: center;
 
@@ -215,11 +215,11 @@ html[data-theme="dark"] .xycq-overlay {
     gap: 4px;
     padding: 5px 10px;
     border: 1px solid var(--xycq-border);
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: transparent;
     color: inherit;
     font-family: inherit;
-    font-size: 11.5px;
+    font-size: var(--a-fs-fine);
     line-height: 1.4;
     white-space: nowrap;
     cursor: pointer;
@@ -227,14 +227,14 @@ html[data-theme="dark"] .xycq-overlay {
 
 .xycq-trigger:hover { color: var(--xycq-primary); border-color: var(--xycq-primary); }
 .xycq-trigger:focus-visible { outline: 2px solid var(--xycq-primary); outline-offset: 2px; }
-.xycq-trigger-compact { flex: 0 0 auto; min-height: 34px; padding: 4px 9px; font-size: 11.5px; }
+.xycq-trigger-compact { flex: 0 0 auto; min-height: 34px; padding: 4px 9px; font-size: var(--a-fs-fine); }
 label .xycq-trigger-compact { font-weight: 400; margin-bottom: 4px; }
 html[data-theme="dark"] .xycq-trigger {   color: var(--a-muted-on-dark); }
 html[data-theme="dark"] .xycq-trigger:hover { color: var(--a-link-on-dark); }
 
 /* 首页分类抽屉标题栏 */
 .rail-title-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
-.rail-add.xycq-trigger { min-height: 24px; padding: 2px 8px; font-size: 11px; letter-spacing: 0; }
+.rail-add.xycq-trigger { min-height: 24px; padding: 2px 8px; font-size: var(--a-fs-fine); letter-spacing: 0; }
 
 /* 首页移动端分类 tab 栏 */
 .mobile-cats-add.xycq-trigger {
@@ -250,6 +250,6 @@ html[data-theme="dark"] .xycq-trigger:hover { color: var(--a-link-on-dark); }
 
 @media (max-width: 767px) {
     .xycq-overlay { align-items: flex-end; padding: 0; }
-    .xycq-dialog { max-width: none; max-height: 88vh; border-radius: 18px 18px 0 0; }
+    .xycq-dialog { max-width: none; max-height: 88vh; border-radius: var(--a-radius-lg) var(--a-radius-lg) 0 0; }
     .xycq-toast { bottom: 22px; }
 }

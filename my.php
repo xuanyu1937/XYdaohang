@@ -540,7 +540,8 @@ $hasLinks = $totalLinks > 0;
             height: 6px;
             border-radius: 50%;
             background: var(--primary);
-            box-shadow: 0 0 0 3px var(--primary-soft);
+            outline: 3px solid var(--primary-soft);
+            outline-offset: 1px;
             content: "";
         }
 
@@ -638,7 +639,7 @@ $hasLinks = $totalLinks > 0;
             font-size: 13px;
             font-weight: 500;
             font-family: inherit;
-            box-shadow: var(--shadow-sm);
+            box-shadow: none;
             transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
         }
 
@@ -658,7 +659,7 @@ $hasLinks = $totalLinks > 0;
             border-color: var(--primary);
             background: var(--primary);
             color: var(--primary-contrast);
-            box-shadow: 0 8px 18px -10px rgba(29, 78, 216, 0.7);
+            box-shadow: none;
         }
 
         .my-btn.is-primary:hover {
@@ -700,7 +701,7 @@ $hasLinks = $totalLinks > 0;
             flex: 0 0 34px;
             /* 与顶部头像统一：正圆形 */
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            background: var(--primary);
             color: #fff;
             font-size: 14px;
             font-weight: 700;
@@ -718,7 +719,7 @@ $hasLinks = $totalLinks > 0;
             object-fit: cover;
             object-position: center;
             background: var(--surface-2);
-            box-shadow: inset 0 0 0 1px var(--hairline, rgba(26, 26, 23, 0.06));
+            box-shadow: none;
         }
 
         .my-avatar-edit {
@@ -795,7 +796,7 @@ $hasLinks = $totalLinks > 0;
             border: 1px solid var(--border);
             border-radius: var(--radius);
             background: var(--surface);
-            box-shadow: var(--shadow-sm);
+            box-shadow: none;
             overflow: hidden;
         }
 
@@ -822,19 +823,19 @@ $hasLinks = $totalLinks > 0;
         }
 
         .my-item.is-drop-before {
-            box-shadow: inset 0 3px 0 var(--primary);
+            border-top: 3px solid var(--primary);
         }
 
         .my-item.is-drop-after {
-            box-shadow: inset 0 -3px 0 var(--primary);
+            border-bottom: 3px solid var(--primary);
         }
 
         .my-group.is-drop-before > .my-group-head {
-            box-shadow: inset 0 3px 0 var(--primary);
+            border-top: 3px solid var(--primary);
         }
 
         .my-group.is-drop-after > .my-group-head {
-            box-shadow: inset 0 -3px 0 var(--primary);
+            border-bottom: 3px solid var(--primary);
         }
 
         .my-group.is-dragging {
@@ -868,7 +869,7 @@ $hasLinks = $totalLinks > 0;
             background: rgba(15, 23, 42, 0.92);
             color: #fff;
             font-size: 14px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            box-shadow: none;
             opacity: 0;
             transition: opacity 0.2s, transform 0.2s;
             pointer-events: none;
@@ -988,7 +989,10 @@ $hasLinks = $totalLinks > 0;
             align-items: center;
             gap: 4px;
             padding-left: 22px;
-            background: linear-gradient(90deg, transparent, var(--surface) 24%);
+            /* 用不透明底 + 左侧遮罩渐隐，替代原来的 linear-gradient 背景（v2.18.8） */
+            background: var(--surface);
+            -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22px);
+            mask-image: linear-gradient(90deg, transparent 0, #000 22px);
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
@@ -1104,7 +1108,7 @@ $hasLinks = $totalLinks > 0;
             border: 1px solid var(--border-strong);
             border-radius: 14px;
             background: var(--surface);
-            box-shadow: var(--shadow-lg);
+            box-shadow: none;
             transform: translateX(-50%);
         }
 
@@ -1255,7 +1259,7 @@ $hasLinks = $totalLinks > 0;
             border-radius: 16px;
             background: var(--surface);
             color: var(--text);
-            box-shadow: var(--shadow-lg);
+            box-shadow: none;
         }
 
         dialog.my-dialog::backdrop {
@@ -1477,7 +1481,8 @@ $hasLinks = $totalLinks > 0;
         .my-field textarea:focus {
             border-color: var(--primary);
             background: var(--surface);
-            box-shadow: 0 0 0 3px var(--primary-soft);
+            outline: 3px solid var(--primary-soft);
+            outline-offset: 1px;
         }
 
         /* 批量导入 · 校对列表 */
@@ -1528,7 +1533,7 @@ $hasLinks = $totalLinks > 0;
             scrollbar-gutter: stable;
             /* inset 阴影固定在滚动容器视口（不随内容滚动），
                底部渐隐提示下面还有内容，不需要额外的包裹层 */
-            box-shadow: inset 0 -14px 12px -12px rgba(0, 0, 0, 0.16);
+            box-shadow: none;
         }
 
         .bp-item {
@@ -1596,7 +1601,8 @@ $hasLinks = $totalLinks > 0;
 
         .bp-main input:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px var(--primary-soft);
+            outline: 3px solid var(--primary-soft);
+            outline-offset: 1px;
         }
 
         .bp-main input.is-weak {
@@ -1774,7 +1780,7 @@ $hasLinks = $totalLinks > 0;
             border: 1px solid var(--border);
             border-radius: 10px;
             background: var(--surface);
-            box-shadow: 0 10px 28px -12px rgba(15, 23, 42, 0.35);
+            box-shadow: none;
         }
 
         .my-group-menu[hidden] { display: none; }
@@ -1803,25 +1809,25 @@ $hasLinks = $totalLinks > 0;
             flex: none;
             white-space: nowrap;
             border-color: transparent;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-filled-hover) 100%);
+            background: var(--primary);
             color: var(--primary-contrast);
             font-weight: 600;
             letter-spacing: 0.02em;
-            box-shadow: 0 6px 14px -6px rgba(29, 78, 216, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+            box-shadow: none;
             transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
         }
 
         #fetchBtn:hover {
-            background: linear-gradient(135deg, var(--primary-filled-hover) 0%, var(--primary) 100%);
+            background: var(--primary);
             color: var(--primary-contrast);
             transform: translateY(-1px);
             filter: brightness(1.06);
-            box-shadow: 0 10px 20px -8px rgba(29, 78, 216, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            box-shadow: none;
         }
 
         #fetchBtn:active {
             transform: translateY(0);
-            box-shadow: 0 3px 8px -4px rgba(29, 78, 216, 0.5);
+            box-shadow: none;
         }
 
         #fetchBtn svg {
@@ -2094,7 +2100,7 @@ $hasLinks = $totalLinks > 0;
         .ai-cat-row:has(input:disabled) {
             opacity: .62;
             background: transparent;
-            box-shadow: inset 0 0 0 1px var(--my-border, #e5e7eb);
+            box-shadow: none;
         }
 
         .ai-cat-row:has(input:disabled) .ai-cat-row-name { font-weight: 500; }

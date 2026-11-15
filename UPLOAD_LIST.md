@@ -21,18 +21,44 @@
 - 卡片无阴影、圆角统一；正文 17px，行高约 1.47；
 - 在线速度文字与状态点为灰阶（错误态为低调深红）；
 - 首页分组出现明暗交替背景（奇数组白底区块、偶数组米白）；
-- axe-core 扫描首页明暗双主题、登录页、`my.php`、`about.php`、后台仪表盘与设置页：`color-contrast=0`；
-- 360 / 390 / 430 / 1280 四档无横向溢出。
+- axe-core 扫描 16 个页面（前台 12 + 后台 4，含明暗双主题）：全部 `0` 违规；
+- 360 / 390 / 430 / 768 / 1024 / 1280 / 1366 / 1440 / 1680 / 1920 十档无横向溢出；
+- 全站无装饰渐变、无卡片投影（仅 LOGO 与 favicon 保留规范允许的那一处）。
 
-8.7、PWA 缓存名同步 |
-| 18 个 PHP 页面（33 处） | `?v=2.18.7` |
-| `CHANGELOG.md` / `README.md` / `UPLOAD_LIST.md` / `FAQ.md` / `API_TEST_REPORT.md` | 文档同步 |
+## 本版变动文件
+
+### v2.18.8 · 全站苹果风格统一改造（17 个功能文件 + 版本同步，新增 1 个 CSS，无 SQL）
+
+| 文件 | 说明 |
+| --- | --- |
+| `assets/css/apple-tokens.css` | **新增**。唯一设计变量源：原子色板、排版阶梯、空间/形状/深度、项目既有变量名映射、后台与快捷收录同源、暗色分档、共用组件契约、Bootstrap 阴影令牌归零 |
+| `assets/css/nav.css` | `:root` 清零；body 改 17px/1.47；分组明暗交替；热门区整幅表面；卡片等高吸底；状态点与拖拽态去缩放；圆角与字重归位 |
+| `assets/css/admin.css` | `:root` 清零；alert 中性化；快捷操作按钮单行；字重与圆角归位 |
+| `assets/css/auth.css` / `page.css` / `category-quick-add.css` | 变量块删除，改引用 token 层；正文链接补下划线 |
+| `index.php` 等 24 个 PHP 页面 | 插入 `apple-tokens.css` 引用；`?v=` 全部升到 2.18.8 |
+| `admin/index.php` | 页内 204 行紫蓝渐变卡片体系整段重写 |
+| `admin/profile.php` / `sidebar.php` / `login.php` | `:root` 变量值重映射；光晕与渐变删除 |
+| `my.php` / `detail.php` / `api/index.php` / `sites.php` | 页内渐变替换；后两者补引入 token 层 |
+| `404.php` / `500.php` | 正文与按钮对齐 token；链接补下划线 |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` / `sw.js` | 版本号 2.18.8、PWA 缓存名 `xy-nav-pwa-v2.18.8` |
+| `CHANGELOG.md` / `README.md` / `UPLOAD_LIST.md` | 文档同步 |
+
+> 约束核对：只改表现层，未改动 SQL、路由、`includes/` 与 `api/` 业务逻辑、接口契约，DOM `data-*` 属性名与 JS 事件钩子全部保留；16 项功能逐项回归通过；无新增第三方依赖、无构建链。
+
+> 本地用 Chromium + Playwright 完成：axe-core 16 页扫描、21 项功能回归、10 档视口溢出检测、14 页运行时渐变/投影检测、桌面与移动各 10 张截图目检。验收脚本只装在本地临时目录，不在交付包内。
+
+## 历史变动文件
+
+### v2.18.7 · 移动端搜索区间距（1 个功能文件 + 版本同步，无 SQL）
 
 > 约束核对：功能改动仅 `assets/css/nav.css` 一个文件的移动端断点；CSS 净增 518 字节；无新增文件、无 SQL、不引第三方库、不改任何接口字段与权限。
 
-> 本地已用 Chromium + Playwright 完成 390px / 1280px 改前改后对比量取、sticky 吸顶采样、三视图首屏卡片数与 360/390/430 档位检查，逐项结果见 `v2.18.7-验收与发版报告.md` 与 `v2.18.7-验收日志.txt`；验收工具只装在本地临时目录，不在交付包内。
-
-## 历史变动文件
+| 文件 | 说明 |
+| --- | --- |
+| `assets/css/nav.css` | 移动端搜索区到分类标签垂直间距 54→12px，sticky 吸顶无缝隙；暗色分类条对比度补强 |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` / `sw.js` | 版本号升至 2.18.7、PWA 缓存名同步 |
+| 18 个 PHP 页面（33 处） | `?v=2.18.7` |
+| `CHANGELOG.md` / `README.md` / `UPLOAD_LIST.md` / `FAQ.md` / `API_TEST_REPORT.md` | 文档同步 |
 
 ### v2.18.6 · 三处收尾（5 个功能文件 + 版本同步，无新增文件，无 SQL）
 

@@ -30,12 +30,13 @@ try {
 })();
 </script>
 <style>
+    /* v2.18.8：侧栏底色改由 apple-tokens.css 的暗色分档提供，渐变与橡皮筋曲线下线 */
     :root {
         --sidebar-width: 260px;
         --sidebar-collapsed-width: 72px;
-        --sidebar-gradient: linear-gradient(180deg, #0b1533 0%, #101d44 52%, #16234f 100%);
-        --primary-color: #4f6df5;
-        --transition-smooth: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        --sidebar-surface: var(--a-tile-1);
+        --primary-color: var(--a-primary);
+        --transition-smooth: color 0.18s var(--a-ease), background-color 0.18s var(--a-ease), border-color 0.18s var(--a-ease);
     }
 
     /* ----------------------------------------------------------------------
@@ -51,9 +52,9 @@ try {
         width: var(--sidebar-width);
         height: 100vh;
         height: 100dvh;
-        background: var(--sidebar-gradient);
+        background: var(--sidebar-surface);
         border-right: 1px solid rgba(255, 255, 255, 0.06);
-        box-shadow: 10px 0 34px rgba(8, 15, 35, 0.14);
+        box-shadow: none;
         overflow: hidden;
         transition: var(--transition-smooth);
     }
@@ -101,9 +102,8 @@ try {
         justify-content: center;
         width: 36px;
         height: 36px;
-        background: linear-gradient(135deg, #4f6df5 0%, #7c5cf5 100%);
-        border-radius: 10px;
-        box-shadow: 0 6px 16px rgba(79, 109, 245, 0.36);
+        background: var(--a-primary);
+        border-radius: var(--a-radius-md);
         color: #ffffff;
         font-size: 15px;
     }
@@ -153,10 +153,10 @@ try {
         margin: 0;
         padding: 11px 13px;
         background: transparent;
-        border-radius: 10px;
+        border-radius: var(--a-radius-md);
         color: rgba(226, 232, 240, 0.72);
         font-size: 14px;
-        font-weight: 500;
+        font-weight: 600;
         line-height: 1.4;
         text-decoration: none;
         white-space: nowrap;
@@ -183,8 +183,8 @@ try {
     }
 
     .nav-link.active {
-        background: linear-gradient(90deg, rgba(79, 109, 245, 0.3) 0%, rgba(79, 109, 245, 0.1) 100%);
-        box-shadow: inset 0 0 0 1px rgba(141, 162, 255, 0.15);
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: none;
         color: #ffffff;
         backdrop-filter: none;
     }
@@ -225,7 +225,8 @@ try {
         padding: 0 6px;
         background: #ef4444 !important;
         border-radius: 999px;
-        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
+        outline: 3px solid rgba(239, 68, 68, 0.14);
+        outline-offset: 1px;
         color: #ffffff !important;
         font-size: 11px;
         font-weight: 600;
@@ -256,9 +257,8 @@ try {
         justify-content: center;
         width: 36px;
         height: 36px;
-        background: linear-gradient(135deg, #4f6df5 0%, #7c5cf5 100%);
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(79, 109, 245, 0.3);
+        background: var(--a-primary);
+        border-radius: var(--a-radius-md);
         color: #ffffff;
         font-size: 14px;
         font-weight: 600;
@@ -347,7 +347,8 @@ try {
         min-width: 8px;
         min-height: 8px;
         padding: 0;
-        box-shadow: 0 0 0 2px #101d44;
+        outline: 2px solid #101d44;
+        outline-offset: 1px;
         font-size: 0;
     }
 
@@ -414,10 +415,10 @@ try {
             justify-content: center;
             width: 44px;
             height: 44px;
-            background: var(--sidebar-gradient);
+            background: var(--sidebar-surface);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-            box-shadow: 0 6px 18px rgba(8, 15, 35, 0.24);
+            box-shadow: none;
             color: #ffffff;
             font-size: 16px;
             cursor: pointer;

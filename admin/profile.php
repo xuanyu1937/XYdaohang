@@ -163,12 +163,13 @@ $recentLogins = $recentStmt->fetchAll();
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
     <link href="../assets/sweetalert2/sweetalert2.min.css" rel="stylesheet">
     <style>
+        /* v2.18.8：变量值改为苹果口径，规则本身不动 —— 渐变退化为纯蓝、阴影归零 */
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --sidebar-gradient: linear-gradient(180deg, #1a237e 0%, #311b92 100%);
-            --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-            --hover-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --primary-solid: var(--a-primary);
+            --sidebar-surface: var(--admin-surface-2);
+            --card-shadow: none;
+            --hover-shadow: none;
+            --transition-smooth: color 0.18s var(--a-ease), border-color 0.18s var(--a-ease), background-color 0.18s var(--a-ease);
         }
         
         body {
@@ -198,15 +199,15 @@ $recentLogins = $recentStmt->fetchAll();
         
         .dashboard-card {
             border: none;
-            border-radius: 16px;
-            box-shadow: var(--card-shadow);
-            background: white;
+            border-radius: var(--a-radius-lg);
+            box-shadow: none;
+            background: var(--admin-surface);
             margin-bottom: 1.5rem;
             overflow: hidden;
         }
         
         .dashboard-card .card-header {
-            background: white;
+            background: var(--admin-surface);
             border-bottom: 1px solid #e2e8f0;
             padding: 1.25rem 1.5rem;
             border-radius: 16px 16px 0 0;
@@ -226,10 +227,10 @@ $recentLogins = $recentStmt->fetchAll();
         }
         
         .navbar-top {
-            background: white;
+            background: var(--admin-surface);
             padding: 1rem 1.5rem;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-radius: var(--a-radius-lg);
+            box-shadow: none;
             margin-bottom: 2rem;
             border: 1px solid #e2e8f0;
         }
@@ -250,7 +251,7 @@ $recentLogins = $recentStmt->fetchAll();
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: var(--primary-gradient);
+            background: var(--primary-solid);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -260,18 +261,17 @@ $recentLogins = $recentStmt->fetchAll();
         
         .stat-card {
             border: none;
-            border-radius: 16px;
-            box-shadow: var(--card-shadow);
+            border-radius: var(--a-radius-lg);
+            box-shadow: none;
             transition: var(--transition-smooth);
             overflow: hidden;
-            background: white;
+            background: var(--admin-surface);
             position: relative;
             height: 100%;
         }
         
         .stat-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--hover-shadow);
+            
         }
         
         .stat-card .card-body {
@@ -290,23 +290,23 @@ $recentLogins = $recentStmt->fetchAll();
         }
         
         .stat-card.border-primary .icon-wrapper {
-            background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
-            color: #4f46e5;
+            background: var(--admin-primary-soft);
+            color: var(--admin-primary);
         }
         
         .stat-card.border-success .icon-wrapper {
-            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-            color: #10b981;
+            background: var(--admin-primary-soft);
+            color: var(--admin-primary);
         }
         
         .stat-card.border-info .icon-wrapper {
-            background: linear-gradient(135deg, #cffafe, #a5f3fc);
-            color: #06b6d4;
+            background: var(--admin-primary-soft);
+            color: var(--admin-primary);
         }
         
         .stat-card.border-warning .icon-wrapper {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            color: #f59e0b;
+            background: var(--admin-primary-soft);
+            color: var(--admin-primary);
         }
         
         .stat-card h3 {
@@ -318,14 +318,14 @@ $recentLogins = $recentStmt->fetchAll();
         .stat-card .card-subtitle {
             font-size: 0.875rem;
             color: #64748b;
-            font-weight: 500;
+            font-weight: 600;
         }
         
         .profile-avatar {
             width: 120px;
             height: 120px;
             border-radius: 50%;
-            background: var(--primary-gradient);
+            background: var(--primary-solid);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -333,26 +333,27 @@ $recentLogins = $recentStmt->fetchAll();
             font-size: 3rem;
             font-weight: 600;
             margin: 0 auto 1.5rem;
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+            box-shadow: none;
             border: 4px solid white;
         }
         
         .form-label {
-            font-weight: 500;
+            font-weight: 600;
             color: #475569;
             margin-bottom: 0.5rem;
         }
         
         .form-control {
             border: 2px solid #e2e8f0;
-            border-radius: 10px;
+            border-radius: var(--a-radius-md);
             padding: 0.75rem 1rem;
             transition: var(--transition-smooth);
         }
         
         .form-control:focus {
             border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: 3px solid rgba(59, 130, 246, 0.1);
+            outline-offset: 1px;
         }
         
         .input-group-text {
@@ -363,31 +364,30 @@ $recentLogins = $recentStmt->fetchAll();
         }
         
         .btn-primary {
-            background: var(--primary-gradient);
+            background: var(--primary-solid);
             border: none;
-            border-radius: 10px;
+            border-radius: var(--a-radius-md);
             padding: 0.75rem 2rem;
-            font-weight: 500;
+            font-weight: 600;
             transition: var(--transition-smooth);
         }
         
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+            
         }
         
         .btn-success {
-            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            background: var(--admin-primary);
             border: none;
-            border-radius: 10px;
+            border-radius: var(--a-radius-md);
             padding: 0.75rem 2rem;
-            font-weight: 500;
+            font-weight: 600;
             transition: var(--transition-smooth);
         }
         
         .btn-success:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+            box-shadow: none;
         }
         
         .password-toggle {
@@ -415,16 +415,16 @@ $recentLogins = $recentStmt->fetchAll();
         }
         
         .alert-warning {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            border: none;
-            border-radius: 10px;
-            border-left: 4px solid #f59e0b;
+            background: var(--admin-surface);
+            border: 1px solid var(--admin-border);
+            border-radius: var(--a-radius-md);
+            border-left: 3px solid var(--admin-warning);
         }
         
         .badge {
             padding: 0.35rem 0.75rem;
             border-radius: 20px;
-            font-weight: 500;
+            font-weight: 600;
         }
         
         .password-strength {

@@ -66,138 +66,149 @@ $currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.1.3';
     <script src="../assets/js/chart.umd.min.js"></script>
     <script>window.Chart || document.write('<script src="https://cdn.staticfile.org/Chart.js/4.3.0/chart.umd.min.js"><\/script>');</script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        /* v2.18.8 · 仪表盘页内样式收编到 apple-tokens.css
+           原先这里自建了一套紫蓝渐变卡片（渐变表头、彩色统计块、translateY 悬浮、双层阴影），
+           与前台苹果风格完全脱节。现改为「表面明暗 + 单一蓝 + 无阴影」的表达。 */
+
         body {
-            background: #f0f2f5;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--admin-bg);
         }
-        
+
+        /* 统计卡：白底 + 细边，不做 hover 位移与阴影 */
         .stat-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: none;
-            border-radius: 15px;
+            border: 1px solid var(--admin-border);
+            border-radius: var(--a-radius-lg);
+            background: var(--admin-surface);
             overflow: hidden;
+            transition: border-color 0.18s var(--a-ease);
         }
-        
+
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-color: var(--admin-border-strong);
         }
-        
+
         .stat-card .card-body {
-            padding: 1.5rem;
+            padding: 20px;
         }
-        
+
+        /* 统计图标：浅蓝方块 + 蓝图标，取代原来的四色彩块 */
         .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            border-radius: var(--a-radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
+            color: var(--admin-primary);
+            background: var(--admin-primary-soft);
         }
-        
-        .stat-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .stat-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
-        .stat-warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-        .stat-info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-        
+
+        .stat-icon i {
+            font-size: var(--a-fs-title-lg);
+        }
+
+        .stat-primary,
+        .stat-success,
+        .stat-warning,
+        .stat-info {
+            background: var(--admin-primary-soft);
+            color: var(--admin-primary);
+        }
+
+        /* 卡片：去阴影去圆角化，只留一条细边，靠表面差分层 */
         .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
+            border: 1px solid var(--admin-border);
+            border-radius: var(--a-radius-lg);
+            background: var(--admin-surface);
+            transition: border-color 0.18s var(--a-ease);
         }
-        
+
         .card:hover {
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-color: var(--admin-border-strong);
         }
-        
+
+        /* 卡头：原本是紫蓝渐变，改为米白表面 + 底部细线 */
         .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px 15px 0 0 !important;
-            padding: 1rem 1.5rem;
-            border: none;
+            background: var(--admin-surface-2);
+            color: var(--admin-text);
+            border-radius: var(--a-radius-lg) var(--a-radius-lg) 0 0 !important;
+            padding: 16px 20px;
+            border: 0;
+            border-bottom: 1px solid var(--admin-border);
         }
-        
+
         .card-header h5 {
             margin: 0;
             font-weight: 600;
+            letter-spacing: var(--a-tracking-caption);
         }
-        
+
         .table-hover tbody tr:hover {
-            background-color: rgba(102, 126, 234, 0.05);
+            background-color: var(--admin-primary-soft);
             cursor: pointer;
         }
-        
+
         .badge {
-            padding: 0.4rem 0.8rem;
-            border-radius: 20px;
-            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: var(--a-radius-pill);
+            font-weight: 600;
         }
-        
-        .quick-action-btn {
-            padding: 0.8rem;
-            border-radius: 10px;
-            transition: all 0.3s ease;
+
+        /* 快速操作：按下才缩放，hover 不抬升 */
+        a.quick-action-btn {
+            padding: 14px 4px;
+            border-radius: var(--a-radius-md);
+            /* 四字标签在 6 列栅格里贴边，强制单行避免逐字换行 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: border-color 0.18s var(--a-ease), background-color 0.18s var(--a-ease);
         }
-        
-        .quick-action-btn:hover {
-            transform: translateY(-3px);
+
+        a.quick-action-btn:active {
+            transform: scale(0.95);
         }
-        
+
         .system-info-item {
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #e9ecef;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--admin-border);
         }
-        
+
         .system-info-item:last-child {
-            border-bottom: none;
+            border-bottom: 0;
         }
-        
+
         .system-info-label {
             font-weight: 600;
-            color: #495057;
+            color: var(--admin-text);
         }
-        
+
         .system-info-value {
-            color: #6c757d;
+            color: var(--admin-text-secondary);
         }
-        
+
         .progress {
-            height: 8px;
-            border-radius: 4px;
+            height: 6px;
+            border-radius: var(--a-radius-pill);
+            background: var(--admin-surface-2);
         }
-        
+
         .welcome-text {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--admin-text);
+            font-weight: 600;
+            letter-spacing: var(--a-tracking-caption);
         }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+
+        /* 入场：淡入即可，不做位移 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
         }
-        
+
         .animate-fade-in {
-            animation: fadeInUp 0.5s ease-out;
+            animation: fadeIn 0.28s var(--a-ease);
         }
-        
+
         .swal2-popup {
             font-size: 1rem !important;
         }

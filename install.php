@@ -302,7 +302,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
         .head { margin-bottom: 18px; }
         .head h1 { margin: 0 0 6px; font-size: 24px; }
         .head p { margin: 0; color: #64748b; font-size: 13px; }
-        .card { background: #fff; border: 1px solid #e3eaf4; border-radius: 16px; box-shadow: 0 18px 40px -28px rgba(15, 23, 42, .35); overflow: hidden; }
+        .card { background: #fff; border: 1px solid #e3eaf4; border-radius: 16px; box-shadow: none; overflow: hidden; }
         .checks { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 20px; background: #f8fafc; border-bottom: 1px solid #edf2f8; }
         .check { font-size: 12px; padding: 5px 9px; border-radius: 999px; background: #eef4ff; color: #1d4ed8; }
         .check.bad { background: #fee2e2; color: #b91c1c; }
@@ -313,7 +313,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
         .full { grid-column: 1 / -1; }
         label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; }
         input { width: 100%; padding: 10px 12px; border: 1px solid #d8e1ee; border-radius: 9px; font-size: 14px; outline: none; background: #fff; }
-        input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, .12); }
+        input:focus { border-color: #2563eb; outline: 3px solid rgba(37, 99, 235, .12);
+ outline-offset: 1px; }
         .hint { margin-top: 5px; color: #94a3b8; font-size: 12px; }
         button { width: 100%; margin-top: 24px; padding: 12px; border: 0; border-radius: 10px; background: #2563eb; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
         button:hover { background: #1d4ed8; }

@@ -179,7 +179,7 @@ $detailJsonLd = [
         }
         
         .breadcrumb-nav {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            background: var(--primary);
             padding: 16px 0;
         }
         
@@ -215,7 +215,7 @@ $detailJsonLd = [
             object-fit: contain;
             border-radius: 20px;
             background: white;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: none;
             transition: transform 0.3s ease;
         }
         
@@ -226,32 +226,32 @@ $detailJsonLd = [
         .default-logo-large {
             width: 100px;
             height: 100px;
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            background: var(--primary);
             border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-size: 40px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: none;
         }
         
         .detail-card {
             background: white;
             border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            box-shadow: none;
             overflow: hidden;
             transition: all 0.3s ease;
         }
         
         .visit-btn {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            background: var(--primary);
             transition: all 0.3s ease;
         }
         
         .visit-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+            box-shadow: none;
         }
         
         .action-btn {
@@ -260,7 +260,7 @@ $detailJsonLd = [
         
         .action-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: none;
         }
         
         .related-card {
@@ -270,7 +270,7 @@ $detailJsonLd = [
         
         .related-card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.08);
+            box-shadow: none;
         }
         
         .related-logo {
@@ -288,7 +288,7 @@ $detailJsonLd = [
         .default-related-logo {
             width: 48px;
             height: 48px;
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            background: var(--primary);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -331,7 +331,7 @@ $detailJsonLd = [
             text-align: center;
             max-width: 320px;
             animation: slideUp 0.3s ease;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            box-shadow: none;
         }
         
         @keyframes slideUp {

@@ -20,7 +20,7 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
                  "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial,
                  sans-serif;
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -125,13 +125,13 @@ body::-webkit-scrollbar-thumb:hover {
     gap: 8px;
     margin-bottom: 6px;
     color: var(--a-primary);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     letter-spacing: 0.01em;
 }
 
 .page-breadcrumb i {
-    font-size: 9px;
+    font-size: var(--a-fs-micro);
     color: var(--a-primary);
 }
 
@@ -141,7 +141,7 @@ body::-webkit-scrollbar-thumb:hover {
     gap: 12px;
     margin: 0 0 6px;
     color: var(--a-primary);
-    font-size: 24px;
+    font-size: var(--a-fs-display);
     font-weight: 700;
     line-height: 1.3;
     letter-spacing: -0.02em;
@@ -156,15 +156,15 @@ body::-webkit-scrollbar-thumb:hover {
     flex: 0 0 38px;
     background: var(--admin-primary-soft);
     border: 1px solid var(--admin-primary-border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     color: var(--admin-primary);
-    font-size: 16px;
+    font-size: var(--a-fs-body);
 }
 
 .page-subtitle {
     margin: 0;
     color: var(--admin-muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     line-height: 1.6;
 }
 
@@ -186,14 +186,14 @@ body::-webkit-scrollbar-thumb:hover {
     border: 1px solid var(--admin-border);
     border-radius: 999px;
     color: var(--admin-text-secondary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     white-space: nowrap;
 }
 
 .meta-pill i {
     color: var(--admin-primary);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
 }
 
 .meta-pill.is-success {
@@ -238,7 +238,7 @@ body::-webkit-scrollbar-thumb:hover {
     }
 
     .page-title {
-        font-size: 21px;
+        font-size: var(--a-fs-heading);
     }
 }
 
@@ -266,14 +266,14 @@ body::-webkit-scrollbar-thumb:hover {
     gap: 9px;
     margin: 0;
     color: var(--a-primary);
-    font-size: 20px;
+    font-size: var(--a-fs-title-lg);
     font-weight: 700;
     letter-spacing: -0.01em;
 }
 
 .navbar-top .navbar-brand i {
     color: var(--admin-primary);
-    font-size: 17px;
+    font-size: var(--a-fs-title);
 }
 
 .navbar-top .user-info {
@@ -292,7 +292,7 @@ body::-webkit-scrollbar-thumb:hover {
     }
 
     .navbar-top .navbar-brand {
-        font-size: 18px;
+        font-size: var(--a-fs-title);
     }
 }
 
@@ -337,7 +337,7 @@ body::-webkit-scrollbar-thumb:hover {
     gap: 9px;
     margin: 0;
     color: var(--admin-text);
-    font-size: 15px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     line-height: 1.4;
 }
@@ -351,20 +351,20 @@ body::-webkit-scrollbar-thumb:hover {
 .card-header h5 i,
 .card-header h6 i {
     color: var(--admin-primary);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
 }
 
 .card-header .card-subtitle {
     display: block;
     margin-top: 4px;
     color: var(--admin-muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 400;
 }
 
 .card-header-link {
     color: var(--admin-primary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     white-space: nowrap;
 }
@@ -431,7 +431,7 @@ body::-webkit-scrollbar-thumb:hover {
 .card.border-danger p,
 .card.border-info p {
     color: var(--admin-muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 @media (max-width: 768px) {
@@ -449,11 +449,11 @@ body::-webkit-scrollbar-thumb:hover {
 .stat-icon {
     width: 52px;
     height: 52px;
-    border-radius: 18px;
+    border-radius: var(--a-radius-lg);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 21px;
+    font-size: var(--a-fs-heading);
     flex-shrink: 0;
 }
 
@@ -505,7 +505,7 @@ body::-webkit-scrollbar-thumb:hover {
 .card-subtitle {
     margin-top: 0 !important;
     color: var(--admin-muted) !important;
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     letter-spacing: 0.01em;
 }
@@ -536,7 +536,7 @@ body::-webkit-scrollbar-thumb:hover {
 .system-info-item {
     padding: 11px 0;
     border-bottom: 1px solid var(--admin-border-soft);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 .system-info-item:last-child {
@@ -580,7 +580,7 @@ body::-webkit-scrollbar-thumb:hover {
     margin-bottom: 0;
     border-color: var(--admin-border-soft);
     color: var(--admin-text-secondary);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     vertical-align: middle;
 }
 
@@ -597,7 +597,7 @@ body::-webkit-scrollbar-thumb:hover {
     border-top: 0;
     border-bottom: 1px solid var(--admin-border) !important;
     color: var(--a-primary);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     line-height: 1.4;
     letter-spacing: 0.035em;
@@ -635,9 +635,9 @@ body::-webkit-scrollbar-thumb:hover {
     min-width: 30px;
     padding: 2px 7px;
     background: var(--primary-soft);
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     color: var(--a-primary);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
@@ -647,13 +647,13 @@ body::-webkit-scrollbar-thumb:hover {
     align-items: center;
     gap: 7px;
     color: var(--admin-muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     white-space: nowrap;
 }
 
 .table .cell-date i {
     color: var(--a-primary);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
 }
 
 .table .sort-chip {
@@ -664,9 +664,9 @@ body::-webkit-scrollbar-thumb:hover {
     padding: 2px 8px;
     background: var(--primary-soft);
     border: 1px solid var(--admin-border);
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     color: var(--admin-text-secondary);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
@@ -680,7 +680,7 @@ body::-webkit-scrollbar-thumb:hover {
 .table .dataTables_empty {
     padding: 44px 20px !important;
     color: var(--admin-muted);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     text-align: center;
 }
 
@@ -727,7 +727,7 @@ body::-webkit-scrollbar-thumb:hover {
     gap: 8px;
     margin: 0;
     color: var(--admin-muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     white-space: nowrap;
 }
@@ -742,7 +742,7 @@ body::-webkit-scrollbar-thumb:hover {
     border: 1px solid var(--admin-border-strong);
     border-radius: var(--admin-radius-sm);
     color: var(--admin-text-secondary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     cursor: pointer;
 
@@ -769,7 +769,7 @@ body::-webkit-scrollbar-thumb:hover {
     border: 1px solid var(--admin-border-strong);
     border-radius: var(--admin-radius-sm);
     color: var(--admin-text);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 
     transition: border-color 0.18s ease;
 }
@@ -788,7 +788,7 @@ body::-webkit-scrollbar-thumb:hover {
 .dataTables_wrapper .dataTables_info {
     padding-top: 4px;
     color: var(--admin-muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     line-height: 36px;
 }
 
@@ -820,9 +820,9 @@ body::-webkit-scrollbar-thumb:hover {
     padding: 0 11px;
     background: transparent;
     border: 1px solid transparent !important;
-    border-radius: 8px !important;
+    border-radius: var(--a-radius-sm) !important;
     color: var(--a-primary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     line-height: 1;
     transition: background-color 0.16s ease, color 0.16s ease,
@@ -861,7 +861,7 @@ body::-webkit-scrollbar-thumb:hover {
     border-radius: var(--admin-radius-md);
 
     color: var(--admin-text-secondary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 /* DataTables 排序箭头：替换默认图片 */
@@ -967,14 +967,14 @@ table.dataTable thead > tr > th.sorting_desc {
    -------------------------------------------------------------------------- */
 
 .btn {
-    --bs-btn-border-radius: 11px;
+    --bs-btn-border-radius: var(--a-radius-md);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
     padding: 0.55rem 1rem;
-    border-radius: 11px;
-    font-size: 14px;
+    border-radius: var(--a-radius-md);
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     line-height: 1.5;
     transition: background-color 0.18s ease, border-color 0.18s ease,
@@ -989,14 +989,14 @@ table.dataTable thead > tr > th.sorting_desc {
 
 .btn-sm {
     padding: 0.35rem 0.7rem;
-    border-radius: 8px;
-    font-size: 13px;
+    border-radius: var(--a-radius-sm);
+    font-size: var(--a-fs-caption);
 }
 
 .btn-lg {
     padding: 0.7rem 1.25rem;
-    border-radius: 11px;
-    font-size: 15px;
+    border-radius: var(--a-radius-md);
+    font-size: var(--a-fs-caption);
 }
 
 .btn-block,
@@ -1165,8 +1165,8 @@ table.dataTable thead > tr > th.sorting_desc {
     height: 34px;
     padding: 0;
     border: 1px solid transparent;
-    border-radius: 8px;
-    font-size: 13px;
+    border-radius: var(--a-radius-sm);
+    font-size: var(--a-fs-caption);
     line-height: 1;
 }
 
@@ -1210,7 +1210,7 @@ table.dataTable thead > tr > th.sorting_desc {
 
 .btn-group > .btn {
     margin-left: 0 !important;
-    border-radius: 8px !important;
+    border-radius: var(--a-radius-sm) !important;
 }
 
 .btn-group-sm > .btn {
@@ -1220,25 +1220,31 @@ table.dataTable thead > tr > th.sorting_desc {
     width: 32px;
     height: 32px;
     padding: 0;
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 /* 快速操作 */
-.quick-action-btn {
-    padding: 14px 10px;
+/* .btn 同为单类选择器且写在后面，这里用 a.btn 提高一级特异性，
+   否则 14px 左右内边距会把"添加分类"四字挤到折行。 */
+a.quick-action-btn {
+    padding: 14px 4px;
     border: 1px solid var(--admin-border) !important;
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--admin-surface);
     color: var(--admin-text-secondary) !important;
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     line-height: 1.5;
+    /* 四个汉字在 6 列栅格里正好卡在折行临界值，强制单行并允许收缩 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     transition: var(--admin-transition);
 }
 
 .quick-action-btn i {
     color: var(--admin-primary);
-    font-size: 24px;
+    font-size: var(--a-fs-display);
     transition: transform 0.2s ease;
 }
 
@@ -1261,7 +1267,7 @@ table.dataTable thead > tr > th.sorting_desc {
 .form-label {
     margin-bottom: 0.45rem;
     color: var(--admin-text-secondary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     letter-spacing: 0.01em;
 }
@@ -1274,7 +1280,7 @@ table.dataTable thead > tr > th.sorting_desc {
     border: 1px solid var(--admin-border-strong);
     border-radius: var(--admin-radius-sm);
     color: var(--admin-text);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
 
     transition: border-color 0.18s ease,
                 background-color 0.18s ease;
@@ -1309,7 +1315,7 @@ small.text-muted,
 
 .form-text {
     margin-top: 0.4rem;
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
 }
 
 .input-group-text {
@@ -1318,7 +1324,7 @@ small.text-muted,
     border: 1px solid var(--admin-border-strong);
     border-radius: var(--admin-radius-sm);
     color: var(--a-primary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 .input-group > .form-control:not(:first-child),
@@ -1364,7 +1370,7 @@ small.text-muted,
 
 .form-check-label {
     color: var(--admin-text-secondary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 .form-switch .form-check-input {
@@ -1387,14 +1393,14 @@ small.text-muted,
     border-left-width: 3px;
     border-radius: var(--admin-radius-md);
     color: var(--admin-text-secondary);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
 
 }
 
 .alert .btn-close {
     margin-left: auto;
     padding: 0.7rem;
-    font-size: 10px;
+    font-size: var(--a-fs-micro);
 
 }
 
@@ -1437,7 +1443,7 @@ small.text-muted,
     gap: 4px;
     padding: 0.32em 0.7em;
     border-radius: 999px;
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     line-height: 1.5;
 }
@@ -1495,7 +1501,7 @@ small.text-muted,
     border: 1px solid var(--admin-border);
     border-radius: 999px;
     color: var(--admin-muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     white-space: nowrap;
 }
@@ -1506,7 +1512,7 @@ small.text-muted,
 }
 
 .page-link {
-    border-radius: 8px !important;
+    border-radius: var(--a-radius-sm) !important;
 }
 
 .dropdown-menu {
@@ -1514,9 +1520,9 @@ small.text-muted,
     padding: 6px;
     background: var(--admin-surface);
     border: 1px solid var(--admin-border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
 
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 .dropdown-item {
@@ -1524,9 +1530,9 @@ small.text-muted,
     align-items: center;
     gap: 8px;
     padding: 8px 10px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     color: var(--admin-text-secondary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 .dropdown-item:hover,
@@ -1556,7 +1562,7 @@ small.text-muted,
     border: 1px solid var(--admin-border) !important;
     border-radius: 999px !important;
     color: var(--admin-text-secondary) !important;
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 .page-header .dropdown .btn:hover {
@@ -1589,9 +1595,9 @@ small.text-muted,
 .nav-tabs .nav-link {
     padding: 9px 14px;
     border: 1px solid transparent;
-    border-radius: 11px 11px 0 0;
+    border-radius: var(--a-radius-md) var(--a-radius-md) 0 0;
     color: var(--admin-muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
 }
 
@@ -1619,7 +1625,7 @@ small.text-muted,
 }
 
 .swal2-popup {
-    border-radius: 18px !important;
+    border-radius: var(--a-radius-lg) !important;
     font-family: inherit !important;
 }
 
@@ -1658,7 +1664,7 @@ small.text-muted,
 body {
     background: var(--admin-bg);
     color: var(--admin-text-secondary);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     letter-spacing: 0.005em;
 }
 
@@ -1695,18 +1701,18 @@ body {
 .sidebar-brand h4 {
     gap: 10px;
     color: var(--admin-text) !important;
-    font-size: 15px;
-    font-weight: 650;
+    font-size: var(--a-fs-caption);
+    font-weight: 600;
     letter-spacing: -0.01em;
 }
 
 .sidebar-brand .logo-icon {
     width: 30px;
     height: 30px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--a-primary);
     color: var(--a-white);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
 
 }
 
@@ -1737,7 +1743,7 @@ body {
     padding: 0 10px;
     border-radius: var(--admin-radius-sm);
     color: var(--admin-text-secondary) !important;
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     transition: var(--admin-transition);
 }
@@ -1745,7 +1751,7 @@ body {
 .sidebar-nav .nav-link i {
     width: 16px;
     color: var(--admin-muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     text-align: center;
     transition: var(--admin-transition);
 }
@@ -1788,7 +1794,7 @@ body {
     border-radius: 0px;
     background: var(--admin-danger) !important;
     color: var(--a-white) !important;
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     line-height: 1.5;
 }
@@ -1845,17 +1851,17 @@ body {
     flex: 0 0 32px;
     width: 32px;
     height: 32px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--a-primary);
 
     color: var(--a-white);
-    font-size: 13px;
-    font-weight: 650;
+    font-size: var(--a-fs-caption);
+    font-weight: 600;
 }
 
 .sidebar-footer .user-name {
     color: var(--admin-text);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
@@ -1866,7 +1872,7 @@ body {
 .sidebar-footer .user-time .text,
 .sidebar-footer .user-time i {
     color: var(--admin-text-secondary);
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
 }
 
 /* --------------------------------------------------------------------------
@@ -1889,7 +1895,7 @@ body {
 .page-breadcrumb {
     margin: 0 0 4px;
     color: var(--admin-muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
 }
 
 .page-title {
@@ -1898,8 +1904,8 @@ body {
     gap: 9px;
     margin: 0;
     color: var(--admin-text);
-    font-size: 19px;
-    font-weight: 680;
+    font-size: var(--a-fs-title-lg);
+    font-weight: 600;
     letter-spacing: -0.015em;
     line-height: 1.3;
 }
@@ -1911,16 +1917,16 @@ body {
     flex: 0 0 auto;
     width: 30px;
     height: 30px;
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     background: var(--admin-primary-soft);
     color: var(--admin-primary);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
 }
 
 .page-subtitle {
     margin: 5px 0 0;
     color: var(--admin-muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     line-height: 1.5;
 }
 
@@ -1933,7 +1939,7 @@ body {
     border: 0;
     background: transparent;
     color: var(--admin-muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 /* --------------------------------------------------------------------------
@@ -1965,14 +1971,14 @@ body {
 .card-header .card-title {
     margin: 0;
     color: var(--admin-text);
-    font-size: 14px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
 }
 
 .card-header h5 i {
     margin-right: 6px;
     color: var(--admin-primary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 .card-body {
@@ -1998,15 +2004,15 @@ body {
 .card.stat-card .card-subtitle {
     margin: 0 0 4px !important;
     color: var(--admin-muted) !important;
-    font-size: 12px;
-    font-weight: 550;
+    font-size: var(--a-fs-fine);
+    font-weight: 600;
 }
 
 .card.stat-card .card-title {
     margin: 0 !important;
     color: var(--admin-text);
-    font-size: 27px;
-    font-weight: 680;
+    font-size: var(--a-fs-lead);
+    font-weight: 600;
     letter-spacing: -0.03em;
     line-height: 1.1;
 }
@@ -2014,8 +2020,8 @@ body {
 .card.stat-card small {
     display: inline-block;
     margin-top: 4px;
-    font-size: 12px;
-    font-weight: 550;
+    font-size: var(--a-fs-fine);
+    font-weight: 600;
 }
 
 .card.stat-card small.text-success {
@@ -2030,15 +2036,15 @@ body {
     flex: 0 0 38px !important;
     width: 38px !important;
     height: 38px !important;
-    border-radius: 11px !important;
+    border-radius: var(--a-radius-md) !important;
     background: var(--admin-primary-soft) !important;
 
-    font-size: 15px !important;
+    font-size: var(--a-fs-caption) !important;
 }
 
 .card.stat-card .stat-icon i {
     color: var(--admin-primary) !important;
-    font-size: 15px !important;
+    font-size: var(--a-fs-caption) !important;
     line-height: 1;
 }
 
@@ -2073,7 +2079,7 @@ body {
 .table {
     margin: 0;
     color: var(--admin-text-secondary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 .table > :not(caption) > * > * {
@@ -2086,7 +2092,7 @@ body {
     border-bottom: 1px solid var(--admin-border) !important;
     background: transparent;
     color: var(--admin-muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     font-weight: 600;
     letter-spacing: 0.03em;
     white-space: nowrap;
@@ -2113,11 +2119,11 @@ body {
 .table td small,
 .table td .text-muted {
     color: var(--admin-muted) !important;
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
 }
 
 .table img {
-    border-radius: 8px;
+    border-radius: var(--a-radius-sm);
     object-fit: cover;
     background: var(--admin-bg);
 }
@@ -2167,8 +2173,8 @@ body {
     border-radius: 0px;
     background: var(--admin-primary-soft);
     color: var(--admin-primary);
-    font-size: 11px;
-    font-weight: 550;
+    font-size: var(--a-fs-fine);
+    font-weight: 600;
 }
 
 .table .cell-tree .badge {
@@ -2189,7 +2195,7 @@ body {
 .table .category-remark {
     margin-top: 2px;
     color: var(--admin-muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     line-height: 1.4;
 }
 
@@ -2200,8 +2206,8 @@ body {
 .btn {
     border-radius: var(--admin-radius-sm);
     padding: 7px 14px;
-    font-size: 13px;
-    font-weight: 550;
+    font-size: var(--a-fs-caption);
+    font-weight: 600;
     line-height: 1.45;
     transition: var(--admin-transition);
 }
@@ -2251,7 +2257,7 @@ body {
 
 .btn-sm {
     padding: 5px 10px;
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
 }
 
 /* 行内操作按钮：默认收灰，悬浮才亮。
@@ -2263,7 +2269,7 @@ body {
     border-radius: var(--admin-radius-sm);
     background: transparent;
     color: var(--admin-muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     transition: var(--admin-transition);
 }
 
@@ -2323,8 +2329,8 @@ td .btn-action + .btn-action {
 .form-label {
     margin-bottom: 5px;
     color: var(--admin-text-secondary);
-    font-size: 13px;
-    font-weight: 550;
+    font-size: var(--a-fs-caption);
+    font-weight: 600;
 }
 
 .form-control,
@@ -2335,7 +2341,7 @@ td .btn-action + .btn-action {
     border-radius: var(--admin-radius-sm);
     background: var(--admin-raised);
     color: var(--admin-text);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     transition: border-color 0.16s var(--admin-ease);
 }
 
@@ -2359,7 +2365,7 @@ td .btn-action + .btn-action {
 
 .form-text {
     color: var(--admin-muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
 }
 
 /* 工具栏里的 select 不应撑满整行（Bootstrap 默认 width:100%） */
@@ -2400,8 +2406,8 @@ td .btn-action + .btn-action {
 .badge {
     padding: 2px 8px;
     border-radius: 0px;
-    font-size: 11px;
-    font-weight: 550;
+    font-size: var(--a-fs-fine);
+    font-weight: 600;
 }
 
 .badge.bg-success,
@@ -2439,7 +2445,7 @@ td .btn-action + .btn-action {
     border-radius: var(--admin-radius-md);
     background: var(--admin-raised);
     color: var(--admin-text-secondary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 .alert-success {
@@ -2477,7 +2483,7 @@ td .btn-action + .btn-action {
     border-radius: var(--admin-radius-sm) !important;
     background: transparent;
     color: var(--admin-text-secondary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     text-align: center;
     transition: var(--admin-transition);
 }
@@ -2508,7 +2514,7 @@ td .btn-action + .btn-action {
     border: 1px solid var(--admin-border);
     border-radius: var(--admin-radius-sm);
     background: var(--admin-raised);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 .dataTables_wrapper .dataTables_filter input:focus {
@@ -2523,14 +2529,14 @@ td .btn-action + .btn-action {
     padding: 3px 26px 3px 9px;
     border: 1px solid var(--admin-border);
     border-radius: var(--admin-radius-sm);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 .dataTables_wrapper .dataTables_info,
 .dataTables_wrapper .dataTables_length,
 .dataTables_wrapper .dataTables_filter {
     color: var(--admin-muted);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
 }
 
 /* --------------------------------------------------------------------------
@@ -2548,11 +2554,11 @@ td .btn-action + .btn-action {
     }
 
     .page-title {
-        font-size: 17px;
+        font-size: var(--a-fs-title);
     }
 
     .card.stat-card .card-title {
-        font-size: 23px;
+        font-size: var(--a-fs-display);
     }
 }
 
@@ -2587,7 +2593,7 @@ td .btn-action + .btn-action {
     .form-control,
     .form-select {
         min-height: 40px;
-        font-size: 14px;
+        font-size: var(--a-fs-caption);
     }
 }
 
@@ -2619,14 +2625,14 @@ td .btn-action + .btn-action {
     max-width: none;
     overflow: visible;
     padding: 1px 6px !important;
-    font-size: 11px !important;
+    font-size: var(--a-fs-fine) !important;
     font-variant-numeric: tabular-nums;
     text-overflow: clip;
     white-space: nowrap;
 }
 
 .table .cell-tree .badge-count i {
-    font-size: 9px;
+    font-size: var(--a-fs-micro);
     opacity: 0.72;
 }
 
@@ -2635,7 +2641,7 @@ td .btn-action + .btn-action {
     min-width: 20px;
     height: 19px;
     padding: 0 4px;
-    font-size: 10px;
+    font-size: var(--a-fs-micro);
 }
 
 /* 名称本身允许省略 */
@@ -2649,7 +2655,7 @@ td .btn-action + .btn-action {
     width: 44px;
     padding-left: 12px !important;
     padding-right: 4px !important;
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
     color: var(--admin-muted);
 }
 
@@ -2657,7 +2663,7 @@ td .btn-action + .btn-action {
 #categoriesTable td:nth-child(7) {
     padding-left: 8px !important;
     padding-right: 8px !important;
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
     white-space: nowrap;
 }
 
@@ -2712,7 +2718,7 @@ td .btn-action + .btn-action {
 .admin-page-body .table-responsive td .btn-action {
     width: 28px;
     height: 28px;
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
 }
 
 .admin-page-body .table-responsive td .btn-action + .btn-action {
@@ -2778,7 +2784,7 @@ td .btn-action + .btn-action {
 }
 
 #navLinksTable .health-latency {
-    font-size: 11px !important;
+    font-size: var(--a-fs-fine) !important;
     font-variant-numeric: tabular-nums;
     color: var(--admin-muted);
 }
@@ -2810,7 +2816,7 @@ td .btn-action + .btn-action {
     padding-right: 4px !important;
     font-variant-numeric: tabular-nums;
     color: var(--admin-muted);
-    font-size: 12px;
+    font-size: var(--a-fs-fine);
 }
 
 #navLinksTable tbody td:nth-child(3) {
@@ -2820,7 +2826,7 @@ td .btn-action + .btn-action {
 /* 分类/归属/状态三列的徽标统一收紧 */
 #navLinksTable tbody td .badge {
     padding: 2px 7px !important;
-    font-size: 11px !important;
+    font-size: var(--a-fs-fine) !important;
     font-weight: 600 !important;
     border-radius: 0px !important;
     white-space: nowrap;
@@ -2897,7 +2903,7 @@ td .btn-action + .btn-action {
     display: block;
     max-width: 100%;
     overflow: hidden;
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -2906,7 +2912,7 @@ td .btn-action + .btn-action {
     display: block;
     max-width: 100%;
     overflow: hidden;
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -2943,7 +2949,7 @@ td .btn-action + .btn-action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
+    font-size: var(--a-fs-micro);
     border-radius: 0px;
     vertical-align: middle;
 }
@@ -2954,8 +2960,8 @@ td .btn-action + .btn-action {
     width: 34px !important;
     height: 34px !important;
     min-width: 34px;
-    border-radius: 8px !important;
-    font-size: 14px !important;
+    border-radius: var(--a-radius-sm) !important;
+    font-size: var(--a-fs-caption) !important;
 }
 
 #navLinksTable tbody td:nth-child(4) .logo-placeholder.me-3,
@@ -2967,7 +2973,7 @@ td .btn-action + .btn-action {
 #navLinksTable > tbody > tr > td:nth-child(10) .btn-action {
     width: 26px;
     height: 26px;
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
 }
 
 #navLinksTable > tbody > tr > td:nth-child(10) .btn-action + .btn-action {
@@ -2988,7 +2994,7 @@ td .btn-action + .btn-action {
     border-radius: 50%;
     background: var(--a-primary);
     color: var(--a-white);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     font-weight: 600;
     letter-spacing: 0.02em;
 
@@ -3208,10 +3214,10 @@ html[data-theme="dark"] .char-count { color: var(--admin-muted) !important; }
     margin-bottom: 10px;
     padding: 9px 12px;
     border: 1px solid var(--admin-border);
-    border-radius: 11px;
+    border-radius: var(--a-radius-md);
     background: var(--admin-surface-2);
     color: var(--admin-text-secondary);
-    font-size: 13px;
+    font-size: var(--a-fs-caption);
     cursor: pointer;
     transition: background-color 0.18s ease, color 0.18s ease;
 }
@@ -3244,7 +3250,7 @@ html[data-theme="dark"] .sidebar-footer .site-quick-links.is-admin { color: var(
 .sidebar.collapsed .sidebar-footer .site-quick-links.is-admin a:last-of-type { font-size: 0; padding: 4px; }
 .sidebar.collapsed .sidebar-footer .site-quick-links.is-admin a:last-of-type::after {
     content: 'API';
-    font-size: 11px;
+    font-size: var(--a-fs-fine);
     letter-spacing: .3px;
 }
 
