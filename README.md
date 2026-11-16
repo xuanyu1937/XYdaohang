@@ -72,9 +72,9 @@
 
 - 找不到对应段落时：**覆盖代码文件 → 清理 `cache/` → 强制刷新（Ctrl+F5）** 即可
 - `upgrade_*.sql` 多为幂等 UPDATE / 索引脚本；`upgrade_v2.18.1.sql` 中的 `ADD COLUMN` 在列已存在时会报 `Duplicate column`，忽略即可
-- 数据库变更版本只有两个：`v2.16.0`（`upgrade_v2.16.0.sql`，两个索引）与 `v2.18.1`（`upgrade_v2.18.1.sql`，`skipped` 枚举 + `skip_check` 列）；**v2.18.2 / v2.18.3 / v2.18.4 / v2.18.5 / v2.18.6 / v2.18.7 / v2.18.8 / v2.18.9 无任何数据库变更**
+- 数据库变更版本只有两个：`v2.16.0`（`upgrade_v2.16.0.sql`，两个索引）与 `v2.18.1`（`upgrade_v2.18.1.sql`，`skipped` 枚举 + `skip_check` 列）；**v2.18.2 / v2.18.3 / v2.18.4 / v2.18.5 / v2.18.6 / v2.18.7 / v2.18.8 / v2.18.9 / v2.18.10 无任何数据库变更**
 
-### 升级到当前版本 v2.18.9（2026-11-15）
+### 升级到当前版本 v2.18.10（2026-11-15）
 
 | 你的当前版本 | 需要执行的 SQL | 说明 |
 | --- | --- | --- |
@@ -82,7 +82,7 @@
 | v2.18.0 及更早 | `upgrade_v2.18.1.sql` | 先执行 SQL，再覆盖文件 |
 | v2.15.2 及更早 | `upgrade_v2.16.0.sql` + `upgrade_v2.18.1.sql` | 按版本顺序各执行一次 |
 
-> 已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，升到 v2.18.2 ~ v2.18.9 **不需要再执行任何 SQL**。全新安装直接用 `install/install.sql`（v2.18.4 修订已内置 `skip_check` 列与 `skipped` 枚举）。
+> 已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，升到 v2.18.2 ~ v2.18.10 **不需要再执行任何 SQL**。全新安装直接用 `install/install.sql`（v2.18.4 修订已内置 `skip_check` 列与 `skipped` 枚举）。
 
 **v2.18.x 版本序列**（完整清单见 [CHANGELOG.md](CHANGELOG.md) / [UPLOAD_LIST.md](UPLOAD_LIST.md)）：
 
@@ -96,6 +96,7 @@
 | v2.18.5 | 星标可取消且按浏览者计算、加载更多测速、文字对比度、后台浅色侧栏、表单可访问名、筛选栏焦点冲突、响应头与 CSP |
 | v2.18.6 | 卡片菜单两页统一 7 项并修手机端缺项、手机端 logo 放大、顶部按钮与用户下拉跨页统一、暗色对比度补强 |
 | v2.18.7 | 移动端首屏节奏：搜索区到分类标签间距 54→12px、sticky 吸顶无缝隙、桌面间距保持不变 |
+| v2.18.10 | 版式层改造收尾：后台登录页补引入样式表（P0）、皮肤选择器下线（P1）、画布满屏白 + 统一分节语法（P1）、交互与排版九项（P2） |
 | v2.18.9 | 无障碍收尾：覆盖页面扩至 28 页，修 `apply.php` 4 个 critical（表单标签关联/select 命名）与 8 处对比度不足 |
 | v2.18.8 | 全站苹果风格统一：单一 token 源、交互色收敛 `#0066cc`、渐变/阴影/3D/spring 下线、圆角五档、正文 17px/1.47、状态色中性化 |
 
@@ -213,7 +214,7 @@
 - 完整变更记录见 [CHANGELOG.md](CHANGELOG.md)
 - 版本发布与安装包下载见 [Releases](https://github.com/xuanyu1937/XYdaohang/releases)
 
-当前版本：`VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` = **2.18.9**（2026-11-15）；静态资源 `?v=` 与 PWA 缓存名同为 `2.18.9`。
+当前版本：`VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` = **2.18.10**（2026-11-15）；静态资源 `?v=` 与 PWA 缓存名同为 `2.18.10`。
 
 ## 📄 许可证
 

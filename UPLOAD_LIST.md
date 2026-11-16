@@ -1,31 +1,51 @@
-# 轩宇-导航 部署清单（当前版本 v2.18.9）
+# 轩宇-导航 部署清单（当前版本 v2.18.10）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：**v2.18.9**（2026-11-15）
+当前版本：**v2.18.10**（2026-11-15）
 
-> **v2.18.9 无障碍收尾补丁**：v2.18.8 上线后把**此前未覆盖的 12 个页面**纳入浏览器级 axe 扫描，清出 8 类问题，其中 `apply.php` 有 **4 个 critical**（6 个表单标签无 `for` 关联、分类下拉框无可访问名称——点标签无法聚焦、读屏读不出名称）。本版只改颜色值与表单关联属性，**不动业务逻辑，无 SQL 变更**。
-> **累计无障碍覆盖 28 页 × 明暗主题，0 违规。**
+> **v2.18.10 版式层改造收尾**：v2.18.9 换完了变量层，但版式层仍是「米白底 + 白卡片」。本版把结构彻底改成**满屏分节 + 组件卡**，并修掉已确认的交互与排版偏差。分三个提交：P0 后台登录页样式崩溃（**全文没有一行 `<link rel="stylesheet">`，内联 style 里的 `var(--a-*)` 全部失效**）、P1 版式层三处规范冲突（皮肤选择器点击无效、画布色、分节语法）、P2 交互与排版九项。**只动表现层，不碰后端权限、路由、SQL、会话逻辑。**
+> **累计无障碍覆盖 28 页 × 明暗主题 + 本版 8 页 × 2 视图，0 违规。**
 
 ## ⚠️ 升级须知（三步）
 
-1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.9 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
-2. **后台「系统工具 → 在线更新」上传 v2.18.9 更新包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
-3. **清一次浏览器缓存**（Ctrl+F5）。22 个 PHP 文件的 57 处资源参数已升到 `?v=2.18.9`；`sw.js` 缓存名 `xy-nav-pwa-v2.18.9` 激活时自动清掉旧 PWA 缓存。
+1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.10 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
+2. **后台「系统工具 → 在线更新」上传 v2.18.10 更新包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
+3. **清一次浏览器缓存**（Ctrl+F5）。25 个 PHP 文件的 59 处资源参数已升到 `?v=2.18.10`；`sw.js` 缓存名 `xy-nav-pwa-v2.18.10` 激活时自动清掉旧 PWA 缓存。
 
 **验证是否生效**
 
-- `/api/index.php` 徽章显示 `v2.18.9`；`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php` 均为 2.18.9；
-- 首页 `<head>` 第一个项目样式为 `apple-tokens.css?v=2.18.9`，其后才是 `nav.css?v=2.18.9`；
-- 按钮/链接只有一种蓝 `#0066cc`，页面不再有紫/橙/青皮肤色与渐变 LOGO；
-- 卡片无阴影、圆角统一；正文 17px，行高约 1.47；
-- 在线速度文字与状态点为灰阶（错误态为低调深红）；
-- 首页分组出现明暗交替背景（奇数组白底区块、偶数组米白）；
-- axe-core 扫描 28 个页面（含明暗双主题）：全部 `0` 违规；
-- 360 / 390 / 430 / 768 / 1024 / 1280 / 1366 / 1440 / 1680 / 1920 十档无横向溢出；
-- 全站无装饰渐变、无卡片投影（仅 LOGO 与 favicon 保留规范允许的那一处）。
+- `/api/index.php` 徽章显示 `v2.18.10`；`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php` 均为 2.18.10；
+- 首页 `<head>` 第一个项目样式为 `apple-tokens.css?v=2.18.10`，其后才是 `nav.css?v=2.18.10`；
+- **打开 `admin/login.php`**：「登录后台」是蓝色满宽圆角按钮，品牌标识是 52×52 蓝色圆角方块，输入框有描边与 11px 圆角 —— 与前台 `login.php` 并排形态一致；
+- **亮色 body 纯白 `#ffffff`、暗色纯黑 `#000000`**，米白只出现在交替分节与页脚；
+- 首页热门区是米白满屏带，分组奇偶明暗交替，分组之间无 margin；
+- 列表态站点卡片无底色、无投影，只有一条 hairline 下边框；
+- 主题切换按钮旁**不再有四个彩色小圆点**（皮肤选择器已下线）；
+- 搜索框与内容列左缘对齐（不再居中于整页），上限 720px；
+- 站点名 15px/600、描述 14px、域名与测速 12px；测速「快/一般/慢」全为中性灰，「无法访问」为低调深红；
+- 全站 `box-shadow` 只出现在品牌标识与站点图标；
+- 圆角只出现 0 / 5 / 8 / 11 / 18 / 9999（DevTools 抽查任意组件）；
+- 390px 下站点名独占一行、描述两行，悬浮按钮不压卡片；
+- axe-core 扫描 8 页 × 桌面/移动：全部 `0` 违规；
+- 360 / 390 / 430 / 768 / 1024 / 1280 / 1440 七档无横向溢出。
 
 ## 本版变动文件
+
+### v2.18.10 · 版式层改造收尾（6 个功能文件 + 版本同步，无新增文件，无 SQL）
+
+| 文件 | 说明 |
+| --- | --- |
+| `admin/login.php` | **补引入 `apple-tokens.css` + `admin.css`**（此前全文无任何样式表，`var(--a-*)` 全部失效）；内联 style 从 138 行压到 96 行，只保留布局；控件改用 `.form-control` / `.btn-primary` 通用类 |
+| `assets/css/admin.css` | 末尾追加「后台登录页」段（作用域限定 `.login-card`，避免污染前台同名 `.brand-mark`） |
+| `assets/css/auth.css` | 前台登录页对齐后台：卡 430→420、圆角 11→18、品牌块 44→52、按钮 15px/600、输入框描边 `--border-strong`→`--a-hairline` |
+| `assets/css/apple-tokens.css` | 画布亮 `#ffffff` / 暗 `#000000`；补 `--a-muted`、`--a-fs-subhead`、`--a-radius-xs`；收编 Bootstrap `--bs-border-radius-*`；移动端不再压缩 `--ctl-size` |
+| `assets/css/nav.css` | 热门区改米白满屏带；分组明暗交替；列表态去卡片化；标题层级重排；搜索区左对齐内容列；触控区 40→44；删 hover 位移；测速三档中性化；状态点收敛；窄屏网格卡改两行结构 |
+| `assets/js/nav.js` | 删除整段「配色皮肤」（`skinPicker`/`SKINS`/`applySkin` 等 70 行）；分组计数与标题计数改用 `data-group-total` 与索引同源 |
+| `index.php` / `my.php` | 删除 `#skinPicker` 节点；`data-skin` 固定 `default` 并保留 `localStorage` 容错 |
+| `includes/site_links.php` | 页脚快捷链接 `border-radius: 4px` → `var(--a-radius-xs)`（内联注入，nav.css 覆盖不到） |
+| `sites.php` | 焦点圆角 3→5px；描述 12.5→12px；暗色 `--muted` 改 `#a1a1a6`（修 157 处对比度违规） |
+| `VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` / `sw.js` | 版本号 2.18.10、PWA 缓存名 `xy-nav-pwa-v2.18.10`、59 处资源参数 `?v=2.18.10`、`APP_UPDATE_TIME` 已刷新 |
 
 ### v2.18.9 · 无障碍收尾补丁（12 个文件 + 版本同步，无新增文件，无 SQL）
 
