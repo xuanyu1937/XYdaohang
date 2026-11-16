@@ -109,8 +109,9 @@ $jsonLd = [
 
     <form class="top" action="index.php" method="get" role="search">
         <label for="q" class="lead" style="display:inline-block;margin:0 8px 0 0">站内搜索</label>
-        <input id="q" name="q" type="search" placeholder="输入网站名或域名" style="padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit">
-        <button type="submit" style="padding:6px 14px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit;cursor:pointer">搜索</button>
+        <!-- v2.18.11：内联 6px 圆角不在规范档位（只允许 0/5/8/11/18/9999），改 8px -->
+    <input id="q" name="q" type="search" placeholder="输入网站名或域名" style="padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:transparent;color:inherit">
+        <button type="submit" style="padding:6px 14px;border:1px solid var(--line);border-radius:8px;background:transparent;color:inherit;cursor:pointer">搜索</button>
     </form>
 
     <?php foreach ($categories as $category): ?>
