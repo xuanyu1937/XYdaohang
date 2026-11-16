@@ -1,22 +1,22 @@
-# 轩宇-导航 部署清单（当前版本 v2.18.10）
+# 轩宇-导航 部署清单（当前版本 v2.18.11）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：**v2.18.10**（2026-11-15）
+当前版本：**v2.18.11**（2026-11-16）
 
-> **v2.18.10 版式层改造收尾**：v2.18.9 换完了变量层，但版式层仍是「米白底 + 白卡片」。本版把结构彻底改成**满屏分节 + 组件卡**，并修掉已确认的交互与排版偏差。分三个提交：P0 后台登录页样式崩溃（**全文没有一行 `<link rel="stylesheet">`，内联 style 里的 `var(--a-*)` 全部失效**）、P1 版式层三处规范冲突（皮肤选择器点击无效、画布色、分节语法）、P2 交互与排版九项。**只动表现层，不碰后端权限、路由、SQL、会话逻辑。**
+> **v2.18.11 视觉协调性修复**：v2.18.9 换完了变量层，但版式层仍是「米白底 + 白卡片」。本版把结构彻底改成**满屏分节 + 组件卡**，并修掉已确认的交互与排版偏差。分三个提交：P0 后台登录页样式崩溃（**全文没有一行 `<link rel="stylesheet">`，内联 style 里的 `var(--a-*)` 全部失效**）、P1 版式层三处规范冲突（皮肤选择器点击无效、画布色、分节语法）、P2 交互与排版九项。**只动表现层，不碰后端权限、路由、SQL、会话逻辑。**
 > **累计无障碍覆盖 28 页 × 明暗主题 + 本版 8 页 × 2 视图，0 违规。**
 
 ## ⚠️ 升级须知（三步）
 
-1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.10 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
-2. **后台「系统工具 → 在线更新」上传 v2.18.10 更新包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
-3. **清一次浏览器缓存**（Ctrl+F5）。25 个 PHP 文件的 59 处资源参数已升到 `?v=2.18.10`；`sw.js` 缓存名 `xy-nav-pwa-v2.18.10` 激活时自动清掉旧 PWA 缓存。
+1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.11 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
+2. **后台「系统工具 → 在线更新」上传 v2.18.11 更新包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
+3. **清一次浏览器缓存**（Ctrl+F5）。29 个 PHP 文件的 62 处资源参数已升到 `?v=2.18.11`；`sw.js` 缓存名 `xy-nav-pwa-v2.18.11` 激活时自动清掉旧 PWA 缓存。
 
 **验证是否生效**
 
-- `/api/index.php` 徽章显示 `v2.18.10`；`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php` 均为 2.18.10；
-- 首页 `<head>` 第一个项目样式为 `apple-tokens.css?v=2.18.10`，其后才是 `nav.css?v=2.18.10`；
+- `/api/index.php` 徽章显示 `v2.18.11`；`VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php` 均为 2.18.11；
+- 首页 `<head>` 第一个项目样式为 `apple-tokens.css?v=2.18.11`，其后才是 `nav.css?v=2.18.11`；
 - **打开 `admin/login.php`**：「登录后台」是蓝色满宽圆角按钮，品牌标识是 52×52 蓝色圆角方块，输入框有描边与 11px 圆角 —— 与前台 `login.php` 并排形态一致；
 - **亮色 body 纯白 `#ffffff`、暗色纯黑 `#000000`**，米白只出现在交替分节与页脚；
 - 首页热门区是米白满屏带，分组奇偶明暗交替，分组之间无 margin；
@@ -31,6 +31,15 @@
 - 360 / 390 / 430 / 768 / 1024 / 1280 / 1440 七档无横向溢出。
 
 ## 本版变动文件
+
+### v2.18.11 · 视觉协调性修复（P0/P1/P2 三个提交，无新增文件，无 SQL）
+
+| 提交 | 改动文件 | 影响页面 |
+| --- | --- | --- |
+| P0 `718e9c5` | `assets/css/nav.css`、`assets/css/apple-tokens.css`、`sites.php`、`404.php`、`admin/login.php`、`assets/css/admin.css` | 首页搜索框、sites/404 搜索、登录/后台登录/关于品牌块、移动端列表卡片 |
+| P1 `b5e5203` | `detail.php`、`about.php`、`sites.php`、`assets/css/{apple-tokens,auth,page}.css` | 详情页（重做）、登录/注册/找回/关于浮层卡、关于页 header、索引页暗色 |
+| P2 `7a5d218` | `404.php`、`500.php`、`index.php`、`about.php`、`contact.php`、`share.php`、`sites.php`、`manifest.php`、`assets/css/nav.css`、`assets/js/nav.js` | 全站 theme-color、404/500、移动端分组与热门横滑、首页列表描述 |
+| 版本同步 | `VERSION`、`config/version.php`、`includes/bootstrap.php`、`includes/ConfigManager.php`、`api/index.php`、`sw.js` + 全部 `?v=` | 全站版本号 2.18.11、PWA 缓存名、62 处资源参数 |
 
 ### v2.18.10 · 版式层改造收尾（6 个功能文件 + 版本同步，无新增文件，无 SQL）
 
