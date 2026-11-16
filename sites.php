@@ -66,17 +66,21 @@ $jsonLd = [
     <meta property="og:image" content="<?php echo $functions->escape($baseUrl . '/assets/img/icons/icon-512.png'); ?>">
     <meta name="twitter:card" content="summary">
     <script type="application/ld+json"><?php echo json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?></script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.9">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.10">
     <style>
-        :root { color-scheme: light dark; --fg: var(--a-ink); --muted: var(--a-ink-48-strong); --line: var(--a-hairline); --accent: var(--a-primary); --bg: var(--a-canvas); }
-        @media (prefers-color-scheme: dark) { :root { --fg: var(--a-white); --muted: var(--a-ink-48); --line: rgba(255,255,255,.14); --accent: var(--a-link-on-dark); --bg: var(--a-tile-1); } }
+        :root { color-scheme: light dark; --fg: var(--a-ink); --muted: var(--a-muted); --line: var(--a-hairline); --accent: var(--a-primary); --bg: var(--a-canvas); }
+        /* v2.18.10：本页只按系统偏好切暗色，不走 data-theme。
+           原先暗色下 --muted 取 --a-ink-48(#6e6e73)，对 #272729 只有 2.93:1，
+           axe 报 157 处 color-contrast。改用会跟随主题的 --a-muted，
+           亮色仍是 #5b5b60、暗色为 #a1a1a6，两档都过 4.5:1。 */
+        @media (prefers-color-scheme: dark) { :root { --fg: var(--a-white); --muted: #a1a1a6; --line: rgba(255,255,255,.14); --accent: var(--a-link-on-dark); --bg: var(--a-tile-1); } }
         * { box-sizing: border-box; }
         body { margin: 0; padding: 28px 18px 60px; background: var(--bg); color: var(--fg);
                font: 15px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
         .wrap { max-width: 1080px; margin: 0 auto; }
         a { color: var(--accent); text-decoration: none; }
         a:hover { text-decoration: underline; }
-        a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+        a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 5px; }
         h1 { font-size: 24px; margin: 0 0 6px; }
         .lead { color: var(--muted); margin: 0 0 22px; font-size: 14px; }
         .crumb { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
@@ -88,7 +92,9 @@ $jsonLd = [
         ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px 20px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
         li { min-width: 0; }
         li a { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
-        li .d { color: var(--muted); font-size: 12.5px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        /* v2.18.10：12.5px 不在字号档位（只允许 11/12/14/15/17/21/25…），
+           按规范落到 12px —— 这行属于索引页的次级说明文字。 */
+        li .d { color: var(--muted); font-size: var(--a-fs-fine); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .top { margin-bottom: 18px; }
     </style>
 </head>

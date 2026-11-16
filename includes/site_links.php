@@ -87,7 +87,9 @@ if (!function_exists('siteQuickLinksCss')) {
     color: inherit;
     text-decoration: none;
     padding: 2px 3px;
-    border-radius: 4px;
+    /* v2.18.10：4px 不在规范档位（只允许 0/5/8/11/18/9999），改 5px。
+       本组件样式是内联注入的，nav.css 覆盖不到，只能在这里改。 */
+    border-radius: var(--a-radius-xs, 5px);
     white-space: nowrap;
 }
 .site-quick-links a:hover,
