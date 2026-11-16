@@ -509,7 +509,7 @@ $navJsonLd = [
 ];
 ?>
 <!DOCTYPE html>
-<html lang="zh-CN" data-skin="<?php echo $functions->escape($skin); ?>">
+<html lang="zh-CN" data-skin="default">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -578,10 +578,16 @@ $navJsonLd = [
                         : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
                 root.setAttribute('data-theme', theme);
 
-                var savedSkin = localStorage.getItem('xy-nav-skin');
-                if (['default', 'purple', 'orange', 'mint'].indexOf(savedSkin) !== -1) {
-                    root.setAttribute('data-skin', savedSkin);
-                }
+                /* v2.18.10：皮肤选择器已下线。保留 localStorage 读取容错 ——
+                   老用户浏览器里可能还存着 purple/orange/mint，读到任何值都回落
+                   default，避免 data-skin 停留在已下线的取值上。 */
+                try {
+                    var savedSkin = localStorage.getItem('xy-nav-skin');
+                    if (savedSkin && savedSkin !== 'default') {
+                        localStorage.setItem('xy-nav-skin', 'default');
+                    }
+                } catch (err) {}
+                root.setAttribute('data-skin', 'default');
 
                 var savedMode = localStorage.getItem('xy-nav-mode');
                 if (['grid', 'list', 'compact'].indexOf(savedMode) !== -1) {
@@ -620,9 +626,9 @@ $navJsonLd = [
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.9">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.9">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.9">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.10">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.10">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.10">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -634,7 +640,7 @@ $navJsonLd = [
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.9';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.10';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -654,10 +660,10 @@ $navJsonLd = [
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.9" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.18.10" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.9" defer></script>
-    <script src="assets/js/search.js?v=2.18.9" defer></script>
+    <script src="assets/js/nav.js?v=2.18.10" defer></script>
+    <script src="assets/js/search.js?v=2.18.10" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -707,35 +713,6 @@ $navJsonLd = [
             </div>
 
             <div class="header-tools">
-                <div class="skin-picker" id="skinPicker">
-                    <button type="button" class="tool-btn" id="skinToggle" aria-label="选择配色" title="选择配色" aria-expanded="false">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <circle cx="9" cy="9.5" r="5"></circle>
-                            <circle cx="15" cy="9.5" r="5"></circle>
-                            <circle cx="12" cy="14.5" r="5"></circle>
-                        </svg>
-                    </button>
-                    <div class="skin-menu" id="skinMenu" role="menu" aria-label="配色方案">
-                        <?php
-                        $skinOptions = [
-                            'default' => '经典蓝',
-                            'purple' => '静谧紫',
-                            'orange' => '暖阳橙',
-                            'mint' => '薄荷青',
-                        ];
-                        foreach ($skinOptions as $key => $label): ?>
-                            <button type="button"
-                                    class="skin-option<?php echo $skin === $key ? ' is-active' : ''; ?>"
-                                    role="menuitemradio"
-                                    aria-checked="<?php echo $skin === $key ? 'true' : 'false'; ?>"
-                                    data-skin="<?php echo $key; ?>">
-                                <span class="skin-dot" data-skin="<?php echo $key; ?>" aria-hidden="true"></span>
-                                <?php echo $functions->escape($label); ?>
-                            </button>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
                 <div class="mode-switch" role="group" aria-label="显示方式">
                     <button type="button" class="mode-btn" data-mode="grid" aria-label="网格显示" title="网格显示">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
@@ -1157,7 +1134,7 @@ $navJsonLd = [
                                  data-group-name="<?php echo $functions->escape($section['name']); ?>">
                             <header class="group-head">
                                 <h2 class="group-title"><?php echo $functions->escape($section['name']); ?></h2>
-                                <span class="group-count" data-group-count="<?php echo (int) $section['id']; ?>"><?php echo (int) $section['count']; ?></span>
+                                <span class="group-count" data-group-count="<?php echo (int) $section['id']; ?>" data-group-total="<?php echo (int) $section['count']; ?>"><?php echo (int) $section['count']; ?></span>
                             </header>
 
                             <?php if ($section['cards']): ?>

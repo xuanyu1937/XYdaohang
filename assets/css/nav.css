@@ -226,13 +226,26 @@ svg {
 /* 搜索区：独立于头部，整体居中（左侧引擎选择 / 中间输入框 / 右侧搜索按钮） */
 .search-section {
     display: flex;
-    justify-content: center;
+    /* v2.18.10：原先 center/center 让搜索条居中于整页，与左侧分类栏、
+       右侧内容列的左缘都对不上（1440 下 left=360，内容列 340 / 色带 308）。
+       改为左对齐，与内容列同一基准线。 */
+    justify-content: flex-start;
     /* 纵向排列：提示条必须落在搜索条下方。
        漏写 direction 时会变成 row，提示条和搜索条并排抢宽度，
        搜索条被挤到 100px 宽、整块向右甩。 */
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
+    /* 搜索区在 .site-body 之外，基准是外壳；要让左缘与内容列对齐，
+       需让出左侧分类栏宽度 + 栅格间距 = 238 + 30 */
+    padding-left: calc(238px + 30px);
     margin: 26px 0 30px;
+}
+
+@media (max-width: 960px) {
+    /* 分类栏收起为单列，搜索条回到页面左缘 */
+    .search-section {
+        padding-left: 0;
+    }
 }
 
 /* 提示条跟随搜索条同宽，竖排时不参与水平分配 */
@@ -416,7 +429,9 @@ svg {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    height: calc(var(--search-size, 52px) - 14px);
+    /* v2.18.10：最小 44px —— --search-size 在窄屏被压到 46 时，
+       这里只剩 32px，低于触控下限 */
+    height: max(44px, calc(var(--search-size, 52px) - 14px));
     padding: 0 8px 0 12px;
     border: 0;
     border-radius: 999px;
@@ -548,7 +563,7 @@ svg {
     border-color: var(--primary);
     background: var(--surface);
     color: var(--primary);
-    transform: translateY(-1px);
+    /* v2.18.10：hover 只变颜色，不做位移 */
     outline: 2px solid var(--a-focus);
     outline-offset: 2px;
 }
@@ -643,8 +658,10 @@ html[data-theme="light"] .theme-toggle .icon-sun {
 .rail-close {
     display: none;
     place-items: center;
-    width: 26px;
-    height: 26px;
+    /* v2.18.10：26×26 远低于 44×44 的触控下限，移动端几乎点不中。
+       盒子撑到 44，图标维持 14px 不变，视觉重量不受影响。 */
+    width: 44px;
+    height: 44px;
     padding: 0;
     border: 0;
     border-radius: var(--a-radius-sm);
@@ -766,26 +783,22 @@ html[data-theme="light"] .theme-toggle .icon-sun {
     min-width: 0;
 }
 
+/* v2.18.10：「全部网站」是页面级标题，不是第一个分组 —— 降为 15px，
+   并去掉蓝色圆点（既是第二强调色，又让它看起来像分组的同级项）。 */
 .section-title h2 {
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: 8px;
     margin: 0;
     color: var(--text);
-    font-size: var(--a-fs-title);
+    font-size: var(--a-fs-subhead);
     font-weight: 600;
     line-height: 1.4;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.01em;
 }
 
 .section-title h2::before {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--primary);
-    outline: 3px solid var(--primary-soft);
-    outline-offset: 0;
-    content: "";
+    content: none;
 }
 
 .section-count {
@@ -830,13 +843,13 @@ html[data-theme="light"] .theme-toggle .icon-sun {
     min-height: 118px;
     padding: 16px;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    /* v2.18.10：网格/紧凑态是"组件卡"，圆角归到 18 档；列表态另行覆盖为 0 */
+    border-radius: var(--a-radius-lg);
     background: var(--surface);
     color: var(--text);
 
     cursor: pointer;
-    transition: transform 0.18s ease,
-                border-color 0.18s ease, opacity 0.2s ease, filter 0.2s ease,
+    transition: border-color 0.18s ease, opacity 0.2s ease,
                 background-color 0.2s ease;
 }
 
@@ -863,7 +876,7 @@ html[data-mode="compact"] .site-grid > .site-card {
     border-color: var(--primary-border);
     outline: 2px solid var(--a-focus);
     outline-offset: 2px;
-    transform: translateY(-3px);
+    /* v2.18.10：去掉上浮，只保留描边反馈 */
 }
 
 .site-card:focus-visible {
@@ -910,6 +923,9 @@ html[data-theme="dark"] .site-card.is-offline {
     border: 1px solid var(--border);
     border-radius: var(--a-radius-md);
     background: var(--surface-2);
+    /* v2.18.10：全站只允许两处阴影 —— 品牌标识与站点图标（规格 P1-3）。
+       其余卡片、按钮、面板一律不用投影，层级交给 hairline。 */
+    box-shadow: var(--a-shadow-product);
 }
 
 /* favicon 兜底：域名首字母 + 稳定底色铺满整个图标区。
@@ -955,9 +971,10 @@ html[data-theme="dark"] .site-card.is-offline {
     display: block;
     overflow: hidden;
     color: var(--text);
-    font-size: var(--a-fs-caption);
+    /* v2.18.10：站点名 15px/600（规格 P2-3） */
+    font-size: var(--a-fs-subhead);
     font-weight: 600;
-    line-height: 1.45;
+    line-height: 1.4;
     /* 中文标题不加负字距：em 负字距会让文本测量宽度小于渲染宽度，
        ellipsis 因此误判，明明放得下也会多截掉一个字（「天气预报」→「天气预…」） */
     letter-spacing: 0;
@@ -1036,16 +1053,13 @@ html[data-theme="dark"] .site-card.is-offline {
     content: "";
 }
 
-.site-speed[data-level="fast"] {
-    color: var(--success-text);
-}
-
-.site-speed[data-level="mid"] {
-    color: var(--warning);
-}
-
+/* v2.18.10：测速三档不再用绿/橙/红，统一中性灰 —— 速度只是参考值，
+   用红绿会让整页出现第二、第三强调色，也容易误读成"故障"。
+   仅"无法访问"保留低调深红（对白 6.4:1）。 */
+.site-speed[data-level="fast"],
+.site-speed[data-level="mid"],
 .site-speed[data-level="slow"] {
-    color: var(--danger);
+    color: var(--a-muted);
 }
 
 .site-speed[data-state="error"] {
@@ -1067,8 +1081,8 @@ html[data-theme="dark"] .site-card.is-offline {
 
 .site-card:hover .site-speed,
 .site-card:focus-visible .site-speed {
+    /* v2.18.10：测速与点击量交叉淡出，不做纵向位移 */
     opacity: 0;
-    transform: translateY(3px);
 }
 
 /* 关闭监测时只展示点击量，隐藏测速与状态 */
@@ -1092,37 +1106,21 @@ body[data-monitor="0"] .site-clicks {
     justify-content: center;
 }
 
+/* v2.18.10：状态点与右侧测速文字重复表达"是否可访问"。
+   按规范只保留一个表达 —— 平时不画点，交给「75 毫秒·快 / 内网 / 测速中」文案；
+   只有「无法访问」才用一个低调深红点做强调。
+   DOM 与 data-state 属性保留不动，JS 侧无需改动。 */
 .status-dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: var(--muted-2);
-    outline: 3px solid var(--surface);
-    outline-offset: 0;
+    background: transparent;
+    outline: 0;
     transition: background-color 0.2s ease;
-}
-
-.site-status[data-state="online"] .status-dot {
-    background: var(--success);
-    outline: 3px solid var(--success-soft);
-    outline-offset: 0;
 }
 
 .site-status[data-state="offline"] .status-dot {
     background: var(--danger);
-    outline: 3px solid var(--danger-soft);
-    outline-offset: 0;
-}
-
-.site-status[data-state="pending"] .status-dot {
-    background: var(--muted-2);
-    animation: status-pulse 1.7s ease-in-out infinite;
-}
-
-/* v2.18.1 · 内网 / 跳过检测：灰点，无动画，绝不显示成失败 */
-.site-status[data-state="skipped"] .status-dot {
-    background: var(--muted-2);
-    animation: none;
 }
 
 .site-speed[data-state="skipped"] {
@@ -1156,13 +1154,12 @@ body[data-monitor="0"] .site-clicks {
     content: attr(data-label);
     opacity: 0;
     pointer-events: none;
-    transform: translateY(-2px);
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    /* v2.18.10：只淡入，不做位移 */
+    transition: opacity 0.15s ease;
 }
 
 .site-status:hover::after {
     opacity: 1;
-    transform: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -1276,8 +1273,9 @@ body[data-monitor="0"] .site-clicks {
     z-index: 20;
     display: grid;
     place-items: center;
-    width: 38px;
-    height: 38px;
+    /* v2.18.10：触控目标 44×44 */
+    width: 44px;
+    height: 44px;
     padding: 0;
     border: 1px solid var(--border);
     border-radius: var(--a-radius-md);
@@ -1322,10 +1320,6 @@ body[data-monitor="0"] .site-clicks {
         width: 100%;
     }
 
-    .skin-menu {
-        left: 0;
-        right: auto;
-    }
 }
 
 @media (max-width: 620px) {
@@ -1367,7 +1361,8 @@ body[data-monitor="0"] .site-clicks {
     }
 
     .search-engine-toggle {
-        height: calc(var(--search-size) - 12px);
+        /* v2.18.10：窄屏也不低于 44px 触控下限 */
+        height: max(44px, calc(var(--search-size) - 12px));
         padding: 0 6px 0 10px;
         font-size: var(--a-fs-caption);
     }
@@ -1378,7 +1373,9 @@ body[data-monitor="0"] .site-clicks {
     }
 
     .search-submit {
-        height: calc(var(--search-size) - 8px);
+        /* v2.18.10：同上，至少 44×44 */
+        width: max(44px, calc(var(--search-size) - 8px));
+        height: max(44px, calc(var(--search-size) - 8px));
         padding: 0;
         font-size: var(--a-fs-caption);
     }
@@ -1547,77 +1544,6 @@ body[data-monitor="0"] .site-clicks {
     display: flex;
     align-items: center;
     gap: 8px;
-}
-
-/* 皮肤选择 */
-
-.skin-picker {
-    position: relative;
-}
-
-.skin-menu {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    z-index: 40;
-    display: none;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 150px;
-    padding: 6px;
-    border: 1px solid var(--border);
-    border-radius: var(--a-radius-md);
-    background: var(--surface);
-
-}
-
-.skin-picker.is-open .skin-menu {
-    display: flex;
-}
-
-.skin-option {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 8px 10px;
-    border: 0;
-    border-radius: var(--a-radius-sm);
-    background: transparent;
-    color: var(--text-2);
-    font-size: var(--a-fs-caption);
-    font-family: inherit;
-    text-align: left;
-}
-
-.skin-option:hover {
-    background: var(--surface-2);
-    color: var(--text);
-}
-
-.skin-option.is-active {
-    background: var(--primary-soft);
-    color: var(--primary);
-    font-weight: 600;
-}
-
-.skin-dot {
-    width: 14px;
-    height: 14px;
-    flex: 0 0 14px;
-    border-radius: 50%;
-    background: var(--a-primary);
-}
-
-.skin-dot[data-skin="purple"] {
-    background: var(--a-primary);
-}
-
-.skin-dot[data-skin="orange"] {
-    background: var(--a-primary);
-}
-
-.skin-dot[data-skin="mint"] {
-    background: var(--a-primary);
 }
 
 /* 显示方式切换（顶栏分段控件） */
@@ -1884,11 +1810,17 @@ body[data-monitor="0"] .site-clicks {
 
 .hot-strip {
     --band-bleed: min(18px, max(0px, (100vw - min(100vw, var(--max-width))) / 2));
-    margin: 0 calc(var(--band-bleed) * -1) 10px;
-    padding: 18px var(--band-bleed) 20px;
+    /* v2.18.10：画布改满屏白后，热门区作为第一道"米白满屏带"，
+       与下一节白底形成明暗交替节奏。分节之间不留 margin，靠 padding 撑开。 */
+    margin: 0 calc(var(--band-bleed) * -1);
+    padding: 32px var(--band-bleed) 32px;
     border: 0;
     border-radius: 0;
-    background: var(--surface);
+    background: var(--a-parchment);
+}
+
+html[data-theme="dark"] .hot-strip {
+    background: var(--a-tile-1);
 }
 
 @media (min-width: 1326px) {
@@ -1997,28 +1929,25 @@ body[data-monitor="0"] .site-clicks {
     display: flex;
     align-items: center;
     gap: 9px;
-    margin-bottom: 12px;
+    /* v2.18.10：节标题与卡片之间给足呼吸位（规格：分节靠 28–40px padding 撑开） */
+    margin-bottom: 16px;
 }
 
+/* v2.18.10：分组标题独立成"节标题"，比页面级标题大一档，
+   层级靠字号与分节底色区分，不再用蓝色圆点做装饰。 */
 .group-head h3, .group-head .group-title {
     display: flex;
     align-items: center;
     gap: 9px;
     margin: 0;
     color: var(--text);
-    font-size: var(--a-fs-body);
+    font-size: var(--a-fs-title);
     font-weight: 600;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.02em;
 }
 
 .group-head h3::before, .group-head .group-title::before {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--primary);
-    outline: 3px solid var(--primary-soft);
-    outline-offset: 0;
-    content: "";
+    content: none;
 }
 
 .group-count {
@@ -2069,11 +1998,37 @@ html[data-mode="list"] .site-grid {
     gap: 9px;
 }
 
+/* v2.18.10：列表态不再是一张张白卡片，改为「满屏分节 + 行分隔」
+   透明底 / 0 圆角 / 只有一条下边框；层级由 hairline 承担，不用投影。 */
 html[data-mode="list"] .site-card {
     flex-direction: row;
     align-items: center;
     min-height: 0;
-    padding: 12px 34px 12px 14px;
+    padding: 10px 6px;
+    border: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+html[data-theme="dark"][data-mode="list"] .site-card {
+    border-bottom-color: rgba(255, 255, 255, 0.10);
+}
+
+html[data-mode="list"] .site-card:hover {
+    background: rgba(0, 0, 0, 0.02);
+    outline: 0;
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="dark"][data-mode="list"] .site-card:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom-color: rgba(255, 255, 255, 0.10);
+}
+
+html[data-mode="list"] .site-card:last-child {
+    border-bottom: 0;
 }
 
 html[data-mode="list"] .site-card-main {
@@ -2082,14 +2037,17 @@ html[data-mode="list"] .site-card-main {
 }
 
 html[data-mode="list"] .site-desc {
-    display: block;
+    display: -webkit-box;
     max-width: 64ch;
-    margin-top: 3px;
+    margin-top: 2px;
     overflow: hidden;
-    color: var(--muted);
-    font-size: var(--a-fs-fine);
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    color: var(--a-muted);
+    /* v2.18.10：描述 12px → 14px/1.43，最多两行后省略（规格 P2-3 / P2-8） */
+    font-size: var(--a-fs-caption);
+    line-height: 1.43;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
 }
 
 html[data-mode="list"] .site-meta {
@@ -2173,8 +2131,9 @@ html[data-mode="compact"] .status-dot {
 .float-btn {
     display: grid;
     place-items: center;
-    width: 40px;
-    height: 40px;
+    /* v2.18.10：触控目标不小于 44×44 */
+    width: 44px;
+    height: 44px;
     padding: 0;
     border: 1px solid var(--border);
     border-radius: var(--a-radius-md);
@@ -2558,9 +2517,20 @@ html {
 }
 
 @media (max-width: 620px) {
+    /* v2.18.10：窄屏悬浮组（44×44 两枚按钮，纵向排列共 96px 高）会压在
+       卡片右缘上，挡住测速与星标。按规格把它下移到 bottom 16px，
+       并给站点网格右侧留 56px 安全区（44 + 交互间隙 12），
+       让卡片提前收窄而不是被按钮盖住。 */
     .float-bar {
         right: max(14px, env(safe-area-inset-right));
-        bottom: max(14px, env(safe-area-inset-bottom));
+        bottom: max(16px, env(safe-area-inset-bottom));
+    }
+
+    /* 安全区只加在「右侧还会被按钮压到」的网格视图上；
+       列表态一行到底，按钮本就落在文字下方的空白里，不需要收窄。 */
+    html[data-mode="grid"] #linkSections .site-grid {
+        padding-right: 0;
+        margin-right: 52px;
     }
 
     .page-shell {
@@ -2610,8 +2580,8 @@ html {
 }
 
 .auth-trigger:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.06);
+    /* v2.18.10：改为只变背景色 */
+    background: var(--a-primary-hover);
 }
 
 dialog.auth-modal {
@@ -2760,8 +2730,8 @@ dialog.auth-modal::backdrop {
 }
 
 .auth-submit:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.06);
+    /* v2.18.10：改为只变背景色 */
+    background: var(--a-primary-hover);
 }
 
 .auth-submit:disabled {
@@ -3048,8 +3018,8 @@ dialog.auth-modal::backdrop {
 }
 
 .ss-action:hover {
-    filter: brightness(1.05);
-    transform: translateY(-1px);
+    /* v2.18.10：去掉上浮与提亮滤镜 */
+    background: var(--primary-soft);
 }
 
 .ss-action-alt {
@@ -3071,8 +3041,9 @@ dialog.auth-modal::backdrop {
 .header-search-btn {
     display: grid;
     place-items: center;
-    width: 40px;
-    height: 40px;
+    /* v2.18.10：触控目标不小于 44×44 */
+    width: 44px;
+    height: 44px;
     padding: 0;
     border: 1px solid var(--border);
     border-radius: var(--a-radius-md);
@@ -3192,15 +3163,14 @@ dialog.auth-modal::backdrop {
     gap: 6px;
     pointer-events: none;
     opacity: 0;
-    transform: translateY(-4px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    /* v2.18.10：星标角标只淡入，不做位移 */
+    transition: opacity 0.2s ease;
 }
 
 .site-card:hover .card-corner,
 .site-card:focus-within .card-corner,
 .site-card[data-starred="1"] .card-corner {
     opacity: 1;
-    transform: translateY(0);
 }
 
 .card-corner > * {
@@ -3558,7 +3528,7 @@ dialog.auth-modal::backdrop {
     border-color: var(--primary-border);
     background: var(--primary-soft);
     color: var(--primary);
-    transform: translateY(-1px);
+    /* v2.18.10：hover 不做位移 */
 }
 
 .my-btn svg {
@@ -4171,16 +4141,13 @@ dialog.my-dialog::backdrop {
     }
 
     .header-tools .tool-btn {
-        width: 40px;
-        height: 40px;
+        /* v2.18.10：移动端头部工具按钮触控目标 44×44 */
+        width: 44px;
+        height: 44px;
         border-radius: var(--a-radius-md);
     }
 
     .header-tools .mode-switch {
-        display: none;
-    }
-
-    .header-tools .skin-picker {
         display: none;
     }
 
@@ -5280,18 +5247,18 @@ p,
 
 }
 
-/* 所有头部图标按钮 hover 统一：上浮 1px + 品牌色柔投影 */
+/* 所有头部图标按钮 hover 统一：只给焦点环，不做位移
+   v2.18.10：删除上浮 1px，按下态统一 scale(.95) */
 .header-tools .tool-btn:hover,
 .header-tools .tool-btn:focus-visible,
 .header-tools .mode-btn:hover {
-    transform: translateY(-1px);
     outline: 2px solid var(--a-focus);
     outline-offset: 2px;
 }
 
 .header-tools .tool-btn:active,
 .header-tools .mode-btn:active {
-    transform: translateY(0);
+    transform: scale(0.95);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -5308,10 +5275,6 @@ p,
     /* 覆盖上方同名规则：这两个控件在窄屏保留，改为紧凑形态 */
     .header-tools .mode-switch {
         display: inline-flex;
-    }
-
-    .header-tools .skin-picker {
-        display: block;
     }
 
     .header-tools .mode-switch {
@@ -5332,21 +5295,9 @@ p,
         height: 15px;
     }
 
-    /* 皮肤按钮窄屏同样按 36×36 图标钮处理（tool-btn 已有 36px 规则，此处兜底） */
-    .header-tools .skin-picker .tool-btn {
-        width: 36px;
-        height: 36px;
-        padding: 0;
-    }
-
-    /* 皮肤下拉改为贴右对齐，防止小屏溢出 */
-    .header-tools .skin-menu {
-        right: 0;
-        left: auto;
-    }
 }
 
-/* 最窄档（≤480px）：保留皮肤与主题，显示模式收进不再展示，
+/* 最窄档（≤480px）：保留主题切换，显示模式收进不再展示，
    避免 390px 级别屏幕头部拥挤 */
 @media (max-width: 480px) {
     .header-tools .mode-switch {
@@ -5441,10 +5392,11 @@ p,
     }
 }
 
-/* 主题按钮点击反馈：按压回弹 + 图标旋转进场 */
+/* 主题按钮点击反馈：按下统一 scale(.95)，不做位移
+   v2.18.10：全站按下态口径统一 */
 .theme-toggle:active,
 .header-tools .tool-btn:active {
-    transform: translateY(0) scale(0.95);
+    transform: scale(0.95);
 }
 
 .theme-toggle.is-switching svg {
@@ -5775,7 +5727,8 @@ html[data-mode="grid"] .site-name {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
-    font-size: var(--a-fs-caption);
+    /* v2.18.10：站点名统一 15px/600（规格 P2-3） */
+    font-size: var(--a-fs-subhead);
     font-weight: 600;
     line-height: 1.35;
 }
@@ -5783,9 +5736,11 @@ html[data-mode="grid"] .site-name {
 html[data-mode="grid"] .site-desc {
     display: -webkit-box;
     overflow: hidden;
-    color: var(--muted);
-    font-size: var(--a-fs-fine);
-    line-height: 1.55;
+    color: var(--a-muted);
+    /* v2.18.10：描述 12px → 14px（规格 P2-3：12px 只允许出现在
+       细则、页脚、计数里，描述属于正文级信息） */
+    font-size: var(--a-fs-caption);
+    line-height: 1.43;
     word-break: break-word;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -5806,7 +5761,10 @@ html[data-mode="grid"] .site-desc:empty {
 
 /* 元信息纵向两行：测速在上、网址在下，网址独占整宽不再被压成省略号。
    .site-metrics 内部本来就是「点击量 | 测速」横排一行（悬停时测速替换点击量），
-   这里不要再把它拆成两行，否则该块会撑到 47px，卡片凭空高出一大截。 */
+   这里不要再把它拆成两行，否则该块会撑到 47px，卡片凭空高出一大截。
+   v2.18.10：窄屏（≤620px）网格卡已改为「域名 · 测速」同排，见下方断点，
+   所以这里收窄到 min-width: 621px，避免两套规则打架。 */
+@media (min-width: 621px) {
 html:not([data-mode="list"]):not([data-mode="compact"]) .site-card .site-meta,
 html[data-mode="grid"] .site-meta {
     flex-direction: column;
@@ -5828,6 +5786,7 @@ html[data-mode="grid"] .site-metrics {
     justify-content: space-between;
     min-height: 0;
     text-align: left;
+}
 }
 
 /* 卡片被同行更高者拉伸时，多出的高度留在底部，不要挤进信息层级中间 */
@@ -5890,7 +5849,17 @@ html[data-mode="list"] .site-card {
     align-items: center;
     column-gap: 12px;
     min-height: 56px;
-    padding: 8px 12px;
+    /* v2.18.10：规格要求行内 padding 10px 6px（此前后置规则覆盖成 8px 12px） */
+    padding: 10px 6px;
+    border: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+html[data-theme="dark"][data-mode="list"] .site-card {
+    border-bottom-color: rgba(255, 255, 255, 0.10);
 }
 
 html[data-mode="list"] .site-card-main,
@@ -5924,7 +5893,8 @@ html[data-mode="list"] .site-name {
     flex: 0 1 auto;
     max-width: 40%;
     overflow: hidden;
-    font-size: var(--a-fs-caption);
+    /* v2.18.10：列表态站点名 15px/600（规格 P2-3） */
+    font-size: var(--a-fs-subhead);
     font-weight: 600;
     line-height: 1.4;
     text-overflow: ellipsis;
@@ -5932,15 +5902,17 @@ html[data-mode="list"] .site-name {
 }
 
 html[data-mode="list"] .site-desc {
-    display: block;
+    /* v2.18.10：与基础规则同口径 —— 14px/1.43、两行 clamp */
+    display: -webkit-box;
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
-    color: var(--muted);
-    font-size: var(--a-fs-fine);
-    line-height: 1.4;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    color: var(--a-muted);
+    font-size: var(--a-fs-caption);
+    line-height: 1.43;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
 }
 
 html[data-mode="list"] .site-domain {
@@ -6090,8 +6062,13 @@ html[data-mode="compact"] .card-action {
    -------------------------------------------------------------------------- */
 
 @media (max-width: 620px) {
+    /* v2.18.10：列宽下限从 150px 提到 168px。
+       150px 时 430px 屏能排两列，每列仅 165px，站点名只剩 96px
+       （「零一万物-大模型开放平台」被折成两行窄条、描述也读不成句）。
+       168px 是「站点名 + 两行描述」还能成立的最小宽度；
+       排不下时自然落回单列，卡片占满整宽，可读性优先于密度。 */
     html[data-mode="grid"] .site-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
         gap: 9px;
     }
 
@@ -6116,14 +6093,85 @@ html[data-mode="compact"] .card-action {
     }
 
     html[data-mode="grid"] .site-name {
-        font-size: var(--a-fs-caption);
+        /* v2.18.10：窄屏也不降字号，站点名保持 15px 可读 */
+        font-size: var(--a-fs-subhead);
     }
 
-    /* 窄屏只给一行介绍：两行会让一屏可见的卡片数量掉太多 */
+    /* v2.18.10：窄屏描述恢复两行 clamp。
+       此前窄屏压到一行，390px 下「提供在线工具箱…」只露出半句，等于没有信息。
+       站点名独占一行后纵向空间足够，两行是能读完整一句话的最小值。
+       字号不再回落到 12px —— 描述是正文级信息，移动端恰恰最需要可读。 */
     html[data-mode="grid"] .site-desc {
-        -webkit-line-clamp: 1;
-        line-clamp: 1;
-        font-size: var(--a-fs-fine);
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+    }
+
+    /* v2.18.10：窄屏网格卡改「图标 + 站点信息」在上、「域名 · 测速」在下。
+       原先是横向 flex，信息列被图标与右侧 meta 左右夹击，390px 下站点名
+       只剩 90px 宽（五六个字就换行），而 meta 又占去 145px。
+       这里与列表态同一手法：用 display:contents 拆掉 .site-card-main /
+       .site-meta 这层包装，让图标、信息、域名、测速直接参与卡片的网格。 */
+    html[data-mode="grid"] .site-card {
+        display: grid;
+        /* 第二行是「域名 1fr + 测速 auto」的横排：域名可截断，测速按内容宽
+           并给到 96px 上界，避免「无法访问」这类长文案把域名挤没 */
+        grid-template-columns: 34px minmax(0, 1fr);
+        grid-template-areas:
+            "icon info"
+            ".    meta";
+        align-items: start;
+        column-gap: 9px;
+        row-gap: 8px;
+    }
+
+    /* 只拆 .site-card-main：图标与信息直接参与卡片网格。
+       .site-meta 保留自身盒模型，在第二行内部再排一条 flex 行。 */
+    html[data-mode="grid"] .site-card > .site-card-main {
+        display: contents;
+    }
+
+    html[data-mode="grid"] .site-card > .site-card-main > .site-icon {
+        grid-area: icon;
+        align-self: start;
+    }
+
+    html[data-mode="grid"] .site-card > .site-card-main > .site-info {
+        grid-area: info;
+        min-width: 0;
+    }
+
+    /* 第二行：域名与测速。390px 下卡片内宽仅约 106px，
+       「weather.cma.cn」按 12px 量宽要 90px 以上，「75 毫秒 · 快」要 73px，
+       并排放只能各露出一截，两边都读不出来。故改两行纵向堆叠：
+       主信息（站点名 + 描述）在两行里独占整宽，meta 退到卡片右下角。 */
+    html[data-mode="grid"] .site-card > .site-meta {
+        grid-area: meta;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        justify-content: flex-start;
+        gap: 1px;
+        margin-top: 0;
+        padding-top: 0;
+        border-top: 0;
+        min-width: 0;
+        text-align: right;
+    }
+
+    html[data-mode="grid"] .site-card > .site-meta > .site-domain {
+        order: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    html[data-mode="grid"] .site-card > .site-meta > .site-metrics {
+        order: 1;
+        display: grid;
+        align-items: baseline;
+        justify-items: end;
+        text-align: right;
     }
 
     html[data-mode="grid"] .site-card-main {
@@ -6172,7 +6220,7 @@ html[data-mode="compact"] .card-action {
 
     html[data-mode="list"] .site-name {
         max-width: 100%;
-        font-size: var(--a-fs-caption);
+        font-size: var(--a-fs-subhead);
     }
 
     html[data-mode="list"] .site-metrics {
@@ -6353,11 +6401,11 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
         font-size: var(--a-fs-caption);
     }
 
-    /* 主题按钮与搜索框统一到 --ctl-size(40px)，避免一高一矮 */
+    /* 主题按钮与搜索框统一 44px，满足触控目标下限，避免一高一矮 */
     .site-header .theme-toggle,
     .site-header .header-search-btn {
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
     }
 
     .site-header .my-avatar-img,
@@ -7033,8 +7081,9 @@ html[data-theme="dark"] .section-tool.is-active .section-tool-label {
    出血量随视口收缩，避免 --max-width 生效时 -18px 把色带推出视口产生横向滚动。 */
 .link-sections > .link-group {
     --band-bleed: min(18px, max(0px, (100vw - min(100vw, var(--max-width))) / 2));
-    padding: 20px var(--band-bleed) 4px;
-    margin: 0 calc(var(--band-bleed) * -1) 10px;
+    /* v2.18.10：分节之间不留 margin，用 32px 上下 padding 撑开留白 */
+    padding: 32px var(--band-bleed) 32px;
+    margin: 0 calc(var(--band-bleed) * -1);
     border-radius: 0;
     background: transparent;
 }
@@ -7046,12 +7095,22 @@ html[data-theme="dark"] .section-tool.is-active .section-tool-label {
     }
 }
 
+/* 奇数组透出白画布、偶数组铺米白，形成整幅明暗交替；
+   不再用边框/阴影/圆角切分，符合"不在白上叠白卡"的规范。 */
 .link-sections > .link-group:nth-child(odd) {
-    background: var(--a-canvas);
+    background: transparent;
+}
+
+.link-sections > .link-group:nth-child(even) {
+    background: var(--a-parchment);
 }
 
 html[data-theme="dark"] .link-sections > .link-group:nth-child(odd) {
-    background: var(--a-tile-2);
+    background: transparent;
+}
+
+html[data-theme="dark"] .link-sections > .link-group:nth-child(even) {
+    background: var(--a-tile-1);
 }
 
 /* 标题：600 字重 + 负字距 */
@@ -7089,10 +7148,10 @@ html[data-theme="dark"] .site-footer {
 }
 
 /* 暗色下 blue 文字需用亮蓝：--primary 作背景时不动，仅文字场景覆盖 */
+/* v2.18.10：测速已中性化，不再需要暗色下单独提亮 */
 html[data-theme="dark"] .brand-stats strong,
 html[data-theme="dark"] .rail-item.is-active,
-html[data-theme="dark"] .rail-item.is-active .rail-count,
-html[data-theme="dark"] .site-speed[data-level="mid"] {
+html[data-theme="dark"] .rail-item.is-active .rail-count {
     color: var(--a-link-on-dark);
 }
 

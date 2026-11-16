@@ -498,10 +498,10 @@ $hasLinks = $totalLinks > 0;
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.9">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.9">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.9">
-    <script src="assets/js/category-quick-add.js?v=2.18.9" defer></script>
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.10">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.10">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.10">
+    <script src="assets/js/category-quick-add.js?v=2.18.10" defer></script>
     <style>
         /* ------------------------------ 我的导航页 ------------------------------ */
         .my-main {
@@ -2313,18 +2313,6 @@ $hasLinks = $totalLinks > 0;
                 ?>
                 <!-- v2.18.6：工具条与 index.php 对齐为 3 枚 --ctl-* 图标按钮，
                      「返回首页 / 退出登录」等裸文字按钮全部收进用户下拉。 -->
-                <div class="skin-picker" id="skinPicker">
-                    <button type="button" class="tool-btn" id="skinToggle" aria-label="选择配色" title="选择配色" aria-expanded="false">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9.5" r="5"></circle><circle cx="15" cy="9.5" r="5"></circle><circle cx="12" cy="14.5" r="5"></circle></svg>
-                    </button>
-                    <div class="skin-menu" id="skinMenu" role="menu" aria-label="配色方案">
-                        <button type="button" class="skin-option is-active" role="menuitemradio" aria-checked="true" data-skin="default"><span class="skin-dot" data-skin="default" aria-hidden="true"></span>经典蓝</button>
-                        <button type="button" class="skin-option" role="menuitemradio" aria-checked="false" data-skin="purple"><span class="skin-dot" data-skin="purple" aria-hidden="true"></span>静谧紫</button>
-                        <button type="button" class="skin-option" role="menuitemradio" aria-checked="false" data-skin="orange"><span class="skin-dot" data-skin="orange" aria-hidden="true"></span>暖阳橙</button>
-                        <button type="button" class="skin-option" role="menuitemradio" aria-checked="false" data-skin="mint"><span class="skin-dot" data-skin="mint" aria-hidden="true"></span>薄荷青</button>
-                    </div>
-                </div>
-
                 <button type="button" class="tool-btn theme-toggle" id="themeToggle" aria-label="切换深浅色" title="切换深浅色">
                     <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"></path></svg>
                     <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
@@ -7097,39 +7085,19 @@ DELETE /api/sites.php       删除网址</code></pre>
                 }
             }, true);
 
-            /* v2.18.6 跨页统一：皮肤 / 用户下拉 / 徽标 / Esc 焦点 */
-            var vMenu=qs('#userMenu'),vSkin=qs('#skinPicker'),vSkinBtn=qs('#skinToggle');
+            /* v2.18.6 跨页统一：用户下拉 / 徽标 / Esc 焦点
+               v2.18.10：皮肤选择器已下线，只保留 localStorage 读取容错，
+               老用户存着的 purple/orange/mint 一律回落 default。 */
+            var vMenu=qs('#userMenu');
+            try{
+                var legacySkin=localStorage.getItem('xy-nav-skin');
+                if(legacySkin&&legacySkin!=='default'){localStorage.setItem('xy-nav-skin','default');}
+            }catch(e){}
+            document.documentElement.setAttribute('data-skin','default');
             function closeVMenu(f){
                 if(!vMenu||!vMenu.hasAttribute('open'))return;
                 vMenu.removeAttribute('open');
                 if(f)vMenu.querySelector('summary').focus();
-            }
-            function applyV(k){
-                if(['default','purple','orange','mint'].indexOf(k)<0)k='default';
-                document.documentElement.setAttribute('data-skin',k);
-                qsa('.skin-option').forEach(function(o){
-                    var on=o.getAttribute('data-skin')===k;
-                    o.classList.toggle('is-active',on);
-                    o.setAttribute('aria-checked',on?'true':'false');
-                });
-            }
-            if(vSkin&&vSkinBtn){
-                var sk='default';
-                try{sk=localStorage.getItem('xy-nav-skin')||'default';}catch(e){}
-                applyV(sk);
-                vSkinBtn.addEventListener('click',function(e){
-                    e.stopPropagation();
-                    vSkinBtn.setAttribute('aria-expanded',vSkin.classList.toggle('is-open')?'true':'false');
-                });
-                qsa('.skin-option').forEach(function(o){
-                    o.addEventListener('click',function(){
-                        var k=o.getAttribute('data-skin');
-                        applyV(k);
-                        try{localStorage.setItem('xy-nav-skin',k);}catch(e){}
-                        vSkin.classList.remove('is-open');
-                        vSkinBtn.setAttribute('aria-expanded','false');
-                    });
-                });
             }
             function readMode(){try{return localStorage.getItem('nav_open_mode')||'default';}catch(e){return 'default';}}
             function badgeV(){
@@ -7694,6 +7662,6 @@ DELETE /api/sites.php       删除网址</code></pre>
         })();
     </script>
     <script src="assets/js/pinyin-pro.min.js" defer></script>
-<script src="assets/js/search.js?v=2.18.9" defer></script>
+<script src="assets/js/search.js?v=2.18.10" defer></script>
 </body>
 </html>

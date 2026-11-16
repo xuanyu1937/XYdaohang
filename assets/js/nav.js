@@ -52,10 +52,8 @@
     var modeCycle = document.getElementById('modeCycle');
     var hotStrip = document.querySelector('.hot-strip');
     var userMenu = document.getElementById('userMenu');
-    var skinPicker = document.getElementById('skinPicker');
 
     var MODES = ['grid', 'list', 'compact'];
-    var SKINS = ['default', 'purple', 'orange', 'mint'];
 
     /* ----------------------------------------------------------------------
        v2.16.1：手机端彻底移除卡片悬停操作条
@@ -236,80 +234,6 @@
                 }, 520);
             });
         }
-
-    /* ----------------------------------------------------------------------
-       配色皮肤
-       ---------------------------------------------------------------------- */
-
-    function applySkin(skin) {
-        var next = SKINS.indexOf(skin) === -1 ? 'default' : skin;
-        root.setAttribute('data-skin', next);
-
-        qsa('.skin-option').forEach(function (option) {
-            var active = option.getAttribute('data-skin') === next;
-            option.classList.toggle('is-active', active);
-            option.setAttribute('aria-checked', active ? 'true' : 'false');
-        });
-    }
-
-    function closeSkinMenu() {
-        if (skinPicker) {
-            skinPicker.classList.remove('is-open');
-        }
-
-        var toggle = document.getElementById('skinToggle');
-
-        if (toggle) {
-            toggle.setAttribute('aria-expanded', 'false');
-        }
-    }
-
-    var skinToggle = document.getElementById('skinToggle');
-
-    if (skinToggle && skinPicker) {
-        skinToggle.addEventListener('click', function (event) {
-            event.stopPropagation();
-            var open = skinPicker.classList.toggle('is-open');
-            skinToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-        });
-    }
-
-    qsa('.skin-option').forEach(function (option) {
-        option.addEventListener('click', function () {
-            var skin = option.getAttribute('data-skin');
-            applySkin(skin);
-            store('xy-nav-skin', skin);
-            closeSkinMenu();
-        });
-    });
-
-    document.addEventListener('click', function (event) {
-        if (skinPicker && skinPicker.classList.contains('is-open')
-            && !skinPicker.contains(event.target)) {
-            closeSkinMenu();
-        }
-
-        if (userMenu && userMenu.hasAttribute('open') && !userMenu.contains(event.target)) {
-            userMenu.removeAttribute('open');
-        }
-    });
-
-    document.addEventListener('keydown', function (event) {
-        if (event.key !== 'Escape') {
-            return;
-        }
-
-        closeSkinMenu();
-
-        // v2.18.6：Esc 关闭用户下拉后，把焦点还给触发按钮
-        if (userMenu && userMenu.hasAttribute('open')) {
-            userMenu.removeAttribute('open');
-            var menuSummary = userMenu.querySelector('summary');
-            if (menuSummary) { menuSummary.focus(); }
-        }
-
-        closeRail();
-    });
 
     /* ----------------------------------------------------------------------
        显示方式：网格 / 列表 / 紧凑
@@ -680,6 +604,10 @@
 
     function applyFilters() {
         var visibleTotal = 0;
+        /* v2.18.10：与左侧分类索引同源的总数。索引给的是该分类的全部站点数，
+           而 visibleTotal 只是首屏已渲染的卡片数（大分类会被"加载更多"分页），
+           两者混用会出现"索引 104、标题 20"的口径分裂。 */
+        var declaredTotal = 0;
         var filtering = state.category !== 'all' || state.query !== '';
 
         groups.forEach(function (group) {
@@ -713,13 +641,32 @@
                 node.hidden = !next || next.hidden;
             });
 
-            group.hidden = groupVisible === 0;
+            var groupHidden = groupVisible === 0;
+            group.hidden = groupHidden;
             visibleTotal += groupVisible;
+
+            if (!groupHidden) {
+                var headCounter = qsa('.group-count', group)[0];
+                var headTotal = headCounter
+                    ? parseInt(headCounter.getAttribute('data-group-total') || '', 10)
+                    : NaN;
+                declaredTotal += isNaN(headTotal) ? groupVisible : headTotal;
+            }
 
             var counter = qsa('.group-count', group)[0];
 
             if (counter) {
-                counter.textContent = groupVisible;
+                /* v2.18.10：分组计数与左侧分类索引必须同源。
+                   索引显示的是该分类的站点总数，而此前这里被覆盖成
+                   「首屏可见卡片数」，于是索引 104、分组 20，看起来像两个数。
+                   现在：未筛选时显示 data-group-total（PHP 输出的分类总数，
+                   与索引同源）；只有在关键词/分类筛选时才显示匹配数。 */
+                if (!filtering) {
+                    var declTotal = parseInt(counter.getAttribute('data-group-total') || '', 10);
+                    counter.textContent = isNaN(declTotal) ? groupVisible : declTotal;
+                } else {
+                    counter.textContent = groupVisible;
+                }
             }
         });
 
@@ -744,7 +691,8 @@
         }
 
         if (sectionCount) {
-            sectionCount.textContent = visibleTotal + ' 个网站';
+            /* 关键词搜索时显示真实命中数；分类浏览时显示与左侧索引一致的总数。 */
+            sectionCount.textContent = (state.query ? visibleTotal : declaredTotal) + ' 个网站';
         }
 
         /* 排序切换在筛选状态下仍然可用：用户在筛选结果里也可能想换排序方式 */
