@@ -205,7 +205,7 @@
         root.setAttribute('data-theme', next);
 
         if (themeColorMeta) {
-            themeColorMeta.setAttribute('content', next === 'dark' ? '#0a1120' : '#f4f6fa');
+            themeColorMeta.setAttribute('content', next === 'dark' ? '#000000' : '#ffffff');
         }
 
         if (themeToggle) {

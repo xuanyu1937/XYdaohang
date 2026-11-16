@@ -63,8 +63,8 @@ $manifest = [
     'scope' => $base . '/',
     'display' => 'standalone',
     'orientation' => 'portrait-primary',
-    'background_color' => '#f4f6fa',
-    'theme_color' => '#3b82f6',
+    'background_color' => '#ffffff',
+    'theme_color' => '#ffffff',
     'icons' => $icons,
 ];
 

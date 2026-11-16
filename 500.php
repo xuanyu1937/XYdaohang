@@ -22,10 +22,10 @@ header('X-Robots-Tag: noindex, nofollow');
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>服务暂时不可用</title>
     <meta name="robots" content="noindex, nofollow">
-    <meta name="theme-color" content="#f5f5f3" id="themeColor">
+    <meta name="theme-color" content="#ffffff" id="themeColor">
     <link rel="icon" href="assets/img/icons/icon-192.png">
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.10">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.10">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.11">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.11">
     <script>
         (function () {
             try {
@@ -33,6 +33,8 @@ header('X-Robots-Tag: noindex, nofollow');
                 var theme = (saved === 'dark' || saved === 'light') ? saved
                     : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
                 document.documentElement.setAttribute('data-theme', theme);
+                var meta = document.querySelector('meta[name="theme-color"]');
+                if (meta) { meta.setAttribute('content', theme === 'dark' ? '#000000' : '#ffffff'); }
             } catch (e) {}
         })();
     </script>

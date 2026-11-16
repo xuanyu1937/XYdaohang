@@ -69,7 +69,7 @@ $tokenParam = rawurlencode($token);
     <meta name="robots" content="noindex,follow">
     <title><?php echo $functions->escape($shareTitle); ?> - <?php echo $functions->escape($brandName); ?></title>
     <meta name="description" content="<?php echo $functions->escape('来自 ' . $brandName . ' 的导航分享，共 ' . count($sites) . ' 个网站。'); ?>">
-    <meta name="theme-color" content="#f5f5f3" id="themeColor">
+    <meta name="theme-color" content="#ffffff" id="themeColor">
 
     <?php if ($siteLogoUrl !== ''): ?>
         <link rel="icon" href="<?php echo $functions->escape($siteLogoUrl); ?>">
@@ -90,7 +90,7 @@ $tokenParam = rawurlencode($token);
 
                 var meta = document.querySelector('meta[name="theme-color"]');
                 if (meta) {
-                    meta.setAttribute('content', theme === 'dark' ? '#0b0b0a' : '#f5f5f3');
+                    meta.setAttribute('content', theme === 'dark' ? '#000000' : '#ffffff');
                 }
             } catch (e) {
                 document.documentElement.setAttribute('data-theme', 'light');
@@ -98,8 +98,8 @@ $tokenParam = rawurlencode($token);
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.10">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.10">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.11">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.11">
     <link rel="stylesheet" href="assets/css/page.css?v=<?php echo APP_VERSION; ?>">
 </head>
 <body data-monitor="0">
@@ -312,6 +312,6 @@ $tokenParam = rawurlencode($token);
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.18.10" defer></script>
+<script src="assets/js/search.js?v=2.18.11" defer></script>
 </body>
 </html>

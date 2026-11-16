@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php /* v2.18.1 · canonical（无查询参数） */ ?>
     <link rel="canonical" href="<?php echo $functions->escape(navSiteBaseUrl() . '/contact.php'); ?>">
     <meta name="description" content="<?php echo $functions->escape('向 ' . $brandName . ' 提交问题反馈或站点收录建议。'); ?>">
-    <meta name="theme-color" content="#f5f5f3" id="themeColor">
+    <meta name="theme-color" content="#ffffff" id="themeColor">
 
     <?php if ($siteLogoUrl !== ''): ?>
         <link rel="icon" href="<?php echo $functions->escape($siteLogoUrl); ?>">
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 var meta = document.querySelector('meta[name="theme-color"]');
                 if (meta) {
-                    meta.setAttribute('content', theme === 'dark' ? '#0b0b0a' : '#f5f5f3');
+                    meta.setAttribute('content', theme === 'dark' ? '#000000' : '#ffffff');
                 }
             } catch (e) {
                 document.documentElement.setAttribute('data-theme', 'light');
@@ -114,8 +114,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.10">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.10">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.11">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.11">
     <link rel="stylesheet" href="assets/css/page.css?v=<?php echo APP_VERSION; ?>">
 </head>
 <body data-monitor="0">
@@ -317,6 +317,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.18.10" defer></script>
+<script src="assets/js/search.js?v=2.18.11" defer></script>
 </body>
 </html>
