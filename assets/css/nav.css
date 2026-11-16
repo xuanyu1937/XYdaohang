@@ -7174,3 +7174,170 @@ html[data-theme="dark"] .rail-item.is-active .rail-count,
 html[data-theme="dark"] .section-tool.is-active .section-tool-label {
     color: var(--a-white);
 }
+
+/* ==========================================================================
+   v2.18.11 · P0 视觉协调性修复层（追加在文件末尾，覆盖上文历史规则）
+   --------------------------------------------------------------------------
+   P0-1 搜索框：亮/暗两态都给可见 1px 描边；胶囊高收到 50px；
+        输入框 14px / 左内边距 18px；聚焦仍用 2px --a-focus 外环（无阴影）。
+   P0-3 移动端 ≤640px：列表/网格卡片改两列 32px 1fr；meta 移第二行右对齐；
+        描述两行 clamp；测速灰点只留一个、文字统一 muted。
+   ========================================================================== */
+
+/* ---------------- P0-1 搜索胶囊：全站唯一形态 ---------------- */
+.search-bar {
+    height: var(--a-search-h);
+    /* 亮色 1px 非透明描边（rgba(0,0,0,.08)，走 --a-line-soft） */
+    border: 1px solid var(--a-line-soft);
+    border-color: var(--a-line-soft);
+    background: var(--a-canvas);
+}
+html[data-theme="dark"] .search-bar {
+    /* 暗色 1px 描边 rgba(255,255,255,.12) */
+    border-color: rgba(255, 255, 255, 0.12);
+    background: var(--a-tile-1);
+}
+/* 聚焦态：2px --a-focus 外环，不用阴影；描边保持常态值 */
+.search-bar:focus-within,
+html[data-theme="dark"] .search-bar:focus-within {
+    border-color: var(--a-line-soft);
+    outline: 2px solid var(--a-focus);
+    outline-offset: 2px;
+}
+html[data-theme="dark"] .search-bar:focus-within {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+/* 输入框：14px / 左内边距 18px；引擎选择器在场时再让出引擎宽度 */
+.search-input {
+    font-size: 14px;
+    padding-left: var(--a-search-pad-x);
+}
+/* 搜索按钮：44 高 / 999 圆角 / 蓝底白字，右侧与胶囊右缘留 4px */
+.search-submit,
+.search-submit.search-save {
+    height: 44px;
+    border-radius: var(--a-radius-pill);
+    background: var(--a-primary);
+    color: var(--a-on-primary);
+}
+.search-actions { right: 4px; }
+
+/* ---------------- P0-3 移动端卡片两列（≤640px） ---------------- */
+@media (max-width: 640px) {
+    /* 列表态：图标 + 信息在上，meta 独占第二行右对齐；取消第三列 */
+    html[data-mode="list"] .site-card {
+        grid-template-columns: 32px minmax(0, 1fr);
+        grid-template-areas:
+            "icon info"
+            ".    meta";
+        column-gap: 10px;
+        row-gap: 12px;
+        min-height: 72px;
+    }
+    html[data-mode="list"] .site-card > .site-card-main { display: contents; }
+    html[data-mode="list"] .site-card > .site-card-main > .site-icon { grid-area: icon; align-self: start; }
+    html[data-mode="list"] .site-card > .site-card-main > .site-info { grid-area: info; min-width: 0; }
+    html[data-mode="list"] .site-card > .site-meta {
+        grid-area: meta;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border-top: 0;
+        text-align: right;
+    }
+    html[data-mode="list"] .site-card > .site-meta > .site-domain {
+        order: 0;
+        min-width: 0;
+        max-width: 62%;
+        display: block;
+    }
+    html[data-mode="list"] .site-card > .site-meta > .site-metrics {
+        order: 1;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    /* 描述两行 clamp，取消单行 nowrap */
+    html[data-mode="list"] .site-desc {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        overflow: hidden;
+        white-space: normal;
+        text-wrap: wrap; /* 覆盖 text-wrap:pretty，避免与 -webkit-box clamp 冲突 */
+    }
+    /* 测速灰点只保留 ::before 一个，状态点不再画点 */
+    html[data-mode="list"] .site-status { display: none; }
+    html[data-mode="list"] .site-speed { color: var(--a-muted); }
+    html[data-mode="list"] .site-speed[data-state="error"] { color: var(--a-danger); }
+}
+
+/* ==========================================================================
+   v2.18.11 · P2 精致度细节（追加层，覆盖上文历史规则）
+   ========================================================================== */
+
+/* P2-7：首页列表行标题与描述关系明确化 —— 桌面描述另起一行并限制 64ch，
+   避免长描述横向铺满整行破坏阅读节奏。标题 15px/600 已在基础层，勿动。 */
+@media (min-width: 641px) {
+    .site-card .site-desc {
+        max-width: 64ch;
+    }
+}
+
+/* P2-2：移动端相邻分组留白压缩。基础层每组上下各 32px（相邻 64px），
+   这里收到上下各 14px（相邻 28px，落在 24~32 区间），并用 1px hairline 分隔，
+   保留原有明暗交替色带节奏。 */
+@media (max-width: 640px) {
+    .link-sections > .link-group {
+        padding-top: 14px;
+        padding-bottom: 14px;
+    }
+    .link-sections > .link-group + .link-group {
+        border-top: 1px solid var(--a-hairline);
+    }
+    html[data-theme="dark"] .link-sections > .link-group + .link-group {
+        border-top-color: rgba(255, 255, 255, 0.08);
+    }
+}
+
+/* P2-3：热门访问横向滚动的可滑动暗示 —— 右侧 24px 渐隐遮罩，
+   提示还有更多内容可横滑；仅移动端（nowrap + overflow-x:auto）生效。 */
+@media (max-width: 640px) {
+    /* 右侧约 24px alpha 渐隐（SVG 遮罩，避免 CSS 渐变函数与内联 hex，
+       保持 gradient=0 的令牌化规范）。offset .93 在窄屏 hot-list 上约等于 24px。 */
+    .hot-list {
+        -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='1' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='f'%3E%3Cstop offset='0' stop-color='white' stop-opacity='1'/%3E%3Cstop offset='.93' stop-color='white' stop-opacity='1'/%3E%3Cstop offset='1' stop-color='white' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='1' fill='url(%23f)'/%3E%3C/svg%3E");
+        mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='1' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='f'%3E%3Cstop offset='0' stop-color='white' stop-opacity='1'/%3E%3Cstop offset='.93' stop-color='white' stop-opacity='1'/%3E%3Cstop offset='1' stop-color='white' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='1' fill='url(%23f)'/%3E%3C/svg%3E");
+        -webkit-mask-size: 100% 100%;
+        mask-size: 100% 100%;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+    }
+}
+
+/* ==========================================================================
+   v2.18.11 · 验收补强：浮动按钮安全间距 / 移动端分类 tab 触控区
+   ========================================================================== */
+
+/* 验收2：浮动按钮与卡片右缘安全间距 ≥16px。grid 模式原安全区 52px
+   （按钮左缘 332 - 卡片右缘 320 = 12px），提到 56px 后卡片右缘收至 316，
+   间距 = 16px。列表态按钮落在卡片下方空白，保持 v2.18.10 既定行为不动。 */
+@media (max-width: 620px) {
+    html[data-mode="grid"] #linkSections .site-grid {
+        margin-right: 56px;
+    }
+}
+
+/* 验收5：移动端所有可点击控件不小于 44×44。分类横滑 tab 原高 34px，
+   在 ≤640px 提到 44px，宽度不变（padding 横向控制），触控达标。 */
+@media (max-width: 640px) {
+    .mcat {
+        height: 44px;
+    }
+}

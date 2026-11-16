@@ -3482,3 +3482,35 @@ html[data-theme="dark"] .welcome-text {
     color: var(--a-muted);
     font-weight: 400;
 }
+
+/* ==========================================================================
+   v2.18.11 · P0-2 后台登录品牌块（与前台 / 关于页同款同尺寸）
+   有真实 logo 时去掉蓝底与 52 方块约束，按原比例 40px 高自适应宽展示；
+   无图时保持原来的方形蓝底 + 首字母，不破坏既有观感。
+   ========================================================================== */
+.login-card .brand-mark:has(img) {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: auto;
+    height: 40px;
+    flex: 0 0 auto;
+    padding: 0;
+    background: transparent;
+    overflow: visible;
+}
+.login-card .brand-mark:has(img) img {
+    position: static;
+    display: block;
+    width: auto;
+    height: 40px;
+    max-width: 200px;
+    padding: 0;
+    background: transparent;
+    object-fit: contain;
+    filter: none;
+}
+html[data-theme="dark"] .login-card .brand-mark:has(img) img {
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.6));
+}
+.login-card .brand:has(.brand-mark img) { gap: 10px; }

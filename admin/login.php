@@ -7,6 +7,10 @@ require_once '../includes/functions.php';
 
 $functions = new Functions();
 
+// v2.18.11 P0-2：与前台登录 / 关于页复用同一 logo 资源与同一套品牌块尺寸
+$adminBrandName = trim((string) $functions->getSetting('site_title')) ?: '轩宇-导航';
+$adminSiteLogoUrl = $functions->getLogoUrl($functions->getSetting('site_logo'));
+
 if ($functions->isLoggedIn()) {
     $functions->redirect('index.php');
 }
@@ -113,8 +117,8 @@ function navVerifyAdminUser($functions, $account, $password)
     <title>后台登录 - 轩宇-导航</title>
     <!-- v2.18.10：此前本页未引入任何样式表，内联 style 里的 var(--a-*) 全部失效，
          导致按钮无蓝底、圆角归零、品牌块退化为 20px 方块。按序补引入。 -->
-    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.10">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=2.18.10">
+    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.11">
+    <link rel="stylesheet" href="../assets/css/admin.css?v=2.18.11">
     <style>
         /* v2.18.10：本页只保留布局与尺寸。
            颜色 / 圆角 / 阴影 / 字重一律走 apple-tokens.css 与 admin.css，
@@ -226,9 +230,9 @@ function navVerifyAdminUser($functions, $account, $password)
 <body>
     <main class="login-card">
         <div class="brand">
-            <div class="brand-mark">轩</div>
+            <div class="brand-mark" aria-hidden="true">轩<?php if ($adminSiteLogoUrl !== ''): ?><img src="<?php echo $functions->escape($adminSiteLogoUrl); ?>" alt="" onerror="this.remove();"><?php endif; ?></div>
             <div>
-                <h1>轩宇-导航</h1>
+                <h1><?php echo $functions->escape($adminBrandName); ?></h1>
                 <p>后台管理系统</p>
             </div>
         </div>

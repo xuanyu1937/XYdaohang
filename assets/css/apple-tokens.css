@@ -161,6 +161,7 @@
     --bg-soft:        var(--a-parchment);
     --surface:        var(--a-canvas);
     --surface-2:      var(--a-pearl);
+    --surface-soft:   var(--a-surface-soft);   /* v2.18.11：柔和描述块表面 */
     --surface-hover:  var(--a-surface-soft);
     --surface-sunken: var(--a-surface-sunken);
     --tab-bg:         var(--a-surface-soft);
@@ -239,6 +240,9 @@
     --search-inset:    20px;
     --search-action-w: 92px;
     --tool-icon:       18px;
+    /* v2.18.11 P0-1：全站统一胶囊搜索条尺寸（首页 / sites.php / 404.php 共用） */
+    --a-search-h:      50px;   /* 胶囊总高，落在 48~52 区间 */
+    --a-search-pad-x:  18px;   /* 输入框左内边距 */
 
     /* ---- 5. 后台变量（admin.css）同源 --------------------------------- */
     --admin-primary:         var(--a-primary);
@@ -314,6 +318,7 @@ html[data-theme="dark"] {
     --bg-soft:        var(--a-tile-3);
     --surface:        var(--a-tile-1);
     --surface-2:      var(--a-tile-2);
+    --surface-soft:   var(--a-tile-1);          /* v2.18.11：暗色柔和表面 */
     --surface-hover:  var(--a-tile-hover);
     --surface-sunken: var(--a-tile-3);
     --tab-bg:         var(--a-tile-2);
@@ -550,4 +555,51 @@ html[data-theme="dark"] .apple-footer a { color: var(--a-muted-on-dark); }
 .shadow-xl,
 .shadow-2xl {
     box-shadow: none !important;
+}
+
+/* ==========================================================================
+   v2.18.11 · P0-2 品牌块统一（首页 / 关于 / 前台登录 / 后台登录共用）
+   --------------------------------------------------------------------------
+   实测问题：site_logo 是「盾牌 + 字标」的横版组合图，却被
+   object-fit:contain + 5px padding 塞进 52×52 的蓝底方块，形成
+   「蓝底 + 白图 + 缩小字标」三层重叠。这里让有真实 logo 的品牌块
+   去掉蓝底与 padding，图片按原比例、固定 40px 高自适应宽展示；
+   无图时回退到原来的方形图标 / 首字母，不裁切文字。
+   用 :has(img) 精确命中"有真实资源"的容器，img onerror 移除后自动回落。
+   ========================================================================== */
+.brand-mark:has(img),
+.auth-mark:has(img) {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: auto;
+    height: 40px;
+    flex: 0 0 auto;
+    padding: 0;
+    background: transparent;
+    overflow: visible;
+}
+/* 方形 fallback 图标在有真实 logo 时隐藏；文字首字母用 font-size:0 隐去 */
+.brand-mark:has(img) > svg { display: none; }
+.auth-mark:has(img) { font-size: 0; }
+/* 标题随容器收窄左移 4px（14px → 10px） */
+.brand:has(.brand-mark img),
+.auth-brand:has(.auth-mark img) { gap: 10px; }
+
+.brand-mark:has(img) img,
+.auth-mark:has(img) img {
+    position: static;
+    display: block;
+    width: auto;
+    height: 40px;
+    max-width: 200px;
+    padding: 0;
+    background: transparent;
+    object-fit: contain;
+    filter: none;
+}
+/* 暗底上的深色描边图加 1px 提亮描边，保证在 #000 上可见 */
+html[data-theme="dark"] .brand-mark:has(img) img,
+html[data-theme="dark"] .auth-mark:has(img) img {
+    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.6));
 }

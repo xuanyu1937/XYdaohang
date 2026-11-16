@@ -45,10 +45,10 @@ $escape = static function ($value) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>页面不存在 · <?php echo $escape($siteName); ?></title>
     <meta name="robots" content="noindex, nofollow">
-    <meta name="theme-color" content="#f5f5f3" id="themeColor">
+    <meta name="theme-color" content="#ffffff" id="themeColor">
     <link rel="icon" href="assets/img/icons/icon-192.png">
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.10">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.10">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.11">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.11">
     <script>
         (function () {
             try {
@@ -56,22 +56,27 @@ $escape = static function ($value) {
                 var theme = (saved === 'dark' || saved === 'light') ? saved
                     : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
                 document.documentElement.setAttribute('data-theme', theme);
+                var meta = document.querySelector('meta[name="theme-color"]');
+                if (meta) { meta.setAttribute('content', theme === 'dark' ? '#000000' : '#ffffff'); }
             } catch (e) {}
         })();
     </script>
     <style>
+        /* v2.18.11 P2-5：内容块在视口内垂直居中，短内容不再贴顶 */
+        body { min-height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; }
         .error-shell {
+            width: 100%;
             max-width: 560px;
             margin: 0 auto;
-            padding: 96px 24px 64px;
+            padding: 48px 24px;
             text-align: center;
         }
         .error-code {
             font-size: 72px;
-            font-weight: 700;
+            font-weight: 600;
             line-height: 1;
             letter-spacing: -2px;
-            color: var(--primary);
+            color: var(--text);
             margin: 0 0 12px;
         }
         .error-title {
@@ -88,34 +93,55 @@ $escape = static function ($value) {
         }
         .error-form {
             display: flex;
-            gap: 8px;
-            max-width: 420px;
+            align-items: center;
+            gap: 6px;
+            max-width: 440px;
             margin: 0 auto 20px;
         }
+        /* v2.18.11 P0-1：404 搜索框与首页 / sites.php 同一套胶囊尺寸与描边 */
         .error-form input[type="search"] {
             flex: 1 1 auto;
             min-width: 0;
-            padding: 11px 14px;
-            font-size: var(--a-fs-body);
+            height: var(--a-search-h);
+            padding: 0 var(--a-search-pad-x);
+            font-size: 14px;
             color: var(--text);
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--a-radius-md);
+            background: var(--a-canvas);
+            border: 1px solid var(--a-line-soft);
+            border-radius: var(--a-radius-pill);
         }
-        .error-form button,
-        .error-home {
+        html[data-theme="dark"] .error-form input[type="search"] {
+            border-color: rgba(255, 255, 255, 0.12);
+            background: var(--a-tile-1);
+        }
+        .error-form input[type="search"]:focus-visible {
+            outline: 2px solid var(--a-focus);
+            outline-offset: 2px;
+        }
+        .error-form button {
             flex: none;
-            padding: 11px 20px;
-            font-size: var(--a-fs-body);
+            height: 44px;
+            padding: 0 22px;
+            font-size: 14px;
             font-weight: var(--a-fw-medium);
             color: var(--primary-contrast);
             background: var(--primary);
             border: 0;
-            border-radius: var(--a-radius-md);
+            border-radius: var(--a-radius-pill);
             cursor: pointer;
         }
         .error-home {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 44px;
+            padding: 0 22px;
+            font-size: 14px;
+            font-weight: var(--a-fw-medium);
+            color: var(--primary-contrast);
+            background: var(--primary);
+            border: 0;
+            border-radius: var(--a-radius-pill);
             text-decoration: none;
         }
         .error-form button:hover,
