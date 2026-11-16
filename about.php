@@ -118,7 +118,7 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
     <?php /* v2.18.1 · canonical（无查询参数） */ ?>
     <link rel="canonical" href="<?php echo $functions->escape(navSiteBaseUrl() . '/about.php'); ?>">
     <meta name="description" content="<?php echo $functions->escape('关于 ' . $brandName . ' 的介绍与使用说明。'); ?>">
-    <meta name="theme-color" content="#f5f5f3" id="themeColor">
+    <meta name="theme-color" content="#ffffff" id="themeColor">
     <meta name="robots" content="index, follow">
 
     <?php if ($siteLogoUrl !== ''): ?>
@@ -140,7 +140,7 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
 
                 var meta = document.querySelector('meta[name="theme-color"]');
                 if (meta) {
-                    meta.setAttribute('content', theme === 'dark' ? '#0b0b0a' : '#f5f5f3');
+                    meta.setAttribute('content', theme === 'dark' ? '#000000' : '#ffffff');
                 }
             } catch (e) {
                 document.documentElement.setAttribute('data-theme', 'light');
@@ -148,8 +148,8 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.10">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.10">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.11">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.11">
     <link rel="stylesheet" href="assets/css/page.css?v=<?php echo APP_VERSION; ?>">
 </head>
 <body data-monitor="0">
@@ -159,15 +159,7 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
         <header class="site-header">
             <div class="header-brand">
                 <a class="brand" href="index.php" aria-label="返回首页">
-                    <span class="brand-mark" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="9"></circle>
-                            <path d="m15.4 8.6-2.1 4.7-4.7 2.1 2.1-4.7z"></path>
-                        </svg>
-                        <?php if ($siteLogoUrl !== ''): ?>
-                            <img src="<?php echo $functions->escape($siteLogoUrl); ?>" alt="" width="48" height="48" onerror="this.remove();">
-                        <?php endif; ?>
-                    </span>
+                    <span class="brand-mark" aria-hidden="true">轩<?php if ($siteLogoUrl !== ''): ?><img src="<?php echo $functions->escape($siteLogoUrl); ?>" alt="" onerror="this.remove();"><?php endif; ?></span>
                     <span class="brand-info">
                         <span class="brand-title" translate="no"><?php echo $functions->escape($brandName); ?></span>
                         <span class="brand-subtitle"><?php echo $functions->escape($siteDescription !== '' ? $siteDescription : '关于本站'); ?></span>
@@ -187,11 +179,17 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
                 </button>
 
                 <?php if ($currentUser): ?>
-                    <a class="tool-btn tool-text" data-icon="nav" title="我的导航" aria-label="我的导航" href="my.php">我的导航</a>
+                    <a class="tool-btn" title="我的导航" aria-label="我的导航" href="my.php">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
+                    </a>
                 <?php else: ?>
-                    <a class="tool-btn tool-text" data-icon="login" title="登录" aria-label="登录" href="login.php?redirect=<?php echo rawurlencode('about.php'); ?>">登录</a>
+                    <a class="tool-btn" title="登录" aria-label="登录" href="login.php?redirect=<?php echo rawurlencode('about.php'); ?>">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+                    </a>
                 <?php endif; ?>
-                <a class="tool-btn tool-text" data-icon="home" title="返回首页" aria-label="返回首页" href="index.php">返回首页</a>
+                <a class="tool-btn" title="返回首页" aria-label="返回首页" href="index.php">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+                </a>
             </div>
         </header>
 
@@ -299,6 +297,6 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.18.10" defer></script>
+<script src="assets/js/search.js?v=2.18.11" defer></script>
 </body>
 </html>

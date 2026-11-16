@@ -514,3 +514,16 @@ html[data-theme="dark"] .changelog-version {
     text-decoration: underline;
     text-underline-offset: 2px;
 }
+
+/* ==========================================================================
+   v2.18.11 · P1-1 内容页浮层卡描边统一（关于 / 分享 / 联系）
+   1px 描边（亮 rgba(0,0,0,.08) / 暗 rgba(255,255,255,.12)），18px 圆角，无阴影。
+   ========================================================================== */
+.page-card {
+    border: 1px solid var(--a-line-soft);
+    border-radius: var(--a-radius-lg);
+    box-shadow: none;
+}
+html[data-theme="dark"] .page-card {
+    border-color: rgba(255, 255, 255, 0.12);
+}

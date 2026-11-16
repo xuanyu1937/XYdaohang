@@ -125,12 +125,16 @@ $detailJsonLd = [
         ],
     ],
 ];
+
+/* v2.18.11 P1-2：统一 header 需要的站点数，与首页同源 */
+$detailTotalStmt = $db->query("SELECT COUNT(*) FROM nav_links WHERE is_active = 1");
+$detailTotalSites = (int) $detailTotalStmt->fetchColumn();
 ?>
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-skin="default">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title><?php echo $functions->escape($pageTitle); ?></title>
     <meta name="description" content="<?php echo $functions->escape($pageDescription); ?>">
     <meta name="keywords" content="<?php echo $functions->escape($link['name']); ?>,网站导航,网址推荐">
@@ -147,542 +151,294 @@ $detailJsonLd = [
     <meta name="twitter:title" content="<?php echo $functions->escape($pageTitle); ?>">
     <meta name="twitter:description" content="<?php echo $functions->escape($pageDescription); ?>">
     <script type="application/ld+json"><?php echo json_encode($detailJsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?></script>
-
-    <script src="assets/js/tailwind.min.js"></script>
-    <link href="assets/css/font-awesome.min.css" rel="stylesheet">
-    
+    <meta name="theme-color" content="#ffffff" id="themeColor">
+    <?php if ($siteLogoUrl !== ''): ?>
+        <link rel="icon" href="<?php echo $functions->escape($siteLogoUrl); ?>">
+    <?php endif; ?>
+    <script>
+        /* v2.18.11 P1-3 / P2-4：与首页共用 early script，写 data-theme 并同步 theme-color */
+        (function () {
+            try {
+                var root = document.documentElement;
+                var saved = localStorage.getItem('xy-nav-theme');
+                var theme = (saved === 'dark' || saved === 'light')
+                    ? saved
+                    : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                root.setAttribute('data-theme', theme);
+                var meta = document.querySelector('meta[name="theme-color"]');
+                if (meta) { meta.setAttribute('content', theme === 'dark' ? '#000000' : '#ffffff'); }
+            } catch (e) {}
+        })();
+    </script>
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.11">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.11">
+    <link rel="stylesheet" href="assets/css/page.css?v=2.18.11">
     <script src="assets/js/jquery3.7.1.js"></script>
     <?php require_once __DIR__ . '/includes/asset_fallbacks.php'; ?>
-    
     <script src="assets/js/qrcode.min.js"></script>
-    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* v2.18.11 P1-2：详情页全部走 design token，无内联 hex、无阴影，
+           圆角只用 11 / 18 / 999；图标一律内联 SVG。 */
+        .detail-card { padding: 28px 30px 30px; }
+        .detail-hero { display: flex; align-items: flex-start; gap: 22px; }
+        .detail-logo {
+            width: 100px; height: 100px; flex: 0 0 100px;
+            display: grid; place-items: center; overflow: hidden;
+            border: 1px solid var(--a-hairline);
+            border-radius: var(--a-radius-lg); background: var(--surface-2);
         }
-        
-        html, body {
-            height: 100%;
+        html[data-theme="dark"] .detail-logo { border-color: rgba(255,255,255,.12); }
+        .detail-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .detail-logo-letter { color: var(--primary); font-size: var(--a-fs-section); font-weight: 700; }
+        .detail-head { min-width: 0; flex: 1 1 auto; }
+        .detail-name { margin: 0 0 8px; color: var(--text); font-size: var(--a-fs-heading); font-weight: 700; letter-spacing: -0.02em; }
+        .detail-facts { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--muted); font-size: var(--a-fs-caption); }
+        .detail-facts span { display: inline-flex; align-items: center; gap: 5px; }
+        .detail-facts svg { width: 14px; height: 14px; }
+        .detail-desc {
+            margin: 22px 0 0; padding: 16px;
+            border-radius: var(--a-radius-md); background: var(--surface-soft);
+            color: var(--text-2); font-size: 14px; line-height: 1.6;
         }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            background: white;
+        .detail-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+        .detail-tag {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 5px 12px; border: 1px solid var(--a-hairline);
+            border-radius: var(--a-radius-pill); background: var(--surface);
+            color: var(--muted); font-size: var(--a-fs-fine);
         }
-        
-        .wrapper {
-            flex: 1;
+        html[data-theme="dark"] .detail-tag { border-color: rgba(255,255,255,.12); }
+        .detail-tag svg { width: 12px; height: 12px; }
+        .detail-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+        .detail-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            height: 44px; padding: 0 18px; border: 1px solid var(--a-hairline);
+            border-radius: var(--a-radius-md); background: var(--surface);
+            color: var(--text-2); font-size: 14px; font-weight: 600; font-family: inherit;
+            text-decoration: none; cursor: pointer;
+            transition: border-color .16s ease, background-color .16s ease, color .16s ease;
         }
-        
-        .breadcrumb-nav {
-            background: var(--primary);
-            padding: 16px 0;
+        html[data-theme="dark"] .detail-btn { border-color: rgba(255,255,255,.12); }
+        .detail-btn:hover { border-color: var(--primary-border); background: var(--primary-soft); color: var(--link); }
+        .detail-btn:active { transform: scale(.95); }
+        .detail-btn svg { width: 17px; height: 17px; }
+        .detail-btn.is-primary { border-color: var(--primary); background: var(--primary); color: var(--a-on-primary); }
+        .detail-btn.is-primary:hover { border-color: var(--primary-hover); background: var(--primary-hover); color: var(--a-on-primary); }
+        .detail-url {
+            display: flex; align-items: center; gap: 12px;
+            margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--a-hairline);
         }
-        
-        .breadcrumb {
-            display: flex;
-            align-items: center;
-            color: rgba(255, 255, 255, 0.9);
+        html[data-theme="dark"] .detail-url { border-top-color: rgba(255,255,255,.12); }
+        .detail-url-icon {
+            width: 40px; height: 40px; flex: 0 0 40px; overflow: hidden;
+            display: grid; place-items: center; border-radius: var(--a-radius-sm);
+            border: 1px solid var(--a-hairline); background: var(--surface-2);
         }
-        
-        .breadcrumb a {
-            color: white;
-            transition: all 0.3s ease;
+        html[data-theme="dark"] .detail-url-icon { border-color: rgba(255,255,255,.12); }
+        .detail-url-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .detail-url-label { margin: 0 0 2px; color: var(--muted); font-size: var(--a-fs-fine); }
+        .detail-url a { color: var(--link); font-size: 14px; word-break: break-all; }
+        .detail-related { margin-top: 40px; }
+        .section-head { display: flex; align-items: baseline; gap: 8px; margin: 0 0 16px; }
+        .section-head h2 { margin: 0; color: var(--text); font-size: 15px; font-weight: 600; }
+        .section-head .n { color: var(--muted); font-size: 12px; }
+        .detail-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+        .rel-card {
+            display: flex; gap: 12px; padding: 14px; text-decoration: none;
+            border: 1px solid var(--a-hairline); border-radius: var(--a-radius-md);
+            background: transparent; transition: border-color .16s ease;
         }
-        
-        .breadcrumb a:hover {
-            color: #fbbf24;
+        html[data-theme="dark"] .rel-card { border-color: rgba(255,255,255,.12); }
+        .rel-card:hover { border-color: var(--primary-border); }
+        .rel-logo {
+            width: 44px; height: 44px; flex: 0 0 44px; overflow: hidden;
+            display: grid; place-items: center; border-radius: var(--a-radius-sm);
+            border: 1px solid var(--a-hairline); background: var(--surface-2);
         }
-        
-        .logo-img {
-            max-height: 48px;
-            width: auto;
-            object-fit: contain;
-            transition: transform 0.3s ease;
-        }
-        
-        .logo-img:hover {
-            transform: scale(1.05);
-        }
-        
-        .site-logo-large {
-            width: 100px;
-            height: 100px;
-            object-fit: contain;
-            border-radius: 20px;
-            background: white;
-            box-shadow: none;
-            transition: transform 0.3s ease;
-        }
-        
-        .site-logo-large:hover {
-            transform: scale(1.05);
-        }
-        
-        .default-logo-large {
-            width: 100px;
-            height: 100px;
-            background: var(--primary);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 40px;
-            box-shadow: none;
-        }
-        
-        .detail-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: none;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .visit-btn {
-            background: var(--primary);
-            transition: all 0.3s ease;
-        }
-        
-        .visit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: none;
-        }
-        
-        .action-btn {
-            transition: all 0.3s ease;
-        }
-        
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: none;
-        }
-        
-        .related-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-        }
-        
-        .related-card:hover {
-            transform: translateY(-8px);
-            box-shadow: none;
-        }
-        
-        .related-logo {
-            width: 48px;
-            height: 48px;
-            object-fit: contain;
-            border-radius: 12px;
-            transition: transform 0.3s ease;
-        }
-        
-        .related-logo:hover {
-            transform: scale(1.1);
-        }
-        
-        .default-related-logo {
-            width: 48px;
-            height: 48px;
-            background: var(--primary);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-        }
-        
-        .tag {
-            display: inline-block;
-            padding: 6px 14px;
-            background: #f3f4f6;
-            border-radius: 30px;
-            font-size: 14px;
-            color: #4b5563;
-            transition: all 0.3s ease;
-        }
-        
-        .tag:hover {
-            background: #e5e7eb;
-        }
-        
+        html[data-theme="dark"] .rel-logo { border-color: rgba(255,255,255,.12); }
+        .rel-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .rel-logo-letter { color: var(--primary); font-size: var(--a-fs-title); font-weight: 700; }
+        .rel-body { min-width: 0; flex: 1 1 auto; }
+        .rel-name { display: block; overflow: hidden; color: var(--text); font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+        .rel-desc { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; margin: 2px 0 4px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+        .rel-meta { color: var(--muted); font-size: 12px; }
         .qrcode-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
+            display: none; position: fixed; inset: 0; z-index: 1000;
+            align-items: center; justify-content: center; background: rgba(0,0,0,.5);
         }
-        
         .qrcode-content {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 320px;
-            animation: slideUp 0.3s ease;
-            box-shadow: none;
+            max-width: 320px; padding: 28px; border-radius: var(--a-radius-lg);
+            background: var(--surface); color: var(--text); text-align: center;
         }
-        
-        @keyframes slideUp {
-            from {
-                transform: translateY(30px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-        
+        .qrcode-content h3 { margin: 0 0 16px; font-size: var(--a-fs-title); font-weight: 700; }
+        .qrcode-content p { margin: 14px 0 18px; color: var(--muted); font-size: 14px; }
+        .qrcode-stage { display: inline-block; padding: 14px; border-radius: var(--a-radius-md); background: var(--surface-soft); }
         .toast-message {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #333;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 50px;
-            z-index: 9999;
-            display: none;
-            animation: fadeInOut 2s ease;
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 9999; display: none; padding: 12px 24px;
+            border-radius: var(--a-radius-pill); background: var(--a-ink); color: var(--a-white);
+            font-size: 14px;
         }
-        
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 0; }
-            10%, 90% { opacity: 1; }
+        #backToTop {
+            position: fixed; right: 24px; bottom: 24px; z-index: 50;
+            width: 44px; height: 44px; display: none; align-items: center; justify-content: center;
+            border: 1px solid var(--a-hairline); border-radius: var(--a-radius-md);
+            background: var(--surface); color: var(--text-2); cursor: pointer;
         }
-        
-        footer a {
-            transition: color 0.3s ease;
-        }
-        
-        footer a:hover {
-            color: #93c5fd !important;
-        }
-        
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #93c5fd;
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #3b82f6;
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .site-logo-large,
-            .default-logo-large {
-                width: 80px;
-                height: 80px;
-                font-size: 32px;
-            }
-            
-            .detail-card {
-                border-radius: 16px;
-            }
+        html[data-theme="dark"] #backToTop { border-color: rgba(255,255,255,.12); }
+        #backToTop svg { width: 19px; height: 19px; }
+        @media (max-width: 640px) {
+            .detail-card { padding: 20px 18px 24px; }
+            .detail-hero { flex-direction: column; gap: 16px; }
+            .detail-logo { width: 72px; height: 72px; flex-basis: 72px; }
+            .detail-actions .detail-btn { flex: 1 1 45%; }
         }
     </style>
 </head>
-<body class="bg-white">
-    <div id="toast" class="toast-message"></div>
-    
-    <div class="wrapper">
-        <div class="breadcrumb-nav">
-            <div class="container mx-auto px-4">
-                <div class="flex items-center justify-between">
-                    <a href="index.php" class="flex items-center space-x-3">
-                        <?php if ($siteLogoUrl): ?>
-                            <img src="<?php echo $functions->escape($siteLogoUrl); ?>" 
-                                 alt="<?php echo $functions->escape($siteTitle); ?>" 
-                                 width="120" height="40"
-                                 class="logo-img"
-                                 style="max-height: 40px; width: auto;">
-                        <?php endif; ?>
-                        <span class="text-white text-xl font-bold">
-                            <?php echo $functions->escape($siteTitle); ?>
-                        </span>
-                    </a>
-                    
-                    <a href="index.php" class="text-white hover:text-yellow-200 transition">
-                        <i class="fas fa-home mr-2"></i>返回首页
-                    </a>
-                </div>
-                
-                <div class="breadcrumb mt-3">
-                    <a href="index.php"><i class="fas fa-home"></i> 首页</a>
-                    <i class="fas fa-chevron-right mx-2 text-xs"></i>
-                    <a href="sites.php">
-                        <?php echo $functions->escape($link['category_name'] ?: '全部分类'); ?>
-                    </a>
-                    <i class="fas fa-chevron-right mx-2 text-xs"></i>
-                    <span class="text-white"><?php echo $functions->escape($link['name']); ?></span>
-                </div>
-            </div>
-        </div>
+<body data-monitor="0">
+    <a class="skip-link" href="#detailMain">跳到正文</a>
+    <div id="toast" class="toast-message" role="status" aria-live="polite"></div>
 
-        <main class="container mx-auto px-4 py-8">
-            <div class="detail-card fade-in">
-                <div class="p-6 md:p-8">
-                    <div class="flex flex-col md:flex-row items-start gap-6">
-                        <div class="flex-shrink-0">
-                            <?php 
-                                $logoUrl = $functions->getLogoDisplayUrl($link['logo']);
-                                if (!empty($logoUrl)): 
-                            ?>
-                                <img src="<?php echo $functions->escape($logoUrl); ?>" 
-                                     alt="<?php echo $functions->escape($link['name']); ?>"
-                                     width="100" height="100"
-                                     class="site-logo-large"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <?php endif; ?>
-                            
-                            <?php if (empty($logoUrl)): ?>
-                                <div class="default-logo-large" style="<?php echo !empty($logoUrl) ? 'display:none;' : ''; ?>">
-                                    <i class="fas fa-globe"></i>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <div class="flex-1">
-                            <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
-                                <div>
-                                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-                                        <?php echo $functions->escape($link['name']); ?>
-                                    </h1>
-                                    <div class="flex flex-wrap items-center gap-3 text-gray-500 text-sm">
-                                        <span class="flex items-center">
-                                            <i class="fas fa-link mr-1"></i>
-                                            <?php echo $functions->escape($domain); ?>
-                                        </span>
-                                        <span class="flex items-center">
-                                            <i class="fas fa-eye mr-1"></i>
-                                            <?php echo number_format($link['clicks'] ?? 0); ?> 次浏览
-                                        </span>
-                                        <span class="flex items-center">
-                                            <i class="fas fa-calendar mr-1"></i>
-                                            <?php echo date('Y-m-d', strtotime($link['created_at'])); ?>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <?php if (!empty($link['description'])): ?>
-                            <div class="bg-gray-50 rounded-xl p-5 mb-5">
-                                <p class="text-gray-700 leading-relaxed">
-                                    <?php echo nl2br($functions->escape($link['description'])); ?>
-                                </p>
-                            </div>
-                            <?php endif; ?>
-                            
-                            <div class="flex flex-wrap gap-2 mb-6">
-                                <?php if ($link['category_name']): ?>
-                                <span class="tag">
-                                    <i class="fas fa-folder mr-1 text-blue-600"></i>
-                                    <?php echo $functions->escape($link['category_name']); ?>
-                                </span>
-                                <?php endif; ?>
-                                <?php 
-                                    $scheme = parse_url($link['url'], PHP_URL_SCHEME);
-                                    if ($scheme): 
-                                ?>
-                                <span class="tag">
-                                    <i class="fas fa-shield-alt mr-1 text-green-600"></i>
-                                    <?php echo strtoupper($scheme); ?>
-                                </span>
-                                <?php endif; ?>
-                            </div>
-                            
-                            <div class="flex flex-wrap gap-3">
-                                <a href="<?php echo $functions->escape($link['url']); ?>" 
-                                   target="_blank" 
-                                   rel="noopener noreferrer"
-                                   class="visit-btn inline-flex items-center px-8 py-3 text-white rounded-full text-base font-medium">
-                                    <i class="fas fa-external-link-alt mr-2"></i>
-                                    访问网站
-                                </a>
-                                
-                                <button onclick="shareWebsite()" 
-                                        class="action-btn inline-flex items-center px-5 py-3 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200">
-                                    <i class="fas fa-share-alt mr-2"></i>
-                                    分享
-                                </button>
-                                
-                                <button onclick="showQRCode()" 
-                                        class="action-btn inline-flex items-center px-5 py-3 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200">
-                                    <i class="fas fa-qrcode mr-2"></i>
-                                    手机访问
-                                </button>
-                                
-                                <button onclick="copyUrl()" 
-                                        class="action-btn inline-flex items-center px-5 py-3 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200">
-                                    <i class="far fa-copy mr-2"></i>
-                                    复制链接
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="border-t border-gray-100">
-                    <div class="p-6 md:p-8 bg-gray-50">
-                        <div class="flex items-start space-x-3">
-                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-globe text-blue-600"></i>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-sm text-gray-500 mb-1">网站地址</p>
-                                <a href="<?php echo $functions->escape($link['url']); ?>" 
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="text-blue-600 hover:text-blue-700 break-all font-medium">
-                                    <?php echo $functions->escape($link['url']); ?>
-                                    <i class="fas fa-external-link-alt ml-2 text-xs"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <div class="page-shell">
+        <header class="site-header">
+            <div class="header-brand">
+                <a class="brand" href="index.php" aria-label="返回首页">
+                    <span class="brand-mark" aria-hidden="true">轩<?php if ($siteLogoUrl !== ''): ?><img src="<?php echo $functions->escape($siteLogoUrl); ?>" alt="" onerror="this.remove();"><?php endif; ?></span>
+                    <span class="brand-info">
+                        <span class="brand-title" translate="no"><?php echo $functions->escape($siteTitle); ?></span>
+                        <span class="brand-subtitle">共 <?php echo (int) $detailTotalSites; ?> 个站点</span>
+                    </span>
+                </a>
             </div>
-            
+            <div class="header-tools">
+                <button type="button" class="tool-btn theme-toggle" id="themeToggle" aria-label="切换到深色模式" title="切换到深色模式" aria-pressed="false">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"></path></svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 1.8v2.5M12 19.7v2.5M4.2 4.2l1.8 1.8M18 18l1.8 1.8M1.8 12h2.5M19.7 12h2.5M4.2 19.8 6 18M18 6l1.8-1.8"></path></svg>
+                </button>
+                <a class="tool-btn" href="index.php" aria-label="返回首页" title="返回首页">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>
+                </a>
+            </div>
+        </header>
+
+        <main class="page-main" id="detailMain">
+            <!-- v2.18.11 P1-4：面包屑只放在内容区顶部，不替代 header -->
+            <nav class="crumb" aria-label="面包屑">
+                <a href="index.php">首页</a> ›
+                <a href="sites.php"><?php echo $functions->escape($link['category_name'] ?: '全部分类'); ?></a> ›
+                <span><?php echo $functions->escape($link['name']); ?></span>
+            </nav>
+
+            <section class="page-card detail-card">
+                <div class="detail-hero">
+                    <?php if (!empty($detailLogoUrl)): ?>
+                        <div class="detail-logo"><img src="<?php echo $functions->escape($detailLogoUrl); ?>" alt="<?php echo $functions->escape($link['name']); ?>" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';"><span class="detail-logo-letter" style="display:none;"><?php echo $functions->escape(mb_substr($link['name'], 0, 1, 'UTF-8')); ?></span></div>
+                    <?php else: ?>
+                        <div class="detail-logo"><span class="detail-logo-letter"><?php echo $functions->escape(mb_substr($link['name'], 0, 1, 'UTF-8')); ?></span></div>
+                    <?php endif; ?>
+                    <div class="detail-head">
+                        <h1 class="detail-name"><?php echo $functions->escape($link['name']); ?></h1>
+                        <div class="detail-facts">
+                            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"></path><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path></svg><?php echo $functions->escape($domain); ?></span>
+                            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg><?php echo number_format($link['clicks'] ?? 0); ?> 次浏览</span>
+                            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M8 3v4M16 3v4M3 11h18"></path></svg><?php echo date('Y-m-d', strtotime($link['created_at'])); ?></span>
+                        </div>
+                    </div>
+                </div>
+
+                <?php if (!empty($link['description'])): ?>
+                    <div class="detail-desc"><?php echo nl2br($functions->escape($link['description'])); ?></div>
+                <?php endif; ?>
+
+                <?php if ($link['category_name'] || parse_url($link['url'], PHP_URL_SCHEME)): ?>
+                    <div class="detail-tags">
+                        <?php if ($link['category_name']): ?>
+                            <span class="detail-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"></path></svg><?php echo $functions->escape($link['category_name']); ?></span>
+                        <?php endif; ?>
+                        <?php $scheme = parse_url($link['url'], PHP_URL_SCHEME); if ($scheme): ?>
+                            <span class="detail-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.4 8.3 8 9 4.6-.7 8-4 8-9V6Z"></path></svg><?php echo strtoupper($scheme); ?></span>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+
+                <div class="detail-actions">
+                    <a href="<?php echo $functions->escape($link['url']); ?>" target="_blank" rel="noopener noreferrer" class="detail-btn is-primary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><path d="M15 3h6v6M10 14 21 3"></path></svg>访问网站
+                    </a>
+                    <button type="button" class="detail-btn" onclick="shareWebsite()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.6 13.5 6.8 4M15.4 6.5 8.6 10.5"></path></svg>分享
+                    </button>
+                    <button type="button" class="detail-btn" onclick="showQRCode()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><path d="M14 14h3v3M21 14v7M14 21h3M17 17h4"></path></svg>手机访问
+                    </button>
+                    <button type="button" class="detail-btn" onclick="copyUrl()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>复制链接
+                    </button>
+                </div>
+
+                <div class="detail-url">
+                    <?php if (!empty($detailLogoUrl)): ?>
+                        <span class="detail-url-icon"><img src="<?php echo $functions->escape($detailLogoUrl); ?>" alt="" onerror="this.remove();"></span>
+                    <?php else: ?>
+                        <span class="detail-url-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:20px;height:20px;color:var(--primary)"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"></path></svg></span>
+                    <?php endif; ?>
+                    <div>
+                        <p class="detail-url-label">网站地址</p>
+                        <a href="<?php echo $functions->escape($link['url']); ?>" target="_blank" rel="noopener noreferrer"><?php echo $functions->escape($link['url']); ?></a>
+                    </div>
+                </div>
+            </section>
+
             <?php if (!empty($relatedLinks)): ?>
-            <div class="mt-12 fade-in" style="animation-delay: 0.2s;">
-                <div class="flex items-center mb-6 pb-2 border-b-2 border-blue-100">
-                    <div class="w-1 h-8 bg-blue-600 rounded-full mr-3"></div>
-                    <h2 class="text-2xl font-bold text-gray-800">
-                        <i class="fas fa-thumbs-up mr-2 text-blue-600"></i>
-                        相关推荐
-                    </h2>
-                    <span class="ml-3 text-sm text-gray-500">(<?php echo count($relatedLinks); ?>个网站)</span>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <?php foreach ($relatedLinks as $related): ?>
-                        <div onclick="window.location.href='detail.php?id=<?php echo $related['id']; ?>'"
-                             class="related-card bg-white rounded-xl shadow-md overflow-hidden group">
-                            <div class="p-5">
-                                <div class="flex items-start space-x-4">
-                                    <?php 
-                                        $relLogo = $functions->getLogoDisplayUrl($related['logo']);
-                                        if (!empty($relLogo)): 
-                                    ?>
-                                        <img src="<?php echo $functions->escape($relLogo); ?>" 
-                                             alt="<?php echo $functions->escape($related['name']); ?>"
-                                             width="48" height="48"
-                                             class="related-logo flex-shrink-0"
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <section class="detail-related">
+                    <div class="section-head">
+                        <h2>相关推荐</h2>
+                        <span class="n"><?php echo count($relatedLinks); ?> 个网站</span>
+                    </div>
+                    <div class="detail-related-grid">
+                        <?php foreach ($relatedLinks as $related): ?>
+                            <?php $relLogo = $functions->getLogoDisplayUrl($related['logo']); ?>
+                            <a class="rel-card" href="detail.php?id=<?php echo (int) $related['id']; ?>">
+                                <span class="rel-logo">
+                                    <?php if (!empty($relLogo)): ?>
+                                        <img src="<?php echo $functions->escape($relLogo); ?>" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
+                                        <span class="rel-logo-letter" style="display:none;"><?php echo $functions->escape(mb_substr($related['name'], 0, 1, 'UTF-8')); ?></span>
+                                    <?php else: ?>
+                                        <span class="rel-logo-letter"><?php echo $functions->escape(mb_substr($related['name'], 0, 1, 'UTF-8')); ?></span>
                                     <?php endif; ?>
-                                    
-                                    <?php if (empty($relLogo)): ?>
-                                        <div class="default-related-logo flex-shrink-0">
-                                            <i class="fas fa-globe"></i>
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <div class="flex-1 min-w-0">
-                                        <h3 class="font-bold text-gray-800 mb-1 group-hover:text-blue-600 transition-colors truncate">
-                                            <?php echo $functions->escape($related['name']); ?>
-                                        </h3>
-                                        <p class="text-gray-500 text-sm line-clamp-2 mb-2">
-                                            <?php echo $functions->escape($related['description'] ?: '暂无描述'); ?>
-                                        </p>
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-gray-600 text-xs">
-                                                <i class="fas fa-eye mr-1"></i>
-                                                <?php echo number_format($related['clicks'] ?? 0); ?>
-                                            </span>
-                                            <span class="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <i class="fas fa-arrow-right text-blue-600 text-xs"></i>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
+                                </span>
+                                <span class="rel-body">
+                                    <span class="rel-name"><?php echo $functions->escape($related['name']); ?></span>
+                                    <span class="rel-desc"><?php echo $functions->escape($related['description'] ?: '暂无描述'); ?></span>
+                                    <span class="rel-meta"><?php echo number_format($related['clicks'] ?? 0); ?> 次访问</span>
+                                </span>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
             <?php endif; ?>
         </main>
-    </div>
-    
-    <footer class="bg-gray-900 text-white py-6 mt-8">
-        <div class="container mx-auto px-4 text-center">
-            
-            <?php if ($showICP == '1' && $icpNumber): ?>
-                <p class="mb-2">
-                    <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white transition">
-                        <i class="fas fa-certificate mr-1"></i> <?php echo $functions->escape($icpNumber); ?>
-                    </a>
-                </p>
-            <?php endif; ?>
-            
-            <?php if ($showGongan == '1' && $gonganNumber): ?>
-                <p class="mb-2">
-                    <a href="http://www.beian.gov.cn/" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white transition">
-                        <i class="fas fa-shield-alt mr-1"></i> <?php echo $functions->escape($gonganNumber); ?>
-                    </a>
-                </p>
-            <?php endif; ?>
-            
-            <p class="text-gray-400 text-sm">
-                &copy; <?php echo date('Y'); ?> <?php echo $functions->escape($siteTitle); ?>.
+
+        <footer class="site-footer">
+            <p class="copyright">
+                &copy; <?php echo date('Y'); ?> <?php echo $functions->escape($siteTitle); ?>
+                <?php if ($showICP == '1' && $icpNumber): ?> · <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer"><?php echo $functions->escape($icpNumber); ?></a><?php endif; ?>
+                <?php if ($showGongan == '1' && $gonganNumber): ?> · <a href="http://www.beian.gov.cn/" target="_blank" rel="noopener noreferrer"><?php echo $functions->escape($gonganNumber); ?></a><?php endif; ?>
+                · <a href="index.php">首页</a>
             </p>
-        </div>
-    </footer>
-    
-    <button id="backToTop" 
-            class="fixed bottom-8 right-8 bg-blue-600 text-white w-12 h-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hidden z-50"
-            aria-label="回到顶部"
-            onclick="scrollToTop()">
-        <i class="fas fa-arrow-up"></i>
+        </footer>
+    </div>
+
+    <button id="backToTop" aria-label="回到顶部" onclick="scrollToTop()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>
     </button>
 
     <div class="qrcode-modal" id="qrcodeModal" onclick="closeQRCode(event)">
         <div class="qrcode-content" onclick="event.stopPropagation()">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">手机扫码访问</h3>
-            <div class="bg-gray-50 p-4 rounded-xl inline-block mb-4">
-                <div id="qrcode"></div>
-            </div>
-            <p class="text-gray-600 text-sm mb-4">使用手机扫描二维码即可访问</p>
-            <button onclick="closeQRCode()" class="px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition">
-                关闭
-            </button>
+            <h3>手机扫码访问</h3>
+            <div class="qrcode-stage"><div id="qrcode"></div></div>
+            <p>使用手机扫描二维码即可访问</p>
+            <button type="button" class="detail-btn" onclick="closeQRCode()">关闭</button>
         </div>
     </div>
 
@@ -690,91 +446,66 @@ $detailJsonLd = [
         $(document).ready(function() {
             new QRCode(document.getElementById("qrcode"), {
                 text: "<?php echo $functions->escape($link['url']); ?>",
-                width: 200,
-                height: 200,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
+                width: 200, height: 200,
+                colorDark: "#000000", colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
-
-            /* v2.18.1 · qrcode.js 生成的 <img> 没有 alt，读屏会念成「图片」，
-               这里补上语义；装饰性容器本身已 aria-hidden。 */
             document.querySelectorAll('#qrcode img').forEach(function (qrImg) {
-                if (!qrImg.hasAttribute('alt')) {
-                    qrImg.setAttribute('alt', '网址二维码');
-                }
+                if (!qrImg.hasAttribute('alt')) { qrImg.setAttribute('alt', '网址二维码'); }
             });
-            
             $(window).scroll(function() {
-                if ($(this).scrollTop() > 300) {
-                    $('#backToTop').fadeIn();
-                } else {
-                    $('#backToTop').fadeOut();
-                }
+                if ($(this).scrollTop() > 300) { $('#backToTop').css('display', 'inline-flex'); }
+                else { $('#backToTop').css('display', 'none'); }
             });
         });
-        
         function showToast(message) {
-            $('#toast').text(message).fadeIn();
-            setTimeout(function() {
-                $('#toast').fadeOut();
-            }, 2000);
+            $('#toast').text(message).stop(true, true).fadeIn();
+            setTimeout(function() { $('#toast').fadeOut(); }, 2000);
         }
-        
         function shareWebsite() {
             if (navigator.share) {
                 navigator.share({
                     title: '<?php echo $functions->escape($link['name']); ?>',
                     text: '<?php echo $functions->escape($link['description'] ?: $link['name']); ?>',
-                    url: '<?php echo $functions->escape($link['url']); ?>',
-                }).catch(() => {
-                    copyUrl();
-                });
-            } else {
-                copyUrl();
-                showToast('链接已复制，可以分享给朋友啦！');
-            }
+                    url: '<?php echo $functions->escape($link['url']); ?>'
+                }).catch(function () { copyUrl(); });
+            } else { copyUrl(); showToast('链接已复制，可以分享给朋友啦！'); }
         }
-        
         function copyUrl() {
-            const url = '<?php echo $functions->escape($link['url']); ?>';
-            navigator.clipboard?.writeText(url).then(() => {
-                showToast('链接已复制到剪贴板');
-            }).catch(() => {
-                const textarea = document.createElement('textarea');
-                textarea.value = url;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                showToast('链接已复制到剪贴板');
-            });
+            var url = '<?php echo $functions->escape($link['url']); ?>';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(function(){ showToast('链接已复制到剪贴板'); }).catch(fallbackCopy);
+            } else { fallbackCopy(); }
+            function fallbackCopy() {
+                var ta = document.createElement('textarea');
+                ta.value = url; document.body.appendChild(ta); ta.select();
+                try { document.execCommand('copy'); } catch (e) {}
+                document.body.removeChild(ta); showToast('链接已复制到剪贴板');
+            }
         }
-        
-        function showQRCode() {
-            $('#qrcodeModal').css('display', 'flex');
-        }
-        
+        function showQRCode() { $('#qrcodeModal').css('display', 'flex'); }
         function closeQRCode(event) {
-            if (!event || event.target === event.currentTarget) {
-                $('#qrcodeModal').fadeOut();
-            }
+            if (!event || event.target === event.currentTarget) { $('#qrcodeModal').fadeOut(); }
         }
-        
-        function scrollToTop() {
-            $('html, body').animate({ scrollTop: 0 }, 500);
-        }
-        
-        $(document).keydown(function(e) {
-            if (e.keyCode === 27) {
-                $('#qrcodeModal').fadeOut();
-            }
-        });
-        
-        window.addEventListener('load', function() {
-            console.log('详情页加载完成');
-            $('.detail-card').addClass('fade-in');
-        });
+        function scrollToTop() { $('html, body').animate({ scrollTop: 0 }, 300); }
+        $(document).keydown(function(e) { if (e.keyCode === 27) { $('#qrcodeModal').fadeOut(); } });
+
+        /* v2.18.11 P1-4：统一 header 主题切换 */
+        (function () {
+            var toggle = document.getElementById('themeToggle');
+            if (!toggle) { return; }
+            var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+            toggle.setAttribute('aria-pressed', dark ? 'true' : 'false');
+            toggle.setAttribute('aria-label', dark ? '切换到浅色模式' : '切换到深色模式');
+            toggle.addEventListener('click', function () {
+                var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                toggle.setAttribute('aria-pressed', next === 'dark' ? 'true' : 'false');
+                var meta = document.querySelector('meta[name="theme-color"]');
+                if (meta) { meta.setAttribute('content', next === 'dark' ? '#000000' : '#ffffff'); }
+                try { localStorage.setItem('xy-nav-theme', next); } catch (e) {}
+            });
+        })();
     </script>
 </body>
 </html>

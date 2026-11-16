@@ -383,3 +383,17 @@ html[data-theme="dark"] .auth-theme .icon-sun {
         font-size: var(--a-fs-title);
     }
 }
+
+/* ==========================================================================
+   v2.18.11 · P1-1 浮层卡描边统一
+   登录 / 注册 / 找回 / 重置浮层卡：1px 描边（亮 rgba(0,0,0,.08) /
+   暗 rgba(255,255,255,.12)），圆角 18px，无阴影。
+   ========================================================================== */
+.auth-card {
+    border: 1px solid var(--a-line-soft);
+    border-radius: var(--a-radius-lg);
+    box-shadow: none;
+}
+html[data-theme="dark"] .auth-card {
+    border-color: rgba(255, 255, 255, 0.12);
+}
