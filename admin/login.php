@@ -111,143 +111,115 @@ function navVerifyAdminUser($functions, $account, $password)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex,nofollow">
     <title>后台登录 - 轩宇-导航</title>
+    <!-- v2.18.10：此前本页未引入任何样式表，内联 style 里的 var(--a-*) 全部失效，
+         导致按钮无蓝底、圆角归零、品牌块退化为 20px 方块。按序补引入。 -->
+    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.10">
+    <link rel="stylesheet" href="../assets/css/admin.css?v=2.18.10">
     <style>
+        /* v2.18.10：本页只保留布局与尺寸。
+           颜色 / 圆角 / 阴影 / 字重一律走 apple-tokens.css 与 admin.css，
+           不再在此重复声明，避免两处口径漂移。 */
         * { box-sizing: border-box; }
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --text: #172033;
-            --muted: #64748b;
-            --border: #dfe6f1;
-            --danger: #dc2626;
-            --danger-soft: #fef2f2;
-        }
+
         body {
             margin: 0;
             min-height: 100vh;
             display: grid;
             place-items: center;
             padding: 24px 14px;
-            color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-            background: var(--a-parchment);
         }
+
         .login-card {
             width: min(420px, 100%);
-            background: var(--a-canvas);
-            border: 1px solid var(--a-hairline);
-            border-radius: var(--a-radius-lg);
             padding: 32px 30px 26px;
         }
+
+        /* 品牌块：与前台 login.php 同构，52 见方 / 18 圆角 / 纯蓝 / 唯一阴影 */
         .brand {
             display: flex;
             align-items: center;
-            gap: 11px;
+            gap: 12px;
             margin-bottom: 24px;
         }
         .brand-mark {
-            width: 42px;
-            height: 42px;
-            border-radius: var(--a-radius-md);
-            display: grid;
-            place-items: center;
-            color: var(--a-canvas);
-            font-weight: 700;
-            font-size: var(--a-fs-title);
-            background: var(--a-primary);
+            flex: 0 0 52px;
+            width: 52px;
+            height: 52px;
         }
         .brand h1 {
             margin: 0;
-            font-size: 19px;
-            letter-spacing: .3px;
+            font-size: 25px;
+            letter-spacing: -0.035em;
         }
         .brand p {
-            margin: 2px 0 0;
-            color: var(--muted);
+            margin: 3px 0 0;
             font-size: 12px;
         }
+
         .intro {
             margin: 0 0 22px;
-            color: var(--muted);
-            font-size: 13px;
-            line-height: 1.7;
+            font-size: 14px;
+            line-height: 1.47;
         }
+
         .alert {
             margin-bottom: 18px;
             padding: 11px 13px;
-            border-radius: var(--a-radius-md);
-            background: var(--danger-soft);
-            border: 1px solid #fecaca;
-            color: #b91c1c;
             font-size: 13px;
-            line-height: 1.6;
+            line-height: 1.5;
         }
+
         .field { margin-bottom: 16px; }
         .field label {
             display: block;
             margin-bottom: 7px;
             font-size: 13px;
-            font-weight: 600;
-            color: #334155;
         }
-        .field input {
+        /* 输入框：高 44 / 圆角 11 / 1px 描边 —— 其余由 admin.css .form-control 提供 */
+        .field .form-control {
             width: 100%;
             height: 44px;
+            min-height: 44px;
             padding: 0 13px;
-            border: 1px solid var(--border);
             border-radius: var(--a-radius-md);
-            outline: none;
-            font-size: 14px;
-            color: var(--text);
-            background: var(--a-parchment);
-            transition: border-color .18s ease, background .18s ease;
         }
-        .field input:focus {
-            border-color: var(--a-focus);
-            background: var(--a-canvas);
+        .field .form-control:focus {
             outline: 2px solid var(--a-focus);
             outline-offset: 1px;
         }
-        .field input.invalid {
-            border-color: var(--danger);
-            outline: 2px solid var(--danger);
+        .field .form-control.invalid {
+            border-color: var(--a-danger);
+            outline: 2px solid var(--a-danger);
             outline-offset: 1px;
         }
+
         .error-text {
             display: none;
             margin: 6px 0 0;
-            color: var(--danger);
             font-size: 12px;
         }
         .error-text.show { display: block; }
+
+        /* 主按钮：宽 100% / 高 46 / 圆角 11 —— 颜色与字重由 .btn-primary 提供 */
         .submit {
             width: 100%;
-            height: 45px;
+            height: 46px;
             margin-top: 6px;
-            border: 0;
             border-radius: var(--a-radius-md);
-            color: var(--a-canvas);
             font-size: 15px;
-            font-weight: 700;
-            letter-spacing: .5px;
-            cursor: pointer;
-            background: var(--a-primary);
-            transition: background-color .18s ease;
         }
-        .submit:hover { background: var(--a-primary-hover); }
-        .submit:active { transform: scale(0.95); }
+
         .foot {
             margin: 22px 0 0;
             padding-top: 16px;
-            border-top: 1px solid var(--a-hairline);
-            /* v2.18.9：原 #94a3b8 对白仅 2.6:1，改 token 后 4.5:1+ */
-            color: var(--a-ink-48-strong);
-            font-size: 11px;
+            font-size: 12px;
             text-align: center;
         }
+
         @media (max-width: 420px) {
-            .login-card { padding: 26px 20px 22px; border-radius: 16px; }
-            .brand h1 { font-size: 17px; }
+            .login-card { padding: 26px 20px 22px; }
+            .brand h1 { font-size: 21px; }
+            .brand-mark { flex-basis: 44px; width: 44px; height: 44px; }
         }
     </style>
 </head>
@@ -270,17 +242,17 @@ function navVerifyAdminUser($functions, $account, $password)
         <form id="loginForm" method="POST" novalidate>
             <div class="field">
                 <label for="username">用户名</label>
-                <input type="text" id="username" name="username" maxlength="50" autocomplete="username" autofocus placeholder="请输入管理员用户名">
+                <input type="text" id="username" name="username" class="form-control" maxlength="50" autocomplete="username" autofocus placeholder="请输入管理员用户名">
                 <p id="usernameError" class="error-text" aria-live="polite"></p>
             </div>
 
             <div class="field">
                 <label for="password">密码</label>
-                <input type="password" id="password" name="password" autocomplete="current-password" placeholder="请输入密码">
+                <input type="password" id="password" name="password" class="form-control" autocomplete="current-password" placeholder="请输入密码">
                 <p id="passwordError" class="error-text" aria-live="polite"></p>
             </div>
 
-            <button type="submit" class="submit">登录后台</button>
+            <button type="submit" class="btn btn-primary btn-block submit">登录后台</button>
         </form>
 
         <p class="foot">轩宇-导航 · 管理入口</p>

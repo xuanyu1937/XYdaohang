@@ -72,6 +72,7 @@
 
     --a-fs-body:      17px;   /* Apple 正文，不是 16px */
     --a-fs-caption:   14px;
+    --a-fs-subhead:   15px;   /* v2.18.10：页面级标题 / 站点名 */
     --a-fs-fine:      12px;
     --a-fs-micro:     11px;
     --a-fs-title:     18px;
@@ -98,7 +99,8 @@
     --a-sp-xxs: 4px;  --a-sp-xs: 8px;   --a-sp-sm: 12px;  --a-sp-md: 17px;
     --a-sp-lg: 24px;  --a-sp-xl: 32px;  --a-sp-xxl: 48px; --a-sp-section: 80px;
 
-    --a-radius-none: 0;      --a-radius-sm: 8px;    --a-radius-md: 11px;
+    --a-radius-none: 0;      --a-radius-xs: 5px;      --a-radius-sm: 8px;
+    --a-radius-md:   11px;
     --a-radius-lg:   18px;   --a-radius-pill: 999px;
 
     --a-shadow-product: rgba(0, 0, 0, 0.22) 3px 5px 30px 0;
@@ -107,6 +109,17 @@
     --bs-box-shadow:      none;
     --bs-box-shadow-sm:   none;
     --bs-box-shadow-lg:   none;
+
+    /* v2.18.10：Bootstrap 的圆角令牌一起归到规范档位。
+       --bs-border-radius-sm 默认 .25rem = 4px，会在页脚快捷链接这类
+       没被单独覆盖的 a 元素上漏出 4px 圆角，破坏「只允许 0/5/8/11/18/9999」。
+       这里把 4 档全部映射到 --a-radius-*，等于把漏网的中间值一起收编。 */
+    --bs-border-radius-sm:    var(--a-radius-sm);
+    --bs-border-radius:       var(--a-radius-md);
+    --bs-border-radius-lg:    var(--a-radius-lg);
+    --bs-border-radius-xl:    var(--a-radius-lg);
+    --bs-border-radius-xxl:   var(--a-radius-lg);
+    --bs-border-radius-pill:  var(--a-radius-pill);
 
     --a-frosted: saturate(180%) blur(20px);
     --a-hit-min: 44px;
@@ -142,7 +155,7 @@
     --brand-shadow:   transparent;
 
     /* 表面（浅色） */
-    --bg:             var(--a-parchment);
+    --bg:             var(--a-canvas);    /* v2.18.10：画布改满屏白，米白只留给交替分节/页脚 */
     --bg-card:        var(--a-canvas);
     --bg-input:       var(--a-canvas);
     --bg-soft:        var(--a-parchment);
@@ -157,6 +170,7 @@
     --text:           var(--a-ink);
     --text-2:         var(--a-ink-80);
     --muted:          var(--a-ink-48-strong);
+    --a-muted:        var(--a-ink-48-strong);  /* 亮色次级文字（≥4.5:1） */
     --muted-2:        var(--a-ink-48);
 
     /* 细线（浅色） */
@@ -294,7 +308,7 @@ html[data-theme="dark"] {
     --primary-text-dark:    var(--a-link-on-dark);
     --link:                 var(--a-link-on-dark);  /* 暗底文字链接 #2997ff */
 
-    --bg:             #1c1c1e;
+    --bg:             #000000;           /* v2.18.10：暗色画布改纯黑 */
     --bg-card:        var(--a-tile-1);
     --bg-input:       var(--a-tile-2);
     --bg-soft:        var(--a-tile-3);
@@ -308,6 +322,7 @@ html[data-theme="dark"] {
     --text:           #f5f5f7;      /* 不用纯白，防字发胖 */
     --text-2:         var(--a-muted-on-dark);
     --muted:          #a1a1a6;      /* 对 #272729 ≥6:1 */
+    --a-muted:        #a1a1a6;      /* 暗色次级文字（对 #272729 ≥6:1） */
     --muted-2:        #8e8e93;      /* 对 #272729 ≥4.9:1 */
 
     --border:         rgba(255, 255, 255, 0.12);
@@ -406,10 +421,12 @@ html[data-theme="dark"][data-skin="mint"] {
     --brand-shadow: transparent;
 }
 
-/* 响应式控件尺寸（原 nav.css 在 @media(max-width:920px) 的 :root 覆盖，
-   变量块移除后在此统一保留，避免桌面 44 / 移动 40 的既有验收值回退） */
+/* 响应式控件尺寸
+   v2.18.10：此前在 ≤920px 把 --ctl-size 压到 40px，违反「触控目标不小于
+   44×44」。移动端恰恰是最需要够大手势区的场景，这里不再缩小，
+   统一沿用 --a-hit-min(44px)。 */
 @media (max-width: 920px) {
-    :root { --ctl-size: 40px; }
+    :root { --ctl-size: var(--a-hit-min); }
 }
 
 /* ==========================================================================
@@ -524,7 +541,8 @@ html[data-theme="dark"] .apple-footer a { color: var(--a-muted-on-dark); }
    Bootstrap 阴影工具类压平
    .shadow-sm / .shadow / .shadow-lg / .shadow-xl 是内联使用的硬编码工具类，
    不读上面归零的 --bs-box-shadow-* 变量，需要单独覆盖一次。
-   唯一保留的阴影是 .brand-mark（LOGO），见 --a-shadow-product。
+   全站只保留两处阴影：.brand-mark（品牌标识）与 .site-icon（站点图标），
+   见 --a-shadow-product；其余卡片、按钮、面板一律不用投影。
    -------------------------------------------------------------------------- */
 .shadow-sm,
 .shadow,

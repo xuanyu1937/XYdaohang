@@ -62,11 +62,11 @@ a {
 /* ------------------------------- 卡片 ------------------------------- */
 
 .auth-card {
-    width: min(430px, 100%);
+    width: min(420px, 100%);
     padding: 32px 30px 26px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--a-radius-lg);   /* v2.18.10：与后台登录页统一 18 圆角 */
 
     animation: auth-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -104,16 +104,17 @@ a {
 }
 
 .auth-mark {
-    flex: 0 0 auto;
-    width: 44px;
-    height: 44px;
+    flex: 0 0 52px;
+    width: 52px;
+    height: 52px;
     border-radius: var(--a-radius-lg);
     display: grid;
     place-items: center;
     overflow: hidden;
     color: var(--a-white);
     font-weight: 700;
-    font-size: var(--a-fs-title);
+    font-size: 25px;
+    letter-spacing: -0.035em;
     background: var(--a-primary);
 }
 
@@ -228,7 +229,7 @@ html[data-theme="dark"] .auth-theme .icon-sun {
     width: 100%;
     height: 44px;
     padding: 0 13px;
-    border: 1px solid var(--border-strong);
+    border: 1px solid var(--a-hairline);   /* v2.18.10：与后台登录页统一描边 */
     border-radius: var(--a-radius-md);
     outline: none;
     background: var(--surface-2);
@@ -246,7 +247,7 @@ html[data-theme="dark"] .auth-theme .icon-sun {
     border-color: var(--primary);
     background: var(--surface);
     outline: 2px solid var(--a-focus);
-    outline-offset: 2px;
+    outline-offset: 1px;
 }
 
 .auth-field input.is-invalid {
@@ -289,28 +290,28 @@ html[data-theme="dark"] .auth-theme .icon-sun {
 
 .auth-submit {
     width: 100%;
-    height: 45px;
+    height: 46px;                       /* v2.18.10：与后台登录页统一 */
     margin-top: 8px;
     border: 0;
     border-radius: var(--a-radius-md);
     background: var(--a-primary);
     color: var(--a-white);
-    font-size: var(--a-fs-caption);
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 600;
     font-family: inherit;
     letter-spacing: 0.4px;
     cursor: pointer;
 
-    transition: transform 0.16s ease, filter 0.16s ease;
+    transition: background-color 0.18s ease;
 }
 
 .auth-submit:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.05);
+    /* v2.18.10：只变背景色，不做位移与滤镜 */
+    background: var(--a-primary-hover);
 }
 
 .auth-submit:active {
-    transform: translateY(0);
+    transform: scale(0.95);
 }
 
 .auth-submit:disabled {
