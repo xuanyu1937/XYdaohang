@@ -340,6 +340,9 @@ html[data-theme="dark"] {
     --a-btn-secondary-fg:      #f5f5f7;
     --a-select-bg:             rgba(41, 151, 255, 0.18);
     --a-select-fg:             var(--a-link-on-dark);
+    /* v2.18.15 复检：暗色选中态蓝底叠加后 #2997ff 前景仅 3.81:1，
+       亮一档保证在 rgba(41,151,255,.18) 叠色上 ≥4.5:1（实测 4.86）。 */
+    --a-select-fg-on-tint:     #5cadff;
 
     --bg:             #000000;           /* v2.18.10：暗色画布改纯黑 */
     --bg-card:        var(--a-tile-1);

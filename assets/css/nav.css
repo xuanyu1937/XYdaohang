@@ -7894,3 +7894,17 @@ html[data-theme="dark"] .hot-strip {
 
 /* v2.18.15 提交3 补：搜索输入文字 14px → 15px（并入站点名档） */
 .search-input { font-size: var(--a-fs-subhead) !important; }
+
+/* v2.18.15 复检修复：暗色选中态蓝底(叠加后 #273b50)上 #2997ff 仅 3.81:1，
+   前景统一提亮到 --a-select-fg-on-tint(#5cadff, 4.86:1) 满足正文 ≥4.5:1。
+   浅色态不变。 */
+html[data-theme="dark"] .mode-btn.is-active,
+html[data-theme="dark"] .mcat.is-active,
+html[data-theme="dark"] .rail-item.is-active,
+html[data-theme="dark"] .section-tool.is-active,
+html[data-theme="dark"] .mcat.is-active .mcat-count,
+html[data-theme="dark"] .rail-item.is-active .rail-count,
+html[data-theme="dark"] .rail-item.is-active .rail-label,
+html[data-theme="dark"] .section-tool.is-active .section-tool-label {
+    color: var(--a-select-fg-on-tint) !important;
+}
