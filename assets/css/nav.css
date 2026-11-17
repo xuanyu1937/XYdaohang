@@ -5862,8 +5862,12 @@ html[data-theme="dark"][data-mode="list"] .site-card {
     border-bottom-color: rgba(255, 255, 255, 0.10);
 }
 
-html[data-mode="list"] .site-card-main,
-html[data-mode="list"] .site-meta {
+/* v2.18.13 · 栅格修复：原 display:contents 同时拆 .site-card-main 与 .site-meta，
+   使 domain/metrics 各自升格 + corner 叠加 → 手机 7 轨道塌陷。
+   现只对 .site-card-main 保留 contents（让 icon / info 成为独立网格项，
+   匹配 grid-template-areas 的 icon / info 两区）；.site-meta 不再拆，
+   作为整块占 meta 列。桌面 / 手机各用一套显式区域，见文件末尾 v2.18.13 层。 */
+html[data-mode="list"] .site-card-main {
     display: contents;
 }
 
@@ -7423,12 +7427,11 @@ html[data-theme="dark"][data-mode="list"] .site-card:hover {
    v2.18.12 · 提交2 收藏按钮：流内 flex + 44×44 命中区 + 几何居中
    仅列表态；网格/紧凑态保持原绝对定位行为不变。
    ========================================================================== */
-html[data-mode="list"] .site-card {
-    /* 第 5 列留给收藏按钮，与信息列同高垂直居中 */
-    grid-template-columns: 38px minmax(0, 1fr) auto auto 44px;
-    grid-template-areas: "icon info domain metrics corner";
-    padding-right: 12px;
-}
+/* v2.18.13：删除上方那条全局五列规则（38px 1fr auto auto 44px /
+   "icon info domain metrics corner"）——它同优先级但位置更靠后，
+   覆盖了 @media(max-width:640px) 的手机两列模板，且 .site-meta 是 flex
+   容器却被分配到不存在的 meta 区，落入隐式列 → 7 轨道塌陷。
+   桌面 / 手机改为各一套显式栅格，见文件末尾 v2.18.13 层。 */
 
 html[data-mode="list"] .card-corner {
     position: static;
@@ -7572,4 +7575,179 @@ html[data-mode] .site-speed[data-check-status="off"] {
 html[data-mode] .site-speed[data-state="error"]::before,
 html[data-mode] .site-speed[data-check-status="off"]::before {
     background: var(--speed-off-dot);
+}
+
+/* ==========================================================================
+   v2.18.13 · 提交1 栅格修复
+   删除 v2.18.12 全局五列模板 + 删掉 .site-meta 的 display:contents 后，
+   桌面 / 手机各用一套显式 grid-template-areas。.site-card-main 保留
+   contents（让 icon / info 成为直接网格项），.site-meta 作为整块占 meta 区。
+   分隔线沿用 v2.18.12 的 ::after 内缩线，site-card 自身不再画 border。
+   ========================================================================== */
+
+/* ---- 桌面 ≥641px：icon | info(name+desc) | meta(domain+metrics) | corner ---- */
+@media (min-width: 641px) {
+    html[data-mode="list"] .site-card {
+        display: grid;
+        grid-template-columns: 38px minmax(0, 1fr) auto 44px;
+        grid-template-areas: "icon info meta corner";
+        align-items: center;
+        column-gap: 12px;
+        min-height: 52px;
+        padding: 8px 12px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+    html[data-mode="list"] .site-icon {
+        grid-area: icon;
+        width: 38px;
+        height: 38px;
+    }
+    html[data-mode="list"] .site-info {
+        grid-area: info;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1px;
+        min-width: 0;
+    }
+    html[data-mode="list"] .site-name {
+        max-width: none;
+        font-size: 15px;
+        line-height: 1.3;
+    }
+    html[data-mode="list"] .site-meta {
+        grid-area: meta;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        margin: 0;
+    }
+    html[data-mode="list"] .card-corner {
+        grid-area: corner;
+        justify-self: end;
+    }
+}
+
+/* ---- 手机 ≤640px：第一行 icon|info|corner，第二行 meta 跨三列右对齐 ---- */
+@media (max-width: 640px) {
+    html[data-mode="list"] .site-card {
+        display: grid;
+        grid-template-columns: 32px minmax(0, 1fr) 44px;
+        grid-template-areas:
+            "icon info corner"
+            "meta meta meta";
+        column-gap: 10px;
+        row-gap: 4px;
+        align-items: center;
+        min-height: 0;
+        padding: 8px 10px 6px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+    html[data-mode="list"] .site-icon {
+        grid-area: icon;
+        width: 32px;
+        height: 32px;
+        align-self: start;
+    }
+    html[data-mode="list"] .site-info {
+        grid-area: info;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1px;
+        min-width: 0;
+    }
+    html[data-mode="list"] .site-name {
+        max-width: none;
+        font-size: 15px;
+        line-height: 1.3;
+    }
+    html[data-mode="list"] .site-desc {
+        font-size: 13px;
+        line-height: 1.35;
+        -webkit-line-clamp: 1;
+        line-clamp: 1;
+        margin-top: 1px;
+    }
+    html[data-mode="list"] .site-meta {
+        grid-area: meta;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+    }
+    /* 手机端域名最大宽度 55%，超出省略 */
+    html[data-mode="list"] .site-domain {
+        max-width: 55%;
+    }
+    /* 收藏按钮跨两行垂直居中，与卡片整行中心对齐（偏差 ≤1px） */
+    html[data-mode="list"] .card-corner {
+        grid-area: 1 / 3 / 3 / 4;
+        align-self: center;
+        justify-self: end;
+    }
+}
+
+/* ==========================================================================
+   v2.18.13 · 提交2 热门访问压缩 + 列表紧凑
+   热门：strip 上下 padding 32→14(手机)/16(桌面)，底部 margin 12→8，
+   title margin 12→6、svg 14→12，item padding→4px 9px 4px 4px，rank 20px。
+   横向滚动（hot-list nowrap + overflow-x:auto）与渐隐提示保留不动。
+   列表：桌面行高压到 52-56（收藏 44 + 上下 padding 5×2 = 54），
+   描述统一单行截断，避免长文本两行 clamp 顶回 100px。
+   ========================================================================== */
+.hot-strip {
+    padding-top: 14px;
+    padding-bottom: 14px;
+    margin-bottom: 8px;
+}
+.hot-title {
+    margin-bottom: 6px;
+}
+.hot-title svg {
+    width: 12px;
+    height: 12px;
+}
+.hot-item {
+    padding: 4px 9px 4px 4px;
+}
+.hot-rank {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+}
+@media (min-width: 641px) {
+    .hot-strip {
+        padding-top: 16px;
+        padding-bottom: 16px;
+    }
+}
+
+/* 桌面列表紧凑：44px 收藏 + 上下 5px padding = 54px 行高 */
+@media (min-width: 641px) {
+    html[data-mode="list"] .site-card {
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+    html[data-mode="list"] .site-desc {
+        -webkit-line-clamp: 1;
+        line-clamp: 1;
+    }
+}
+/* 手机列表紧凑：描述单行截断（提交1 已设 13px/1.35，此处补 clamp 防两行顶高） */
+@media (max-width: 640px) {
+    html[data-mode="list"] .site-desc {
+        -webkit-line-clamp: 1;
+        line-clamp: 1;
+    }
 }
