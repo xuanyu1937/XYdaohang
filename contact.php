@@ -114,8 +114,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.15">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.15">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.16">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.16">
     <link rel="stylesheet" href="assets/css/page.css?v=<?php echo APP_VERSION; ?>">
 </head>
 <body data-monitor="0">
@@ -317,6 +317,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.18.15" defer></script>
+<script src="assets/js/search.js?v=2.18.16" defer></script>
 </body>
 </html>

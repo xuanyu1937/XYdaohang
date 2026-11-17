@@ -438,10 +438,16 @@ html[data-theme="dark"] .auth-card {
     height: 44px !important;
     border-radius: var(--a-radius-sm) !important;
 }
+/* v2.18.16 提交3：聚焦态减重 —— 1px 内描边 + 3px 半透明外环（替代 2px 实色 + 4px 实色发光）。
+   外环用 outline 半透明绘制（不新增 box-shadow 绘制点，守住全站阴影只归品牌/站点图标的铁律）。 */
 .auth-field input:focus {
-    border-color: var(--a-primary) !important;
-    outline: 2px solid var(--a-primary) !important;
-    outline-offset: 4px !important;
+    border: 1px solid var(--a-primary) !important;
+    outline: 3px solid rgba(0, 102, 204, .18) !important;
+    outline-offset: 0 !important;
+}
+html[data-theme="dark"] .auth-field input:focus {
+    border-color: var(--a-link-on-dark) !important;
+    outline-color: rgba(41, 151, 255, .24) !important;
 }
 @media (max-width: 420px) {
     .auth-card {

@@ -7392,12 +7392,14 @@ html[data-theme="dark"][data-mode="list"] .site-card {
     border-bottom-color: transparent;
 }
 
-/* 行间内缩分隔线：绝对定位伪元素，跳过最后一行；首末圆角由 group overflow 裁出 */
+/* v2.18.16 提交3：行间分隔线改伪元素 left:12 / right:68 ——
+   右端落在收藏星标左缘（距右 56px）之外再留 12px，故星标区域内无任何分隔线像素，
+   线右端距星标左缘实测 12px（≥8px 硬断言）。跳过最后一行。 */
 html[data-mode="list"] .site-card:not(:last-child)::after {
     content: "";
     position: absolute;
-    left: 56px;
-    right: 16px;
+    left: 12px;
+    right: 68px;
     bottom: 0;
     height: 1px;
     background: rgba(0, 0, 0, 0.10);
@@ -7417,9 +7419,11 @@ html[data-theme="dark"][data-mode="list"] .site-card:hover {
 }
 
 @media (max-width: 640px) {
+    /* 手机端星标仍 44px 贴右、padding-right 14px → 星标左缘距右 58px，
+       线 right:70px 留 12px；手机三列两行结构不变。 */
     html[data-mode="list"] .site-card:not(:last-child)::after {
-        left: 52px;
-        right: 14px;
+        left: 12px;
+        right: 70px;
     }
 }
 
@@ -7881,6 +7885,9 @@ html[data-theme="dark"] .hot-strip {
     }
     /* 收藏贴右：卡片右 padding 12 = 收藏与测速的固定间隙 */
     html[data-mode="list"] .card-corner { justify-self: end !important; }
+    /* v2.18.16 提交3：metrics 右缘外扩 2px，使 .card-star 左缘与 .site-metrics
+       右缘间距由 14px 收到精确 12px（column-gap 仍为规格 12px 不变）。 */
+    html[data-mode="list"] .site-metrics { margin-right: -2px !important; }
 }
 
 /* ---- 字号归位：消除 11.5px 等非标准可见字号 ---- */
@@ -7891,6 +7898,10 @@ html[data-theme="dark"] .hot-strip {
 }
 .group-title { font-size: var(--a-fs-title) !important; }  /* 20px */
 .brand-title { font-size: var(--a-fs-display) !important; } /* 28px */
+/* v2.18.16 提交3：手机 ≤430px 品牌标题降到 24px（仅两档：桌面 28 / 手机 24，无第三档） */
+@media (max-width: 430px) {
+    .brand-title { font-size: 24px !important; line-height: 1.2 !important; font-weight: 700 !important; }
+}
 
 /* v2.18.15 提交3 补：搜索输入文字 14px → 15px（并入站点名档） */
 .search-input { font-size: var(--a-fs-subhead) !important; }
