@@ -7751,3 +7751,146 @@ html[data-mode] .site-speed[data-check-status="off"]::before {
         line-clamp: 1;
     }
 }
+
+/* ==========================================================================
+   v2.18.15 · 提交2 按钮三档 + 选中态统一（全站唯一来源，覆盖上文历史规则）
+   --------------------------------------------------------------------------
+   三档：.btn-primary / .btn-secondary / .btn-icon；高 44、圆角 8px。
+   选中态：浅色 rgba(0,102,204,.10)+#0066cc、暗色 rgba(41,151,255,.18)+#2997ff；
+   视图切换 mode-btn / 分类 mcat / 桌面 rail-item 共用，取消实蓝底白图标反色。
+   ========================================================================== */
+.btn-primary,
+.btn-secondary,
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: var(--a-radius-sm);
+    font-family: inherit;
+    font-size: var(--a-fs-caption);
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+.btn-primary {
+    background: var(--a-btn-primary-bg);
+    color: var(--a-btn-primary-fg);
+    border: 1px solid var(--a-btn-primary-bg);
+}
+.btn-secondary {
+    background: var(--a-btn-secondary-bg);
+    color: var(--a-btn-secondary-fg);
+    border: 1px solid var(--a-btn-secondary-border);
+}
+.btn-icon {
+    width: 44px;
+    padding: 0;
+    background: var(--a-btn-secondary-bg);
+    color: var(--a-btn-secondary-fg);
+    border: 1px solid var(--a-btn-secondary-border);
+}
+.btn-icon svg { width: 18px; height: 18px; }
+
+/* 404「返回首页」：药丸 → 8px 圆角主按钮 */
+.error-home {
+    border-radius: var(--a-radius-sm) !important;
+    background: var(--a-btn-primary-bg) !important;
+    color: var(--a-btn-primary-fg) !important;
+    height: 44px !important;
+}
+
+/* 登录页右上角主题按钮：圆形 → 44×44 / 8px 圆角图标按钮 */
+.auth-theme {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: var(--a-radius-sm) !important;
+}
+
+/* detail 四按钮：保持 44 高，圆角统一 8px（原有彩色/次按钮语义不变） */
+.detail-btn {
+    border-radius: var(--a-radius-sm) !important;
+    height: 44px !important;
+}
+
+/* 搜索条内部提交按钮保留 999px 胶囊：例外，贴合搜索外框。
+   全站圆角集合里 999 只允许出现在这里与头像，下一轮勿改回 8px。 */
+.search-submit { border-radius: 999px !important; }
+
+/* ---- 选中态统一：视图切换 / 分类「全部」/ 桌面分类索引 ---- */
+.mode-btn.is-active,
+.mcat.is-active,
+.rail-item.is-active,
+.section-tool.is-active {
+    background: var(--a-select-bg) !important;
+    color: var(--a-select-fg) !important;
+}
+.mode-btn.is-active svg,
+.mcat.is-active svg,
+.rail-item.is-active svg,
+.section-tool.is-active svg,
+.mcat.is-active .mcat-count,
+.rail-item.is-active .rail-count,
+.rail-item.is-active .rail-label,
+.section-tool.is-active .section-tool-label {
+    color: var(--a-select-fg) !important;
+}
+/* 取消历史「实蓝底 + 白图标」反色 */
+html[data-theme="dark"] .mcat.is-active,
+html[data-theme="dark"] .rail-item.is-active,
+html[data-theme="dark"] .section-tool.is-active {
+    background: var(--a-select-bg) !important;
+    color: var(--a-select-fg) !important;
+}
+
+/* ==========================================================================
+   v2.18.15 · 提交3 表面容器统一 + 桌面行空间 + 字号阶梯归位
+   --------------------------------------------------------------------------
+   热门区从 0 圆角出血灰带改为 18px 圆角 + hairline 的分组卡同源表面；
+   分组间距统一 24px；桌面收藏贴右与测速 12px；字号可见集合收敛到
+   {11,13,15,17,20,28}，撤销 11.5px 等非标准值。
+   ========================================================================== */
+
+/* ---- 热门区表面：与 18px 分组卡同一套 ---- */
+.hot-strip {
+    margin: 0 0 24px !important;              /* 取消出血 + 与分组卡间距 24px */
+    padding: 10px 16px !important;
+    border: 1px solid var(--a-hairline) !important;
+    border-radius: var(--a-radius-lg) !important;
+    background: var(--a-parchment) !important;
+}
+html[data-theme="dark"] .hot-strip {
+    background: var(--a-tile-1) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+@media (min-width: 1326px) {
+    .hot-strip { --band-bleed: 0px; margin: 0 0 24px !important; }
+}
+
+/* ---- 桌面列表：列模板与 12px 收藏/测速间距 ---- */
+@media (min-width: 641px) {
+    html[data-mode="list"] .site-card {
+        grid-template-columns: 38px minmax(0, 1fr) auto 44px !important;
+        column-gap: 12px !important;
+        padding-right: 12px !important;
+    }
+    /* 收藏贴右：卡片右 padding 12 = 收藏与测速的固定间隙 */
+    html[data-mode="list"] .card-corner { justify-self: end !important; }
+}
+
+/* ---- 字号归位：消除 11.5px 等非标准可见字号 ---- */
+.site-quick-links,
+.site-quick-links a,
+.footer-sep {
+    font-size: var(--a-fs-micro) !important;   /* 11px */
+}
+.group-title { font-size: var(--a-fs-title) !important; }  /* 20px */
+.brand-title { font-size: var(--a-fs-display) !important; } /* 28px */
+
+/* v2.18.15 提交3 补：搜索输入文字 14px → 15px（并入站点名档） */
+.search-input { font-size: var(--a-fs-subhead) !important; }
