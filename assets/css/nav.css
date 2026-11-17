@@ -7341,3 +7341,235 @@ html[data-theme="dark"] .search-bar:focus-within {
         height: 44px;
     }
 }
+
+/* ==========================================================================
+   v2.18.12 · 提交1 列表分隔：分组卡外壳 + 内缩分隔线
+   仅作用于 html[data-mode="list"]，网格/紧凑态保持原组件卡不变。
+   ========================================================================== */
+html[data-mode="list"] .link-sections > .link-group {
+    /* 中和 v2.18.10 的出血色带：取消负 margin 与交替背景，改为独立分组卡 */
+    --band-bleed: 0px;
+    margin: 0 0 24px;
+    padding: 16px;
+    overflow: hidden;
+    border: 1px solid var(--a-hairline);
+    border-radius: var(--a-radius-lg);
+    background: var(--surface);
+}
+html[data-mode="list"] .link-sections > .link-group:nth-child(odd),
+html[data-mode="list"] .link-sections > .link-group:nth-child(even) {
+    background: var(--surface);
+}
+html[data-theme="dark"][data-mode="list"] .link-sections > .link-group,
+html[data-theme="dark"][data-mode="list"] .link-sections > .link-group:nth-child(odd),
+html[data-theme="dark"][data-mode="list"] .link-sections > .link-group:nth-child(even) {
+    background: var(--surface-group);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* 分组标题与卡片之间统一 12px */
+html[data-mode="list"] .link-group .group-head {
+    margin-bottom: 12px;
+}
+
+/* 列表态：卡片去边框/圆角/阴影，透明底，padding 14px 16px，gap 归零 */
+html[data-mode="list"] .site-grid {
+    gap: 0;
+}
+html[data-mode="list"] .site-card {
+    padding: 14px 16px;
+    border: 0;
+    border-bottom: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+html[data-theme="dark"][data-mode="list"] .site-card {
+    border-bottom-color: transparent;
+}
+
+/* 行间内缩分隔线：绝对定位伪元素，跳过最后一行；首末圆角由 group overflow 裁出 */
+html[data-mode="list"] .site-card:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 56px;
+    right: 16px;
+    bottom: 0;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.10);
+    pointer-events: none;
+}
+html[data-theme="dark"][data-mode="list"] .site-card:not(:last-child)::after {
+    background: rgba(255, 255, 255, 0.10);
+}
+
+/* 悬停只改整行背景，不位移、不加阴影、不改分隔线颜色 */
+html[data-mode="list"] .site-card:hover {
+    background: rgba(0, 0, 0, 0.02);
+    box-shadow: none;
+}
+html[data-theme="dark"][data-mode="list"] .site-card:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+@media (max-width: 640px) {
+    html[data-mode="list"] .site-card:not(:last-child)::after {
+        left: 52px;
+        right: 14px;
+    }
+}
+
+/* ==========================================================================
+   v2.18.12 · 提交2 收藏按钮：流内 flex + 44×44 命中区 + 几何居中
+   仅列表态；网格/紧凑态保持原绝对定位行为不变。
+   ========================================================================== */
+html[data-mode="list"] .site-card {
+    /* 第 5 列留给收藏按钮，与信息列同高垂直居中 */
+    grid-template-columns: 38px minmax(0, 1fr) auto auto 44px;
+    grid-template-areas: "icon info domain metrics corner";
+    padding-right: 12px;
+}
+
+html[data-mode="list"] .card-corner {
+    position: static;
+    grid-area: corner;
+    align-self: center;
+    flex: 0 0 44px;
+    width: 44px;
+    margin-left: 8px;
+    gap: 0;
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+}
+html[data-mode="list"] .site-card:hover .card-corner,
+html[data-mode="list"] .site-card:focus-within .card-corner {
+    transform: none;
+}
+
+/* owner 的编辑/删除操作组绝对定位浮出行右上，脱离 44px 列，不挤压对齐 */
+html[data-mode="list"] .card-actions {
+    position: absolute;
+    top: 4px;
+    right: 56px;
+    z-index: 7;
+}
+
+/* 收藏按钮：44×44 本体即命中区，去毛玻璃与 color-mix，图标 18px 几何居中 */
+html[data-mode="list"] .card-star {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border-color: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    color: var(--a-muted);
+}
+html[data-mode="list"] .card-star svg {
+    width: 18px;
+    height: 18px;
+}
+html[data-mode="list"] .card-star:hover {
+    color: var(--a-primary);
+    background: rgba(0, 0, 0, 0.04);
+    border-color: transparent;
+}
+html[data-theme="dark"][data-mode="list"] .card-star:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+/* 已收藏走 Action Blue（不再用警示橙），背景淡蓝 */
+html[data-mode="list"] .site-card[data-starred="1"] .card-star {
+    color: var(--a-primary);
+    background: rgba(0, 102, 204, 0.10);
+    border-color: transparent;
+}
+/* 删掉 40px 伪元素热区（按钮本体已是 44px） */
+html[data-mode="list"] .card-star::after {
+    content: none;
+}
+
+/* ==========================================================================
+   v2.18.12 · 提交3 品牌控件方形化尺寸（手机 44 / 桌面 52，圆角 18 不变）
+   覆盖上文 ≤620/≤430/≤360 各档的 38/42px；img 由 apple-tokens 规则铺满。
+   ========================================================================== */
+.site-header .brand-mark,
+.site-header .brand-mark img {
+    width: 52px;
+    height: 52px;
+    flex-basis: 52px;
+    border-radius: var(--a-radius-lg);
+}
+@media (max-width: 640px) {
+    .site-header .brand-mark,
+    .site-header .brand-mark img {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+        border-radius: var(--a-radius-lg);
+    }
+}
+
+/* ==========================================================================
+   v2.18.12 · 提交3 搜索框：占位文字与放大镜不再重叠
+   padding-left 18→40，图标 left 10→12 / 17→18px，间距达标 ≥10px。
+   ========================================================================== */
+.search-icon {
+    left: 12px;
+    width: 18px;
+    height: 18px;
+    color: var(--a-muted);
+}
+.search-input {
+    padding-left: 40px;
+}
+
+/* ==========================================================================
+   v2.18.12 · 提交4 测速四档语义色
+   圆点 6px + 间距 6px；只作用于 .site-speed 文字与 ::before 圆点。
+   兼容两套属性：JS 实际写的 [data-level]/[data-state]，与规格 [data-check-status]。
+   "无法访问"(data-state=error) 走 off 灰档，避免与"慢"红档混淆。
+   ========================================================================== */
+.site-speed::before {
+    width: 6px;
+    height: 6px;
+    margin-right: 6px;
+    vertical-align: 1px;
+}
+/* 四档文字 + 圆点（基础选择器，确保各模式一致） */
+html[data-mode] .site-speed[data-level="fast"],
+html[data-mode] .site-speed[data-check-status="fast"] {
+    color: var(--speed-fast-fg);
+}
+html[data-mode] .site-speed[data-level="fast"]::before,
+html[data-mode] .site-speed[data-check-status="fast"]::before {
+    background: var(--speed-fast-dot);
+}
+html[data-mode] .site-speed[data-level="mid"],
+html[data-mode] .site-speed[data-check-status="mid"] {
+    color: var(--speed-mid-fg);
+}
+html[data-mode] .site-speed[data-level="mid"]::before,
+html[data-mode] .site-speed[data-check-status="mid"]::before {
+    background: var(--speed-mid-dot);
+}
+html[data-mode] .site-speed[data-level="slow"],
+html[data-mode] .site-speed[data-check-status="slow"] {
+    color: var(--speed-slow-fg);
+}
+html[data-mode] .site-speed[data-level="slow"]::before,
+html[data-mode] .site-speed[data-check-status="slow"]::before {
+    background: var(--speed-slow-dot);
+}
+/* 无法访问 / off 走灰档，避免与"慢"红档混淆 */
+html[data-mode] .site-speed[data-state="error"],
+html[data-mode] .site-speed[data-check-status="off"] {
+    color: var(--speed-off-fg);
+}
+html[data-mode] .site-speed[data-state="error"]::before,
+html[data-mode] .site-speed[data-check-status="off"]::before {
+    background: var(--speed-off-dot);
+}
