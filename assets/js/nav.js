@@ -692,7 +692,12 @@
 
         if (sectionCount) {
             /* 关键词搜索时显示真实命中数；分类浏览时显示与左侧索引一致的总数。 */
-            sectionCount.textContent = (state.query ? visibleTotal : declaredTotal) + ' 个网站';
+            sectionCount.textContent = '当前视图 ' + (state.query ? visibleTotal : declaredTotal) + ' 个';
+        }
+        /* v2.18.16 提交2：头部「当前视图 N 个」与 sectionCount 同源，随筛选/搜索同步。 */
+        var jsVisibleCount = document.querySelector('.js-visible-count');
+        if (jsVisibleCount) {
+            jsVisibleCount.textContent = state.query ? visibleTotal : declaredTotal;
         }
 
         /* 排序切换在筛选状态下仍然可用：用户在筛选结果里也可能想换排序方式 */
@@ -929,7 +934,11 @@
         }
 
         if (sectionCount) {
-            sectionCount.textContent = (data.total || 0) + ' 个网站';
+            sectionCount.textContent = '当前视图 ' + (data.total || 0) + ' 个';
+        }
+        var jsVisibleCount2 = document.querySelector('.js-visible-count');
+        if (jsVisibleCount2) {
+            jsVisibleCount2.textContent = data.total || 0;
         }
 
         if (sectionTitle) {

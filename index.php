@@ -637,9 +637,9 @@ $navJsonLd = [
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.15">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.15">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.15">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.16">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.16">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.16">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -651,7 +651,7 @@ $navJsonLd = [
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.15';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.16';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -671,10 +671,10 @@ $navJsonLd = [
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.15" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.18.16" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.15" defer></script>
-    <script src="assets/js/search.js?v=2.18.15" defer></script>
+    <script src="assets/js/nav.js?v=2.18.16" defer></script>
+    <script src="assets/js/search.js?v=2.18.16" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -716,7 +716,7 @@ $navJsonLd = [
                         <h1 class="brand-title" translate="no"><?php echo $functions->escape($brandName); ?></h1>
                         <span class="brand-subtitle"><?php echo $functions->escape($brandSubtitle); ?></span>
                         <span class="brand-stats">
-                            共 <strong><?php echo $publishedSiteTotal; ?></strong> 个站点
+                            已收录 <strong><?php echo $publishedSiteTotal; ?></strong> 个站点 · 当前视图 <strong class="js-visible-count"><?php echo $totalSites; ?></strong> 个
                             <?php if ($isOwner && $currentUser): ?>· 我的导航<?php endif; ?>
                         </span>
                     </span>
@@ -1120,7 +1120,7 @@ $navJsonLd = [
                 <div class="section-head">
                     <div class="section-title">
                         <h2 id="sectionTitle">全部网站</h2>
-                        <span class="section-count" id="sectionCount" aria-live="polite"><?php echo $totalSites; ?> 个网站</span>
+                        <span class="section-count" id="sectionCount" aria-live="polite">当前视图 <?php echo $totalSites; ?> 个</span>
                     </div>
                     <div class="section-aside" id="sectionAside">
                         <button type="button" class="section-tool is-active" data-sort="clicks" aria-pressed="true" title="按点击量排序">

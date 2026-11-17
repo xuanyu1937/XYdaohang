@@ -170,9 +170,9 @@ $detailTotalSites = (int) $detailTotalStmt->fetchColumn();
             } catch (e) {}
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.15">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.15">
-    <link rel="stylesheet" href="assets/css/page.css?v=2.18.15">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.16">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.16">
+    <link rel="stylesheet" href="assets/css/page.css?v=2.18.16">
     <script src="assets/js/jquery3.7.1.js"></script>
     <?php require_once __DIR__ . '/includes/asset_fallbacks.php'; ?>
     <script src="assets/js/qrcode.min.js"></script>
@@ -306,7 +306,7 @@ $detailTotalSites = (int) $detailTotalStmt->fetchColumn();
                     <span class="brand-mark" aria-hidden="true">轩<?php if ($siteLogoUrl !== ''): ?><img src="<?php echo $functions->escape($siteLogoUrl); ?>" alt="" onerror="this.remove();"><?php endif; ?></span>
                     <span class="brand-info">
                         <span class="brand-title" translate="no"><?php echo $functions->escape($siteTitle); ?></span>
-                        <span class="brand-subtitle">共 <?php echo (int) $detailTotalSites; ?> 个站点</span>
+                        <span class="brand-subtitle">已收录 <strong><?php echo (int) $detailTotalSites; ?></strong> 个站点</span>
                     </span>
                 </a>
             </div>
