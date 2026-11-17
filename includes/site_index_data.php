@@ -21,7 +21,7 @@ if (!function_exists('navPublicIndexLinks')) {
 
         $viewUserId = (int) $users->defaultViewUserId();
 
-        $sql = "SELECT nl.id, nl.name, nl.url, nl.description, nl.clicks, nl.category_id, nl.updated_at,
+        $sql = "SELECT nl.id, nl.name, nl.url, nl.logo, nl.description, nl.clicks, nl.category_id, nl.updated_at,
                        c.name AS category_name, c.sort_order AS category_sort
                 FROM nav_links nl
                 LEFT JOIN categories c ON c.id = nl.category_id

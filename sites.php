@@ -12,6 +12,7 @@ require_once __DIR__ . '/includes/bootstrap.php';
 require_once 'includes/functions.php';
 require_once 'includes/Services.php';
 require_once __DIR__ . '/includes/site_links.php';
+require_once __DIR__ . '/includes/site_card_build.php';   /* v2.18.16：复用 navBuildCard 的 favicon 兜底链与字母兜底 */
 require_once __DIR__ . '/includes/site_index_data.php';
 
 $functions = new Functions();
@@ -24,8 +25,38 @@ $siteLogoUrl = $functions->getLogoUrl($functions->getSetting('site_logo'));
 $rows = navPublicIndexLinks($functions);
 $categories = navIndexCategories($rows);
 
+/* v2.18.16：为每条索引记录构建与首页同源的站点图标数据（favicon 三级兜底链 +
+   域名首字母兜底色）。navBuildCard 需要 safe_url/url 等字段，此处只取图标相关结果。 */
+foreach ($rows as &$__row) {
+    $__card = navBuildCard($__row, $functions);
+    if ($__card) {
+        $__row['icon_chain'] = $__card['favicon_chain'];
+        $__row['icon_initial'] = $__card['fallback_initial'];
+        $__row['icon_bg'] = $__card['fallback_bg'];
+        $__row['icon_fg'] = $__card['fallback_fg'];
+    } else {
+        $__row['icon_chain'] = [];
+        $__row['icon_initial'] = '#';
+        $__row['icon_bg'] = '#e8efff';
+        $__row['icon_fg'] = '#3457c5';
+    }
+}
+unset($__row);
+
 $totalSites = count($rows);
 $totalCategories = count($categories);
+
+/* v2.18.16 提交2：与首页 $publishedSiteTotal / detail $detailTotalSites 同源的全库已发布数，
+   用于「已收录 {total} 个站点 · 当前视图 {visible} 个」统一文案。 */
+$publishedSiteTotal = $totalSites;
+try {
+    $__db = Database::getInstance()->getConnection();
+    $publishedSiteStmt = $__db->query("SELECT COUNT(*) FROM nav_links WHERE is_active = 1");
+    $publishedSiteTotal = (int) $publishedSiteStmt->fetchColumn();
+} catch (Throwable $ignored) {
+    // 老库兼容：查询失败时退回当前视图数
+}
+
 
 $baseUrl = navSiteBaseUrl();
 $canonicalUrl = $baseUrl . '/sites.php';
@@ -86,7 +117,7 @@ $jsonLd = [
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.15">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.16">
     <style>
         :root { color-scheme: light; --fg: var(--a-ink); --muted: var(--a-muted); --line: var(--a-hairline); --accent: var(--a-primary); --bg: var(--a-canvas); }
         /* v2.18.11 P1-3：暗色改由 html[data-theme="dark"] 驱动（与首页 / 关于页同源），
@@ -108,12 +139,11 @@ $jsonLd = [
         section { margin-bottom: 26px; }
         h2 { font-size: 16px; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
         h2 .n { font-weight: 400; font-size: 12px; color: var(--muted); margin-left: 6px; }
-        ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px 24px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+        /* v2.18.16 提交1：响应式列数 —— 桌面 3 列(≥260px) / 1024-1280 为 2 列 / ≤760 为 1 列 */
+        ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0 24px; grid-template-columns: repeat(3, minmax(260px, 1fr)); }
+        @media (max-width: 1280px) { ul { grid-template-columns: repeat(2, minmax(260px, 1fr)); } }
+        @media (max-width: 760px) { ul { grid-template-columns: 1fr; } }
         li { min-width: 0; }
-        li a { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
-        /* v2.18.10：12.5px 不在字号档位（只允许 11/12/14/15/17/21/25…），
-           按规范落到 12px —— 这行属于索引页的次级说明文字。 */
-        li .d { color: var(--muted); font-size: var(--a-fs-fine); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         /* v2.18.11 P0-1 / P1-3 / P2-6：本页搜索条与首页共用一套胶囊尺寸与描边，
            站点名常态用正文色、hover/focus 才变蓝，四列基线对齐（列间距 24px）。 */
         .top { margin-bottom: 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -193,25 +223,56 @@ $jsonLd = [
         }
         body h2 { font-size: var(--a-fs-title); border-bottom-color: var(--a-hairline); }
         body h2 .n { font-size: var(--a-fs-micro); }
-        body ul { gap: 8px 24px; }
-        body li { display: flex; align-items: baseline; gap: 8px; }
-        body li a {
-            display: inline; flex: 0 1 auto; min-width: 0;
-            font-size: var(--a-fs-subhead); white-space: nowrap;
+        /* v2.18.16 提交1：每条 = 20px 站点图标 + 列内嵌套纵向 flex（名称行 / 描述行）；
+           行高 56px，条目间 1px 内缩 hairline（left 12 / right 12），不再有蓝色外链箭头。 */
+        body section { padding: 16px; }
+        body ul { gap: 0 24px; }
+        body li {
+            display: flex; align-items: center; gap: 10px;
+            height: 56px; padding: 0;
+            position: relative; min-width: 0;
         }
-        /* 20px 站标：内联 SVG mask，颜色走 primary 令牌 */
-        body li::before {
-            content: ''; flex: 0 0 20px; width: 20px; height: 20px;
-            align-self: center;
-            background-color: var(--a-primary);
-            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='black' stroke-width='2'/%3E%3Cpath d='m15.4 8.6-2.1 4.7-4.7 2.1 2.1-4.7z' fill='black'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
-            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='black' stroke-width='2'/%3E%3Cpath d='m15.4 8.6-2.1 4.7-4.7 2.1 2.1-4.7z' fill='black'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+        /* 内缩分隔线：除每组首条外画在顶部，left 12 / right 12 */
+        body li + li::before {
+            content: ''; position: absolute; top: 0; left: 12px; right: 12px;
+            height: 1px; background: var(--a-hairline); pointer-events: none;
         }
-        html[data-theme="dark"] body li::before { background-color: var(--a-link-on-dark); }
+        html[data-theme="dark"] body li + li::before { background: rgba(255,255,255,.12); }
+        /* 20px 站点图标：复用首页 .site-icon 的取图逻辑（favicon img + 字母兜底块） */
+        body li .site-icon {
+            position: relative; display: grid; place-items: center;
+            width: 20px; height: 20px; flex: 0 0 20px;
+            overflow: hidden; border-radius: 5px; background: var(--a-surface-soft);
+        }
+        body li .site-icon-letter {
+            position: absolute; inset: 0; display: grid; place-items: center;
+            background: var(--fallback-bg, var(--a-surface-soft));
+            color: var(--fallback-fg, var(--a-ink-48-strong));
+            font-size: 11px; font-weight: 700; line-height: 1; user-select: none;
+        }
+        body li .site-favicon {
+            position: absolute; inset: 0; display: block;
+            width: 100%; height: 100%; padding: 0; object-fit: contain;
+            opacity: 0; transition: opacity .15s ease;
+        }
+        body li .site-favicon.is-loaded { opacity: 1; }
+        /* 列内嵌套纵向 flex：名称第一行、描述第二行，名称不再被描述挤压 */
+        body li .si-body {
+            display: flex; flex-direction: column; justify-content: center;
+            min-width: 0; flex: 1 1 auto; gap: 2px;
+        }
+        body li a.site-name {
+            display: block; max-width: 100%; min-width: 0;
+            font-size: var(--a-fs-subhead); font-weight: 500; line-height: 1.3;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            color: var(--fg); text-decoration: none;
+        }
         body li .d {
-            flex: 1 1 auto; min-width: 0; font-size: var(--a-fs-fine);
+            display: block; max-width: 100%; min-width: 0;
+            font-size: 13px; line-height: 1.3; color: #6e6e73;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
+        html[data-theme="dark"] body li .d { color: var(--a-muted); }
         body h1 { font-size: var(--a-fs-display); }
         body .lead, body .top label, .u-search input[type="search"] { font-size: var(--a-fs-fine); }
     </style>
@@ -239,8 +300,8 @@ $jsonLd = [
     <nav class="crumb" aria-label="面包屑"><a href="index.php">首页</a> › 全部站点</nav>
     <h1>全部网站索引</h1>
     <p class="lead">
-        共 <strong><?php echo $totalSites; ?></strong> 个站点，分 <strong><?php echo $totalCategories; ?></strong> 个分类。
-        点站点名进入站内详情页（简介、标签、二维码），点右侧域名直达原站。
+        已收录 <strong><?php echo $publishedSiteTotal; ?></strong> 个站点 · 当前视图 <strong><?php echo $totalSites; ?></strong> 个，分 <strong><?php echo $totalCategories; ?></strong> 个分类。
+        点站点名进入站内详情页（简介、标签、二维码）。
     </p>
 
     <form class="top" action="index.php" method="get" role="search">
@@ -257,12 +318,26 @@ $jsonLd = [
             <h2><?php echo $functions->escape($category['name']); ?><span class="n"><?php echo count($category['links']); ?> 个</span></h2>
             <ul>
                 <?php foreach ($category['links'] as $row): ?>
-                    <?php $desc = trim(preg_replace('/\s+/u', ' ', (string) ($row['description'] ?? ''))); ?>
+                    <?php
+                    $desc = trim(preg_replace('/\s+/u', ' ', (string) ($row['description'] ?? '')));
+                    $siteName = trim((string) ($row['name'] ?? ''));
+                    if ($siteName === '') { $siteName = (string) ($row['url'] ?? '未命名'); }
+                    $iconChain = (array) ($row['icon_chain'] ?? []);
+                    ?>
                     <li>
-                        <a href="detail.php?id=<?php echo (int) $row['id']; ?>" title="<?php echo $functions->escape($row['name']); ?>"><?php echo $functions->escape($row['name']); ?></a>
-                        <?php if ($desc !== ''): ?>
-                            <span class="d"><?php echo $functions->escape(mb_substr($desc, 0, 42, 'UTF-8') . (mb_strlen($desc, 'UTF-8') > 42 ? '…' : '')); ?></span>
-                        <?php endif; ?>
+                        <span class="site-icon" aria-hidden="true">
+                            <span class="site-icon-letter" style="--fallback-bg: <?php echo $functions->escape($row['icon_bg']); ?>; --fallback-fg: <?php echo $functions->escape($row['icon_fg']); ?>"><?php echo $functions->escape($row['icon_initial']); ?></span>
+                            <img class="site-favicon" alt="" width="20" height="20" loading="lazy" referrerpolicy="no-referrer"
+                                 data-src="<?php echo $functions->escape($iconChain[0] ?? ''); ?>"
+                                 <?php if (isset($iconChain[1])): ?>data-fb1="<?php echo $functions->escape($iconChain[1]); ?>"<?php endif; ?>
+                                 <?php if (isset($iconChain[2])): ?>data-fb2="<?php echo $functions->escape($iconChain[2]); ?>"<?php endif; ?>>
+                        </span>
+                        <span class="si-body">
+                            <a class="site-name" href="detail.php?id=<?php echo (int) $row['id']; ?>" title="<?php echo $functions->escape($siteName); ?>"><?php echo $functions->escape($siteName); ?></a>
+                            <?php if ($desc !== ''): ?>
+                                <span class="d" title="<?php echo $functions->escape($desc); ?>"><?php echo $functions->escape($desc); ?></span>
+                            <?php endif; ?>
+                        </span>
                     </li>
                 <?php endforeach; ?>
             </ul>
@@ -275,6 +350,38 @@ $jsonLd = [
     </p>
 </div>
 <script>
+    /* v2.18.16 提交1：站点图标 favicon 三级兜底（与首页 nav.js 同源逻辑）。
+       加载成功加 .is-loaded 覆盖字母兜底块；失败逐级回退，全失败则保留字母块。 */
+    (function () {
+        function loadFavicon(img) {
+            if (!img || img.getAttribute('data-fav-done') === '1') { return; }
+            img.setAttribute('data-fav-done', '1');
+            var chain = ['data-src', 'data-fb1', 'data-fb2']
+                .map(function (k) { return img.getAttribute(k); })
+                .filter(function (u) { return typeof u === 'string' && u.length > 0; });
+            if (!chain.length) { return; }
+            var i = 0;
+            function advance() { i++; if (i < chain.length) { img.src = chain[i]; } }
+            img.addEventListener('load', function () {
+                if (img.naturalWidth <= 1 || img.naturalHeight <= 1) { advance(); return; }
+                img.classList.add('is-loaded');
+            });
+            img.addEventListener('error', advance);
+            img.src = chain[i];
+        }
+        var imgs = document.querySelectorAll('.site-icon .site-favicon');
+        if ('IntersectionObserver' in window) {
+            var io = new IntersectionObserver(function (entries) {
+                entries.forEach(function (e) {
+                    if (!e.isIntersecting) { return; }
+                    io.unobserve(e.target); loadFavicon(e.target);
+                });
+            }, { root: null, rootMargin: '200px 0px', threshold: 0 });
+            imgs.forEach(function (im) { io.observe(im); });
+        } else {
+            imgs.forEach(function (im) { loadFavicon(im); });
+        }
+    })();
     /* v2.18.11 P1-4：统一 header 的主题切换（与首页 / 关于页同源） */
     (function () {
         var toggle = document.getElementById('themeToggle');
