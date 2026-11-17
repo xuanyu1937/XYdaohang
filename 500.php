@@ -24,8 +24,8 @@ header('X-Robots-Tag: noindex, nofollow');
     <meta name="robots" content="noindex, nofollow">
     <meta name="theme-color" content="#ffffff" id="themeColor">
     <link rel="icon" href="assets/img/icons/icon-192.png">
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.11">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.11">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.12">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.12">
     <script>
         (function () {
             try {
