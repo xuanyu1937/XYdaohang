@@ -1,5 +1,26 @@
 # 轩宇-导航 · 版本记录
 
+## v2.18.13（2026-11-17）
+
+> **移动端列表塌陷修复 + 热门访问与列表紧凑化**。v2.18.12 线上实测：手机上 `.site-card` 计算栅格为 7 轨道、其中 4 个 0px，站名宽 0、描述宽 14px、行高 133px；桌面站名被挤到 60px。本版按 **两个独立提交**修复，**只动表现层，不碰路由、SQL、权限、会话，无数据库变更**。
+
+### 一、栅格修复（提交1）
+
+- 根因：v2.18.12 提交的全局五列规则（`38px 1fr auto auto 44px` / `"icon info domain metrics corner"`）位置在手机 `@media(max-width:640px)` 之后、同优先级覆盖手机两列模板；叠加 `display:contents` 把 `.site-meta` 也拆散，`domain`/`metrics` 各自升格又被分配到不存在的 `meta` 区而落入隐式列，形成 7 轨道塌陷。
+- 删除全局五列规则整段；删除 `.site-meta` 的 `display:contents`，只对 `.site-card-main` 保留（让 `icon` / `info` 成为直接网格项匹配 areas 两区）。
+- 桌面 ≥641px：`"icon info meta corner"` = `38px / 1fr / auto / 44px`，站名 `align-items:stretch` 占满 info 列。
+- 手机 ≤640px：第一行 `"icon info corner"`、第二行 `"meta meta meta"` = `32px / 1fr / 44px`；收藏跨两行垂直居中；域名 `max-width:55%` 超出省略；测速保留四档语义色与单圆点。
+- 仅改 `html[data-mode="list"]`，网格态与紧凑态不动。
+
+### 二、热门与列表紧凑（提交2）
+
+- 热门条：`.hot-strip` 上下 padding 32→14(手机)/16(桌面)、底部 margin 12→8；`.hot-title` margin 12→6、svg 14→12；`.hot-item` padding→`4px 9px 4px 4px`、`.hot-rank` 20px；横向滚动与渐隐提示保留。
+- 列表紧凑：桌面行高 54px（44px 收藏 + 上下 5px padding，由 60px 压下）；描述统一 `-webkit-line-clamp:1` 防长文本两行顶高；`.site-grid` gap 0、分组卡 hairline + 18px 圆角、收藏 44×44 不变。
+
+**验收**：390/430/768/1440 四宽度 `.site-card` 均无 0px 轨道；390 站名宽 204px（占行宽 63.7%，要求 >45%）；手机行高 73.8px（目标 72-78）、热门区 82.2px（目标 76-84）、收藏中心偏差 1px；桌面行高 54px（目标 52-56）。机械规范 12/12 PASS；CSS 仅表现层增量，gradient/hex/box-shadow 均守住。
+
+---
+
 ## v2.18.12（2026-11-17）
 
 > **UI 细节修复**：v2.18.11 修复了搜索框描边、移动端两列栅格、详情页头部与索引页暗色。实机复核仍有五处问题：列表分隔线太淡、收藏按钮小且错位、Logo 留白、搜索占位文字与图标重叠、测速四档同色。本版按 **四个独立提交**修复，**只动表现层，不碰路由、SQL、权限、会话**。

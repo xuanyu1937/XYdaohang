@@ -148,8 +148,8 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.12">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.12">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.13">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.13">
     <link rel="stylesheet" href="assets/css/page.css?v=<?php echo APP_VERSION; ?>">
 </head>
 <body data-monitor="0">
@@ -297,6 +297,6 @@ if (is_file($changelogPath) && is_readable($changelogPath)) {
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.18.12" defer></script>
+<script src="assets/js/search.js?v=2.18.13" defer></script>
 </body>
 </html>

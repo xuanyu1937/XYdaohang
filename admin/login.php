@@ -117,8 +117,8 @@ function navVerifyAdminUser($functions, $account, $password)
     <title>后台登录 - 轩宇-导航</title>
     <!-- v2.18.10：此前本页未引入任何样式表，内联 style 里的 var(--a-*) 全部失效，
          导致按钮无蓝底、圆角归零、品牌块退化为 20px 方块。按序补引入。 -->
-    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.12">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=2.18.12">
+    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.13">
+    <link rel="stylesheet" href="../assets/css/admin.css?v=2.18.13">
     <style>
         /* v2.18.10：本页只保留布局与尺寸。
            颜色 / 圆角 / 阴影 / 字重一律走 apple-tokens.css 与 admin.css，
