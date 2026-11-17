@@ -86,7 +86,7 @@ $jsonLd = [
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.14">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.15">
     <style>
         :root { color-scheme: light; --fg: var(--a-ink); --muted: var(--a-muted); --line: var(--a-hairline); --accent: var(--a-primary); --bg: var(--a-canvas); }
         /* v2.18.11 P1-3：暗色改由 html[data-theme="dark"] 驱动（与首页 / 关于页同源），
@@ -178,6 +178,42 @@ $jsonLd = [
             .site-header .brand-subtitle { display: none; }
             .site-header .brand-mark { width: 44px; height: 44px; flex-basis: 44px; }
         }
+        /* v2.18.15 · 提交4 视觉对齐：四列文字墙 → 18px 圆角分组容器 + hairline +
+           20px 站标 + 描述单行截断；与首页分组卡同源表面语言。 */
+        body section {
+            margin-bottom: 24px;
+            padding: 16px 18px;
+            border: 1px solid var(--a-hairline);
+            border-radius: var(--a-radius-lg);
+            background: var(--a-canvas);
+        }
+        html[data-theme="dark"] body section {
+            background: var(--a-tile-1);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+        body h2 { font-size: var(--a-fs-title); border-bottom-color: var(--a-hairline); }
+        body h2 .n { font-size: var(--a-fs-micro); }
+        body ul { gap: 8px 24px; }
+        body li { display: flex; align-items: baseline; gap: 8px; }
+        body li a {
+            display: inline; flex: 0 1 auto; min-width: 0;
+            font-size: var(--a-fs-subhead); white-space: nowrap;
+        }
+        /* 20px 站标：内联 SVG mask，颜色走 primary 令牌 */
+        body li::before {
+            content: ''; flex: 0 0 20px; width: 20px; height: 20px;
+            align-self: center;
+            background-color: var(--a-primary);
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='black' stroke-width='2'/%3E%3Cpath d='m15.4 8.6-2.1 4.7-4.7 2.1 2.1-4.7z' fill='black'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='black' stroke-width='2'/%3E%3Cpath d='m15.4 8.6-2.1 4.7-4.7 2.1 2.1-4.7z' fill='black'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+        }
+        html[data-theme="dark"] body li::before { background-color: var(--a-link-on-dark); }
+        body li .d {
+            flex: 1 1 auto; min-width: 0; font-size: var(--a-fs-fine);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        body h1 { font-size: var(--a-fs-display); }
+        body .lead, body .top label, .u-search input[type="search"] { font-size: var(--a-fs-fine); }
     </style>
 </head>
 <body>

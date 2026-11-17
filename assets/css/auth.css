@@ -428,3 +428,26 @@ html[data-theme="dark"] .auth-card {
         flex-basis: 44px;
     }
 }
+
+/* ==========================================================================
+   v2.18.15 · 提交4 登录页微调
+   输入框 44px / 8px 圆角；聚焦 2px #0066cc 描边 + 4px 外间隙（不用默认紫蓝环）；
+   390px 下卡片左右各 20px 留白、内部 padding 20px。
+   ========================================================================== */
+.auth-field input {
+    height: 44px !important;
+    border-radius: var(--a-radius-sm) !important;
+}
+.auth-field input:focus {
+    border-color: var(--a-primary) !important;
+    outline: 2px solid var(--a-primary) !important;
+    outline-offset: 4px !important;
+}
+@media (max-width: 420px) {
+    .auth-card {
+        width: calc(100% - 40px) !important;   /* 左右各 20px */
+        margin-left: 20px !important;
+        margin-right: 20px !important;
+        padding: 20px !important;
+    }
+}
