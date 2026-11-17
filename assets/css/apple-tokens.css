@@ -71,14 +71,14 @@
                       "Microsoft YaHei", system-ui, sans-serif;
 
     --a-fs-body:      17px;   /* Apple 正文，不是 16px */
-    --a-fs-caption:   14px;
-    --a-fs-subhead:   15px;   /* v2.18.10：页面级标题 / 站点名 */
-    --a-fs-fine:      12px;
-    --a-fs-micro:     11px;
-    --a-fs-title:     18px;
+    --a-fs-caption:   13px;   /* v2.18.15 字号阶梯：描述/辅助 = 13px */
+    --a-fs-subhead:   15px;   /* 页面级标题 / 站点名 */
+    --a-fs-fine:      13px;   /* v2.18.15：细则并入 13px（原 12px） */
+    --a-fs-micro:     11px;   /* meta 与徽章 */
+    --a-fs-title:     20px;   /* v2.18.15：原 18px → 20px */
     --a-fs-title-lg:  20px;
     --a-fs-heading:   22px;
-    --a-fs-display:   25px;
+    --a-fs-display:   28px;   /* v2.18.15：原 25px → 28px 展示级 */
     --a-fs-lead:      28px;
     --a-fs-tagline:   21px;
     --a-fs-section:   40px;
@@ -102,6 +102,15 @@
     --a-radius-none: 0;      --a-radius-xs: 5px;      --a-radius-sm: 8px;
     --a-radius-md:   11px;
     --a-radius-lg:   18px;   --a-radius-pill: 999px;
+
+    /* v2.18.15 三档按钮 + 选中态（浅色） */
+    --a-btn-primary-bg:        var(--a-primary);
+    --a-btn-primary-fg:        var(--a-on-primary);
+    --a-btn-secondary-bg:      var(--a-canvas);
+    --a-btn-secondary-border:  var(--a-hairline);
+    --a-btn-secondary-fg:      var(--a-ink);
+    --a-select-bg:             rgba(0, 102, 204, 0.10);
+    --a-select-fg:             var(--a-primary);
 
     --a-shadow-product: rgba(0, 0, 0, 0.22) 3px 5px 30px 0;
     /* Bootstrap 5 的阴影令牌统一归零：后台大量组件（alert/card/dropdown/modal/toast）
@@ -322,6 +331,15 @@ html[data-theme="dark"] {
     --primary-solid-dark:   var(--a-primary);
     --primary-text-dark:    var(--a-link-on-dark);
     --link:                 var(--a-link-on-dark);  /* 暗底文字链接 #2997ff */
+
+    /* v2.18.15 三档按钮 + 选中态（暗色） */
+    --a-btn-primary-bg:        var(--a-link-on-dark);
+    --a-btn-primary-fg:        var(--a-on-primary);
+    --a-btn-secondary-bg:      var(--a-tile-1);
+    --a-btn-secondary-border:  rgba(255, 255, 255, 0.16);
+    --a-btn-secondary-fg:      #f5f5f7;
+    --a-select-bg:             rgba(41, 151, 255, 0.18);
+    --a-select-fg:             var(--a-link-on-dark);
 
     --bg:             #000000;           /* v2.18.10：暗色画布改纯黑 */
     --bg-card:        var(--a-tile-1);
@@ -697,4 +715,95 @@ html[data-theme="dark"] .login-card .brand-mark {
 .login-card .brand-mark > svg {
     display: none !important;
 }
+
+/* ==========================================================================
+   v2.18.15 · 提交1 控件系统统一：暗色图标对比度 + 品牌块白底描边方块
+   --------------------------------------------------------------------------
+   P0-1：暗色图标按钮的实色图标由 --primary(#0066cc，对 #272729 仅 2.68:1)
+   改为 --a-link-on-dark(#2997ff，4.95:1)；浅色统一 --a-primary(#0066cc)。
+   P0-2 / 第四节：品牌块由「无框实色 mask 盾牌」改为白底 + 1px 描边 + 8px
+   圆角方块，内部 24px（桌面 28px）矢量盾牌几何居中；暗色改 #272729 底、
+   亮蓝盾牌。brand-mark 与 auth-mark 同规格，跨页统一同一盾牌同一填充色。
+   ========================================================================== */
+.theme-toggle,
+.auth-theme {
+    color: var(--a-primary) !important;
+}
+/* 登录/注册/找回/重置页只加载 apple-tokens + auth，不加载 nav.css，
+   主题按钮尺寸在此定义：44×44 / 8px 圆角图标按钮 */
+.auth-theme {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: var(--a-radius-sm) !important;
+}
+html[data-theme="dark"] .theme-toggle,
+html[data-theme="dark"] .auth-theme,
+html[data-theme="dark"] .theme-toggle:hover,
+html[data-theme="dark"] .auth-theme:hover {
+    color: var(--a-link-on-dark) !important;
+}
+.theme-toggle svg,
+.auth-theme svg { color: inherit; }
+
+.brand-mark,
+.site-header .brand-mark,
+.auth-mark,
+.login-card .brand-mark,
+.auth-brand .auth-mark {
+    position: relative !important;
+    display: grid !important;
+    place-items: center !important;
+    width: 44px !important;
+    height: 44px !important;
+    flex: 0 0 44px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    font-size: 0 !important;
+    background-color: var(--a-canvas) !important;
+    border: 1px solid var(--a-hairline) !important;
+    border-radius: var(--a-radius-sm) !important;
+    box-shadow: none !important;
+    -webkit-mask: none !important;
+    mask: none !important;
+}
+.brand-mark::before,
+.auth-mark::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 24px;
+    background-color: var(--a-primary);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5 3.5 4.6v5.9c0 5.4 3.6 10.5 8.5 11.9 4.9-1.4 8.5-6.5 8.5-11.9V4.6L12 1.5z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5 3.5 4.6v5.9c0 5.4 3.6 10.5 8.5 11.9 4.9-1.4 8.5-6.5 8.5-11.9V4.6L12 1.5z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+.brand-mark > *,
+.auth-mark > * { display: none !important; }
+@media (min-width: 641px) {
+    .brand-mark,
+    .site-header .brand-mark,
+    .auth-mark,
+    .login-card .brand-mark,
+    .auth-brand .auth-mark {
+        width: 52px !important;
+        height: 52px !important;
+        flex-basis: 52px !important;
+    }
+    .brand-mark::before,
+    .auth-mark::before { width: 28px; height: 28px; }
+}
+html[data-theme="dark"] .brand-mark,
+html[data-theme="dark"] .site-header .brand-mark,
+html[data-theme="dark"] .auth-mark,
+html[data-theme="dark"] .login-card .brand-mark,
+html[data-theme="dark"] .auth-brand .auth-mark {
+    background-color: var(--a-tile-1) !important;
+    border-color: var(--border) !important;
+}
+html[data-theme="dark"] .brand-mark::before,
+html[data-theme="dark"] .auth-mark::before {
+    background-color: var(--a-link-on-dark);
+}
+
+/* v2.18.15 控件令牌（三档按钮 + 选中态）已并入上方主 :root 与暗色块，
+   保持全站唯一 :root 源，避免重复定义。 */
 

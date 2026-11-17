@@ -234,6 +234,17 @@ foreach ($rawLinks as $row) {
 
 $totalSites = count($links);
 
+/* v2.18.15 P0-3：站点总数统一口径 = 全库已发布站点（is_active = 1）。
+   与 detail.php 的 $detailTotalSites 同源，不随当前视图 / 登录态 / 明暗变化。
+   $totalSites 仍保留「当前视图可见数」用于列表与分类计数，两者语义不再混用。 */
+$publishedSiteTotal = $totalSites;
+try {
+    $publishedSiteStmt = $db->query("SELECT COUNT(*) FROM nav_links WHERE is_active = 1");
+    $publishedSiteTotal = (int) $publishedSiteStmt->fetchColumn();
+} catch (Throwable $ignored) {
+    // 老库兼容：查询失败时退回当前视图数，不影响渲染
+}
+
 // 分类树：默认只保留有链接的分类，父分类计数含子分类；
 // 当前登录用户自己新建的空分组是例外（v2.12.0）。
 $categoryRows = $engine->all();
@@ -626,9 +637,9 @@ $navJsonLd = [
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.14">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.14">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.14">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.15">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.15">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.15">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -640,7 +651,7 @@ $navJsonLd = [
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.14';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.15';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -660,10 +671,10 @@ $navJsonLd = [
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.14" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.18.15" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.14" defer></script>
-    <script src="assets/js/search.js?v=2.18.14" defer></script>
+    <script src="assets/js/nav.js?v=2.18.15" defer></script>
+    <script src="assets/js/search.js?v=2.18.15" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -705,7 +716,7 @@ $navJsonLd = [
                         <h1 class="brand-title" translate="no"><?php echo $functions->escape($brandName); ?></h1>
                         <span class="brand-subtitle"><?php echo $functions->escape($brandSubtitle); ?></span>
                         <span class="brand-stats">
-                            共 <strong><?php echo $totalSites; ?></strong> 个站点
+                            共 <strong><?php echo $publishedSiteTotal; ?></strong> 个站点
                             <?php if ($isOwner && $currentUser): ?>· 我的导航<?php endif; ?>
                         </span>
                     </span>
