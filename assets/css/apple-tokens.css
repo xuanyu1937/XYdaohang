@@ -294,6 +294,17 @@
     --xycq-primary:      var(--a-primary);
     --xycq-primary-text: var(--a-on-primary);
     --xycq-danger:       var(--a-danger);
+    /* v2.18.12 测速四档语义色（仅测速文字与状态点） */
+    --speed-fast-fg:  #1E7A34;
+    --speed-fast-dot: #34C759;
+    --speed-mid-fg:   #B25000;
+    --speed-mid-dot:  #FF9500;
+    --speed-slow-fg:  #C1272D;
+    --speed-slow-dot: #FF3B30;
+    --speed-off-fg:   #6E6E73;
+    --speed-off-dot:  #8E8E93;
+    /* v2.18.12 列表分组卡暗色外壳 */
+    --surface-group:  var(--surface);
 }
 
 /* ==========================================================================
@@ -393,6 +404,19 @@ html[data-theme="dark"] {
     --xycq-primary: var(--a-primary);
     --xycq-primary-text: var(--a-on-primary);
     --xycq-danger:  #e88a83;
+    /* v2.18.12 测速四档语义色（暗色文字与圆点同色） */
+    --speed-fast-fg:  #30D158;
+    --speed-fast-dot: #30D158;
+    --speed-mid-fg:   #FF9F0A;
+    --speed-mid-dot:  #FF9F0A;
+    /* v2.18.12：规格 #FF453A 对纯黑 6.16:1，但实测文字落在 #272729 卡片上仅 4.38:1；
+       文字提亮到 #FF5349（对 #272729 4.68:1 过 AA），圆点保留系统色 #FF453A */
+    --speed-slow-fg:  #FF5349;
+    --speed-slow-dot: #FF453A;
+    --speed-off-fg:   #A1A1A6;
+    --speed-off-dot:  #A1A1A6;
+    /* v2.18.12 列表分组卡暗色外壳 */
+    --surface-group:  #1d1d1f;
 }
 
 /* ==========================================================================
@@ -603,3 +627,36 @@ html[data-theme="dark"] .brand-mark:has(img) img,
 html[data-theme="dark"] .auth-mark:has(img) img {
     filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.6));
 }
+
+/* ==========================================================================
+   v2.18.12 · Logo 铺满控件：覆盖上方 v2.18.11 的横版 contain 逻辑。
+   当前站点 logo 已是方形无白边资源（assets/img/logo.svg），改为 img 铺满方形控件。
+   ========================================================================== */
+.brand-mark:has(img),
+.auth-mark:has(img) {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    padding: 0;
+    border-radius: var(--a-radius-lg);
+}
+.brand-mark:has(img) img,
+.auth-mark:has(img) img {
+    position: static;
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    padding: 0;
+    border-radius: inherit;
+    background: transparent;
+    object-fit: cover;
+    object-position: center;
+    filter: none;
+}
+/* 暗色下不再对整图加白色描边（方形资源铺满后描边会在圆角外露白边） */
+html[data-theme="dark"] .brand-mark:has(img) img,
+html[data-theme="dark"] .auth-mark:has(img) img {
+    filter: none;
+}
+

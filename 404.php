@@ -47,8 +47,8 @@ $escape = static function ($value) {
     <meta name="robots" content="noindex, nofollow">
     <meta name="theme-color" content="#ffffff" id="themeColor">
     <link rel="icon" href="assets/img/icons/icon-192.png">
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.11">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.11">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.12">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.12">
     <script>
         (function () {
             try {
@@ -99,11 +99,20 @@ $escape = static function ($value) {
             margin: 0 auto 20px;
         }
         /* v2.18.11 P0-1：404 搜索框与首页 / sites.php 同一套胶囊尺寸与描边 */
-        .error-form input[type="search"] {
+        /* v2.18.12：与首页同款放大镜 + 占位文字不重叠（图标右缘 + ≥10px） */
+        .error-search {
+            position: relative;
             flex: 1 1 auto;
             min-width: 0;
+        }
+        .error-search .error-search-icon {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            width: 18px; height: 18px; color: var(--a-muted); pointer-events: none;
+        }
+        .error-form input[type="search"] {
+            width: 100%;
             height: var(--a-search-h);
-            padding: 0 var(--a-search-pad-x);
+            padding: 0 12px 0 40px;
             font-size: 14px;
             color: var(--text);
             background: var(--a-canvas);
@@ -172,7 +181,10 @@ $escape = static function ($value) {
 
         <form class="error-form" action="index.php" method="get" role="search">
             <label for="errorSearch" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">搜索站点</label>
-            <input type="search" id="errorSearch" name="q" placeholder="搜索网址或站点名称" autocomplete="off">
+            <span class="error-search">
+                <svg class="error-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
+                <input type="search" id="errorSearch" name="q" placeholder="搜索网址或站点名称" autocomplete="off">
+            </span>
             <button type="submit">搜索</button>
         </form>
 

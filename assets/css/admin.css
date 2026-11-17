@@ -3514,3 +3514,38 @@ html[data-theme="dark"] .login-card .brand-mark:has(img) img {
     filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.6));
 }
 .login-card .brand:has(.brand-mark img) { gap: 10px; }
+
+/* ==========================================================================
+   v2.18.12 · 后台登录品牌块：方形 52/44，覆盖 v2.18.11 横版 contain 规则
+   ========================================================================== */
+.login-card .brand-mark:has(img) {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+    border-radius: var(--a-radius-lg);
+    overflow: hidden;
+    padding: 0;
+    background: var(--a-primary);
+}
+.login-card .brand-mark:has(img) img {
+    position: static;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    object-position: center;
+    border-radius: inherit;
+    padding: 0;
+    background: transparent;
+    filter: none;
+}
+html[data-theme="dark"] .login-card .brand-mark:has(img) img { filter: none; }
+@media (max-width: 640px) {
+    .login-card .brand-mark:has(img) {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+    }
+}

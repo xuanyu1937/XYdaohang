@@ -86,7 +86,7 @@ $jsonLd = [
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.11">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.12">
     <style>
         :root { color-scheme: light; --fg: var(--a-ink); --muted: var(--a-muted); --line: var(--a-hairline); --accent: var(--a-primary); --bg: var(--a-canvas); }
         /* v2.18.11 P1-3：暗色改由 html[data-theme="dark"] 驱动（与首页 / 关于页同源），
@@ -119,13 +119,20 @@ $jsonLd = [
         .top { margin-bottom: 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .top label { margin: 0; color: var(--muted); font-size: 14px; }
         .u-search {
+            position: relative;
             display: flex; align-items: center; gap: 6px;
-            height: var(--a-search-h); padding: 3px 4px 3px var(--a-search-pad-x);
+            height: var(--a-search-h); padding: 3px 4px 3px 0;
             border: 1px solid var(--a-line-soft); border-radius: var(--a-radius-pill);
             background: var(--a-canvas);
         }
+        /* v2.18.12：与首页同款放大镜 + 占位文字不重叠（图标右缘 + ≥10px） */
+        .u-search .u-search-icon {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            width: 18px; height: 18px; color: var(--a-muted); pointer-events: none;
+        }
         .u-search input[type="search"] {
             flex: 1 1 auto; min-width: 0; height: 42px; border: 0; outline: 0;
+            padding-left: 40px;
             font-size: 14px; color: var(--fg); background: transparent;
         }
         .u-search button {
@@ -203,6 +210,7 @@ $jsonLd = [
     <form class="top" action="index.php" method="get" role="search">
         <label for="q">站内搜索</label>
         <span class="u-search">
+            <svg class="u-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
             <input id="q" name="q" type="search" placeholder="输入网站名或域名">
             <button type="submit">搜索</button>
         </span>
