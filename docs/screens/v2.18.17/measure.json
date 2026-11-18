@@ -1,0 +1,2488 @@
+{
+  "390-light-anon-index": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "light",
+    "mode": "list",
+    "owner": "0",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(0, 0, 0, 0.3)",
+      "width": "1px",
+      "surface": "rgb(255, 255, 255)",
+      "composed": "rgb(179,179,179)",
+      "contrastToSurface": 2.11
+    },
+    "card": {
+      "h": 75,
+      "grid": "32px 148px 44px",
+      "areas": "\"icon info corner\" \"meta meta meta\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 245,
+        "y": 442,
+        "w": 44,
+        "h": 44,
+        "left": 245,
+        "right": 289,
+        "top": 442,
+        "bottom": 486
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 1
+    },
+    "desc": {
+      "h": 17.5,
+      "lines": "1",
+      "font": "13px",
+      "text": "轩宇-导航 · 轻量网址导…"
+    },
+    "meta": {
+      "h": 18,
+      "ws": "nowrap",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "55%",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "nowrap"
+    },
+    "starSpeedGap": -44,
+    "floatBar": {
+      "rect": {
+        "x": 334,
+        "y": 786,
+        "w": 44,
+        "h": 44,
+        "left": 334,
+        "right": 378,
+        "top": 786,
+        "bottom": 830
+      },
+      "w": 44,
+      "h": 44,
+      "toTop": "none"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": -45,
+    "brandTitle": {
+      "font": "24px",
+      "lh": "44px",
+      "h": 44,
+      "markH": 44,
+      "offset": 0
+    },
+    "myGroups": 0,
+    "myItems": 0,
+    "starRect": {
+      "left": 245,
+      "right": 289,
+      "top": 442,
+      "bottom": 486,
+      "w": 44,
+      "h": 44
+    },
+    "metricsRect": {
+      "left": 121.7,
+      "right": 289,
+      "top": 476.5,
+      "bottom": 494.6,
+      "w": 167.3,
+      "h": 18.2
+    },
+    "domainRect": {
+      "left": 45,
+      "right": 109.7,
+      "top": 476.5,
+      "bottom": 494.6,
+      "w": 64.7,
+      "h": 18.2
+    },
+    "metaRect": {
+      "left": 45,
+      "right": 289,
+      "top": 476.5,
+      "bottom": 494.5,
+      "w": 244,
+      "h": 18
+    },
+    "cardRect": {
+      "left": 35,
+      "right": 299,
+      "top": 425.5,
+      "bottom": 500.5,
+      "w": 264,
+      "h": 75
+    },
+    "starRightVsMetricRight": 0,
+    "starBottomToMetaTop": -9.5
+  },
+  "390-light-anon-sites": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "20px",
+      "lh": "34px",
+      "h": 34,
+      "markH": 44,
+      "offset": 0
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "390-light-anon-detail": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "24px",
+      "lh": "44px",
+      "h": 44,
+      "markH": 44,
+      "offset": 0
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "390-light-anon-login": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "390-light-anon-404": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "390-dark-anon-index": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "dark",
+    "mode": "list",
+    "owner": "0",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(255, 255, 255, 0.24)",
+      "width": "1px",
+      "surface": "rgb(29, 29, 31)",
+      "composed": "rgb(83,83,85)",
+      "contrastToSurface": 2.2
+    },
+    "card": {
+      "h": 75,
+      "grid": "32px 148px 44px",
+      "areas": "\"icon info corner\" \"meta meta meta\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 245,
+        "y": 442,
+        "w": 44,
+        "h": 44,
+        "left": 245,
+        "right": 289,
+        "top": 442,
+        "bottom": 486
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 1
+    },
+    "desc": {
+      "h": 17.5,
+      "lines": "1",
+      "font": "13px",
+      "text": "轩宇-导航 · 轻量网址导…"
+    },
+    "meta": {
+      "h": 18,
+      "ws": "nowrap",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "55%",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "nowrap"
+    },
+    "starSpeedGap": -44,
+    "floatBar": {
+      "rect": {
+        "x": 334,
+        "y": 786,
+        "w": 44,
+        "h": 44,
+        "left": 334,
+        "right": 378,
+        "top": 786,
+        "bottom": 830
+      },
+      "w": 44,
+      "h": 44,
+      "toTop": "none"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": -45,
+    "brandTitle": {
+      "font": "24px",
+      "lh": "44px",
+      "h": 44,
+      "markH": 44,
+      "offset": 0
+    },
+    "myGroups": 0,
+    "myItems": 0,
+    "starRect": {
+      "left": 245,
+      "right": 289,
+      "top": 442,
+      "bottom": 486,
+      "w": 44,
+      "h": 44
+    },
+    "metricsRect": {
+      "left": 120.1,
+      "right": 289,
+      "top": 476.5,
+      "bottom": 494.6,
+      "w": 168.9,
+      "h": 18.2
+    },
+    "domainRect": {
+      "left": 45,
+      "right": 108.1,
+      "top": 476.5,
+      "bottom": 494.6,
+      "w": 63.1,
+      "h": 18.2
+    },
+    "metaRect": {
+      "left": 45,
+      "right": 289,
+      "top": 476.5,
+      "bottom": 494.5,
+      "w": 244,
+      "h": 18
+    },
+    "cardRect": {
+      "left": 35,
+      "right": 299,
+      "top": 425.5,
+      "bottom": 500.5,
+      "w": 264,
+      "h": 75
+    },
+    "starRightVsMetricRight": 0,
+    "starBottomToMetaTop": -9.5
+  },
+  "390-dark-anon-sites": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "20px",
+      "lh": "34px",
+      "h": 34,
+      "markH": 44,
+      "offset": 0
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "390-dark-anon-detail": {
+    "err": "Page.screenshot: Timeout 30000ms exceeded.\nCall log:\n  - taking page screenshot\n    - disabled all CSS animations\n  - waiting for fonts to load...\n"
+  },
+  "390-dark-anon-login": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "390-dark-anon-404": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "768-light-anon-index": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "light",
+    "mode": "list",
+    "owner": "0",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(0, 0, 0, 0.3)",
+      "width": "1px",
+      "surface": "rgb(255, 255, 255)",
+      "composed": "rgb(179,179,179)",
+      "contrastToSurface": 2.11
+    },
+    "card": {
+      "h": 54,
+      "grid": "38px 329.547px 198.453px 44px",
+      "areas": "\"icon info meta corner\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 663,
+        "y": 426.5,
+        "w": 44,
+        "h": 44,
+        "left": 663,
+        "right": 707,
+        "top": 426.5,
+        "bottom": 470.5
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 0
+    },
+    "desc": {
+      "h": 18.6,
+      "lines": "1",
+      "font": "13px",
+      "text": "轩宇-导航 · 轻量网址导航站 | 个人导航 · 全局搜索（拼…"
+    },
+    "meta": {
+      "h": 32.2,
+      "ws": "normal",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "240px",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "normal"
+    },
+    "starSpeedGap": 12,
+    "floatBar": {
+      "rect": {
+        "x": 702,
+        "y": 906,
+        "w": 44,
+        "h": 96,
+        "left": 702,
+        "right": 746,
+        "top": 906,
+        "bottom": 1002
+      },
+      "w": 44,
+      "h": 96,
+      "toTop": "grid"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": 5,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "33.6px",
+      "h": 33.6,
+      "markH": 52,
+      "offset": 0
+    },
+    "myGroups": 0,
+    "myItems": 0,
+    "starRect": {
+      "left": 663,
+      "right": 707,
+      "top": 426.5,
+      "bottom": 470.5,
+      "w": 44,
+      "h": 44
+    },
+    "metricsRect": {
+      "left": 538.4,
+      "right": 651,
+      "top": 446.4,
+      "bottom": 464.6,
+      "w": 112.6,
+      "h": 18.2
+    },
+    "domainRect": {
+      "left": 452.5,
+      "right": 526.4,
+      "top": 446.4,
+      "bottom": 464.6,
+      "w": 73.9,
+      "h": 18.2
+    },
+    "metaRect": {
+      "left": 452.5,
+      "right": 651,
+      "top": 432.4,
+      "bottom": 464.6,
+      "w": 198.5,
+      "h": 32.2
+    },
+    "cardRect": {
+      "left": 49,
+      "right": 719,
+      "top": 421.5,
+      "bottom": 475.5,
+      "w": 670,
+      "h": 54
+    },
+    "starRightVsMetricRight": 56,
+    "starBottomToMetaTop": -38.1
+  },
+  "768-light-anon-sites": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "20px",
+      "lh": "34px",
+      "h": 34,
+      "markH": 52,
+      "offset": -11
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "768-light-anon-detail": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "33.6px",
+      "h": 33.6,
+      "markH": 52,
+      "offset": 0
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "768-light-anon-login": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "768-light-anon-404": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "768-dark-anon-index": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "dark",
+    "mode": "list",
+    "owner": "0",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(255, 255, 255, 0.24)",
+      "width": "1px",
+      "surface": "rgb(29, 29, 31)",
+      "composed": "rgb(83,83,85)",
+      "contrastToSurface": 2.2
+    },
+    "card": {
+      "h": 54,
+      "grid": "38px 327.406px 200.594px 44px",
+      "areas": "\"icon info meta corner\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 663,
+        "y": 426.5,
+        "w": 44,
+        "h": 44,
+        "left": 663,
+        "right": 707,
+        "top": 426.5,
+        "bottom": 470.5
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 0
+    },
+    "desc": {
+      "h": 18.6,
+      "lines": "1",
+      "font": "13px",
+      "text": "轩宇-导航 · 轻量网址导航站 | 个人导航 · 全局搜索（拼…"
+    },
+    "meta": {
+      "h": 32.2,
+      "ws": "normal",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "240px",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "normal"
+    },
+    "starSpeedGap": 12,
+    "floatBar": {
+      "rect": {
+        "x": 702,
+        "y": 906,
+        "w": 44,
+        "h": 96,
+        "left": 702,
+        "right": 746,
+        "top": 906,
+        "bottom": 1002
+      },
+      "w": 44,
+      "h": 96,
+      "toTop": "grid"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": 5,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "33.6px",
+      "h": 33.6,
+      "markH": 52,
+      "offset": 0
+    },
+    "myGroups": 0,
+    "myItems": 0,
+    "starRect": {
+      "left": 663,
+      "right": 707,
+      "top": 426.5,
+      "bottom": 470.5,
+      "w": 44,
+      "h": 44
+    },
+    "metricsRect": {
+      "left": 537.3,
+      "right": 651,
+      "top": 446.4,
+      "bottom": 464.6,
+      "w": 113.7,
+      "h": 18.2
+    },
+    "domainRect": {
+      "left": 450.4,
+      "right": 525.3,
+      "top": 446.4,
+      "bottom": 464.6,
+      "w": 74.9,
+      "h": 18.2
+    },
+    "metaRect": {
+      "left": 450.4,
+      "right": 651,
+      "top": 432.4,
+      "bottom": 464.6,
+      "w": 200.6,
+      "h": 32.2
+    },
+    "cardRect": {
+      "left": 49,
+      "right": 719,
+      "top": 421.5,
+      "bottom": 475.5,
+      "w": 670,
+      "h": 54
+    },
+    "starRightVsMetricRight": 56,
+    "starBottomToMetaTop": -38.1
+  },
+  "768-dark-anon-sites": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "20px",
+      "lh": "34px",
+      "h": 34,
+      "markH": 52,
+      "offset": -11
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "768-dark-anon-detail": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "33.6px",
+      "h": 33.6,
+      "markH": 52,
+      "offset": 0
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "768-dark-anon-login": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "768-dark-anon-404": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1024-light-anon-index": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "light",
+    "mode": "list",
+    "owner": "0",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(0, 0, 0, 0.3)",
+      "width": "1px",
+      "surface": "rgb(255, 255, 255)",
+      "composed": "rgb(179,179,179)",
+      "contrastToSurface": 2.11
+    },
+    "card": {
+      "h": 54,
+      "grid": "38px 317.547px 198.453px 44px",
+      "areas": "\"icon info meta corner\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 919,
+        "y": 546.2,
+        "w": 44,
+        "h": 44,
+        "left": 919,
+        "right": 963,
+        "top": 546.2,
+        "bottom": 590.2
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 0
+    },
+    "desc": {
+      "h": 18.6,
+      "lines": "1",
+      "font": "13px",
+      "text": "轩宇-导航 · 轻量网址导航站 | 个人导航 · 全局搜索（…"
+    },
+    "meta": {
+      "h": 32.2,
+      "ws": "normal",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "240px",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "normal"
+    },
+    "starSpeedGap": 12,
+    "floatBar": {
+      "rect": {
+        "x": 958,
+        "y": 650,
+        "w": 44,
+        "h": 96,
+        "left": 958,
+        "right": 1002,
+        "top": 650,
+        "bottom": 746
+      },
+      "w": 44,
+      "h": 96,
+      "toTop": "grid"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": 5,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -21.8
+    },
+    "myGroups": 0,
+    "myItems": 0,
+    "starRect": {
+      "left": 919,
+      "right": 963,
+      "top": 546.2,
+      "bottom": 590.2,
+      "w": 44,
+      "h": 44
+    },
+    "metricsRect": {
+      "left": 794.4,
+      "right": 907,
+      "top": 566.1,
+      "bottom": 584.3,
+      "w": 112.6,
+      "h": 18.2
+    },
+    "domainRect": {
+      "left": 708.5,
+      "right": 782.4,
+      "top": 566.1,
+      "bottom": 584.3,
+      "w": 73.9,
+      "h": 18.2
+    },
+    "metaRect": {
+      "left": 708.5,
+      "right": 907,
+      "top": 552.1,
+      "bottom": 584.3,
+      "w": 198.5,
+      "h": 32.2
+    },
+    "cardRect": {
+      "left": 317,
+      "right": 975,
+      "top": 541.2,
+      "bottom": 595.2,
+      "w": 658,
+      "h": 54
+    },
+    "starRightVsMetricRight": 56,
+    "starBottomToMetaTop": -38.1
+  },
+  "1024-light-anon-sites": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "20px",
+      "lh": "34px",
+      "h": 34,
+      "markH": 52,
+      "offset": -11
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1024-light-anon-detail": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -10.3
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1024-light-anon-login": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1024-light-anon-404": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1024-dark-anon-index": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "dark",
+    "mode": "list",
+    "owner": "0",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(255, 255, 255, 0.24)",
+      "width": "1px",
+      "surface": "rgb(29, 29, 31)",
+      "composed": "rgb(83,83,85)",
+      "contrastToSurface": 2.2
+    },
+    "card": {
+      "h": 54,
+      "grid": "38px 315.406px 200.594px 44px",
+      "areas": "\"icon info meta corner\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 919,
+        "y": 546.2,
+        "w": 44,
+        "h": 44,
+        "left": 919,
+        "right": 963,
+        "top": 546.2,
+        "bottom": 590.2
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 0
+    },
+    "desc": {
+      "h": 18.6,
+      "lines": "1",
+      "font": "13px",
+      "text": "轩宇-导航 · 轻量网址导航站 | 个人导航 · 全局搜索（…"
+    },
+    "meta": {
+      "h": 32.2,
+      "ws": "normal",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "240px",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "normal"
+    },
+    "starSpeedGap": 12,
+    "floatBar": {
+      "rect": {
+        "x": 958,
+        "y": 650,
+        "w": 44,
+        "h": 96,
+        "left": 958,
+        "right": 1002,
+        "top": 650,
+        "bottom": 746
+      },
+      "w": 44,
+      "h": 96,
+      "toTop": "grid"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": 5,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -21.8
+    },
+    "myGroups": 0,
+    "myItems": 0,
+    "starRect": {
+      "left": 919,
+      "right": 963,
+      "top": 546.2,
+      "bottom": 590.2,
+      "w": 44,
+      "h": 44
+    },
+    "metricsRect": {
+      "left": 793.3,
+      "right": 907,
+      "top": 566.1,
+      "bottom": 584.3,
+      "w": 113.7,
+      "h": 18.2
+    },
+    "domainRect": {
+      "left": 706.4,
+      "right": 781.3,
+      "top": 566.1,
+      "bottom": 584.3,
+      "w": 74.9,
+      "h": 18.2
+    },
+    "metaRect": {
+      "left": 706.4,
+      "right": 907,
+      "top": 552.1,
+      "bottom": 584.3,
+      "w": 200.6,
+      "h": 32.2
+    },
+    "cardRect": {
+      "left": 317,
+      "right": 975,
+      "top": 541.2,
+      "bottom": 595.2,
+      "w": 658,
+      "h": 54
+    },
+    "starRightVsMetricRight": 56,
+    "starBottomToMetaTop": -38.1
+  },
+  "1024-dark-anon-sites": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "20px",
+      "lh": "34px",
+      "h": 34,
+      "markH": 52,
+      "offset": -11
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1024-dark-anon-detail": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -10.3
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1024-dark-anon-login": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1024-dark-anon-404": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1440-light-anon-index": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "light",
+    "mode": "list",
+    "owner": "0",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(0, 0, 0, 0.3)",
+      "width": "1px",
+      "surface": "rgb(255, 255, 255)",
+      "composed": "rgb(179,179,179)",
+      "contrastToSurface": 2.11
+    },
+    "card": {
+      "h": 54,
+      "grid": "38px 653.547px 198.453px 44px",
+      "areas": "\"icon info meta corner\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 1295,
+        "y": 510.2,
+        "w": 44,
+        "h": 44,
+        "left": 1295,
+        "right": 1339,
+        "top": 510.2,
+        "bottom": 554.2
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 0
+    },
+    "desc": {
+      "h": 18.6,
+      "lines": "1",
+      "font": "13px",
+      "text": "轩宇-导航 · 轻量网址导航站 | 个人导航 · 全局搜索（拼音/语义/联想） "
+    },
+    "meta": {
+      "h": 32.2,
+      "ws": "normal",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "240px",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "normal"
+    },
+    "starSpeedGap": 12,
+    "floatBar": {
+      "rect": {
+        "x": 1374,
+        "y": 782,
+        "w": 44,
+        "h": 96,
+        "left": 1374,
+        "right": 1418,
+        "top": 782,
+        "bottom": 878
+      },
+      "w": 44,
+      "h": 96,
+      "toTop": "grid"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": -35,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -21.8
+    },
+    "myGroups": 0,
+    "myItems": 0,
+    "starRect": {
+      "left": 1295,
+      "right": 1339,
+      "top": 510.2,
+      "bottom": 554.2,
+      "w": 44,
+      "h": 44
+    },
+    "metricsRect": {
+      "left": 1170.4,
+      "right": 1283,
+      "top": 530.1,
+      "bottom": 548.3,
+      "w": 112.6,
+      "h": 18.2
+    },
+    "domainRect": {
+      "left": 1084.5,
+      "right": 1158.4,
+      "top": 530.1,
+      "bottom": 548.3,
+      "w": 73.9,
+      "h": 18.2
+    },
+    "metaRect": {
+      "left": 1084.5,
+      "right": 1283,
+      "top": 516.1,
+      "bottom": 548.3,
+      "w": 198.5,
+      "h": 32.2
+    },
+    "cardRect": {
+      "left": 357,
+      "right": 1351,
+      "top": 505.2,
+      "bottom": 559.2,
+      "w": 994,
+      "h": 54
+    },
+    "starRightVsMetricRight": 56,
+    "starBottomToMetaTop": -38.1
+  },
+  "1440-light-anon-sites": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "20px",
+      "lh": "34px",
+      "h": 34,
+      "markH": 52,
+      "offset": -11
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1440-light-anon-detail": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -10.3
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1440-light-anon-login": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1440-light-anon-404": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1440-dark-anon-index": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "dark",
+    "mode": "list",
+    "owner": "0",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(255, 255, 255, 0.24)",
+      "width": "1px",
+      "surface": "rgb(29, 29, 31)",
+      "composed": "rgb(83,83,85)",
+      "contrastToSurface": 2.2
+    },
+    "card": {
+      "h": 54,
+      "grid": "38px 651.406px 200.594px 44px",
+      "areas": "\"icon info meta corner\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 1295,
+        "y": 510.2,
+        "w": 44,
+        "h": 44,
+        "left": 1295,
+        "right": 1339,
+        "top": 510.2,
+        "bottom": 554.2
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 0
+    },
+    "desc": {
+      "h": 18.6,
+      "lines": "1",
+      "font": "13px",
+      "text": "轩宇-导航 · 轻量网址导航站 | 个人导航 · 全局搜索（拼音/语义/联想） "
+    },
+    "meta": {
+      "h": 32.2,
+      "ws": "normal",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "240px",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "normal"
+    },
+    "starSpeedGap": 12,
+    "floatBar": {
+      "rect": {
+        "x": 1374,
+        "y": 782,
+        "w": 44,
+        "h": 96,
+        "left": 1374,
+        "right": 1418,
+        "top": 782,
+        "bottom": 878
+      },
+      "w": 44,
+      "h": 96,
+      "toTop": "grid"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": -35,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -21.8
+    },
+    "myGroups": 0,
+    "myItems": 0,
+    "starRect": {
+      "left": 1295,
+      "right": 1339,
+      "top": 510.2,
+      "bottom": 554.2,
+      "w": 44,
+      "h": 44
+    },
+    "metricsRect": {
+      "left": 1169.3,
+      "right": 1283,
+      "top": 530.1,
+      "bottom": 548.3,
+      "w": 113.7,
+      "h": 18.2
+    },
+    "domainRect": {
+      "left": 1082.4,
+      "right": 1157.3,
+      "top": 530.1,
+      "bottom": 548.3,
+      "w": 74.9,
+      "h": 18.2
+    },
+    "metaRect": {
+      "left": 1082.4,
+      "right": 1283,
+      "top": 516.1,
+      "bottom": 548.3,
+      "w": 200.6,
+      "h": 32.2
+    },
+    "cardRect": {
+      "left": 357,
+      "right": 1351,
+      "top": 505.2,
+      "bottom": 559.2,
+      "w": 994,
+      "h": 54
+    },
+    "starRightVsMetricRight": 56,
+    "starBottomToMetaTop": -38.1
+  },
+  "1440-dark-anon-sites": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "20px",
+      "lh": "34px",
+      "h": 34,
+      "markH": 52,
+      "offset": -11
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1440-dark-anon-detail": {
+    "err": "Page.screenshot: Timeout 30000ms exceeded.\nCall log:\n  - taking page screenshot\n    - disabled all CSS animations\n  - waiting for fonts to load...\n"
+  },
+  "1440-dark-anon-login": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1440-dark-anon-404": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "390-light-login-index": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "light",
+    "mode": "list",
+    "owner": "1",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(0, 0, 0, 0.3)",
+      "width": "1px",
+      "surface": "rgb(255, 255, 255)",
+      "composed": "rgb(179,179,179)",
+      "contrastToSurface": 2.11
+    },
+    "card": {
+      "h": 75,
+      "grid": "32px 148px 44px",
+      "areas": "\"icon info corner\" \"meta meta meta\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 245,
+        "y": 442,
+        "w": 44,
+        "h": 44,
+        "left": 245,
+        "right": 289,
+        "top": 442,
+        "bottom": 486
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 1
+    },
+    "desc": {
+      "h": 17.5,
+      "lines": "1",
+      "font": "13px",
+      "text": "Token:74d253946eb1…"
+    },
+    "meta": {
+      "h": 18,
+      "ws": "nowrap",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "55%",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "nowrap"
+    },
+    "starSpeedGap": -44,
+    "floatBar": {
+      "rect": {
+        "x": 334,
+        "y": 786,
+        "w": 44,
+        "h": 44,
+        "left": 334,
+        "right": 378,
+        "top": 786,
+        "bottom": 830
+      },
+      "w": 44,
+      "h": 44,
+      "toTop": "none"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": -45,
+    "brandTitle": {
+      "font": "24px",
+      "lh": "44px",
+      "h": 44,
+      "markH": 44,
+      "offset": 0
+    },
+    "myGroups": 0,
+    "myItems": 0,
+    "starRect": {
+      "left": 245,
+      "right": 289,
+      "top": 442,
+      "bottom": 486,
+      "w": 44,
+      "h": 44
+    },
+    "metricsRect": {
+      "left": 136.6,
+      "right": 289,
+      "top": 476.5,
+      "bottom": 494.6,
+      "w": 152.4,
+      "h": 18.2
+    },
+    "domainRect": {
+      "left": 45,
+      "right": 124.6,
+      "top": 476.5,
+      "bottom": 494.6,
+      "w": 79.6,
+      "h": 18.2
+    },
+    "metaRect": {
+      "left": 45,
+      "right": 289,
+      "top": 476.5,
+      "bottom": 494.5,
+      "w": 244,
+      "h": 18
+    },
+    "cardRect": {
+      "left": 35,
+      "right": 299,
+      "top": 425.5,
+      "bottom": 500.5,
+      "w": 264,
+      "h": 75
+    },
+    "starRightVsMetricRight": 0,
+    "starBottomToMetaTop": -9.5
+  },
+  "390-light-login-my-all": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "24px",
+      "lh": "44px",
+      "h": 44,
+      "markH": 44,
+      "offset": 0
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "390-light-login-my-personal": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "24px",
+      "lh": "44px",
+      "h": 44,
+      "markH": 44,
+      "offset": 0
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "390-light-login-my-fav": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "24px",
+      "lh": "44px",
+      "h": 44,
+      "markH": 44,
+      "offset": 0
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "390-dark-login-index": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "dark",
+    "mode": "list",
+    "owner": "1",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(255, 255, 255, 0.24)",
+      "width": "1px",
+      "surface": "rgb(29, 29, 31)",
+      "composed": "rgb(83,83,85)",
+      "contrastToSurface": 2.2
+    },
+    "card": {
+      "h": 75,
+      "grid": "32px 148px 44px",
+      "areas": "\"icon info corner\" \"meta meta meta\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 245,
+        "y": 442,
+        "w": 44,
+        "h": 44,
+        "left": 245,
+        "right": 289,
+        "top": 442,
+        "bottom": 486
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 1
+    },
+    "desc": {
+      "h": 17.5,
+      "lines": "1",
+      "font": "13px",
+      "text": "Token:74d253946eb1…"
+    },
+    "meta": {
+      "h": 18,
+      "ws": "nowrap",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "55%",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "nowrap"
+    },
+    "starSpeedGap": -44,
+    "floatBar": {
+      "rect": {
+        "x": 334,
+        "y": 786,
+        "w": 44,
+        "h": 44,
+        "left": 334,
+        "right": 378,
+        "top": 786,
+        "bottom": 830
+      },
+      "w": 44,
+      "h": 44,
+      "toTop": "none"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": -45,
+    "brandTitle": {
+      "font": "24px",
+      "lh": "44px",
+      "h": 44,
+      "markH": 44,
+      "offset": 0
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "390-dark-login-my-all": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "24px",
+      "lh": "44px",
+      "h": 44,
+      "markH": 44,
+      "offset": 0
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "390-dark-login-my-personal": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "24px",
+      "lh": "44px",
+      "h": 44,
+      "markH": 44,
+      "offset": 0
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "390-dark-login-my-fav": {
+    "vw": 390,
+    "vh": 844,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "24px",
+      "lh": "44px",
+      "h": 44,
+      "markH": 44,
+      "offset": 0
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "768-light-login-index": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "light",
+    "mode": "list",
+    "owner": "1",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(0, 0, 0, 0.3)",
+      "width": "1px",
+      "surface": "rgb(255, 255, 255)",
+      "composed": "rgb(179,179,179)",
+      "contrastToSurface": 2.11
+    },
+    "card": {
+      "h": 54,
+      "grid": "38px 321.281px 206.719px 44px",
+      "areas": "\"icon info meta corner\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 663,
+        "y": 426.5,
+        "w": 44,
+        "h": 44,
+        "left": 663,
+        "right": 707,
+        "top": 426.5,
+        "bottom": 470.5
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 0
+    },
+    "desc": {
+      "h": 18.6,
+      "lines": "1",
+      "font": "13px",
+      "text": "Token:74d253946eb14fa199d5769da0934e00"
+    },
+    "meta": {
+      "h": 32.2,
+      "ws": "normal",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "240px",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "normal"
+    },
+    "starSpeedGap": 12,
+    "floatBar": {
+      "rect": {
+        "x": 702,
+        "y": 906,
+        "w": 44,
+        "h": 96,
+        "left": 702,
+        "right": 746,
+        "top": 906,
+        "bottom": 1002
+      },
+      "w": 44,
+      "h": 96,
+      "toTop": "grid"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": 5,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "33.6px",
+      "h": 33.6,
+      "markH": 52,
+      "offset": 0
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "768-light-login-my-all": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "33.6px",
+      "h": 33.6,
+      "markH": 52,
+      "offset": 0
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "768-light-login-my-personal": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "33.6px",
+      "h": 33.6,
+      "markH": 52,
+      "offset": 0
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "768-light-login-my-fav": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "33.6px",
+      "h": 33.6,
+      "markH": 52,
+      "offset": 0
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "768-dark-login-index": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "dark",
+    "mode": "list",
+    "owner": "1",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(255, 255, 255, 0.24)",
+      "width": "1px",
+      "surface": "rgb(29, 29, 31)",
+      "composed": "rgb(83,83,85)",
+      "contrastToSurface": 2.2
+    },
+    "card": {
+      "h": 54,
+      "grid": "38px 318.828px 209.172px 44px",
+      "areas": "\"icon info meta corner\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 663,
+        "y": 426.5,
+        "w": 44,
+        "h": 44,
+        "left": 663,
+        "right": 707,
+        "top": 426.5,
+        "bottom": 470.5
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 0
+    },
+    "desc": {
+      "h": 18.6,
+      "lines": "1",
+      "font": "13px",
+      "text": "Token:74d253946eb14fa199d5769da0934e00"
+    },
+    "meta": {
+      "h": 32.2,
+      "ws": "normal",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "240px",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "normal"
+    },
+    "starSpeedGap": 12,
+    "floatBar": {
+      "rect": {
+        "x": 702,
+        "y": 906,
+        "w": 44,
+        "h": 96,
+        "left": 702,
+        "right": 746,
+        "top": 906,
+        "bottom": 1002
+      },
+      "w": 44,
+      "h": 96,
+      "toTop": "grid"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": 5,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "33.6px",
+      "h": 33.6,
+      "markH": 52,
+      "offset": 0
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "768-dark-login-my-all": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "33.6px",
+      "h": 33.6,
+      "markH": 52,
+      "offset": 0
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "768-dark-login-my-personal": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "33.6px",
+      "h": 33.6,
+      "markH": 52,
+      "offset": 0
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "768-dark-login-my-fav": {
+    "vw": 768,
+    "vh": 1024,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "33.6px",
+      "h": 33.6,
+      "markH": 52,
+      "offset": 0
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "1024-light-login-index": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "light",
+    "mode": "list",
+    "owner": "1",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(0, 0, 0, 0.3)",
+      "width": "1px",
+      "surface": "rgb(255, 255, 255)",
+      "composed": "rgb(179,179,179)",
+      "contrastToSurface": 2.11
+    },
+    "card": {
+      "h": 54,
+      "grid": "38px 309.281px 206.719px 44px",
+      "areas": "\"icon info meta corner\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 919,
+        "y": 546.2,
+        "w": 44,
+        "h": 44,
+        "left": 919,
+        "right": 963,
+        "top": 546.2,
+        "bottom": 590.2
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 0
+    },
+    "desc": {
+      "h": 18.6,
+      "lines": "1",
+      "font": "13px",
+      "text": "Token:74d253946eb14fa199d5769da0934e00"
+    },
+    "meta": {
+      "h": 32.2,
+      "ws": "normal",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "240px",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "normal"
+    },
+    "starSpeedGap": 12,
+    "floatBar": {
+      "rect": {
+        "x": 958,
+        "y": 650,
+        "w": 44,
+        "h": 96,
+        "left": 958,
+        "right": 1002,
+        "top": 650,
+        "bottom": 746
+      },
+      "w": 44,
+      "h": 96,
+      "toTop": "grid"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": 5,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -21.8
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1024-light-login-my-all": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -10.3
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "1024-light-login-my-personal": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -10.2
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "1024-light-login-my-fav": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -10.2
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "1024-dark-login-index": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "dark",
+    "mode": "list",
+    "owner": "1",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(255, 255, 255, 0.24)",
+      "width": "1px",
+      "surface": "rgb(29, 29, 31)",
+      "composed": "rgb(83,83,85)",
+      "contrastToSurface": 2.2
+    },
+    "card": {
+      "h": 54,
+      "grid": "38px 306.828px 209.172px 44px",
+      "areas": "\"icon info meta corner\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 919,
+        "y": 546.2,
+        "w": 44,
+        "h": 44,
+        "left": 919,
+        "right": 963,
+        "top": 546.2,
+        "bottom": 590.2
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 0
+    },
+    "desc": {
+      "h": 18.6,
+      "lines": "1",
+      "font": "13px",
+      "text": "Token:74d253946eb14fa199d5769da0934e00"
+    },
+    "meta": {
+      "h": 32.2,
+      "ws": "normal",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "240px",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "normal"
+    },
+    "starSpeedGap": 12,
+    "floatBar": {
+      "rect": {
+        "x": 958,
+        "y": 650,
+        "w": 44,
+        "h": 96,
+        "left": 958,
+        "right": 1002,
+        "top": 650,
+        "bottom": 746
+      },
+      "w": 44,
+      "h": 96,
+      "toTop": "grid"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": 5,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -21.8
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1024-dark-login-my-all": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -10.3
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "1024-dark-login-my-personal": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -10.2
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "1024-dark-login-my-fav": {
+    "vw": 1024,
+    "vh": 768,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -10.2
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "1440-light-login-index": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "light",
+    "mode": "list",
+    "owner": "1",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(0, 0, 0, 0.3)",
+      "width": "1px",
+      "surface": "rgb(255, 255, 255)",
+      "composed": "rgb(179,179,179)",
+      "contrastToSurface": 2.11
+    },
+    "card": {
+      "h": 54,
+      "grid": "38px 645.281px 206.719px 44px",
+      "areas": "\"icon info meta corner\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 1295,
+        "y": 510.2,
+        "w": 44,
+        "h": 44,
+        "left": 1295,
+        "right": 1339,
+        "top": 510.2,
+        "bottom": 554.2
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 0
+    },
+    "desc": {
+      "h": 18.6,
+      "lines": "1",
+      "font": "13px",
+      "text": "Token:74d253946eb14fa199d5769da0934e00"
+    },
+    "meta": {
+      "h": 32.2,
+      "ws": "normal",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "240px",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "normal"
+    },
+    "starSpeedGap": 12,
+    "floatBar": {
+      "rect": {
+        "x": 1374,
+        "y": 782,
+        "w": 44,
+        "h": 96,
+        "left": 1374,
+        "right": 1418,
+        "top": 782,
+        "bottom": 878
+      },
+      "w": 44,
+      "h": 96,
+      "toTop": "grid"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": -35,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -21.8
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1440-light-login-my-all": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -10.3
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "1440-light-login-my-personal": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -10.2
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "1440-light-login-my-fav": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "light",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -10.2
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "1440-dark-login-index": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "dark",
+    "mode": "list",
+    "owner": "1",
+    "hscroll": false,
+    "border": {
+      "color": "rgba(255, 255, 255, 0.24)",
+      "width": "1px",
+      "surface": "rgb(29, 29, 31)",
+      "composed": "rgb(83,83,85)",
+      "contrastToSurface": 2.2
+    },
+    "card": {
+      "h": 54,
+      "grid": "38px 642.828px 209.172px 44px",
+      "areas": "\"icon info meta corner\"",
+      "display": "grid"
+    },
+    "star": {
+      "rect": {
+        "x": 1295,
+        "y": 510.2,
+        "w": 44,
+        "h": 44,
+        "left": 1295,
+        "right": 1339,
+        "top": 510.2,
+        "bottom": 554.2
+      },
+      "w": 44,
+      "h": 44,
+      "offsetY": 0
+    },
+    "desc": {
+      "h": 18.6,
+      "lines": "1",
+      "font": "13px",
+      "text": "Token:74d253946eb14fa199d5769da0934e00"
+    },
+    "meta": {
+      "h": 32.2,
+      "ws": "normal",
+      "display": "flex"
+    },
+    "domain": {
+      "maxWidth": "240px",
+      "ellipsis": "ellipsis"
+    },
+    "metrics": {
+      "ws": "normal"
+    },
+    "starSpeedGap": 12,
+    "floatBar": {
+      "rect": {
+        "x": 1374,
+        "y": 782,
+        "w": 44,
+        "h": 96,
+        "left": 1374,
+        "right": 1418,
+        "top": 782,
+        "bottom": 878
+      },
+      "w": 44,
+      "h": 96,
+      "toTop": "grid"
+    },
+    "floatStarOverlap": false,
+    "floatStarOverlapX": -35,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -21.8
+    },
+    "myGroups": 0,
+    "myItems": 0
+  },
+  "1440-dark-login-my-all": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -10.3
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "1440-dark-login-my-personal": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -10.2
+    },
+    "myGroups": 7,
+    "myItems": 49
+  },
+  "1440-dark-login-my-fav": {
+    "vw": 1440,
+    "vh": 900,
+    "theme": "dark",
+    "mode": null,
+    "owner": null,
+    "hscroll": false,
+    "brandTitle": {
+      "font": "28px",
+      "lh": "35px",
+      "h": 35,
+      "markH": 52,
+      "offset": -10.2
+    },
+    "myGroups": 7,
+    "myItems": 49
+  }
+}
