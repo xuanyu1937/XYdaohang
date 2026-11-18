@@ -8114,3 +8114,50 @@ html[data-theme="dark"][data-mode="list"] .link-sections > .link-group {
         height: 44px !important;
     }
 }
+
+/* ==========================================================================
+   v2.18.18 · 问题7 全站标识统一：站内品牌块拉回盾牌
+   --------------------------------------------------------------------------
+   根因：历史 .brand-mark:has(img) 系列规则（v2.18.11/12）让后台上传的
+   白底横版 JPG 铺满品牌块，特异性高于 v2.18.14 的盾牌 mask 规则，导致
+   站内品牌块实际显示白底 JPG（与 favicon/应用图标三套不一致）。
+   修复：用更高特异性 + !important 强制所有品牌块（含 :has(img)）统一为
+   令牌蓝盾牌 mask，隐藏内部 img/svg/文字，与 favicon/应用图标同一图形语言。
+   ========================================================================== */
+html .brand-mark,
+html .site-header .brand-mark,
+html .auth-mark,
+html .login-card .brand-mark,
+html .brand-mark:has(img),
+html .auth-mark:has(img) {
+    font-size: 0 !important;
+    color: transparent !important;
+    background-color: var(--primary) !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5 3.5 4.6v5.9c0 5.4 3.6 10.5 8.5 11.9 4.9-1.4 8.5-6.5 8.5-11.9V4.6L12 1.5z'/%3E%3C/svg%3E") center / 68% 68% no-repeat !important;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5 3.5 4.6v5.9c0 5.4 3.6 10.5 8.5 11.9 4.9-1.4 8.5-6.5 8.5-11.9V4.6L12 1.5z'/%3E%3C/svg%3E") center / 68% 68% no-repeat !important;
+}
+html[data-theme="dark"] .brand-mark,
+html[data-theme="dark"] .brand-mark:has(img),
+html[data-theme="dark"] .site-header .brand-mark,
+html[data-theme="dark"] .auth-mark,
+html[data-theme="dark"] .auth-mark:has(img),
+html[data-theme="dark"] .login-card .brand-mark {
+    background-color: var(--a-link-on-dark) !important;
+}
+html .brand-mark img,
+html .brand-mark > svg,
+html .brand-mark:has(img) img,
+html .brand-mark:has(img) > svg,
+html .site-header .brand-mark img,
+html .site-header .brand-mark > svg,
+html .auth-mark img,
+html .auth-mark > svg,
+html .auth-mark:has(img) img,
+html .login-card .brand-mark img,
+html .login-card .brand-mark > svg {
+    display: none !important;
+}
