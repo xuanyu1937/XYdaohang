@@ -5274,3 +5274,67 @@
         }
     }
 })();
+
+/* ==========================================================================
+   v2.18.17 · 提交3 P2-6：描述语义截断
+   在单行 -webkit-line-clamp:1 之前，把超出宽度的描述按空格 / 中英文标点
+   回退最多 4 个字符再补省略号，避免「…个…」半词尾。
+   只改 .site-desc 的可见文本，不动 data-description（编辑 / 搜索依赖原值）。
+   ========================================================================== */
+(function initSmartEllipsis() {
+    var d = document;
+    var BREAK = /[\s,，.。;；:：!！?？、)）\]】}》]/;
+    var probe = null, pctx = null;
+
+    function widthOf(text, font) {
+        if (!probe) { probe = d.createElement('canvas'); pctx = probe.getContext('2d'); }
+        pctx.font = font;
+        return pctx.measureText(text).width;
+    }
+
+    function applyOne(el) {
+        var full = el.getAttribute('data-desc-full');
+        if (full === null) {
+            full = el.textContent || '';
+            el.setAttribute('data-desc-full', full);
+        }
+        // 每次从原文重算，避免 resize/重复执行导致逐级截断
+        el.textContent = full;
+        var cs = window.getComputedStyle(el);
+        var font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+        var avail = el.clientWidth;
+        if (!avail || widthOf(full, font) <= avail) return;
+
+        var ell = '…';
+        var limit = avail - widthOf(ell, font) - 1;
+        var cut = full.length;
+        for (var i = 1; i <= full.length; i++) {
+            if (widthOf(full.slice(0, i), font) > limit) { cut = i - 1; break; }
+        }
+        if (cut < 1) cut = 1;
+        // 回退最多 4 个字符找断点
+        var floor = Math.max(0, cut - 4);
+        var bp = -1;
+        for (var j = cut - 1; j >= floor; j--) {
+            if (BREAK.test(full.charAt(j))) { bp = j + 1; break; }
+        }
+        if (bp > 0) cut = bp;
+        var out = full.slice(0, cut).replace(/[\s,，.。;；:：、]+$/, '');
+        el.textContent = (out || full.slice(0, cut)) + ell;
+    }
+
+    function run() {
+        var nodes = d.querySelectorAll('.site-desc');
+        for (var i = 0; i < nodes.length; i++) applyOne(nodes[i]);
+    }
+
+    function onReady() { setTimeout(run, 60); }
+    if (d.readyState === 'complete' || d.readyState === 'interactive') onReady();
+    else d.addEventListener('DOMContentLoaded', onReady, { once: true });
+
+    var t = null;
+    window.addEventListener('resize', function () {
+        clearTimeout(t);
+        t = setTimeout(run, 150);
+    }, { passive: true });
+})();
