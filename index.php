@@ -639,9 +639,9 @@ $navJsonLd = [
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.18">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.18">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.18">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.19">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.19">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.19">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -653,7 +653,7 @@ $navJsonLd = [
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.18';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.19';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -673,10 +673,10 @@ $navJsonLd = [
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.18" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.18.19" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.18" defer></script>
-    <script src="assets/js/search.js?v=2.18.18" defer></script>
+    <script src="assets/js/nav.js?v=2.18.19" defer></script>
+    <script src="assets/js/search.js?v=2.18.19" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -1080,6 +1080,42 @@ $navJsonLd = [
                     <span class="rail-current" id="railCurrent">全部</span>
                 </div>
 
+                <!-- v2.18.19 · P1-6：标题栏与筛选占位前移到热门条之前，
+                     使热门条(.hot-strip)与首个分组卡(.link-group)之间只隔统一 24px margin -->
+                <div class="section-head">
+                    <div class="section-title">
+                        <h2 id="sectionTitle">全部网站</h2>
+                        <span class="section-count" id="sectionCount" aria-live="polite">当前视图 <?php echo $totalSites; ?> 个</span>
+                    </div>
+                    <div class="section-aside" id="sectionAside">
+                        <button type="button" class="section-tool is-active" data-sort="clicks" aria-pressed="true" title="按点击量排序">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 19V9M10 19V5M16 19v-7M22 19h-20"></path>
+                            </svg>
+                            <span class="section-tool-label">常用优先</span>
+                        </button>
+                        <button type="button" class="section-tool" data-sort="name" aria-pressed="false" title="按名称排序">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 6h9M4 12h7M4 18h9"></path><path d="M17 8l3-3 3 3M20 5v14"></path>
+                            </svg>
+                            <span class="section-tool-label">名称排序</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filter-bar-wrap" id="filterBarWrap" data-open="0">
+                <div class="filter-bar" id="filterBar">
+                    <div class="filter-chip" id="filterKeyword" hidden>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
+                        <span>关键词：<strong id="filterKeywordText"></strong></span>
+                    </div>
+                    <div class="filter-chip" id="filterCategory" hidden>
+                        <span>分类：<strong id="filterCategoryText"></strong></span>
+                    </div>
+                    <button type="button" class="filter-reset" id="filterResetAll">清除筛选</button>
+                </div>
+                </div>
+
                 <?php if ($hotLinks): ?>
                     <section class="hot-strip" aria-label="热门访问">
                         <h2 class="hot-title">
@@ -1105,40 +1141,6 @@ $navJsonLd = [
                         </div>
                     </section>
                 <?php endif; ?>
-
-                <div class="filter-bar-wrap" id="filterBarWrap" data-open="0">
-                <div class="filter-bar" id="filterBar">
-                    <div class="filter-chip" id="filterKeyword" hidden>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
-                        <span>关键词：<strong id="filterKeywordText"></strong></span>
-                    </div>
-                    <div class="filter-chip" id="filterCategory" hidden>
-                        <span>分类：<strong id="filterCategoryText"></strong></span>
-                    </div>
-                    <button type="button" class="filter-reset" id="filterResetAll">清除筛选</button>
-                </div>
-                </div>
-
-                <div class="section-head">
-                    <div class="section-title">
-                        <h2 id="sectionTitle">全部网站</h2>
-                        <span class="section-count" id="sectionCount" aria-live="polite">当前视图 <?php echo $totalSites; ?> 个</span>
-                    </div>
-                    <div class="section-aside" id="sectionAside">
-                        <button type="button" class="section-tool is-active" data-sort="clicks" aria-pressed="true" title="按点击量排序">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M4 19V9M10 19V5M16 19v-7M22 19h-20"></path>
-                            </svg>
-                            <span class="section-tool-label">常用优先</span>
-                        </button>
-                        <button type="button" class="section-tool" data-sort="name" aria-pressed="false" title="按名称排序">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M4 6h9M4 12h7M4 18h9"></path><path d="M17 8l3-3 3 3M20 5v14"></path>
-                            </svg>
-                            <span class="section-tool-label">名称排序</span>
-                        </button>
-                    </div>
-                </div>
 
                 <div class="link-sections" id="linkSections">
                     <?php $navEagerCards = 0; foreach ($sections as $sectionIndex => $section): ?>

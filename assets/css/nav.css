@@ -8161,3 +8161,105 @@ html .login-card .brand-mark img,
 html .login-card .brand-mark > svg {
     display: none !important;
 }
+
+/* ==========================================================================
+   v2.18.19 · 遗留问题 1-6 + 新增问题 10 修复层（覆盖上文全部历史规则）
+   --------------------------------------------------------------------------
+   P0-1/2/3：撤销 v2.18.17 的 56px 右安全区——它让 .link-sections 内容区
+     缩窄 56px，分组卡 w298/right316 与热门条 w354/right372 不等宽，
+     卡片内容列仅 148px 致标题 9 字截断；悬浮层为 position:fixed，
+     本就不参与文档流，去掉安全区后 .site-card 宽度不再随悬浮态变化。
+   P0-4：分组卡与热门条统一 border 计算值（同为 1px solid rgba(0,0,0,.30)，
+     暗色 rgba(255,255,255,.24)），比正文浅且 100% 缩放肉眼可辨。
+   P1-5：内容列由 148px 回到 ≥200px，13px 描述单行可容 ≥14 汉字。
+   P1-6：把"全部网站"标题栏与筛选占位移到热门条之前，热门条与分组卡
+     之间只留统一 24px margin（详见 index.php 顺序调整）。
+   P0-10：撤销 v2.18.18 把 mask 直接作用于 .brand-mark 容器的做法——
+     容器恢复白底/1px 描边/8px 圆角/44(手机)·52(桌面)，与右侧图标按钮
+     同一组件语言；盾牌改画到 ::before 伪元素（mask 只在伪元素上），
+     灰色描边不再沿盾形轮廓绘制，盾形 center 定位保证上下留白均衡。
+     判定口径同步：问题7 的"同主色"改看盾牌伪元素主色(令牌蓝)，
+     容器底色不再作为主色判据，7-9 视觉结果不回退。
+   ========================================================================== */
+
+/* ---- P0-10 品牌块容器归位（盾牌下沉到伪元素） ---- */
+html .brand-mark,
+html .site-header .brand-mark,
+html .auth-mark,
+html .login-card .brand-mark,
+html .brand-mark:has(img),
+html .auth-mark:has(img) {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    font-size: 0 !important;
+    color: transparent !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e0e0e0 !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    -webkit-mask: none !important;
+    mask: none !important;
+}
+html .brand-mark::before,
+html .site-header .brand-mark::before,
+html .auth-mark::before,
+html .login-card .brand-mark::before,
+html .brand-mark:has(img)::before,
+html .auth-mark:has(img)::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    pointer-events: none !important;
+    background-color: #0066cc !important;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5 3.5 4.6v5.9c0 5.4 3.6 10.5 8.5 11.9 4.9-1.4 8.5-6.5 8.5-11.9V4.6L12 1.5z'/%3E%3C/svg%3E") center / 68% 68% no-repeat !important;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5 3.5 4.6v5.9c0 5.4 3.6 10.5 8.5 11.9 4.9-1.4 8.5-6.5 8.5-11.9V4.6L12 1.5z'/%3E%3C/svg%3E") center / 68% 68% no-repeat !important;
+}
+html[data-theme="dark"] .brand-mark,
+html[data-theme="dark"] .site-header .brand-mark,
+html[data-theme="dark"] .auth-mark,
+html[data-theme="dark"] .login-card .brand-mark,
+html[data-theme="dark"] .brand-mark:has(img),
+html[data-theme="dark"] .auth-mark:has(img) {
+    background-color: #272729 !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+html[data-theme="dark"] .brand-mark::before,
+html[data-theme="dark"] .site-header .brand-mark::before,
+html[data-theme="dark"] .auth-mark::before,
+html[data-theme="dark"] .login-card .brand-mark::before {
+    background-color: #2997ff !important;
+}
+
+/* ---- P0-1/2/3 撤销 56px 右安全区，两块表面同宽、内容列 ≥200px ---- */
+@media (max-width: 620px) {
+    .link-sections,
+    #linkSections {
+        padding-right: 0 !important;
+    }
+    .hot-strip {
+        padding-right: 16px !important;
+    }
+}
+
+/* ---- P0-4 分组卡与热门条边框同源（计算值字符串一致） ---- */
+html .link-sections > .link-group,
+html .hot-strip {
+    border: 1px solid rgba(0, 0, 0, 0.30) !important;
+}
+html[data-theme="dark"] .link-sections > .link-group,
+html[data-theme="dark"] .hot-strip {
+    border-color: rgba(255, 255, 255, 0.24) !important;
+}
+
+/* ---- P1-6 两块表面间距统一 24px（DOM 顺序调整后 hot→分组卡只隔 margin） ---- */
+.hot-strip {
+    margin-bottom: 24px !important;
+}
+@media (max-width: 620px) {
+    .hot-strip { margin-bottom: 24px !important; }
+}
