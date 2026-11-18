@@ -554,9 +554,11 @@ $navJsonLd = [
     <meta name="twitter:card" content="summary">
     <meta name="twitter:image" content="<?php echo $functions->escape($ogImageUrl); ?>">
 
-    <?php if ($siteLogoUrl !== ''): ?>
-        <link rel="icon" href="<?php echo $functions->escape($siteLogoUrl); ?>">
-    <?php endif; ?>
+    <?php /* v2.18.18 · 全站标识统一：favicon 用令牌蓝盾牌，与品牌块/应用图标同一图形语言，16px 可辨、无白底方块 */ ?>
+    <link rel="icon" type="image/svg+xml" href="assets/img/icons/favicon.svg">
+    <link rel="icon" type="image/x-icon" href="assets/img/icons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/icons/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png">
 
     <!-- v2.18.1 · PWA：可添加到手机桌面（manifest 动态生成，图标为静态 PNG） -->
     <link rel="manifest" href="manifest.php">
@@ -637,9 +639,9 @@ $navJsonLd = [
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.17">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.17">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.17">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.18">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.18">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.18">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -651,7 +653,7 @@ $navJsonLd = [
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.17';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.18';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -671,10 +673,10 @@ $navJsonLd = [
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.17" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.18.18" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.17" defer></script>
-    <script src="assets/js/search.js?v=2.18.17" defer></script>
+    <script src="assets/js/nav.js?v=2.18.18" defer></script>
+    <script src="assets/js/search.js?v=2.18.18" defer></script>
     <noscript>
         <style>
             .site-status,

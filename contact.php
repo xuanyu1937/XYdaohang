@@ -87,9 +87,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="description" content="<?php echo $functions->escape('向 ' . $brandName . ' 提交问题反馈或站点收录建议。'); ?>">
     <meta name="theme-color" content="#ffffff" id="themeColor">
 
-    <?php if ($siteLogoUrl !== ''): ?>
-        <link rel="icon" href="<?php echo $functions->escape($siteLogoUrl); ?>">
-    <?php endif; ?>
+    <?php /* v2.18.18 · 全站标识统一：favicon 用令牌蓝盾牌，与品牌块/应用图标同一图形语言，16px 可辨、无白底方块 */ ?>
+    <link rel="icon" type="image/svg+xml" href="assets/img/icons/favicon.svg">
+    <link rel="icon" type="image/x-icon" href="assets/img/icons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/icons/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png">
 
     <script>
         (function () {
@@ -114,8 +116,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.17">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.17">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.18">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.18">
     <link rel="stylesheet" href="assets/css/page.css?v=<?php echo APP_VERSION; ?>">
 </head>
 <body data-monitor="0">
@@ -317,6 +319,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.18.17" defer></script>
+<script src="assets/js/search.js?v=2.18.18" defer></script>
 </body>
 </html>

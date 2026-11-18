@@ -152,9 +152,11 @@ $detailTotalSites = (int) $detailTotalStmt->fetchColumn();
     <meta name="twitter:description" content="<?php echo $functions->escape($pageDescription); ?>">
     <script type="application/ld+json"><?php echo json_encode($detailJsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?></script>
     <meta name="theme-color" content="#ffffff" id="themeColor">
-    <?php if ($siteLogoUrl !== ''): ?>
-        <link rel="icon" href="<?php echo $functions->escape($siteLogoUrl); ?>">
-    <?php endif; ?>
+    <?php /* v2.18.18 · 全站标识统一：favicon 用令牌蓝盾牌，与品牌块/应用图标同一图形语言，16px 可辨、无白底方块 */ ?>
+    <link rel="icon" type="image/svg+xml" href="assets/img/icons/favicon.svg">
+    <link rel="icon" type="image/x-icon" href="assets/img/icons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/icons/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/img/icons/favicon-16.png">
     <script>
         /* v2.18.11 P1-3 / P2-4：与首页共用 early script，写 data-theme 并同步 theme-color */
         (function () {
@@ -170,9 +172,9 @@ $detailTotalSites = (int) $detailTotalStmt->fetchColumn();
             } catch (e) {}
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.17">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.17">
-    <link rel="stylesheet" href="assets/css/page.css?v=2.18.17">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.18">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.18">
+    <link rel="stylesheet" href="assets/css/page.css?v=2.18.18">
     <script src="assets/js/jquery3.7.1.js"></script>
     <?php require_once __DIR__ . '/includes/asset_fallbacks.php'; ?>
     <script src="assets/js/qrcode.min.js"></script>

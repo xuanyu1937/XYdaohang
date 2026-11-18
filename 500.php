@@ -23,9 +23,10 @@ header('X-Robots-Tag: noindex, nofollow');
     <title>服务暂时不可用</title>
     <meta name="robots" content="noindex, nofollow">
     <meta name="theme-color" content="#ffffff" id="themeColor">
-    <link rel="icon" href="assets/img/icons/icon-192.png">
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.17">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.17">
+    <link rel="icon" type="image/svg+xml" href="assets/img/icons/favicon.svg">
+    <link rel="icon" type="image/x-icon" href="assets/img/icons/favicon.ico">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.18">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.18">
     <script>
         (function () {
             try {
