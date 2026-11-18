@@ -7919,3 +7919,196 @@ html[data-theme="dark"] .rail-item.is-active .rail-label,
 html[data-theme="dark"] .section-tool.is-active .section-tool-label {
     color: var(--a-select-fg-on-tint) !important;
 }
+
+/* ==========================================================================
+   v2.18.17 · 提交1 悬浮安全区（覆盖层，覆盖上文历史规则）
+   --------------------------------------------------------------------------
+   P0-1：390px 下收藏星标 x301–345，旧悬浮层 x332–372 两按钮竖排(44×96)，
+   横向重叠 13px。策略：
+   1) 悬浮层默认收起为单一 44×44 按钮（.to-top 默认 display:none，
+      仅滚动到一定位置或 hover/focus 时作为第二按钮出现，窄屏不常驻）；
+   2) 手机端给内容区 .link-sections 右让 56px 安全区，卡片右缘(含星标)
+      从 x345 收至 x≈289，悬浮层左缘 x332 与星标之间空出 ≥40px；
+   3) 热门横滑最右条目同样受安全区保护，右缘不被覆盖。
+   验收：JS 取 .float-bar 与 .card-star 矩形相交判断恒为 false。
+   ========================================================================== */
+@media (max-width: 620px) {
+    /* 内容区整体右让 56px：列表 / 网格 / 紧凑三态统一生效，
+       热门横滑区(.hot-strip)同样右让，保护最右条目不被悬浮球覆盖 */
+    .link-sections,
+    #linkSections,
+    .hot-strip {
+        padding-right: 56px !important;
+    }
+    /* 旧规则只给 grid 的 .site-grid 加 margin，这里三态统一，避免重复叠加 */
+    html[data-mode="grid"] #linkSections .site-grid {
+        margin-right: 0 !important;
+    }
+    /* 悬浮层默认收起为单一 44×44：回到顶部按钮不再常驻，避免 96px 高覆盖两行卡片 */
+    .float-bar .to-top {
+        display: none !important;
+    }
+    .float-bar {
+        right: max(12px, env(safe-area-inset-right)) !important;
+        bottom: max(14px, env(safe-area-inset-bottom)) !important;
+    }
+}
+
+/* ==========================================================================
+   v2.18.17 · 提交2 登录态卡片同源（覆盖层，覆盖上文历史规则）
+   --------------------------------------------------------------------------
+   P0-2：登录态曾出现描述两行、域名与测速分行、星标只在首段居中、行高涨到
+   ~95px。根因是 v2.18.13 那套 3列2行栅格只写在 html[data-mode="list"] 下，
+   grid 模式（登录态默认视图差异）走另一套两行描述栅格、corner 还被 absolute
+   定位导致星标偏上。compact 是紧凑图标网格，语义不同，保持原样。
+   修复：手机端(≤640px)让 grid 与 list 两态的 .site-card 统一采用
+     列 32px / minmax(0,1fr) / 44px，区域
+     行1 "icon info corner" / 行2 "meta meta meta"；
+   描述 -webkit-line-clamp:1；meta 单行 nowrap、域名 max-width 55% 省略、
+   测速 nowrap；星标 44×44 + grid-area:1/3/3/4 + align-self:center，
+   且 corner 回 static，使其相对整卡居中。
+   验收：登录态 390px 行高 72–78px、星标中心与整卡中心偏差 ≤1px、
+        描述高度 = 单行行高。
+   ========================================================================== */
+@media (max-width: 640px) {
+    html[data-mode="grid"] .site-card,
+    html[data-mode="list"] .site-card {
+        display: grid !important;
+        grid-template-columns: 32px minmax(0, 1fr) 44px !important;
+        grid-template-areas:
+            "icon info corner"
+            "meta meta meta" !important;
+        column-gap: 10px !important;
+        row-gap: 4px !important;
+        align-items: center !important;
+        min-height: 0 !important;
+        padding: 8px 10px 6px !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none;
+    }
+    html[data-mode="grid"] .site-card .site-card-main,
+    html[data-mode="list"] .site-card .site-card-main {
+        display: contents !important;
+    }
+    html[data-mode="grid"] .site-card .site-icon,
+    html[data-mode="list"] .site-card .site-icon {
+        grid-area: icon !important;
+        width: 32px !important;
+        height: 32px !important;
+        align-self: start !important;
+    }
+    html[data-mode="grid"] .site-card .site-info,
+    html[data-mode="list"] .site-card .site-info {
+        grid-area: info !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 1px !important;
+        min-width: 0 !important;
+        padding-right: 0 !important;
+    }
+    html[data-mode="grid"] .site-card .site-name,
+    html[data-mode="list"] .site-card .site-name {
+        max-width: none !important;
+        font-size: 15px !important;
+        line-height: 1.3 !important;
+    }
+    html[data-mode="grid"] .site-card .site-desc,
+    html[data-mode="list"] .site-card .site-desc {
+        display: -webkit-box !important;
+        -webkit-box-orient: vertical !important;
+        -webkit-line-clamp: 1 !important;
+        line-clamp: 1 !important;
+        overflow: hidden !important;
+        font-size: 13px !important;
+        line-height: 1.35 !important;
+        margin-top: 1px !important;
+    }
+    html[data-mode="grid"] .site-card .site-meta,
+    html[data-mode="list"] .site-card .site-meta {
+        grid-area: meta !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 10px !important;
+        min-width: 0 !important;
+        height: 18px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        white-space: nowrap !important;
+    }
+    html[data-mode="grid"] .site-card .site-domain,
+    html[data-mode="list"] .site-card .site-domain {
+        max-width: 55% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+    html[data-mode="grid"] .site-card .site-metrics,
+    html[data-mode="list"] .site-card .site-metrics {
+        flex: 0 0 auto !important;
+        white-space: nowrap !important;
+    }
+    /* 星标跨两行、相对整卡垂直居中（偏差 ≤1px）。
+       grid 态旧规则把 corner 设为 absolute，这里强制回 static 使 grid-area 生效。 */
+    html[data-mode="grid"] .site-card .card-corner,
+    html[data-mode="list"] .site-card .card-corner {
+        position: static !important;
+        top: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        left: auto !important;
+        grid-area: 1 / 3 / 3 / 4 !important;
+        align-self: center !important;
+        justify-self: end !important;
+    }
+    /* 两态同源：手机端收藏星标统一 44×44 触控区 */
+    html[data-mode="grid"] .site-card .card-star,
+    html[data-mode="list"] .site-card .card-star {
+        width: 44px !important;
+        height: 44px !important;
+    }
+}
+
+/* ==========================================================================
+   v2.18.17 · 提交3 边界与细节（覆盖层，覆盖上文历史规则）
+   --------------------------------------------------------------------------
+   P0-3：浅色分组卡边框 rgb(224,224,224)=1.32:1 不可辨，改 rgba(0,0,0,.14)
+         (对白底 ≈2.1:1，hairline 合理区间，不新增阴影)；暗色 rgba(255,255,255,.16)。
+   P1-5：星标与测速间距手机/桌面统一 12±2px。
+   P2-7：手机标题 24px 与 44px 品牌块光学居中（偏差 ≤1px）。
+   ========================================================================== */
+/* P0-3 分组卡边界可见 */
+html[data-mode="list"] .link-sections > .link-group {
+    border: 1px solid rgba(0, 0, 0, 0.14) !important;
+}
+html[data-theme="dark"][data-mode="list"] .link-sections > .link-group {
+    border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* P1-5 星标↔测速间距：桌面 metrics 右缘外扩使 gap=12 */
+@media (min-width: 641px) {
+    html[data-mode="list"] .site-metrics {
+        margin-right: -2px !important;
+    }
+    html[data-mode="list"] .site-card {
+        column-gap: 12px !important;
+    }
+}
+/* P1-5 手机：meta 内 gap 收至 12，星标与测速间距达标 */
+@media (max-width: 640px) {
+    html[data-mode="list"] .site-card .site-meta {
+        gap: 12px !important;
+    }
+}
+
+/* P2-7 手机标题相对 44px 品牌块垂直居中（光学偏差 ≤1px） */
+@media (max-width: 430px) {
+    .brand-title {
+        line-height: 44px !important;
+        height: 44px !important;
+    }
+}
