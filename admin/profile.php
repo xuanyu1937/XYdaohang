@@ -439,8 +439,8 @@ $recentLogins = $recentStmt->fetchAll();
         .strength-good { width: 75%; background: #3b82f6; }
         .strength-strong { width: 100%; background: #10b981; }
     </style>
-    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.18">
-    <link href="../assets/css/admin.css?v=2.18.18" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.19">
+    <link href="../assets/css/admin.css?v=2.18.19" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
