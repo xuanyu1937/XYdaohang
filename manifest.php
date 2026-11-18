@@ -15,8 +15,8 @@ $name = $siteTitle !== '' ? $siteTitle : '轩宇-导航';
 $siteDescription = trim((string) $functions->getSetting('site_description'));
 $description = $siteDescription !== '' ? $siteDescription : '一个简洁实用的导航网站';
 
-$logoUrl = $functions->getLogoUrl($functions->getSetting('site_logo'));
-$logoIsRaster = $logoUrl !== '' && preg_match('/\.(png|jpe?g|gif|webp)(\?|$)/i', $logoUrl) === 1;
+/* v2.18.18 · 全站标识统一：移除把后台上传的白底横版 Logo 置顶为应用图标的逻辑。
+   添加到桌面时改用 assets/img/icons 下的令牌蓝盾牌图标，与站内品牌块/favicon 同一图形语言。 */
 
 $base = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? '/'), '/\\');
 function iconUrl($base, $rel) {
@@ -43,16 +43,6 @@ $icons = [
         'purpose' => 'maskable',
     ],
 ];
-
-if ($logoIsRaster) {
-    // 后台上传了位图 logo 时，把它排在最前作为应用图标来源
-    array_unshift($icons, [
-        'src' => $logoUrl,
-        'sizes' => '192x192 512x512',
-        'type' => 'image/png',
-        'purpose' => 'any',
-    ]);
-}
 
 $manifest = [
     'name' => $name,

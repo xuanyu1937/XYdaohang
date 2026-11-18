@@ -139,8 +139,8 @@ $pageTitle = '搜索引擎管理';
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
     <link href="../assets/sweetalert2/sweetalert2.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.17">
-    <link href="../assets/css/admin.css?v=2.18.17" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.18">
+    <link href="../assets/css/admin.css?v=2.18.18" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
