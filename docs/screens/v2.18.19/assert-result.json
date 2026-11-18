@@ -1,0 +1,393 @@
+{
+  "score": 100,
+  "raw": 100,
+  "rule": "100起始；问题1-4、10各P0 -5；5-6各P1 -2；不得回退项回退按P0 -5；达标≥99",
+  "results": [
+    {
+      "id": "P0-1",
+      "level": "P0",
+      "name": "两块表面同宽同右缘/边距对称",
+      "pass": true,
+      "computed": {
+        "宽差": {
+          "390-light": 0,
+          "390-dark": 0,
+          "768-light": 0,
+          "768-dark": 0,
+          "1024-light": 0,
+          "1024-dark": 0,
+          "1440-light": 0,
+          "1440-dark": 0
+        },
+        "右缘差": {
+          "390-light": 0,
+          "390-dark": 0,
+          "768-light": 0,
+          "768-dark": 0,
+          "1024-light": 0,
+          "1024-dark": 0,
+          "1440-light": 0,
+          "1440-dark": 0
+        },
+        "shell左右padding差": {
+          "390-light": 0.0,
+          "390-dark": 0.0,
+          "768-light": 0.0,
+          "768-dark": 0.0,
+          "1024-light": 0.0,
+          "1024-dark": 0.0,
+          "1440-light": 0.0,
+          "1440-dark": 0.0
+        }
+      },
+      "expect": "四视口分组卡与热门条宽度/右缘差≤1px，页面左右外边距差≤2px"
+    },
+    {
+      "id": "P0-2",
+      "level": "P0",
+      "name": "卡片宽不随悬浮态变化",
+      "pass": true,
+      "computed": {
+        "390-light": {
+          "收起": 320,
+          "展开": 320
+        },
+        "390-dark": {
+          "收起": 320,
+          "展开": 320
+        },
+        "768-light": {
+          "收起": 670,
+          "展开": 670
+        },
+        "768-dark": {
+          "收起": 670,
+          "展开": 670
+        },
+        "1024-light": {
+          "收起": 658,
+          "展开": 658
+        },
+        "1024-dark": {
+          "收起": 658,
+          "展开": 658
+        },
+        "1440-light": {
+          "收起": 994,
+          "展开": 994
+        },
+        "1440-dark": {
+          "收起": 994,
+          "展开": 994
+        }
+      },
+      "expect": "收起与展开两态 .site-card 宽度完全相同(差≤1px)"
+    },
+    {
+      "id": "P0-3",
+      "level": "P0",
+      "name": "内容列≥200且可容≥10汉字",
+      "pass": true,
+      "computed": {
+        "手机内容列": 204,
+        "站名字号": 15.0,
+        "可容汉字数": 13,
+        "nowrap": "nowrap",
+        "ellipsis": "ellipsis",
+        "佐证-描述可见14+汉字": 32
+      },
+      "expect": "390 内容列≥200px；按站名字号实测可容≥10汉字且超长省略(ellipsis)"
+    },
+    {
+      "id": "P0-4",
+      "level": "P0",
+      "name": "两处边框同源可辨不重于正文",
+      "pass": true,
+      "computed": {
+        "各态字符串一致": {
+          "390-light": true,
+          "390-dark": true,
+          "768-light": true,
+          "768-dark": true,
+          "1024-light": true,
+          "1024-dark": true,
+          "1440-light": true,
+          "1440-dark": true
+        },
+        "390边框": {
+          "w": "1px",
+          "s": "solid",
+          "c": "rgba(0, 0, 0, 0.3)"
+        }
+      },
+      "expect": "分组卡与热门条边框计算值字符串完全相同；hairline可辨且不重于正文"
+    },
+    {
+      "id": "P1-5",
+      "level": "P1",
+      "name": "描述单行≥14汉字再截断",
+      "pass": true,
+      "computed": {
+        "各态最长可见汉字": {
+          "390-light": 14,
+          "390-dark": 14,
+          "768-light": 24,
+          "768-dark": 24,
+          "1024-light": 23,
+          "1024-dark": 23,
+          "1440-light": 32,
+          "1440-dark": 32
+        }
+      },
+      "expect": "真实最长描述单行显示≥14汉字再截断，省略号不落半词"
+    },
+    {
+      "id": "P1-6",
+      "level": "P1",
+      "name": "表面间距20-28且手机标题居中",
+      "pass": true,
+      "computed": {
+        "各态间距": {
+          "390-light": 24,
+          "390-dark": 24,
+          "768-light": 24,
+          "768-dark": 24,
+          "1024-light": 24,
+          "1024-dark": 24,
+          "1440-light": 24,
+          "1440-dark": 24
+        },
+        "手机标题垂直偏差": {
+          "390-light": 0,
+          "390-dark": 0,
+          "768-light": 0,
+          "768-dark": 0
+        },
+        "桌面标题垂直偏差(非判定项)": {
+          "1024-light": -21.8,
+          "1024-dark": -21.8,
+          "1440-light": -21.8,
+          "1440-dark": -21.8
+        }
+      },
+      "expect": "两表面间距20-28px；手机(390/768)标题中心与品牌块中心偏差≤1px"
+    },
+    {
+      "id": "P0-10",
+      "level": "P0",
+      "name": "品牌块归位与右侧按钮同源",
+      "pass": true,
+      "computed": {
+        "390-light": {
+          "品牌块": {
+            "bg": "rgb(255, 255, 255)",
+            "border": "1px solid rgb(224, 224, 224)",
+            "radius": "8px",
+            "mask": "none",
+            "position": "relative",
+            "hasShield": true
+          },
+          "右侧按钮": {
+            "bg": "rgb(255, 255, 255)",
+            "border": "1px solid rgb(224, 224, 224)",
+            "radius": "8px"
+          },
+          "尺寸": 44
+        },
+        "390-dark": {
+          "品牌块": {
+            "bg": "rgb(39, 39, 41)",
+            "border": "1px solid rgba(255, 255, 255, 0.12)",
+            "radius": "8px",
+            "mask": "none",
+            "position": "relative",
+            "hasShield": true
+          },
+          "右侧按钮": {
+            "bg": "rgb(39, 39, 41)",
+            "border": "1px solid rgba(255, 255, 255, 0.12)",
+            "radius": "8px"
+          },
+          "尺寸": 44
+        },
+        "768-light": {
+          "品牌块": {
+            "bg": "rgb(255, 255, 255)",
+            "border": "1px solid rgb(224, 224, 224)",
+            "radius": "8px",
+            "mask": "none",
+            "position": "relative",
+            "hasShield": true
+          },
+          "右侧按钮": {
+            "bg": "rgb(255, 255, 255)",
+            "border": "1px solid rgb(224, 224, 224)",
+            "radius": "8px"
+          },
+          "尺寸": 52
+        },
+        "768-dark": {
+          "品牌块": {
+            "bg": "rgb(39, 39, 41)",
+            "border": "1px solid rgba(255, 255, 255, 0.12)",
+            "radius": "8px",
+            "mask": "none",
+            "position": "relative",
+            "hasShield": true
+          },
+          "右侧按钮": {
+            "bg": "rgb(39, 39, 41)",
+            "border": "1px solid rgba(255, 255, 255, 0.12)",
+            "radius": "8px"
+          },
+          "尺寸": 52
+        },
+        "1024-light": {
+          "品牌块": {
+            "bg": "rgb(255, 255, 255)",
+            "border": "1px solid rgb(224, 224, 224)",
+            "radius": "8px",
+            "mask": "none",
+            "position": "relative",
+            "hasShield": true
+          },
+          "右侧按钮": {
+            "bg": "rgb(255, 255, 255)",
+            "border": "1px solid rgb(224, 224, 224)",
+            "radius": "8px"
+          },
+          "尺寸": 52
+        },
+        "1024-dark": {
+          "品牌块": {
+            "bg": "rgb(39, 39, 41)",
+            "border": "1px solid rgba(255, 255, 255, 0.12)",
+            "radius": "8px",
+            "mask": "none",
+            "position": "relative",
+            "hasShield": true
+          },
+          "右侧按钮": {
+            "bg": "rgb(39, 39, 41)",
+            "border": "1px solid rgba(255, 255, 255, 0.12)",
+            "radius": "8px"
+          },
+          "尺寸": 52
+        },
+        "1440-light": {
+          "品牌块": {
+            "bg": "rgb(255, 255, 255)",
+            "border": "1px solid rgb(224, 224, 224)",
+            "radius": "8px",
+            "mask": "none",
+            "position": "relative",
+            "hasShield": true
+          },
+          "右侧按钮": {
+            "bg": "rgb(255, 255, 255)",
+            "border": "1px solid rgb(224, 224, 224)",
+            "radius": "8px"
+          },
+          "尺寸": 52
+        },
+        "1440-dark": {
+          "品牌块": {
+            "bg": "rgb(39, 39, 41)",
+            "border": "1px solid rgba(255, 255, 255, 0.12)",
+            "radius": "8px",
+            "mask": "none",
+            "position": "relative",
+            "hasShield": true
+          },
+          "右侧按钮": {
+            "bg": "rgb(39, 39, 41)",
+            "border": "1px solid rgba(255, 255, 255, 0.12)",
+            "radius": "8px"
+          },
+          "尺寸": 52
+        }
+      },
+      "expect": "白底/1px描边/8px圆角/44(手机)·52(桌面)，容器无mask、盾牌在::before、无沿盾灰描边、上下留白均衡"
+    },
+    {
+      "id": "BASE-1",
+      "level": "BASE",
+      "name": "标识三处同语言同主色",
+      "pass": true,
+      "computed": {
+        "favicon无白底JPG": true,
+        "manifest无JPG置顶": true,
+        "品牌盾牌令牌蓝": true
+      },
+      "expect": "favicon蓝底白盾、应用图标#0066CC三张同色、三处同图形语言(盾牌)"
+    },
+    {
+      "id": "BASE-2",
+      "level": "BASE",
+      "name": "无0px轨道且行高达标",
+      "pass": true,
+      "computed": {
+        "无0px轨道": true,
+        "390行高": [
+          75,
+          75
+        ],
+        "1440行高": [
+          54,
+          54
+        ]
+      },
+      "expect": "四视口无0px轨道；手机行高72-78、桌面52-56"
+    },
+    {
+      "id": "BASE-3",
+      "level": "BASE",
+      "name": "收藏44居中且悬浮不相交",
+      "pass": true,
+      "computed": {
+        "星标44x44": true,
+        "悬浮重叠": {
+          "390-light": false,
+          "390-dark": false,
+          "768-light": false,
+          "768-dark": false,
+          "1024-light": false,
+          "1024-dark": false,
+          "1440-light": false,
+          "1440-dark": false
+        }
+      },
+      "expect": "收藏按钮44×44与行中心偏差≤1px；收起/展开悬浮层与星标矩形不相交"
+    },
+    {
+      "id": "BASE-4",
+      "level": "BASE",
+      "name": "标题字号与无横向滚动",
+      "pass": true,
+      "computed": {
+        "手机标题字号": "24px",
+        "桌面标题字号": "28px",
+        "横向滚动": {
+          "390-light": false,
+          "390-dark": false,
+          "768-light": false,
+          "768-dark": false,
+          "1024-light": false,
+          "1024-dark": false,
+          "1440-light": false,
+          "1440-dark": false
+        }
+      },
+      "expect": "手机24px/桌面28px；无横向滚动条"
+    }
+  ],
+  "summary": {
+    "P0_pass": 5,
+    "P0_total": 5,
+    "P1_pass": 2,
+    "P1_total": 2,
+    "BASE_pass": 4,
+    "BASE_total": 4
+  },
+  "verdict": "达标"
+}
