@@ -8263,3 +8263,46 @@ html[data-theme="dark"] .hot-strip {
 @media (max-width: 620px) {
     .hot-strip { margin-bottom: 24px !important; }
 }
+
+/* ==========================================================================
+   v2.18.20 · 问题11：悬浮控件与收藏星标零重叠（四视口 / 收起展开两态）
+   --------------------------------------------------------------------------
+   根因：星标右缘 345(390)/707(768)/963(1024) 伸入悬浮层 x 区间
+   （float.x=334/702/958），滚动时星标穿过悬浮层矩形造成遮挡。
+   方案：星标列整体左移，使星标右缘恒小于悬浮层左缘：
+   - ≤640：卡片栅格 32px/1fr/44px + gap10 + pad 10/10 改为
+     28px/1fr/44px + gap5 + pad 10/24，图标 32→28；星标右缘 = vw-59，
+     悬浮层右让 12px（断点 620→640）→ float.x = vw-56，恒 gap 3px；
+     内容列 204px 不变（28+204+44+2×5 = 卡宽-34）。
+   - ≥641：卡片 padding-right 12→21，星标右缘 707→698(768)/954(1024)，
+     恒 gap ≥4px。
+   验收：四视口 list 模式收起/展开两态，悬浮层与任一星标矩形不相交，
+   .site-card 宽度不随悬浮态改变。
+   ========================================================================== */
+@media (max-width: 640px) {
+    html[data-mode="grid"] .site-card,
+    html[data-mode="list"] .site-card {
+        grid-template-columns: 28px minmax(0, 1fr) 44px !important;
+        column-gap: 5px !important;
+        padding: 8px 24px 6px 10px !important;
+    }
+    html[data-mode="grid"] .site-card .site-icon,
+    html[data-mode="list"] .site-card .site-icon {
+        width: 28px !important;
+        height: 28px !important;
+    }
+    /* 悬浮层右让 12px + 收起态单按钮：断点从 620 扩到 640，与手机栅格断点一致 */
+    .float-bar {
+        right: max(12px, env(safe-area-inset-right)) !important;
+        bottom: max(14px, env(safe-area-inset-bottom)) !important;
+    }
+    .float-bar .to-top {
+        display: none !important;
+    }
+}
+@media (min-width: 641px) {
+    html[data-mode="grid"] .site-card,
+    html[data-mode="list"] .site-card {
+        padding-right: 21px !important;
+    }
+}

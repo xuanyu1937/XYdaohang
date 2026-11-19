@@ -639,9 +639,9 @@ $navJsonLd = [
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.19">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.19">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.19">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.20">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.20">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.20">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -653,7 +653,7 @@ $navJsonLd = [
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.19';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.20';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -673,10 +673,10 @@ $navJsonLd = [
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.19" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.18.20" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.19" defer></script>
-    <script src="assets/js/search.js?v=2.18.19" defer></script>
+    <script src="assets/js/nav.js?v=2.18.20" defer></script>
+    <script src="assets/js/search.js?v=2.18.20" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -1080,8 +1080,34 @@ $navJsonLd = [
                     <span class="rail-current" id="railCurrent">全部</span>
                 </div>
 
-                <!-- v2.18.19 · P1-6：标题栏与筛选占位前移到热门条之前，
-                     使热门条(.hot-strip)与首个分组卡(.link-group)之间只隔统一 24px margin -->
+                <!-- v2.18.20 · 问题13：热门访问是全局排行，归入全局区——
+                     置于「全部网站」标题之前，不再夹在标题与首张分组卡之间造成从属误读 -->
+                <?php if ($hotLinks): ?>
+                    <section class="hot-strip" aria-label="热门访问">
+                        <h2 class="hot-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 3c1.5 3.2.4 4.9-1 6.4-1.6 1.6-2.6 3-2.4 5 .2 2.4 2.2 4.1 4.4 4.1 3 0 5-2.3 5-5.3 0-4.4-3.5-7.5-6-10.2z"></path>
+                            </svg>
+                            热门访问
+                        </h2>
+                        <div class="hot-list">
+                            <?php foreach ($hotLinks as $index => $hot): ?>
+                                <a class="hot-item"
+                                   href="<?php echo $functions->escape($hot['safe_url']); ?>"
+                                   target="<?php echo $functions->escape($defaultTarget); ?>"
+                                   rel="noopener noreferrer"
+                                   data-id="<?php echo (int) $hot['id']; ?>"
+                                   data-clicks="<?php echo (int) $hot['click_count']; ?>"
+                                   title="<?php echo $functions->escape($hot['display_name'] . ' · ' . $hot['click_count'] . ' 次点击'); ?>">
+                                    <span class="hot-rank"><?php echo $index + 1; ?></span>
+                                    <span class="hot-name"><?php echo $functions->escape($hot['display_name']); ?></span>
+                                    <span class="hot-count"><?php echo (int) $hot['click_count']; ?></span>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </section>
+                <?php endif; ?>
+
                 <div class="section-head">
                     <div class="section-title">
                         <h2 id="sectionTitle">全部网站</h2>
@@ -1115,32 +1141,6 @@ $navJsonLd = [
                     <button type="button" class="filter-reset" id="filterResetAll">清除筛选</button>
                 </div>
                 </div>
-
-                <?php if ($hotLinks): ?>
-                    <section class="hot-strip" aria-label="热门访问">
-                        <h2 class="hot-title">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M12 3c1.5 3.2.4 4.9-1 6.4-1.6 1.6-2.6 3-2.4 5 .2 2.4 2.2 4.1 4.4 4.1 3 0 5-2.3 5-5.3 0-4.4-3.5-7.5-6-10.2z"></path>
-                            </svg>
-                            热门访问
-                        </h2>
-                        <div class="hot-list">
-                            <?php foreach ($hotLinks as $index => $hot): ?>
-                                <a class="hot-item"
-                                   href="<?php echo $functions->escape($hot['safe_url']); ?>"
-                                   target="<?php echo $functions->escape($defaultTarget); ?>"
-                                   rel="noopener noreferrer"
-                                   data-id="<?php echo (int) $hot['id']; ?>"
-                                   data-clicks="<?php echo (int) $hot['click_count']; ?>"
-                                   title="<?php echo $functions->escape($hot['display_name'] . ' · ' . $hot['click_count'] . ' 次点击'); ?>">
-                                    <span class="hot-rank"><?php echo $index + 1; ?></span>
-                                    <span class="hot-name"><?php echo $functions->escape($hot['display_name']); ?></span>
-                                    <span class="hot-count"><?php echo (int) $hot['click_count']; ?></span>
-                                </a>
-                            <?php endforeach; ?>
-                        </div>
-                    </section>
-                <?php endif; ?>
 
                 <div class="link-sections" id="linkSections">
                     <?php $navEagerCards = 0; foreach ($sections as $sectionIndex => $section): ?>
