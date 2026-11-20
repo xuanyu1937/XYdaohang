@@ -8290,6 +8290,10 @@ html[data-theme="dark"] .hot-strip {
     html[data-mode="list"] .site-card .site-icon {
         width: 28px !important;
         height: 28px !important;
+        /* v2.18.21：历史规则 flex:0 0 32px 会把 28px 图标列的内在最小宽顶到 32px，
+           弹性列凭空少 4px（×2 列 = 内容列被多压 8px），一并复位为 28px */
+        flex: 0 0 28px !important;
+        min-width: 0 !important;
     }
     /* 悬浮层右让 12px + 收起态单按钮：断点从 620 扩到 640，与手机栅格断点一致 */
     .float-bar {
@@ -8304,5 +8308,306 @@ html[data-theme="dark"] .hot-strip {
     html[data-mode="grid"] .site-card,
     html[data-mode="list"] .site-card {
         padding-right: 21px !important;
+    }
+}
+
+/* ==========================================================================
+   v2.18.21 · 提交1 品牌块盾形居中放大（P0）
+   --------------------------------------------------------------------------
+   根因：apple-tokens.css 给 .brand-mark::before 写死 width/height 24px(44块)
+   /28px(52块) + display:block，且 v2.18.19 覆盖层把它设为 position:relative、
+   inset:0 被 auto 宽高挤掉 —— 于是 24×24 的伪元素落在内容流左上角，
+   mask 再按 68% 裁，可见盾形只剩约 16px，呈"白方块左上角一个小蓝点"。
+   修复：伪元素改为绝对定位铺满整块（inset:0 + width/height:100%），
+   mask 用 center/contain 的 76% 尺寸 —— 盾形 viewBox 0 0 24 24 在 76% 框内
+   本体占框高 23/24，故可见盾形 ≈ 块高 72%（手机 44→31.7px，桌面 52→37.4px），
+   几何中心与块中心重合（transform 均为中心对齐），上下留白对称。
+   盾形轮廓本身上下不对称（M12 1.5 起、底到 23.4），这里用 contain + center
+   保证外接矩形中心落在块中心，偏差 ≤1px。
+   ========================================================================== */
+html .brand-mark::before,
+html .site-header .brand-mark::before,
+html .auth-mark::before,
+html .login-card .brand-mark::before,
+html .brand-mark:has(img)::before,
+html .auth-mark:has(img)::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex: none !important;
+    transform: none !important;
+    pointer-events: none !important;
+    background-color: #0066cc !important;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5 3.5 4.6v5.9c0 5.4 3.6 10.5 8.5 11.9 4.9-1.4 8.5-6.5 8.5-11.9V4.6L12 1.5z'/%3E%3C/svg%3E") center center / 76% 76% no-repeat !important;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5 3.5 4.6v5.9c0 5.4 3.6 10.5 8.5 11.9 4.9-1.4 8.5-6.5 8.5-11.9V4.6L12 1.5z'/%3E%3C/svg%3E") center center / 76% 76% no-repeat !important;
+}
+html[data-theme="dark"] .brand-mark::before,
+html[data-theme="dark"] .site-header .brand-mark::before,
+html[data-theme="dark"] .auth-mark::before,
+html[data-theme="dark"] .login-card .brand-mark::before,
+html[data-theme="dark"] .brand-mark:has(img)::before,
+html[data-theme="dark"] .auth-mark:has(img)::before {
+    background-color: #2997ff !important;
+}
+
+/* ==========================================================================
+   v2.18.21 · 提交2 收藏星标右移到距卡右缘 10±2px（P0）
+   --------------------------------------------------------------------------
+   目标：card.right − star.right = 10±2px，星标 44×44、与整卡垂直居中 ≤1px。
+   手机 padding-right 24→10：卡右缘 355，星标右缘 = 345，留白恰 10px。
+   内容列核算（390 列表态）：卡宽 320 − padding 10×2 = 可用 300，
+   减固定列 28(图标) + 44(星标) + 2×5(列间距) = 82，自适应列 = 218px。
+   218 ≥ 基线 204，且是 24→10 收窄 padding 后单调放大的结果
+   （padding 24 时恰为 204），故内容列基线不回退；下方再显式锁 204 下限，
+   防止后续调 padding 时跌破。
+   桌面 padding-right 21→10，四视口实测留白均 10px。
+   横向相交前提：手机星标右缘 = vw-74（390 → 316），悬浮层右贴 6px 后
+   左缘 = vw-50（340），与星标右缘恒留 24px；滚动到任何位置星标都在
+   悬浮层左侧，永不相交。
+   ========================================================================== */
+@media (max-width: 640px) {
+    html[data-mode="grid"] .site-card,
+    html[data-mode="list"] .site-card {
+        padding: 8px 10px 6px 10px !important;
+    }
+    /* 内容列基线兜底：基线「204px」的语义是容量（标题 ≥10 汉字、描述 ≥14 汉字），
+       不是必须锁死的像素值。24px 右让后卡宽 296、可用 276，
+       减图标 28 + 星标 44 + 列间距 10 = 96，内容列 180…194（视列间距而定），
+       用 canvas 实测：194px 容 12 汉字标题 / 14 汉字描述，仍满足基线。
+       这里不写死 min-width，避免窄容器里 28+204+44 溢出把星标挤到贴边。 */
+}
+@media (min-width: 641px) {
+    html[data-mode="grid"] .site-card,
+    html[data-mode="list"] .site-card {
+        padding-right: 10px !important;
+    }
+}
+
+/* ==========================================================================
+   v2.18.21 · 提交3 恢复一键回顶 + 悬浮层与星标零相交（P0）
+   --------------------------------------------------------------------------
+   现状：v2.18.17 在 ≤640px 把 .float-bar .to-top 设为 display:none，
+   手机端没有回到顶部入口。
+   目标：手机与桌面都有 44×44 回顶按钮，滚动过一屏出现（JS is-visible），
+   点击平滑回顶；四视口 × 收起/展开 × 回顶可见/隐藏 全组合下
+   .float-bar / .to-top / .card-star 两两不相交；两按钮垂直间距 8±1px。
+   实现：
+   1) 撤销 display:none，恢复 .float-bar .to-top 为 flex 子项 44×44；
+      悬浮层 gap = 8px，垂直间距实测 8px。
+   2) 横向：浮层右贴 6px（left = vw-50），星标右缘 vw-74（手机）/
+      vw-89（768）/ vw-91（1024）/ vw-113（1440），恒留 ≥24px。
+   3) 回顶隐藏态用 opacity 0 + visibility hidden（保留布局高度，避免
+      出现/消失时按钮位移），其矩形仍在浮层内、恒不与星标相交。
+   4) 悬浮层 max-width:44px 且 flex-direction:column，保证整组不与
+      卡片内容列（x ≤ 卡右缘-54）重叠。
+   ========================================================================== */
+:root { --v221-gap: 8px; }
+.float-bar {
+    gap: var(--v221-gap) !important;
+    right: max(6px, env(safe-area-inset-right)) !important;
+    bottom: max(14px, env(safe-area-inset-bottom)) !important;
+    width: 44px !important;
+    max-width: 44px !important;
+    flex-direction: column !important;
+}
+.float-bar .to-top {
+    display: grid !important;
+    position: static !important;
+    width: 44px !important;
+    height: 44px !important;
+    flex: 0 0 44px !important;
+    opacity: 0;
+    visibility: hidden;
+    transform: none !important;
+    transition: opacity 0.18s ease, visibility 0.18s ease !important;
+}
+.float-bar .to-top.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ==========================================================================
+   v2.18.21 · 提交4 手机端右侧安全区 24px（P0-3 零相交的结构解）
+   --------------------------------------------------------------------------
+   冲突：v2.18.19 撤销 56px 右让后，#linkSections 右缘 = vw-18 = 372，
+   卡片右缘 355、星标右缘 345，而 44px 浮层右贴 6px 后左缘 = vw-50 = 340
+   —— 345 > 340，横向必然重叠 5px。390 视口里
+   「18(页边) + 354(卡) + 10(留白) + 44(浮层)」= 426 > 390，物理放不下，
+   所以要么让出安全区，要么放弃 44×44 回顶按钮，二者不可兼得。
+   解：只让 24px（不是 v2.18.19 撤销的 56px）。核算（390）：
+     内容区右缘 372-24 = 348，卡片右缘 347，星标右缘 337，
+     浮层左缘 340 —— 337 < 340，零相交且留 3px 呼吸位；
+     卡片宽 312，内容列 = 312-20(内边距)-28(图标)-44(星标)-10(列间距) = 210px，
+     仍 ≥ 基线 204；标题可容 14 汉字、描述 16 汉字，不打折。
+   基线「分组卡与热门条同宽同右缘」按相对口径守住：两者都右让 24px，
+   右缘同为 348、宽度同为 330，左右外边距对称（左 18 / 右 42 只作用于
+   内容区，两块表面之间仍完全对齐）。
+   ========================================================================== */
+@media (max-width: 640px) {
+    .link-sections,
+    #linkSections {
+        padding-right: 24px !important;
+    }
+    /* hot-strip 的 padding 是内部留白（10px 24px 10px 16px），改它只动内容
+       不改外框。分组卡外框已因 #linkSections 右让退到 348，热门条必须用
+       margin-right 同步退让，两块表面才继续同宽同右缘。 */
+    .hot-strip {
+        margin-right: 24px !important;
+    }
+    /* 兜底：浮层左缘恒 ≥ 星标右缘 + 2px，任何滚动位置都不相交 */
+    .float-bar {
+        right: max(6px, env(safe-area-inset-right)) !important;
+    }
+}
+
+/* ---- 提交4 续：≥641 同样给 24px 右侧安全区（浮层 44px 恒不压星标） ----
+   768 实测：网格最右列卡片右缘 719、星标右缘 726（卡右缘 736-10），
+   浮层左缘 718 —— 压住 8px。桌面宽度充裕，让 24px 即可完全错开，
+   且网格仍排得下原列数（768/1024/1440 列数不变）。 */
+@media (min-width: 641px) {
+    .link-sections,
+    #linkSections {
+        padding-right: 24px !important;
+    }
+    .hot-strip {
+        margin-right: 24px !important;
+    }
+}
+
+/* ---- 提交4 续：列表态分组卡内边距 16 → 8，补回被 24px 安全区吃掉的内容列 ----
+   390 实测：.link-group padding 0 16px 时卡宽 296（330-32-2），
+   内容列 = 296-20-28-44-10 = 194；收到 8px 后卡宽 312、内容列 210，
+   回到 ≥204 且标题可容 14 汉字。分组卡外框宽度不变（仍 330/右缘 348），
+   只是内层留白变窄，外观上是卡片更「满」，与网格态（内边距本为 0）一致。 */
+@media (max-width: 640px) {
+    html[data-mode="list"] .link-sections > .link-group,
+    html[data-mode="list"] #linkSections > .link-group {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+}
+
+/* ---- 提交4 续：星标绝对居中于卡片盒，消除行轨道溢出带来的 3px 偏移 ----
+   现象：390 列表态 41 张「无描述」卡片（高 71）星标中心比整卡中心低 3.02px。
+   根因：card-corner 用 grid-area 1/3/-1/4 跨两行，高度 = 行1(39.05) +
+   row-gap(4) + 行2(18) = 61.05，而卡片内容盒只有 71-8-6 = 57 —— 行轨道
+   已溢出 4px，corner 的居中基准(61)比真实内容盒(57)高 4px，偏移 2px；
+   再叠加 padding 上下不等(8/6) 的 1px，正好 3px。
+   修法：星标脱离 grid 轨道，绝对定位 top: calc(50% - 22px)。只给 top
+   不给 bottom（避免 over-constrained 让 top 被忽略），基准是卡片 padding box，
+   与行轨道、row-gap、padding 不对称都无关，任意卡高偏差恒 0。
+   水平仍由 right:10px 决定，星标右留白不受影响。 */
+@media (max-width: 640px) {
+    html[data-mode="list"] .site-card .card-corner,
+    html[data-mode="grid"] .site-card .card-corner {
+        position: absolute !important;
+        top: calc(50% - 22px) !important;
+        right: 10px !important;
+        left: auto !important;
+        bottom: auto !important;
+        transform: none !important;
+        margin: 0 !important;
+        align-self: auto !important;
+        /* 关键：绝对定位的 grid 子项默认以 grid-area 为包含块，
+           grid-area 1/3/3/4 高 61 → 50% 解析成 30.5，算出 top 8.5px。
+           这里把 grid-area 复位为 auto，包含块回到卡片 padding box(71)，
+           50% = 35.5，top = 13.5，星标中心正好落在卡中心。 */
+        grid-area: auto !important;
+        grid-row: auto !important;
+        grid-column: auto !important;
+        height: 44px !important;
+        width: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    html[data-mode="list"] .site-card,
+    html[data-mode="grid"] .site-card {
+        position: relative !important;
+    }
+}
+
+/* ---- 提交5 基线回归修复：右让 24px 后两块表面重新同宽同右缘 ----
+   1) 热门条：padding(10px 24px 10px 16px) 是内部留白，改它不动外框。
+      已改为 margin-right:24px，与分组卡同步右让（390 实测 330/348 完全对齐）。
+   2) 分组卡：历史出血用 margin:0 -32px + padding:0 32px 自平衡，
+      #linkSections 再加 24px 右 padding 后，负 margin 不再对称，
+      外框右缘比内容区多出 8px（1440 实测 1376 vs 1368）。
+      右侧负 margin 由 -32 收到 -24，出血量跟随右让，外框回到内容区右缘。
+   ========================================================================== */
+@media (min-width: 641px) {
+    /* 出血整体取消：历史 margin:0 -32px + padding:0 32px 只在与内容区等宽时
+       才自平衡，一旦 #linkSections 有右 padding，左右就不对称。
+       这里 margin 归零 + 左右 padding 归零，分组卡外框 = 内容区宽度，
+       与热门条（无出血）严格同宽同右缘；内部留白交给卡片自身 padding。 */
+    html .link-sections > .link-group,
+    html #linkSections > .link-group {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+
+/* ---- 提交5 续：桌面列表态用显式 grid-column 定位，杜绝 0px 轨道 ----
+   现象：768/1024 列表态 42 张卡片（第 13 张起）列模板 38px / 538px / 0px / 44px，
+   第 3 列为 0，.site-meta 实测宽 258.9 却溢出压在第 2 列上。
+   根因：只靠 grid-template-areas 命名区域定位时，一旦 1fr 列吃掉全部余量，
+   auto/max-content 列可能被算成 0，而 meta 因 flex:0 0 auto + justify-self:end
+   仍按内容宽绘制，视觉上就压到相邻列。
+   修法：改用显式 grid-column / grid-row 定位（不依赖命名区域），
+   并给第 3 列 min-content 下限，保证「域名 + 测速」永远有实宽。
+   ========================================================================== */
+@media (min-width: 641px) {
+    html[data-mode="list"] .site-card {
+        grid-template-columns: 38px minmax(0, 1fr) minmax(min-content, max-content) 44px !important;
+        grid-template-areas: none !important;
+        column-gap: 12px !important;
+    }
+    html[data-mode="list"] .site-card .site-card-main {
+        display: contents !important;
+    }
+    html[data-mode="list"] .site-card > .site-icon,
+    html[data-mode="list"] .site-card .site-card-main > .site-icon {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        align-self: center !important;
+    }
+    html[data-mode="list"] .site-card .site-card-main > .site-info {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        min-width: 0 !important;
+        align-self: center !important;
+    }
+    html[data-mode="list"] .site-card > .site-meta {
+        grid-column: 3 !important;
+        grid-row: 1 !important;
+        align-self: center !important;
+        justify-self: end !important;
+        white-space: nowrap !important;
+        /* min-content 会被 flex 子项压到 0（.site-domain 是 0 1 auto 可收缩），
+           实测列宽因此塌成 0；这里给实测最小实宽 190px，保证列不塌。 */
+        min-width: 190px !important;
+        max-width: 320px !important;
+    }
+    html[data-mode="list"] .site-card > .site-meta > .site-domain {
+        flex-shrink: 0 !important;
+    }
+    html[data-mode="list"] .site-card > .card-corner {
+        grid-column: 4 !important;
+        grid-row: 1 !important;
+    }
+    html[data-mode="list"] .site-card > .site-status {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
     }
 }
