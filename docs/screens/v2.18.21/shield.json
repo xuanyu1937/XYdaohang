@@ -1,0 +1,130 @@
+{
+ "390-light": {
+  "block": {
+   "w": 44,
+   "h": 44
+  },
+  "shield": {
+   "w": 22.5,
+   "h": 27.75
+  },
+  "centerDx": -0.12,
+  "centerDy": -0.25,
+  "hRatio": 63.1,
+  "padTop": 8.0,
+  "padBottom": 8.25,
+  "padDiff": 0.25
+ },
+ "390-dark": {
+  "block": {
+   "w": 44,
+   "h": 44
+  },
+  "shield": {
+   "w": 22.5,
+   "h": 27.75
+  },
+  "centerDx": -0.12,
+  "centerDy": -0.25,
+  "hRatio": 63.1,
+  "padTop": 8.0,
+  "padBottom": 8.25,
+  "padDiff": 0.25
+ },
+ "768-light": {
+  "block": {
+   "w": 52,
+   "h": 52
+  },
+  "shield": {
+   "w": 27.0,
+   "h": 32.75
+  },
+  "centerDx": -0.12,
+  "centerDy": -0.25,
+  "hRatio": 63.0,
+  "padTop": 9.5,
+  "padBottom": 9.75,
+  "padDiff": 0.25
+ },
+ "768-dark": {
+  "block": {
+   "w": 52,
+   "h": 52
+  },
+  "shield": {
+   "w": 27.0,
+   "h": 32.75
+  },
+  "centerDx": -0.12,
+  "centerDy": -0.25,
+  "hRatio": 63.0,
+  "padTop": 9.5,
+  "padBottom": 9.75,
+  "padDiff": 0.25
+ },
+ "1024-light": {
+  "block": {
+   "w": 52,
+   "h": 52
+  },
+  "shield": {
+   "w": 27.0,
+   "h": 32.75
+  },
+  "centerDx": -0.12,
+  "centerDy": -0.5,
+  "hRatio": 63.0,
+  "padTop": 9.25,
+  "padBottom": 10.0,
+  "padDiff": 0.75
+ },
+ "1024-dark": {
+  "block": {
+   "w": 52,
+   "h": 52
+  },
+  "shield": {
+   "w": 27.0,
+   "h": 32.75
+  },
+  "centerDx": -0.12,
+  "centerDy": -0.5,
+  "hRatio": 63.0,
+  "padTop": 9.25,
+  "padBottom": 10.0,
+  "padDiff": 0.75
+ },
+ "1440-light": {
+  "block": {
+   "w": 52,
+   "h": 52
+  },
+  "shield": {
+   "w": 27.0,
+   "h": 32.75
+  },
+  "centerDx": -0.12,
+  "centerDy": -0.5,
+  "hRatio": 63.0,
+  "padTop": 9.25,
+  "padBottom": 10.0,
+  "padDiff": 0.75
+ },
+ "1440-dark": {
+  "block": {
+   "w": 52,
+   "h": 52
+  },
+  "shield": {
+   "w": 27.0,
+   "h": 32.75
+  },
+  "centerDx": -0.12,
+  "centerDy": -0.5,
+  "hRatio": 63.0,
+  "padTop": 9.25,
+  "padBottom": 10.0,
+  "padDiff": 0.75
+ }
+}
