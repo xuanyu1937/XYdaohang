@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.20">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.21">
     <link rel="stylesheet" href="assets/css/auth.css">
 </head>
 <body>
