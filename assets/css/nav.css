@@ -9301,10 +9301,11 @@ html .header-tools .mobile-mode-cycle {
 }
 
 
-/* 分类 chips 溢出时右端同样给渐隐，避免半个「学」字直接怼在「更多」按钮上 */
-html .mobile-cats-track.is-scrollable {
-    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 18px), transparent 100%);
-    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 18px), transparent 100%);
+/* 分类 chips 溢出时不做渐隐：18px 渐隐会把下一个 chip 淡成一个「空圆」，
+   比截断更让人困惑。改为留 6px 右内边距，让溢出的 chip 稳定地「半露」，
+   既看得到还有内容，也不会直接贴住右侧按钮。 */
+html .mobile-cats-track {
+    padding-right: 6px;
 }
 
 /* ---- 问题5：热门条右端渐隐 + 末项留白 ----
@@ -9312,8 +9313,8 @@ html .mobile-cats-track.is-scrollable {
    1440 下 6 条热门刚好排满 988px 不溢出，此时再加渐隐会把末项尾部
    无谓地淡掉，反而让人以为还有内容未显示。 */
 html .hot-list.is-scrollable {
-    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 20px), transparent 100%) !important;
-    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 20px), transparent 100%) !important;
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%) !important;
+    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%) !important;
 }
 /* 末项留白 24px：mask 从 100%-20px 开始渐隐，留 24px 才能让「滑到底」
    时最后一项完整落在清晰区，不被自身容器的渐隐吃掉最后几个字。 */
