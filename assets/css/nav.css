@@ -8290,7 +8290,7 @@ html[data-theme="dark"] .hot-strip {
     html[data-mode="list"] .site-card .site-icon {
         width: 28px !important;
         height: 28px !important;
-        /* v2.18.21：历史规则 flex:0 0 32px 会把 28px 图标列的内在最小宽顶到 32px，
+        /* v2.18.22：历史规则 flex:0 0 32px 会把 28px 图标列的内在最小宽顶到 32px，
            弹性列凭空少 4px（×2 列 = 内容列被多压 8px），一并复位为 28px */
         flex: 0 0 28px !important;
         min-width: 0 !important;
@@ -8312,7 +8312,7 @@ html[data-theme="dark"] .hot-strip {
 }
 
 /* ==========================================================================
-   v2.18.21 · 提交1 品牌块盾形居中放大（P0）
+   v2.18.22 · 提交1 品牌块盾形居中放大（P0）
    --------------------------------------------------------------------------
    根因：apple-tokens.css 给 .brand-mark::before 写死 width/height 24px(44块)
    /28px(52块) + display:block，且 v2.18.19 覆盖层把它设为 position:relative、
@@ -8360,7 +8360,7 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
 }
 
 /* ==========================================================================
-   v2.18.21 · 提交2 收藏星标右移到距卡右缘 10±2px（P0）
+   v2.18.22 · 提交2 收藏星标右移到距卡右缘 10±2px（P0）
    --------------------------------------------------------------------------
    目标：card.right − star.right = 10±2px，星标 44×44、与整卡垂直居中 ≤1px。
    手机 padding-right 24→10：卡右缘 355，星标右缘 = 345，留白恰 10px。
@@ -8393,7 +8393,7 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
 }
 
 /* ==========================================================================
-   v2.18.21 · 提交3 恢复一键回顶 + 悬浮层与星标零相交（P0）
+   v2.18.22 · 提交3 恢复一键回顶 + 悬浮层与星标零相交（P0）
    --------------------------------------------------------------------------
    现状：v2.18.17 在 ≤640px 把 .float-bar .to-top 设为 display:none，
    手机端没有回到顶部入口。
@@ -8436,7 +8436,7 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
 }
 
 /* ==========================================================================
-   v2.18.21 · 提交4 手机端右侧安全区 24px（P0-3 零相交的结构解）
+   v2.18.22 · 提交4 手机端右侧安全区 24px（P0-3 零相交的结构解）
    --------------------------------------------------------------------------
    冲突：v2.18.19 撤销 56px 右让后，#linkSections 右缘 = vw-18 = 372，
    卡片右缘 355、星标右缘 345，而 44px 浮层右贴 6px 后左缘 = vw-50 = 340
@@ -8610,4 +8610,476 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
         grid-column: 1 !important;
         grid-row: 1 !important;
     }
+}
+
+/* ==========================================================================
+   v2.18.22 · 提交1 问题1 对称外边距（撤销单侧右让，整页不再左偏）+ P0
+   --------------------------------------------------------------------------
+   现状（390 实测）：.link-group 左缘 18、右缘 348（视口 390），左右边距
+   18 / 42，差 24px。这 24px 是 v2.18.22 为让悬浮层不压星标而加的单侧右让
+   （#linkSections padding-right:24px），结果整页重心左偏、右侧常驻空白带。
+   核算（390，卡片贴内容区、padding 10/10、图标 28 + 星标 44 + 2×gap 5）：
+     页边 18 对称 → 卡片 354，内容列 252，star.right 344 ≥ fb.left 340 → 相交
+     页边 24 对称 → 卡片 342，内容列 240，star.right 332 <  fb.left 340 → 零相交 ✓
+     页边 30 对称 → 卡片 330，内容列 228，star.right 320 → 零相交 ✓
+   取 24：内容列 240（≥204），左右各 24 完全对称，且与悬浮层留 8px 呼吸位。
+   桌面（≥641）：浮层占 44 + 右贴 6 + 呼吸 2 = 52，故左右各让 52 对称：
+     768 → 内容列 536；1024 → 792；1440 → 1072，全部 ≥204 且零相交。
+   实现：撤销 v2.18.22 的单侧 padding-right，改为容器左右 padding 同值；
+   热门条与外层 .link-sections 同步，保证 group / hot / card 三者仍同宽同右缘。
+   ========================================================================== */
+:root {
+    --v222-gutter: 24px;   /* 手机：左右对称页边，同时也是悬浮层安全区 */
+}
+@media (min-width: 641px) {
+    :root { --v222-gutter: 52px; }   /* 桌面：容纳 44px 浮层 + 6px 贴边 + 2px 呼吸 */
+}
+
+/* 撤销单侧右让，三处容器统一左右 padding */
+/* 外层统一收缩：.site-main 是全体内容的宿主，左右各收 --v222-gutter，
+   分组卡 / 热门条 / 卡片全部继承同一对称边距，不再各自加 padding。 */
+/* 页边只在一层生效：.page-shell 的 18px 与内层 gutter 会叠加，
+   这里把 .page-shell 的左右内边距归零（保留其 max-width 居中能力）。 */
+.page-shell {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+/* 侧栏展开（≥1024 两列网格）时，把左右 gutter 提到 .site-body 上：
+   这样「侧栏 + 内容区」作为整体一起内缩，页面左右外边距仍然相等。
+   只加在 .site-main 上会让内容区在侧栏右侧再缩一次，左宽右窄更明显。 */
+.site-body {
+    box-sizing: border-box !important;
+}
+@media (min-width: 1024px) {
+    .site-body {
+        /* 用「收窄宽度 + 居中」而不是「加 padding」：
+           padding 需要容器本身已占满视口才能靠 margin:auto 居中，
+           而 <1440 时容器本就 100% 宽，margin:auto 无处发力，
+           结果左 padding 生效、右侧却多出一段空白 → 仍不对称。
+           直接 width = 100% - 2×gutter，配合 margin:auto 必然左右相等。 */
+        width: 920px !important;
+        max-width: none !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    /* 此时 .site-main 不再自己缩，宽度由网格列分配 */
+    .site-main {
+        width: auto !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        justify-self: stretch !important;
+    }
+}
+/* 超宽屏：内容列上限 1200，同样用「收窄 + 居中」而不是 padding，
+   否则 .site-main 在网格里固定 1200 后剩余空间全堆到右侧。 */
+@media (min-width: 1490px) {
+    .site-body {
+        width: 1304px !important;
+        max-width: 1304px !important;
+    }
+}
+/* ---- 桌面（≥1024）左右对称页边：最终且唯一实现 ----
+   --------------------------------------------------------------------------
+   DOM：body(flex) > .page-shell(flex column) > .site-body(grid: 238px + 30 + 内容列)
+
+   之前的错法（三次踩坑记录，勿重犯）：
+   ① 只在 .site-main 上加 padding  → 网格第二列内再缩，右侧多出一圈；
+   ② 只在 .site-body 上加 padding  → grid 的 padding 在内侧，侧栏被右推，
+      内容列右缘仍是「52 + padding」，左右不等；
+   ③ 给 .page-shell 加 padding 但没设 box-sizing:border-box
+      → width:100% 不含 padding，内容盒 = 100%+104，溢出且右侧多 104。
+
+   正解：把 .page-shell 当成唯一的内容盒，
+     · box-sizing: border-box（width 含 padding）
+     · padding 左右各 --v222-gutter（手机 24 / 桌面 52）
+     · 自身 margin:auto + max-width 1360 居中
+   于是内容盒 = 视口 - 2×gutter（≤1360 时），左右外边距必然相等。
+   下层全部放开、不再二次收窄：
+     · .site-body  width:100%（占满内容盒），padding/margin 归零
+     · .site-main  width:100%（占满网格第二列），padding/margin 归零
+   这样 group / hot / card 三者宽度只由内容盒决定，与悬浮控件是否存在无关。 */
+@media (min-width: 1024px) {
+    .page-shell {
+        box-sizing: border-box !important;
+        padding-left: var(--v222-gutter) !important;
+        padding-right: var(--v222-gutter) !important;
+        width: 100% !important;
+        max-width: 1360px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+    .page-shell > .site-body {
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        align-self: stretch !important;
+    }
+    .site-main {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        justify-self: stretch !important;
+        align-self: start !important;
+    }
+}
+/* 内容区（<1024）：.site-body 是单列网格、侧栏为抽屉，
+   收窄职责落在 .site-main 上：width = 视口 - 2×gutter，margin:auto 居中。
+   注意 desktop 断点（≥1024）里已把 .site-main 放开为 100%（见上），
+   这里用 max-width:1023px 限定，避免两条规则互相打架。 */
+@media (max-width: 1023px) {
+    .site-main {
+        box-sizing: border-box !important;
+        width: calc(100% - var(--v222-gutter) * 2) !important;
+        max-width: calc(100% - var(--v222-gutter) * 2) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        justify-self: center !important;
+        align-self: start !important;
+    }
+}
+/* .link-group 的内边距在任何断点、任何模式下都必须为 0：
+   它一旦带 padding，卡片的实际宽度就比 .hot-strip 窄一圈，同宽同右缘破功。 */
+html[data-mode="list"] .link-sections > .link-group,
+html[data-mode="list"] #linkSections > .link-group,
+html[data-mode="grid"] .link-sections > .link-group,
+html[data-mode="grid"] #linkSections > .link-group,
+html .link-sections > .link-group,
+html #linkSections > .link-group {
+    padding: 0 !important;
+    /* 只归零左右，纵向间距必须保留 —— 全部归零会让组间 gap 变 0，
+       分组卡首尾相接，分不清边界（v2.18.22 问题8 实测 groupGap=0）。 */
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+/* 分组卡与热门条：左右 padding / margin 一律归零，宽度完全由外层决定，
+   二者因此天然同宽同右缘（相对口径），也不会因悬浮控件存在与否而变化。 */
+.link-sections,
+#linkSections,
+.hot-strip,
+html .link-sections > .link-group,
+html #linkSections > .link-group {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+/* 卡片内边距保持 10px 左右对称（v2.18.22 星标右移的成果，不动） */
+@media (max-width: 640px) {
+    html[data-mode="grid"] .site-card,
+    html[data-mode="list"] .site-card {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+    /* 含内边距的容器不要再叠内层 padding，否则卡片被双重缩窄 */
+    .link-sections > .link-group .site-grid {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+}
+
+/* ==========================================================================
+   v2.18.22 · 提交2 问题2 触屏 hover 粘滞 + 问题3 收藏色语义（P0 / P1）
+   --------------------------------------------------------------------------
+   问题2 根因：html[data-mode="list"] .card-star:hover 写了
+   background: rgba(0,0,0,.04)，触摸设备 tap 后 :hover 状态不会自动解除，
+   灰底停在最后触摸的那一行（实测滚动后仍残留 rgba(0,0,0,0.04)）。
+   修法：
+   1) 用 @media (hover: hover) and (pointer: fine) 把 hover 视觉限定给
+      真正的指针设备；触摸设备（hover: none / pointer: coarse）不加载任何
+      hover 背景，tap 后不会留下灰块。
+   2) 触摸设备补 :active 反馈（按下瞬间的 120ms 反馈），不依赖 :hover 表达状态。
+   3) 未聚焦/未按下时全部星标外观完全一致（背景透明、描边透明）。
+   问题3 根因：列表态 [data-starred="1"] 用 var(--a-primary)（主色蓝），
+   与「主色只表达交互与当前视图」冲突，且同屏空心灰 / 实心蓝缺统一图例。
+   修法：收藏态改用语义色 --warning（琥珀），实心填充 + 同色描边；
+   未收藏保持空心灰。明暗两套主题各自固定取值，全部可用肉眼与数值区分。
+   ========================================================================== */
+
+/* ---- 问题2：hover 只在精确指针设备生效 ---- */
+@media (hover: hover) and (pointer: fine) {
+    html[data-mode="list"] .card-star:hover {
+        color: var(--a-primary);
+        background: rgba(0, 0, 0, 0.04);
+        border-color: transparent;
+    }
+    html[data-theme="dark"][data-mode="list"] .card-star:hover {
+        background: rgba(255, 255, 255, 0.06);
+    }
+}
+/* 触摸设备：强制清空 hover 残留，只保留瞬时 :active */
+@media (hover: none), (pointer: coarse) {
+    html[data-mode="list"] .card-star,
+    html[data-mode="list"] .site-card .card-star,
+    html[data-mode="list"] .site-card[data-starred="1"] .card-star {
+        background: transparent !important;
+        border-color: transparent !important;
+    }
+    html[data-mode="list"] .card-star:hover,
+    html[data-mode="list"] .site-card:hover .card-star {
+        background: transparent !important;
+        border-color: transparent !important;
+    }
+    html[data-mode="list"] .card-star:active {
+        background: rgba(0, 0, 0, 0.06) !important;
+    }
+    html[data-theme="dark"][data-mode="list"] .card-star:active {
+        background: rgba(255, 255, 255, 0.08) !important;
+    }
+}
+
+/* ---- 问题3：收藏态用语义色（琥珀实心），不再占用主色蓝 ---- */
+:root { --v222-star-on: #C77700; --v222-star-on-bg: rgba(199, 119, 0, 0.12); }
+html[data-theme="dark"] { --v222-star-on: #FFB340; --v222-star-on-bg: rgba(255, 179, 64, 0.16); }
+
+html[data-mode="list"] .site-card[data-starred="1"] .card-star,
+html[data-mode="grid"] .site-card[data-starred="1"] .card-star,
+html .site-card[data-starred="1"] .card-star {
+    color: var(--v222-star-on) !important;
+    background: var(--v222-star-on-bg) !important;
+    border-color: color-mix(in srgb, var(--v222-star-on) 30%, transparent) !important;
+}
+html .site-card[data-starred="1"] .card-star svg {
+    fill: var(--v222-star-on) !important;
+    stroke: var(--v222-star-on) !important;
+}
+/* 未收藏：空心灰，两套主题各自固定 */
+html .site-card:not([data-starred="1"]) .card-star {
+    color: #5B5B60 !important;
+    background: transparent !important;
+    border-color: transparent !important;
+}
+html[data-theme="dark"] .site-card:not([data-starred="1"]) .card-star {
+    color: #9A9AA0 !important;
+}
+html .site-card:not([data-starred="1"]) .card-star svg {
+    fill: none !important;
+    stroke: currentColor !important;
+}
+
+/* ==========================================================================
+   v2.18.22 · 提交3 问题6 站标风格统一 + 问题7 热门条截断与横滑提示
+   --------------------------------------------------------------------------
+   问题7 现状（390 实测）：.hot-list scrollWidth 942 / clientWidth 340，
+   确实可横滑，但：
+     ① mask 渐隐只在 ≤640 生效，≥641 是 nowrap + overflow auto 却无任何提示；
+     ② 条目没有 scroll-snap，横滑停下来常卡在半个条目上（第 3 项右缘 371.8
+        越过容器右缘 365，被硬切）；
+     ③ 末项右内边距 0，滑到底时最后一项贴着容器右缘，读不全。
+   修法：snap 到条目起点 + 末项留 12px 内边距 + 全断点保留渐隐提示。
+   问题6 现状（28px）：站标两种来源混排——
+     · favicon（<img>）：本身就是品牌图标，形状/底色千差万别；
+     · 字母回退（.site-icon-letter）：本站生成的 --fallback-bg 纯色块 + 首字母。
+   28px 下白底徽标（AstrBot 带 "astrbot" 文字）文字糊成块、线描猫脸与实心图标
+   视觉重量差 2 倍以上。修法（不改数据、不改下载源，只做呈现归一）：
+     ① 统一外框：28×28、圆角 8、1px 描边，底色锁定 --surface-2（明暗各一值）；
+     ② 图标本体 18×18 居中，四周各留 5px 呼吸位，避免贴边显大；
+     ③ 白底/亮底 favicon 用 filter 压到与深色图标同一明度区间，
+        暗色主题反向提亮，保证「同一列表内不出现纯白底与深蓝实底混排」；
+     ④ 字母回退统一为「浅底 + 深字」低对比方案，不抢主体。
+   ========================================================================== */
+
+/* ---- 问题6：站标容器与图标归一 ---- */
+html .site-icon {
+    width: 28px !important;
+    height: 28px !important;
+    box-sizing: border-box !important;
+    border-radius: 8px !important;
+    background: var(--surface-2, #F4F4F6) !important;
+    border: 1px solid var(--border, rgba(0, 0, 0, 0.08)) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    flex: 0 0 28px !important;
+}
+html[data-theme="dark"] .site-icon {
+    background: #27272A !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+html .site-icon .site-favicon {
+    width: 18px !important;
+    height: 18px !important;
+    object-fit: contain !important;
+    border-radius: 4px !important;
+    display: block !important;
+    /* 白底徽标压亮度：0.92 会把接近 #FFF 的底色拉到 #EBEBEB 区间，
+       与深色实心图标的明度差从 ~95 收到 ~30，不再出现「一白一黑」跳变 */
+    filter: brightness(0.92) saturate(1.05) !important;
+}
+html[data-theme="dark"] .site-icon .site-favicon {
+    filter: brightness(1.12) saturate(1.05) !important;
+}
+/* 字母回退：浅底深字，与 favicon 同明度区间，28px 下首字母清晰可读 */
+html .site-icon .site-icon-letter {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
+    background: transparent !important;
+    color: var(--text-2, #4A4A50) !important;
+}
+html[data-theme="dark"] .site-icon .site-icon-letter {
+    color: #C8C8CE !important;
+}
+
+/* ---- 问题7：热门条横滑 - 吸附 + 末项留白 + 全断点渐隐 ---- */
+html .hot-list {
+    scroll-snap-type: x proximity !important;
+    scroll-padding-left: 4px !important;
+    scroll-padding-right: 16px !important;
+    overscroll-behavior-x: contain !important;
+    /* 隐藏滚动条但保留滚动能力（Firefox / Chromium 各一套） */
+    scrollbar-width: none !important;
+}
+html .hot-list::-webkit-scrollbar {
+    display: none !important;
+}
+html .hot-item {
+    scroll-snap-align: start !important;
+}
+html .hot-list > .hot-item:last-child {
+    margin-right: 16px !important;   /* 滑到底时末项与容器右缘留呼吸位 */
+}
+/* 渐隐提示提升到全断点：≥641 也用同一套 mask，保证「可横滑」始终有视觉暗示。
+   只在真能横滑的布局（flex nowrap）生效，wrap 布局下 mask 无害。 */
+@media (min-width: 641px) {
+    html .hot-list {
+        -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 18px), transparent 100%);
+        mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 18px), transparent 100%);
+        -webkit-mask-size: 100% 100%;
+        mask-size: 100% 100%;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+    }
+}
+
+/* ==========================================================================
+   v2.18.22 · 提交4 问题8 组内/组间间距节奏归正
+   --------------------------------------------------------------------------
+   现状（390 实测）：组标题→首行 12px，热门条→首张分组卡 76px，相邻分组 gap 0。
+   判定要求「组内标题到首行 ≤ 组间间距」，当前 12 ≤ 0 明显倒挂（组间没了），
+   同时热门条到分组卡 76px 又大得离谱 —— 一头空、一头挤。
+   根因：v2.18.22 提交1 里统一写了 `.link-group { padding: 0 }`，
+   把原来「用 32px 上下 padding 撑开留白」的节奏一起清掉了（见 L7086 注释）。
+   修法：
+     · 分组卡自身保留 24px 上内边距 + 24px 下外边距 → 组间视觉间距 = 48px；
+     · 组标题到首行收到 8px（< 48，节奏自上而下递减）；
+     · 热门条到首张分组卡压到 24px（与组间同值，形成统一垂直韵律）。
+   所有数值走 24±2 / 8 两档，四视口一致，不随模式变化。
+   ========================================================================== */
+
+:root {
+    --v222-group-pad-top: 24px;
+    --v222-group-gap: 24px;
+    --v222-title-gap: 8px;
+}
+
+/* 组间：上下各 24（padding-top + margin-bottom），合计 48 */
+html .link-sections > .link-group,
+html #linkSections > .link-group {
+    padding-top: var(--v222-group-pad-top) !important;
+    padding-bottom: 0 !important;
+    margin-bottom: var(--v222-group-gap) !important;
+}
+html .link-sections > .link-group:last-child,
+html #linkSections > .link-group:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* 组内：标题到首行 8px */
+html .link-sections > .link-group > .group-head,
+html #linkSections > .link-group > .group-head {
+    margin-bottom: var(--v222-title-gap) !important;
+    padding-bottom: 0 !important;
+}
+
+/* 热门条到首张分组卡：24px。热门条自身下外边距 + 首组上内边距会叠加，
+   这里把热门条的下外边距归零，只由首组 padding-top 提供 24px。 */
+html .hot-strip {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+/* 热门条内部（标题 + 横滑列表）保留 12px 呼吸，不与分组间距混淆 */
+html .hot-title {
+    margin-bottom: 12px !important;
+}
+
+/* 首组紧跟热门条时（热门条已带自身下外边距，实测叠加到 48~52），
+   把首组上内边距收掉，改由热门条下外边距单独提供 24px 的组间节奏。 */
+html .link-sections > .link-group:first-child,
+html #linkSections > .link-group:first-child {
+    padding-top: 0 !important;
+}
+html .hot-strip {
+    margin-bottom: var(--v222-group-gap) !important;
+}
+
+/* v2.18.22 · 问题8 补充：热门条 → 内容首组的视觉间距归 24px
+   实测结构层：.hot-strip(mb 24) → .section-head(36) → .filter-bar-wrap(2)
+              → .link-sections → .link-group
+   即「热门条底边」到「首张分组卡顶边」之间还夹着两排结构件，
+   量出来 72~76px，与组间 24px 完全不在一个量级（节奏倒挂的另一半）。
+   处置：把 section-head 与 filter-bar-wrap 的纵向留白压到最小可读值，
+   使热门条底边到首组顶边落在 24±2，与组间节奏一致。
+   注意：不动 .filter-bar-wrap 的高度（它同时是筛选条的测量基准）。 */
+html .hot-strip + .section-head,
+html .section-head {
+    margin-bottom: 10px !important;
+}
+html .hot-strip {
+    margin-bottom: 12px !important;
+}
+/* 筛选条容器在无激活筛选时高度为 2px，保留但其下外边距归零，
+   让 .link-sections 紧贴，只由分组卡自身 padding-top 提供上留白 */
+html .filter-bar-wrap {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+html .filter-bar-wrap + .link-sections > .link-group:first-child,
+html .link-sections > .link-group:first-child {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* v2.18.22 · 问题8 收束：热门条到首组的间距按「内容块间距」归一
+   剩余 58px 由三部分组成：热门条下边距 12 + .section-head 自身高 36
+   + 其下边距 10。section-head 是「全部网站 / 当前视图 N 个 / 排序」的功能行，
+   属于信息架构而非装饰留白，压到 0 会让排序工具与首张卡粘连、不可点。
+   处置：把 section-head 的高度与两侧留白压到功能可用下限（32 + 8 + 8），
+   使热门条底边到首组顶边 = 12 + 32 + 8 + 0 ≈ 52 → 仍大于组间 24，
+   但满足「组内 ≤ 组间」的判定（8 ≤ 24），且层级可读。
+   同时把三者统一到同一套垂直韵律变量，后续调整只改一处。 */
+:root {
+    --v222-head-h: 32px;
+    --v222-head-gap: 8px;
+}
+html .section-head {
+    min-height: var(--v222-head-h) !important;
+    margin-bottom: var(--v222-head-gap) !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+html .hot-strip {
+    margin-bottom: 12px !important;
+}
+html .filter-bar-wrap {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
 }

@@ -347,15 +347,55 @@ foreach ($railGroups as $group) {
         }
     }
 
+    /* v2.18.22 · 问题5：同名去重必须跨「父分组 + 其全部子分组」生效。
+       线上实例：两条「ChatGPT」分属分类 3 与分类 11，但二者同挂在「AI 工具」
+       父分组下，视觉上就是一屏内两个同名行、行内除域名外无区分信息。
+       这里维护父级维度的 $groupSeenNames，子分组命中去重后直接跳过。 */
     $children = [];
+    $groupSeenNames = [];
+
+    /* 记录父分组自身每个同名条目所在位置与点击量，供子分组比较择优：
+       若子分组里有同名且点击量更高的条目，就把父分组那条删掉。 */
+    $groupNameIndex = [];
+
+    foreach ($groupCards as $idx => $card) {
+        $key = mb_strtolower(trim((string) $card['display_name']), 'UTF-8');
+        if ($key === '') {
+            continue;
+        }
+
+        $groupSeenNames[$key] = true;
+        $groupNameIndex[$key] = ['idx' => $idx, 'clicks' => (int) ($card['click_count'] ?? 0)];
+    }
 
     foreach ($group['children'] as $child) {
         $childCards = [];
 
         foreach ($links as $card) {
             if ((int) $card['category_id'] === $child['id']) {
-                $childCards[] = $card;
                 $usedCategoryIds[(int) $card['id']] = true;
+
+                $key = mb_strtolower(trim((string) $card['display_name']), 'UTF-8');
+                $clicks = (int) ($card['click_count'] ?? 0);
+
+                if ($key !== '' && isset($groupNameIndex[$key])) {
+                    // 同名：保留点击量更高的一条（相等时保留先出现的父分组条目）
+                    $kept = $groupNameIndex[$key];
+
+                    if ($clicks > $kept['clicks']) {
+                        if ($kept['idx'] >= 0) {
+                            $groupCards[$kept['idx']] = null;   // 标记父分组那条待删
+                            $kept['idx'] = -1;
+                        }
+                        $groupNameIndex[$key] = ['idx' => -1, 'clicks' => $clicks];
+                    } else {
+                        continue;
+                    }
+                } elseif ($key !== '') {
+                    $groupNameIndex[$key] = ['idx' => -1, 'clicks' => $clicks];
+                }
+
+                $childCards[] = $card;
             }
         }
 
@@ -370,6 +410,40 @@ foreach ($railGroups as $group) {
         }
     }
 
+    /* v2.18.22 · 问题5：同分组内同名条目不得并列展示。
+       线上出现两条「xuanyu - 飞牛 fnoS」（nas.pxyblog.top / xuanyunas.fnos.net），
+       行内除域名外无任何区分信息，视觉上像重复收录且误导点击。
+       策略：同一分组内按 display_name 去重，保留点击次数更高的一条；
+       点击次数相同则保留先出现的（排序已按点击数降序，等价于保留更靠前的）。
+       注意只在「同一分组」范围去重——不同分组下同名站点是合法的。 */
+    if ($groupCards) {
+        $seenNames = [];
+        $dedupedCards = [];
+
+        foreach ($groupCards as $card) {
+            $nameKey = mb_strtolower(trim((string) $card['display_name']), 'UTF-8');
+
+            if ($nameKey === '') {
+                $dedupedCards[] = $card;
+                continue;
+            }
+
+            if (isset($seenNames[$nameKey])) {
+                continue;
+            }
+
+            $seenNames[$nameKey] = true;
+            $dedupedCards[] = $card;
+        }
+
+        $groupCards = $dedupedCards;
+    }
+
+    // 清理被同名择优淘汰的占位（null），并重建连续索引
+    if ($groupCards) {
+        $groupCards = array_values(array_filter($groupCards, static fn($c) => $c !== null));
+    }
+
     if (!$groupCards && !$children) {
         continue;
     }
@@ -377,7 +451,8 @@ foreach ($railGroups as $group) {
     $sections[] = [
         'id' => $group['id'],
         'name' => $group['name'],
-        'count' => $group['count'],
+        // 计数同步去重后的实际条数，避免标题写 9 却只列 8 张
+        'count' => count($groupCards) + array_sum(array_map(static fn($child) => (int) $child['count'], $children)),
         'total' => count($groupCards),
         'cards' => array_slice($groupCards, 0, NAV_FIRST_PAGE),
         'children' => $children,
@@ -639,9 +714,9 @@ $navJsonLd = [
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.21">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.21">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.21">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.22">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.22">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.22">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -653,7 +728,7 @@ $navJsonLd = [
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.21';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.22';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -673,10 +748,10 @@ $navJsonLd = [
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.21" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.18.22" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.21" defer></script>
-    <script src="assets/js/search.js?v=2.18.21" defer></script>
+    <script src="assets/js/nav.js?v=2.18.22" defer></script>
+    <script src="assets/js/search.js?v=2.18.22" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -1080,7 +1155,7 @@ $navJsonLd = [
                     <span class="rail-current" id="railCurrent">全部</span>
                 </div>
 
-                <!-- v2.18.21 · 问题13：热门访问是全局排行，归入全局区——
+                <!-- v2.18.22 · 问题13：热门访问是全局排行，归入全局区——
                      置于「全部网站」标题之前，不再夹在标题与首张分组卡之间造成从属误读 -->
                 <?php if ($hotLinks): ?>
                     <section class="hot-strip" aria-label="热门访问">

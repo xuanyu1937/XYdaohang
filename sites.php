@@ -117,7 +117,7 @@ $jsonLd = [
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.21">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.22">
     <style>
         :root { color-scheme: light; --fg: var(--a-ink); --muted: var(--a-muted); --line: var(--a-hairline); --accent: var(--a-primary); --bg: var(--a-canvas); }
         /* v2.18.11 P1-3：暗色改由 html[data-theme="dark"] 驱动（与首页 / 关于页同源），

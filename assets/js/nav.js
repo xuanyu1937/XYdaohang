@@ -2005,7 +2005,7 @@
         // 直接覆盖用户自己起的名字会造成困扰。这里只把它作为「别名」参与搜索与提示，
         // 卡片主标题始终以用户填写的名称为准。
         var nameEl = card.querySelector('.site-name');
-        // v2.18.21：.site-name 文本可能被语义截断，别名比对必须用全文
+        // v2.18.22：.site-name 文本可能被语义截断，别名比对必须用全文
         var currentName = nameEl ? (nameEl.getAttribute('data-name-full') || nameEl.textContent).trim() : '';
 
         card.setAttribute('data-title', clean);
@@ -5281,7 +5281,7 @@
    在单行 -webkit-line-clamp:1 之前，把超出宽度的描述按空格 / 中英文标点
    回退最多 4 个字符再补省略号，避免「…个…」半词尾。
    只改 .site-desc 的可见文本，不动 data-description（编辑 / 搜索依赖原值）。
-   v2.18.21 · 问题12：.site-name 纳入同一套语义截断（data-name-full 存全文），
+   v2.18.22 · 问题12：.site-name 纳入同一套语义截断（data-name-full 存全文），
    省略号前剥离尾部标点与多余空格，不再出现「NAS ，…」式孤立标点。
    搜索 / 别名等依赖全文处一律读 data-name-full（见取别名逻辑）。
    ========================================================================== */
