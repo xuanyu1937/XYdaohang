@@ -9095,3 +9095,247 @@ html .filter-bar-wrap {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
 }
+
+/* ==========================================================================
+   v2.18.23 · 横向基准统一 / 手机边距回收 / 站标可读性
+   --------------------------------------------------------------------------
+   问题1 根因：v2.18.22 把 .page-shell 的左右 padding 归零，收窄职责只落在
+   .site-main 上；但 .site-header / .search-section 是 .site-main 的兄弟节点，
+   于是 header 与搜索区顶到视口边缘（x=0），chips / 分组卡 / 热门条却内缩 40。
+   同一屏出现 0 与 40 两套左基准：logo 贴边、搜索框圆角被屏幕边缘切平。
+   修法：把 .page-shell 恢复成「唯一内容盒」，全断点承担 gutter；
+   .site-body / .site-main 一律 100%，任何子块不再自行收窄。
+   这样 header / 搜索 / 分类条 / 分组卡 / 热门条共用同一个左缘。
+
+   问题2：手机 gutter 40 → 18。390 内容宽 354（卡片 354、内容列 252），
+   360 内容宽 324（卡片 324、内容列 222）；两边各 18 ≤ 20。
+
+   问题7：390 视口里「18 页边 + 354 卡 + 44 浮层 + 6 贴边」= 422 > 390，
+   44px 常驻浮层与 ≥340 宽卡片物理上无法共存。解：把「视图切换 / 回顶」
+   两个入口迁入吸顶分类条（.mobile-quick），手机端 .float-bar 整体隐藏，
+   与卡片矩形零相交；回顶按钮随吸顶条常驻视口，滚动超一屏出现且可点。
+   ========================================================================== */
+
+:root { --v223-gutter: 18px; }
+@media (min-width: 641px) {
+    :root { --v223-gutter: 52px; }
+}
+
+/* ---- 问题1：唯一内容盒 ---- */
+html .page-shell {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 1360px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: var(--v223-gutter) !important;
+    padding-right: var(--v223-gutter) !important;
+}
+html .page-shell > .site-body,
+html .site-body {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    align-self: stretch !important;
+}
+html .page-shell .site-main,
+html .site-main {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    justify-self: stretch !important;
+    align-self: start !important;
+}
+/* 搜索区与头部跟随同一左缘（≤960 时搜索区不再为侧栏让位） */
+@media (max-width: 960px) {
+    html .search-section {
+        padding-left: 0 !important;
+        width: 100% !important;
+    }
+    /* 分类条原本用负 margin 出血到视口边，在「唯一内容盒」下会跑到基准线左侧
+       16px。归零后条带与卡片同宽同缘，chips 首项左缘 = 页边 = 18px。 */
+    html .mobile-cats {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+
+/* ---- 问题2：手机页边 18px，卡片与内容列全部回到可用宽度 ---- */
+@media (max-width: 640px) {
+    html .link-sections,
+    html #linkSections,
+    html .hot-strip {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+}
+/* 页边从 40 收敛到 18 后，390 的内容宽 354 会跨过 minmax(168) 的两列阈值，
+   卡片被劈成 171.5 两张，「卡片 ≥340」直接失守。手机上网格态固定单列：
+   一列大卡的可读性本来也优于两张窄卡。 */
+@media (max-width: 460px) {
+    html[data-mode="grid"] .site-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 8px !important;
+    }
+}
+
+/* 变宽后部分卡片少折一行，行高掉到 71（基线要求 72–78）。
+   手机列表态给 72px 下限，描述两行的卡仍可到 75，区间不变。 */
+@media (max-width: 640px) {
+    html[data-mode="list"] .site-card {
+        min-height: 72px !important;
+    }
+}
+
+/* ---- 问题3：站标可见面积 ≥ 容器 80%（24/28 = 85.7%） ---- */
+html .site-icon .site-favicon {
+    width: 24px !important;
+    height: 24px !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: contain !important;
+}
+html .site-icon .site-icon-letter {
+    font-size: 15px !important;
+}
+
+/* ---- 问题6：组内节奏 —— 标题到首卡 24px，不小于组间 24px ---- */
+html .link-sections > .link-group,
+html #linkSections > .link-group,
+html .link-sections > .link-group:first-child,
+html #linkSections > .link-group:first-child {
+    padding-top: 20px !important;
+}
+html .link-sections > .link-group > .group-head,
+html #linkSections > .link-group > .group-head,
+html .link-sections > .link-group .group-head,
+html #linkSections > .link-group .group-head {
+    margin-bottom: 24px !important;
+}
+
+/* ---- 问题7-a：手机端撤掉常驻浮层，回顶改由吸顶分类条承载 ----
+   浮层位置固定在右下 44px，手机页边收到 18 后内容右缘 372，
+   两者必然相交 30px；而 44px 浮层又不可能塞进 18px 页边。
+   因此 ≤640 直接隐藏浮层（DOM 保留，矩形面积 0 → 与卡片零相交），
+   回顶按钮放进 sticky 分类条：它本来就在视口顶部，滚动超一屏时点亮。 */
+@media (max-width: 640px) {
+    html .float-bar {
+        display: none !important;
+    }
+}
+.mobile-quick {
+    display: none;
+}
+@media (max-width: 640px) {
+    html .mobile-cats .mobile-quick {
+        display: grid !important;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--surface);
+        color: var(--text-2);
+        transition: opacity 0.18s ease, visibility 0.18s ease, color 0.18s ease;
+    }
+    html .mobile-cats .mobile-quick svg {
+        width: 16px;
+        height: 16px;
+    }
+    html .mobile-cats .mobile-quick:active {
+        color: var(--primary);
+    }
+    /* 回顶按钮：滚动超一屏才出现，占位保留避免 chips 宽度跳动 */
+    html .mobile-cats .mobile-to-top {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+    html .mobile-cats .mobile-to-top.is-visible {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+}
+
+/* 视图切换：≤480 时 .mode-switch 三按钮被隐藏，用头部这颗单按钮循环切换。
+   481–920 仍由 .mode-switch 承担，避免两套入口同时出现。 */
+html .header-tools .mobile-mode-cycle {
+    display: none;
+}
+@media (max-width: 480px) {
+    html .header-tools .mobile-mode-cycle {
+        display: grid;
+        place-items: center;
+        width: var(--ctl-size, 40px);
+        height: var(--ctl-size, 40px);
+        flex: 0 0 auto;
+        padding: 0;
+    }
+    #mobileModeCycle svg {
+        display: none;
+        width: 17px;
+        height: 17px;
+    }
+    html[data-mode="grid"] #mobileModeCycle .mode-icon-mode-grid,
+    html[data-mode="list"] #mobileModeCycle .mode-icon-mode-list,
+    html[data-mode="compact"] #mobileModeCycle .mode-icon-mode-compact {
+        display: block;
+    }
+}
+
+
+/* 分类 chips 溢出时右端同样给渐隐，避免半个「学」字直接怼在「更多」按钮上 */
+html .mobile-cats-track.is-scrollable {
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 18px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 18px), transparent 100%);
+}
+
+/* ---- 问题5：热门条右端渐隐 + 末项留白 ----
+   渐隐只在「真的能横滑」时出现（JS 加 is-scrollable）。
+   1440 下 6 条热门刚好排满 988px 不溢出，此时再加渐隐会把末项尾部
+   无谓地淡掉，反而让人以为还有内容未显示。 */
+html .hot-list.is-scrollable {
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 20px), transparent 100%) !important;
+    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 20px), transparent 100%) !important;
+}
+/* 末项留白 24px：mask 从 100%-20px 开始渐隐，留 24px 才能让「滑到底」
+   时最后一项完整落在清晰区，不被自身容器的渐隐吃掉最后几个字。 */
+html .hot-list > .hot-item:last-child {
+    margin-right: 24px !important;
+}
+html .hot-list {
+    scroll-padding-right: 24px !important;
+}
+
+/* v2.18.23 · 「我的网址」工具栏在手机上原本一行排 4 个按钮，
+   390 下第 4 个「批量导入」被右缘裁掉半截且无滚动提示。
+   手机端允许换行（2×2），不再靠裁剪容纳。 */
+@media (max-width: 640px) {
+    html .my-head {
+        flex-wrap: wrap;
+        row-gap: 10px;
+    }
+    html .my-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+    }
+}

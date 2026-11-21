@@ -2277,6 +2277,78 @@
         updateToTop();
     }
 
+    /* v2.18.23 · 问题7：手机端浮层撤掉后，回顶 / 切换视图改由吸顶分类条承载。
+       回顶按钮的显隐门槛是「滚动超过一屏」（innerHeight），与桌面 320px 的
+       常驻浮层区分：分类条本身一直在视口顶部，按钮只在需要时露出来，
+       避免手机首屏多两个图标抢注意力。 */
+    var mobileToTop = document.getElementById('mobileToTop');
+    var mobileModeCycle = document.getElementById('mobileModeCycle');
+
+    if (mobileToTop) {
+        var mobileTicking = false;
+
+        var updateMobileToTop = function () {
+            mobileToTop.classList.toggle('is-visible', window.scrollY > window.innerHeight);
+        };
+
+        mobileToTop.addEventListener('click', function () {
+            window.scrollTo({
+                top: 0,
+                behavior: prefersReducedMotion ? 'auto' : 'smooth'
+            });
+        });
+
+        window.addEventListener('scroll', function () {
+            if (mobileTicking) {
+                return;
+            }
+
+            mobileTicking = true;
+            window.requestAnimationFrame(function () {
+                updateMobileToTop();
+                mobileTicking = false;
+            });
+        }, { passive: true });
+
+        window.addEventListener('resize', updateMobileToTop, { passive: true });
+        updateMobileToTop();
+    }
+
+    if (mobileModeCycle) {
+        mobileModeCycle.addEventListener('click', function () {
+            // 复用桌面浮层的同一套切换逻辑，避免两处状态机分叉
+            if (modeCycle) {
+                modeCycle.click();
+            }
+        });
+    }
+
+    /* v2.18.23 · 问题5：热门条只有在真的溢出时才给右端渐隐。
+       1440 下 6 条热门刚好排满，静态渐隐会把末项尾部淡掉，
+       让人误以为后面还有内容。 */
+    var hotList = document.querySelector('.hot-list');
+    var catsTrack = document.querySelector('.mobile-cats-track');
+
+    if (hotList || catsTrack) {
+        var syncScrollable = function () {
+            [hotList, catsTrack].forEach(function (el) {
+                if (!el) {
+                    return;
+                }
+                el.classList.toggle('is-scrollable', el.scrollWidth > el.clientWidth + 1);
+            });
+        };
+
+        syncScrollable();
+        window.addEventListener('resize', syncScrollable, { passive: true });
+
+        if (window.ResizeObserver) {
+            var ro = new ResizeObserver(syncScrollable);
+            if (hotList) { ro.observe(hotList); }
+            if (catsTrack) { ro.observe(catsTrack); }
+        }
+    }
+
     /* ----------------------------------------------------------------------
        登录 / 注册 统一弹窗（v2.4.0）
        ---------------------------------------------------------------------- */

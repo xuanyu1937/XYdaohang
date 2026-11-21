@@ -213,8 +213,8 @@ $currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.1.3';
             font-size: 1rem !important;
         }
     </style>
-    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.22">
-    <link href="../assets/css/admin.css?v=2.18.22" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.23">
+    <link href="../assets/css/admin.css?v=2.18.23" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>

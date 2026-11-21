@@ -478,6 +478,18 @@ if ($orphanCards) {
     ];
 }
 
+/* v2.18.23 · 问题4：分类 chips 的「全部」与列表区「当前视图 N 个」必须同源。
+   旧口径下 chips 用 $totalSites（数据库条数），列表用去重后的实际渲染条数，
+   线上 40 / 39、本地 139 / 138 两处对不上，且无任何说明。
+   这里统一改成「去重后实际可见条数」：$sections 的 count 已在 2.18.22 里
+   同步为去重结果（父分组去重 + 跨子分组同名择优 + 未分类兜底），
+   直接求和即得与列表完全一致的数字。 */
+$visibleSiteTotal = 0;
+
+foreach ($sections as $visibleSection) {
+    $visibleSiteTotal += (int) $visibleSection['count'];
+}
+
 // 热门访问 TopN（仅统计有点击量的站点）。
 $hotLinks = [];
 
@@ -714,9 +726,9 @@ $navJsonLd = [
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.22">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.22">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.22">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.23">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.23">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.23">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -728,7 +740,7 @@ $navJsonLd = [
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.22';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.23';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -748,10 +760,10 @@ $navJsonLd = [
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.22" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.18.23" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.22" defer></script>
-    <script src="assets/js/search.js?v=2.18.22" defer></script>
+    <script src="assets/js/nav.js?v=2.18.23" defer></script>
+    <script src="assets/js/search.js?v=2.18.23" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -793,7 +805,7 @@ $navJsonLd = [
                         <h1 class="brand-title" translate="no"><?php echo $functions->escape($brandName); ?></h1>
                         <span class="brand-subtitle"><?php echo $functions->escape($brandSubtitle); ?></span>
                         <span class="brand-stats">
-                            已收录 <strong><?php echo $publishedSiteTotal; ?></strong> 个站点 · 当前视图 <strong class="js-visible-count"><?php echo $totalSites; ?></strong> 个
+                            已收录 <strong><?php echo $publishedSiteTotal; ?></strong> 个站点 · 当前视图 <strong class="js-visible-count"><?php echo $visibleSiteTotal; ?></strong> 个
                             <?php if ($isOwner && $currentUser): ?>· 我的导航<?php endif; ?>
                         </span>
                     </span>
@@ -821,6 +833,24 @@ $navJsonLd = [
                         </svg>
                     </button>
                 </div>
+
+                <!-- v2.18.23 · ≤480 时 .mode-switch 三按钮被隐藏（头部太挤），
+                     用这个单按钮循环切换，位置与主题按钮同级，不占分类条宽度 -->
+                <button type="button" class="tool-btn mobile-mode-cycle" id="mobileModeCycle"
+                        aria-label="切换显示方式" title="切换显示方式（网格 / 列表 / 紧凑）">
+                    <svg class="mode-icon-mode-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+                        <rect x="3" y="3" width="7.5" height="7.5" rx="1.6"></rect>
+                        <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"></rect>
+                        <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"></rect>
+                        <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"></rect>
+                    </svg>
+                    <svg class="mode-icon-mode-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+                        <path d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                    <svg class="mode-icon-mode-compact" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+                        <path d="M4 7h6M4 12h6M4 17h6M14 7h6M14 12h6M14 17h6"></path>
+                    </svg>
+                </button>
 
                 <button type="button"
                         id="themeToggle"
@@ -1073,7 +1103,7 @@ $navJsonLd = [
                 <nav class="rail-nav" id="railNav">
                     <button type="button" class="rail-item is-active" data-category="all" data-name="全部网站">
                         <span class="rail-label">全部</span>
-                        <span class="rail-count"><?php echo $totalSites; ?></span>
+                        <span class="rail-count"><?php echo $visibleSiteTotal; ?></span>
                     </button>
 
                     <?php foreach ($railGroups as $group): ?>
@@ -1119,7 +1149,7 @@ $navJsonLd = [
                     <div class="mobile-cats-track" id="mobileCatsTrack" role="tablist">
                         <button type="button" class="mcat is-active" role="tab" aria-selected="true"
                                 data-category="all" data-name="全部网站">
-                            <span>全部</span><span class="mcat-count"><?php echo $totalSites; ?></span>
+                            <span>全部</span><span class="mcat-count"><?php echo $visibleSiteTotal; ?></span>
                         </button>
                         <?php foreach ($railGroups as $group): ?>
                             <button type="button" class="mcat" role="tab" aria-selected="false"
@@ -1138,6 +1168,16 @@ $navJsonLd = [
                             </svg>
                         </button>
                     <?php endif; ?>
+                    <!-- v2.18.23 · 问题7：手机端 44px 常驻浮层与 ≥340 宽卡片
+                         物理上放不下（18+354+44+6 > 390），回顶入口收进这条吸顶分类条，
+                         浮层在 ≤640 整体隐藏，与卡片矩形零相交；
+                         回顶随吸顶条常驻视口，滚超一屏出现。 -->
+                    <button type="button" class="mobile-quick mobile-to-top" id="mobileToTop"
+                            aria-label="回到顶部" title="回到顶部">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 19V5M6 11l6-6 6 6"></path>
+                        </svg>
+                    </button>
                     <button type="button" class="mobile-cats-more" id="mobileCatsMore" aria-label="查看全部分类">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                             <path d="M4 6h16M4 12h16M4 18h16"></path>
@@ -1186,7 +1226,7 @@ $navJsonLd = [
                 <div class="section-head">
                     <div class="section-title">
                         <h2 id="sectionTitle">全部网站</h2>
-                        <span class="section-count" id="sectionCount" aria-live="polite">当前视图 <?php echo $totalSites; ?> 个</span>
+                        <span class="section-count" id="sectionCount" aria-live="polite">当前视图 <?php echo $visibleSiteTotal; ?> 个</span>
                     </div>
                     <div class="section-aside" id="sectionAside">
                         <button type="button" class="section-tool is-active" data-sort="clicks" aria-pressed="true" title="按点击量排序">
