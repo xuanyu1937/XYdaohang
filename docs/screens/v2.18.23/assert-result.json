@@ -1,0 +1,93 @@
+{
+ "version": "2.18.23",
+ "base": "http://dh.pxyblog.top",
+ "score": 100,
+ "pass": 12,
+ "total": 12,
+ "items": [
+  {
+   "no": 1,
+   "prio": "P0",
+   "title": "全页可见元素左缘同一基准（≤2px）、搜索框左右 ≥16px 且不贴边、圆角完整",
+   "pass": true,
+   "detail": "手机/平板单基准：360/390 全 18px、768 全 52px（brand/searchBar/chips/hotStrip/group/sectionHead spread=0）；1440 左基准 brand=rail=92px、内容基准 searchBar=hotStrip=group=sectionHead=360px（spread 0）；搜索框左右留白 [(18, 18), (52, 52), (360, 360)]、贴边 [False]、圆角 ['999px']"
+  },
+  {
+   "no": 2,
+   "prio": "P0",
+   "title": "360/390 左右边距 ≤20、卡片 ≥340（390）、内容列 ≥220、标题 ≥12 汉字",
+   "pass": true,
+   "detail": "390 边距 [(18, 18)]、卡片 [352]、内容列 [250]、标题 [16.7] 字；360 边距 [(18, 18)]、卡片 [322]、内容列 [220]、标题 [14.7] 字"
+  },
+  {
+   "no": 3,
+   "prio": "P1",
+   "title": "可见图标占容器 ≥80%、容器与图标尺寸唯一",
+   "pass": true,
+   "detail": "图标/容器比 [0.857]（24/28 = 85.7%）；容器 ['28x28']；图标本体 ['24x24']；本版未改变数据源，只放大 <img> 呈现尺寸"
+  },
+  {
+   "no": 4,
+   "prio": "P1",
+   "title": "分类 chips「全部」与列表「当前视图 N 个」同源",
+   "pass": true,
+   "detail": "16 态 chips=['39']、section=['39']、hero=['39']；两处统一取 $visibleSiteTotal = 去重后各分组 count 之和"
+  },
+  {
+   "no": 5,
+   "prio": "P1",
+   "title": "热门条末项完整/渐隐、有横滑提示、与分组卡右缘差 ≤1px",
+   "pass": true,
+   "detail": "group/hot 右缘差 [0]px、宽差 [0]px、边框同源 [True]；scroll-snap ['x']；可滚动时 mask 存在 True；滚到最右末项完全可见 True（右留白 [23.6, 24.3, 369.8, 370.4]px）"
+  },
+  {
+   "no": 6,
+   "prio": "P2",
+   "title": "标题到卡顶 ≥12px、组间距 24±2、组内不小于组间",
+   "pass": true,
+   "detail": "16 态 titleToFirst=[24]px、groupGap=[24]px（24 ≥ 24 满足「组内不小于组间」）；组内 24 / 组间 24 相等，层级由分组卡描边区分"
+  },
+  {
+   "no": 7,
+   "prio": "P2",
+   "title": "任何状态组合下悬浮层与卡片矩形不相交",
+   "pass": true,
+   "detail": "相交卡片数 [0]；360/390 float-bar display=['none']（撤回常驻浮层）；768/1440 浮层可见 [True] 且相交 0"
+  },
+  {
+   "no": "B1",
+   "prio": "P0",
+   "title": "星标右缘 10±2px、垂直居中 ≤1px、无粘滞 hover 灰底",
+   "pass": true,
+   "detail": "列表态右留白 [(10, 10)]px；垂直偏差 max 0.01px；未收藏星标背景唯一值 ['rgba(0, 0, 0, 0)']"
+  },
+  {
+   "no": "B2",
+   "prio": "P0",
+   "title": "一键回顶存在且可点、滚动超一屏出现",
+   "pass": true,
+   "detail": "手机 #mobileToTop 滚 1.2 屏后 [('visible', True)]、在视口内 [True]；桌面 #toTop 滚 1.2 屏后 [('visible', 44)]、在视口内 [True]"
+  },
+  {
+   "no": "B3",
+   "prio": "P0",
+   "title": "品牌块盾形居中 ≤1px、可见盾形 ≥55%、白底/#272729、1px 描边、8px 圆角",
+   "pass": true,
+   "detail": "圆角 ['8px']、描边 ['1px rgb(224, 224, 224)', '1px rgba(255, 255, 255, 0.12)']；底色明 ['rgb(255, 255, 255)'] / 暗 ['rgb(39, 39, 41)']；盾形像素量取 {'390-light': {'centerDx': 0.25, 'centerDy': 0.25, 'shieldH': 28.0, 'blockH': 44, 'ratio': 0.636}, '1440-light': {'centerDx': 0.25, 'centerDy': 0.25, 'shieldH': 33.0, 'blockH': 52, 'ratio': 0.635}}；44/52 两档比例一致（390 块 44、768+ 块 52）"
+  },
+  {
+   "no": "B4",
+   "prio": "P0",
+   "title": "分组卡与热门条同宽同右缘、边框同源、行高区间、无 0px 轨道、无横滚",
+   "pass": true,
+   "detail": "宽差 [0]、右缘差 [0]、边框同源 [True]；手机列表行高 [(72, 75), (72, 75), (72, 75), (72, 75)]、桌面列表行高 [(54, 67), (54, 67), (54, 67), (54, 67)]（上限 67 为两行描述的卡）；0px 轨道 [0]、横向滚动 [False]"
+  },
+  {
+   "no": "B5",
+   "prio": "P0",
+   "title": "favicon 蓝底白盾 16px 可辨、应用图标主色 #0066CC 且多张同色",
+   "pass": true,
+   "detail": "图标主色统计 {'favicon-16.png': {'size': (16, 16), 'top': [('#0066CC', 164), ('#FFFFFF', 34), ('#0066CC', 5)]}, 'favicon-32.png': {'size': (32, 32), 'top': [('#0066CC', 722), ('#FFFFFF', 166), ('#000000', 24)]}, 'icon-192.png': {'size': (192, 192), 'top': [('#0066CC', 28033), ('#FFFFFF', 6696), ('#000000', 1452)]}, 'icon-512.png': {'size': (512, 512), 'top': [('#0066CC', 200930), ('#FFFFFF', 48473), ('#000000', 10940)]}}；favicon-16 主色 #0066CC 占 164/256、白盾 34 像素，16px 下盾形可辨；icon-192/512 同为主色 #0066CC（28033 / 200930 像素）"
+  }
+ ]
+}
