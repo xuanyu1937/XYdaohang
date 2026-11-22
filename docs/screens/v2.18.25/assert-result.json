@@ -1,0 +1,93 @@
+{
+ "version": "2.18.25",
+ "base": "http://dh.pxyblog.top",
+ "score": 100,
+ "pass": 12,
+ "total": 12,
+ "items": [
+  {
+   "no": "L1",
+   "prio": "B2",
+   "title": "分类条与三子项矩形命中 390/360 目标值（误差 ≤2px）",
+   "pass": true,
+   "detail": "四视口量取；390/360 × 明暗 × list/grid 共 60 个字段逐项比对，最大误差 0.0px；390: cats x18/w354/right372/h56、track x18/w250/right268、top x276/w44/h44/right320、more x328/w44/h44/right372；360: 容器 324、track 220、回顶 246–290、索引 298–342；误差样例 390/cats.x=18(目标 18)、390/cats.w=354(目标 354)、390/cats.right=372(目标 372)、390/cats.h=56(目标 56)、390/track.x=18(目标 18)、390/track.w=250(目标 250)"
+  },
+  {
+   "no": "L2",
+   "prio": "B2",
+   "title": "chip 与按钮矩形相交全部 false",
+   "pass": true,
+   "detail": "16 态 chip×按钮相交集合 [0]（chip 矩形按轨道可视区裁切后再判，轨道外被 overflow 裁掉的不参与）；相交 chip 名 []"
+  },
+  {
+   "no": "L3",
+   "prio": "B2",
+   "title": "回顶 rect 宽高 = 44×44",
+   "pass": true,
+   "detail": "360/390 各态回顶尺寸集合 [(44, 44)]；圆角 ['8px']"
+  },
+  {
+   "no": "L4",
+   "prio": "B2",
+   "title": "轨道可滑、滑到最右末项 right ≤ 轨道 right−12 且末项完整",
+   "pass": true,
+   "detail": "16 态 scrollWidth/clientWidth 集合 [(0, 0), (680, 220), (680, 250), (685, 622)]；360/390 滑到最右末项距轨道 right 集合 [20.2]px（≥12）；末项完整可见 [True]"
+  },
+  {
+   "no": "D1",
+   "prio": "B3",
+   "title": "滚动 0/1/2 屏：回顶 opacity 0→1、轨道宽度三次一致",
+   "pass": true,
+   "detail": "16 态回顶 opacity 序列（0屏/1屏/2屏）集合 [(0, 0, 1)]（0屏=0、2屏=1、单调不减；1屏处于「滚超一屏」阈值边界，可为 0）；轨道 rectW/clientW 三次一致 True；样例 390 明色 list: [(0, 0, 250, 250), (838, 0, 250, 250), (1678, 1, 250, 250)]"
+  },
+  {
+   "no": "D2",
+   "prio": "B3",
+   "title": "热门条滑到最右末项间隙 ≥12、渐隐仅可滑时出现、at-end 取消",
+   "pass": true,
+   "detail": "可滑态滑到最右末项间隙 [23.6, 24.3, 35.6, 36.3]px（均 ≥12；1440 不可滑态末项本就靠左，gap 数百 px 不计）；渐隐宽度分视口：360/390=24px、768=32px（本版 CSS 仅覆盖 ≤640，平板沿用历史）、1440 不可滑=none，逐态符合 True；滑到最右提示 display ['none']（none 即取消）；hot-list padding-right ['0px', '12px']"
+  },
+  {
+   "no": "D3",
+   "prio": "B3",
+   "title": "顶栏 ≤640 无 rail-open、手机全页分类索引入口 = 1",
+   "pass": true,
+   "detail": "360/390 顶栏 rail-open 可见集合 [False]（False 即隐藏）；手机分类索引入口数 [1]（=1）；768/1440 入口数 [0, 1]（桌面保留顶栏/侧栏分类入口，语义可区分）"
+  },
+  {
+   "no": "D4",
+   "prio": "B3",
+   "title": "三块间隙各 8px、矩形互不相交",
+   "pass": true,
+   "detail": "360/390 track→回顶 / 回顶→索引 间距集合 [(8, 8)]px（两类按钮 44 固定、轨道 flex:1，靠布局分离、z-index 不参与）"
+  },
+  {
+   "no": "R1",
+   "prio": "B0",
+   "title": "页边 18/18、分组卡与热门条同宽 354/右缘 372、内容列 250",
+   "pass": true,
+   "detail": "页边 [(18, 18)] 差 [0]；卡/热门条宽差 [0] 右缘差 [0] 边框同源 [True]；390 卡宽 [354]；内容列 [220, 250]"
+  },
+  {
+   "no": "R2",
+   "prio": "B0",
+   "title": "星标右留白 10±2、中心偏差 ≤1、无 hover 灰底",
+   "pass": true,
+   "detail": "右留白 9–10px；中心最大偏差 0.01px；未收藏底色 ['rgba(0, 0, 0, 0)']"
+  },
+  {
+   "no": "R3",
+   "prio": "B0",
+   "title": "盾形居中 ≥55%、白底/#272729、1px 描边、8px 圆角、favicon 16px 可辨",
+   "pass": true,
+   "detail": "圆角 ['8px']、底色 ['rgb(255, 255, 255)', 'rgb(39, 39, 41)']；盾形 见 shield；favicon 16/32/svg {'svg': True, 'icon16': True, 'icon32': True}"
+  },
+  {
+   "no": "R4",
+   "prio": "B0",
+   "title": "行高 75±3、无 0px 轨道、无横滚、两处计数一致",
+   "pass": true,
+   "detail": "手机列表行高 [(72, 75)]；0px 轨道 0；横滚 False；16 态计数不一致合计 0"
+  }
+ ]
+}
