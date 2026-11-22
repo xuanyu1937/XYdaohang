@@ -1,0 +1,80 @@
+{
+ "version": "2.18.26",
+ "base": "http://dh.pxyblog.top",
+ "preview": false,
+ "score": 100,
+ "pass": 10,
+ "total": 10,
+ "items": [
+  {
+   "no": "N1",
+   "prio": "C3",
+   "title": "回顶静止淡显 .35 + 滚一屏实心 + 矩形 44×44 位置不变",
+   "pass": true,
+   "detail": "静止 opacity 集合 [0.35]（目标 .30-.40）、visibility ['visible']、pointer-events ['none']、背景 ['rgba(0, 0, 0, 0)']；滚动四态 opacity 序列集合 [(0.35, 0.35, 1, 1)]（0/1屏=.35、1.2/2屏=1、单调不减，背景透明→实色、pointer none→auto，矩形恒定=True）；390 回顶 x276/right320/w44/h44、360 x246/right290/w44/h44=True；样例 390 light list scroll4=[(0, 0.35, 'rgba(0, 0, 0, 0)', 'none', 276, 44), (830, 0.35, 'rgba(0, 0, 0, 0)', 'none', 276, 44), (1013, 1, 'rgb(255, 255, 255)', 'auto', 276, 44), (1685, 1, 'rgb(255, 255, 255)', 'auto', 276, 44)]"
+  },
+  {
+   "no": "N2",
+   "prio": "C3",
+   "title": "chip 收紧：前 3 枚右缘命中、chip3 计数≤242、chip4 探入渐隐带、chip gap 6",
+   "pass": true,
+   "detail": "前 3 枚 x/right 误差最大 1.8000000000000114px（≤2）；390 实测 [('全部', 18, 83.9), ('我的收藏', 89.9, 181.8), ('小智', 187.8, 246.2), ('AI', 252.2, 306.1)]；chip3 计数右缘集合 [236.2]（≤242）、chip3 right [246.2] ≤ 渐隐起点 [248]；chip4 左缘 [252.2]（落在 248–268 渐隐带）；chip 间距 [6.0]px（目标 6）"
+  },
+  {
+   "no": "N3",
+   "prio": "C3",
+   "title": "热门条内容右缘收口 + 渐隐 32px（起点≈327）",
+   "pass": true,
+   "detail": "strip 右缘 [342, 372]；list 内容右缘 390=[359]、360=[329]（strip 内边距 12）；渐隐宽度 [32]px（目标 32）、起点=listRight-32（390≈327）；item2 DOM 右缘超出容器被 overflow 裁切，视觉由 listRight+渐隐收口，不触 strip 边框；mask 含 32px=True；样例 linear-gradient(to right, rgb(0, 0, 0) 0px, rgb(0, 0, 0) calc(100% - 32px), rgba(0, 0, 0, 0) 100%)"
+  },
+  {
+   "no": "N4",
+   "prio": "C3",
+   "title": "吸顶条不透明（α≥.94）+ blur16 saturate180 + 明暗 1px 分隔线",
+   "pass": true,
+   "detail": "背景 alpha 集合 [0.96]（≥.94；实测 color-mix 96%）；backdrop 集合 ['blur(16px) saturate(1.8)']（blur16px saturate1.8）；亮色分隔线 ['rgba(0, 0, 0, 0.1) 0px -1px 0px 0px inset']；暗色分隔线 ['rgba(255, 255, 255, 0.14) 0px -1px 0px 0px inset']"
+  },
+  {
+   "no": "N5",
+   "prio": "C3",
+   "title": "模式按钮固定 2×2 方块、页面三横图标 = 1",
+   "pass": true,
+   "detail": "#mobileModeCycle grid/list/compact display 集合 (['block']/['none']/['none'])（目标 block/none/none）；可见三横 svg 数集合 [1]（=1，仅分类索引 ☰；mode 按钮三横图标已 display:none）"
+  },
+  {
+   "no": "R1",
+   "prio": "B0",
+   "title": "回归：页边 18/18、分组卡与热门条同宽 354/右缘 372、卡宽 352",
+   "pass": true,
+   "detail": "页边 [(18, 18)]；分组/热门条宽差 [0]、右缘差 [0]、边框同源 [True]；390 卡宽 [354]"
+  },
+  {
+   "no": "R2",
+   "prio": "B0",
+   "title": "回归：星标右留白 10±2、中心偏差≤1、无灰底",
+   "pass": true,
+   "detail": "右留白 9–10px（目标 8–12）；中心最大偏差 0.01px；未收藏底色 ['rgba(0, 0, 0, 0)']"
+  },
+  {
+   "no": "R3",
+   "prio": "B0",
+   "title": "回归：桌面 1440 移动条隐藏、group/hot 同宽 988、无横滚",
+   "pass": true,
+   "detail": "1440 分组宽 [988]、热门条宽 [988]（目标 988）；无横向滚动 True；注：.mobile-cats 在 >640 由历史规则 display:none，本轮 CSS 仅 ≤640/480 生效，桌面不受影响"
+  },
+  {
+   "no": "R4",
+   "prio": "B0",
+   "title": "回归：行高 75±3、无 0px 轨道、计数一致、favicon 可辨",
+   "pass": true,
+   "detail": "行高 [(72, 75)]；0px 轨道 0；计数不一致合计 0；favicon {'svg': True, 'icon16': True, 'icon32': True}"
+  },
+  {
+   "no": "R5",
+   "prio": "B0",
+   "title": "回归：三段式三块 gap 8/8、chip×按钮零相交、滑到最右末项完整且渐隐取消",
+   "pass": true,
+   "detail": "三块 gap 集合 [(8, 8)]（8/8）；chip×按钮相交 [0]；滑到最右末项距轨道右缘 [20.2]px；at-end 渐隐取消 True"
+  }
+ ]
+}
