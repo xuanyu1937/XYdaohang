@@ -9643,3 +9643,65 @@ html .hot-strip.at-end .hot-list {
   -webkit-mask-image: none !important;
           mask-image: none !important;
 }
+
+/* ==========================================================================
+   v2.18.26 · 细节收口（5 项，全部只在 ≤640 / ≤480 生效，桌面不动）
+   不重排布局、不改宽度基准：沿用 v2.18.25 三段式（轨道 250 + 回顶 44 + 索引 44，gap 8）。
+   只修 5 处观感缺陷，全部 !important 覆盖，不删改 v2.18.17–v2.18.25 历史区块。
+   ========================================================================== */
+@media (max-width: 640px) {
+  /* 1) 回顶：静止态淡显禁用态（淡箭头），滚过一屏恢复实心；24×7 空档只留 gap 8 */
+  html .mobile-cats .mobile-to-top {
+    opacity: .35 !important;
+    visibility: visible !important;
+    pointer-events: none !important;
+    background: transparent !important;
+    border-color: transparent !important;
+  }
+  html .mobile-cats .mobile-to-top.is-visible {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+  }
+
+  /* 2) chip 收紧：padding 12→9、轨道 gap 8→6，
+        前 3 枚文字与计数全部落在渐隐起点 248 之前，第 4 枚探进渐隐带约 14px */
+  html .mobile-cats .mcat {
+    padding: 0 9px !important;
+    font-size: 13px !important;
+  }
+  html .mobile-cats > .mobile-cats-track {
+    column-gap: 6px !important;
+  }
+
+  /* 3) 热门条收尾：内容右缘收到 359（条带内边距 12），渐隐加宽到 32px，
+        文字在边框前 13px 就淡出 */
+  html .hot-strip {
+    padding-right: 12px !important;
+  }
+  html .hot-list.is-scrollable:not(.at-end) {
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 32px), transparent 100%) !important;
+            mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 32px), transparent 100%) !important;
+  }
+
+  /* 4) 吸顶条：不透明 + 底部发丝分隔线，滚动后 chip 背后无文字残影 */
+  html .mobile-cats {
+    background: var(--surface) !important;
+    background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+            backdrop-filter: blur(16px) saturate(180%) !important;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .10) !important;
+  }
+  html[data-theme="dark"] .mobile-cats {
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .14) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 5) 模式按钮固定「布局」2×2 方块，不再随模式换字形；
+        一屏内只有分类索引 ☰ 一枚汉堡（列表态 mode list 图标被隐藏） */
+  html #mobileModeCycle .mode-icon-mode-grid { display: block !important; }
+  html #mobileModeCycle .mode-icon-mode-list,
+  html #mobileModeCycle .mode-icon-mode-compact { display: none !important; }
+}
