@@ -9558,3 +9558,88 @@ html .hot-list.is-scrollable:not(.at-end) {
     -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 32px), transparent 100%) !important;
     mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 32px), transparent 100%) !important;
 }
+
+/* ==========================================================================
+   v2.18.25 · 分类条两段式（44/44）+ 单一分类入口 + 热门条收尾
+   只改表现层：全部规则 !important 覆盖历史区块，不删改 v2.18.17–v2.18.24。
+   注：rail-open 用 button 限定——正文里 body 也会被加上 .rail-open 类（抽屉展开态），
+   若按原样写 html .rail-open 会把整个页面隐藏；这里只 hide 顶栏那枚按钮。
+   ========================================================================== */
+@media (max-width: 640px) {
+  /* 1) 顶栏 ☰ 让位：全站只保留分类条右侧这一个分类入口 */
+  html button.rail-open { display: none !important; }
+
+  /* 2) 分类条：两段式，轨道 flex:1，按钮固定 44 */
+  html .mobile-cats {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 6px 0 !important;
+    height: auto !important;
+    min-height: 56px !important;
+    overflow: visible !important;
+  }
+  html .mobile-cats > .mobile-cats-track {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
+    padding: 0 12px 0 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 20px), transparent 100%);
+            mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 20px), transparent 100%);
+    -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+  }
+  html .mobile-cats > .mobile-cats-track.at-end {
+    -webkit-mask-image: none !important;
+            mask-image: none !important;
+  }
+
+  /* 3) 两个按钮统一 44×44，视觉与热区同尺寸 */
+  html .mobile-cats > .mobile-quick,
+  html .mobile-cats > .mobile-cats-more {
+    flex: 0 0 44px !important;
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 8px !important;
+    display: grid !important;
+    place-items: center !important;
+    padding: 0 !important;
+  }
+  html .mobile-cats > .mobile-quick svg,
+  html .mobile-cats > .mobile-cats-more svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  /* 回顶仍用透明度切换，始终占位，避免轨道宽度跳动 */
+  html .mobile-cats .mobile-to-top {
+    opacity: 0; visibility: hidden; pointer-events: none;
+  }
+  html .mobile-cats .mobile-to-top.is-visible {
+    opacity: 1; visibility: visible; pointer-events: auto;
+  }
+
+  /* 4) chip 收紧：250px 轨道内完整显示 3 个分类 */
+  html .mobile-cats .mcat {
+    padding: 0 12px !important;
+    font-size: 13px !important;
+    border-radius: 999px !important;
+  }
+  html .mobile-cats > .mobile-cats-track { column-gap: 8px !important; }
+
+  /* 5) 热门条：末项留 12px，可滑时 24px 渐隐 */
+  html .hot-list { padding-right: 12px !important; }
+  html .hot-strip.is-scrollable .hot-list,
+  html .hot-list.is-scrollable:not(.at-end) {
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 24px), transparent 100%) !important;
+            mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 24px), transparent 100%) !important;
+  }
+}
+/* at-end 兜底：v2.18.24 的 is-scrollable:not(.at-end) 已处理 list；
+   这里再给 strip/list 双保险，确保滑到底渐隐一定取消。 */
+html .hot-list.at-end,
+html .hot-strip.at-end .hot-list {
+  -webkit-mask-image: none !important;
+          mask-image: none !important;
+}

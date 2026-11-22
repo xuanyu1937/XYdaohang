@@ -74,7 +74,7 @@
 - `upgrade_*.sql` 多为幂等 UPDATE / 索引脚本；`upgrade_v2.18.1.sql` 中的 `ADD COLUMN` 在列已存在时会报 `Duplicate column`，忽略即可
 - 数据库变更版本只有两个：`v2.16.0`（`upgrade_v2.16.0.sql`，两个索引）与 `v2.18.1`（`upgrade_v2.18.1.sql`，`skipped` 枚举 + `skip_check` 列）；**v2.18.2 / v2.18.3 / v2.18.4 / v2.18.5 / v2.18.6 / v2.18.7 / v2.18.8 / v2.18.9 / v2.18.10 / v2.18.11 / v2.18.12 / v2.18.13 / v2.18.14 / v2.18.15 / v2.18.16 / v2.18.17 / v2.18.18 / v2.18.19 / v2.18.21 无任何数据库变更**
 
-### 升级到当前版本 v2.18.21（2026-11-19）
+### 升级到当前版本 v2.18.25（2026-11-22）
 
 | 你的当前版本 | 需要执行的 SQL | 说明 |
 | --- | --- | --- |
@@ -82,7 +82,7 @@
 | v2.18.0 及更早 | `upgrade_v2.18.1.sql` | 先执行 SQL，再覆盖文件 |
 | v2.15.2 及更早 | `upgrade_v2.16.0.sql` + `upgrade_v2.18.1.sql` | 按版本顺序各执行一次 |
 
-> 已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，升到 v2.18.2 ~ v2.18.21 **不需要再执行任何 SQL**。全新安装直接用 `install/install.sql`（v2.18.4 修订已内置 `skip_check` 列与 `skipped` 枚举）。
+> 已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，升到 v2.18.2 ~ v2.18.25 **不需要再执行任何 SQL**。全新安装直接用 `install/install.sql`（v2.18.4 修订已内置 `skip_check` 列与 `skipped` 枚举）。
 
 **v2.18.x 版本序列**（完整清单见 [CHANGELOG.md](CHANGELOG.md) / [UPLOAD_LIST.md](UPLOAD_LIST.md)）：
 
