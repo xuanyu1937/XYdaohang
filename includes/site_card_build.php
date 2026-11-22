@@ -9,57 +9,197 @@
 /**
  * v2.18.24 · 问题5：字标型站标在 24px 下只剩噪点。
  *
- * 判定对象只限「本地缓存图标」（uploads/icons/，服务端可读），不改数据源。
- * 命中后模板打 data-wordmark="1"，CSS 用高斯模糊把笔画并成色块，
- * 轮廓与主色仍在，但不会再出现"读不出来又很像字"的噪点。
+ * 两条措施：
+ *   ① 渲染层（对所有图标生效）：≤960px 时统一加 0.35px 亚像素模糊。
+ *      24px 下小字只有 1px 宽的笔画，一道亚像素模糊就把它抹成色块，
+ *      但图形标（猫头、字母块、山形）的轮廓只掉一点点锐度，观感反而更整。
+ *      这一层不需要认识图标，所以不会误伤、也不会漏。
+ *   ② 判定层（只对本地缓存图标）：命中后模板输出 class="...is-wordmark"，
+ *      CSS 再叠 1.6px 高斯模糊，把成串小字彻底糊平。
  *
- * 证据（两段判定，先看有没有字，再看字多不多）：
- *   ① 二值化后按每行的「明暗翻转次数」看细碎程度：文字行内笔画频繁切换，
- *      平均翻转 ≥ 5 次；纯色底 + 单个大字母（K、C）只有 1–2 次；
- *   ② 平均笔画段宽 ≤ 3.3px 且「含 ≥2 段的行」占一半以上：
- *      文字由大量窄笔画并排组成；星芒、单字、折线这类单笔图形宽 4–7px。
- *   ③ 墨水量 60–700px：太少的（小圆点）与太多的（满幅色块）都不是字标。
+ * 判定只看像素，不看站点名。三段证据同时成立才算字标：
+ *   ① 每行平均明暗翻转 ≥ 5.0：一行小字里笔画频繁进出；
+ *   ② 平均笔画段宽 ≤ 3.0px、且「含 ≥2 段的行」占七成以上：小字由大量窄笔画并排；
+ *   ③ 墨水量 60–620px：太少（小圆点）或太多（满幅色块）都不算。
+ * 门槛比初版（3.5 / 3.6 / 0.5）紧得多——初版会把机器人插画、单个大字母
+ * 一起判进来，24px 下把它们糊成一团比不糊更难看。
  *
- * 已知判定结果（本地 32 个缓存图标实测）：
- *   Claude 星芒字标、深底字母串（AstrBot 一类）→ 命中；
- *   React 原子、Kimi 的 K、知乎「知」字块、PHP 圆角块、淘宝「淘」→ 不命中。
- * 结果按「文件大小 + mtime」缓存，同一请求内重复卡片零开销。
+ * 判定对象限定为「本地缓存图标」（uploads/icons/，服务端可读）：
+ * 外链图标要判定就得在渲染时联网抓图，实测服务器出口对第三方图标域名
+ * 成功率不到一半，冷缓存一次首屏要赔上几秒，不值当——这类图标交给①的
+ * 统一软化即可。结果按「文件大小 + mtime」记，同一请求内重复卡片零开销。
  */
-if (!function_exists('navIsWordmarkIcon')) {
-    function navIsWordmarkIcon($url)
+if (!function_exists('navWordmarkDecodeImage')) {
+    /**
+     * 把一段图片字节解成 GD 资源。
+     *
+     * GD 的 imagecreatefromstring 只认 PNG 封装的 ICO，而站标里大量是
+     * 「多帧 BMP」的老式 ICO（16/32/48/64 多尺寸叠在一个文件里），直接读会失败。
+     * 这里补一层 ICO 解析：取面积最大的帧，PNG 帧交给 GD，
+     * BMP 帧按 32/24/8/4/1bpp 手工铺像素，并用 AND 掩码还原透明。
+     */
+    function navWordmarkDecodeImage($raw)
     {
-        static $cache = [];
+        $img = @imagecreatefromstring($raw);
 
-        $url = (string) $url;
+        if ($img) {
+            return $img;
+        }
 
-        if ($url === '') {
+        if (!is_string($raw) || strlen($raw) < 22) {
             return false;
         }
 
-        $pathPart = (string) parse_url($url, PHP_URL_PATH);
-        $pos = strpos($pathPart, 'uploads/icons/');
+        $hdr = unpack('vres/vtype/vcount', substr($raw, 0, 6));
 
-        if ($pos === false) {
+        if ((int) $hdr['res'] !== 0 || (int) $hdr['type'] !== 1 || (int) $hdr['count'] < 1) {
             return false;
         }
 
-        $abs = __DIR__ . '/../' . ltrim(substr($pathPart, $pos), '/');
+        $best = null;
+        $bestArea = 0;
 
-        if (!is_file($abs) || !function_exists('imagecreatetruecolor')) {
+        for ($i = 0; $i < (int) $hdr['count']; $i++) {
+            $o = 6 + $i * 16;
+
+            if (strlen($raw) < $o + 16) {
+                break;
+            }
+
+            $e = unpack('Cw/Ch/Ccolors/Cres/vplanes/vbits/Vsize/Voffset', substr($raw, $o, 16));
+            $ew = (int) $e['w'] === 0 ? 256 : (int) $e['w'];
+            $eh = (int) $e['h'] === 0 ? 256 : (int) $e['h'];
+
+            if ((int) $e['size'] < 8 || (int) $e['offset'] + (int) $e['size'] > strlen($raw)) {
+                continue;
+            }
+
+            if ($ew * $eh > $bestArea) {
+                $bestArea = $ew * $eh;
+                $best = ['w' => $ew, 'h' => $eh, 'bits' => (int) $e['bits'],
+                         'size' => (int) $e['size'], 'offset' => (int) $e['offset']];
+            }
+        }
+
+        if ($best === null) {
             return false;
         }
 
-        $stamp = (string) @filesize($abs) . '-' . (string) @filemtime($abs);
+        $frame = substr($raw, $best['offset'], $best['size']);
+        $png = @imagecreatefromstring($frame);
 
-        if (isset($cache[$abs]) && $cache[$abs]['stamp'] === $stamp) {
-            return $cache[$abs]['is'];
+        if ($png) {
+            return $png;
+        }
+
+        return navWordmarkDecodeIcoBmp($frame, $best['w'], $best['h'], $best['bits']);
+    }
+}
+
+if (!function_exists('navWordmarkDecodeIcoBmp')) {
+    /** ICO 里的 BMP 帧：像素从下往上存，颜色表 BGRX，尾部跟 1bpp 的 AND 掩码。 */
+    function navWordmarkDecodeIcoBmp($data, $w, $h, $bits)
+    {
+        if (!in_array($bits, [32, 24, 8, 4, 1], true) || strlen($data) < 40) {
+            return false;
+        }
+
+        $bi = unpack('Vsize/Vw/Vh/vplanes/vbits/Vcomp/VimgSize/Vxppm/Vyppm/VclrUsed/VclrImportant',
+            substr($data, 0, 40));
+
+        if ((int) $bi['comp'] !== 0) {
+            return false;
+        }
+
+        $bottomUp = (int) $bi['h'] > 0;
+        $paletteCount = (int) $bi['clrUsed'] > 0 ? (int) $bi['clrUsed']
+            : ($bits <= 8 ? (1 << $bits) : 0);
+
+        $offset = 40 + $paletteCount * 4;
+        $palette = [];
+
+        for ($i = 0; $i < $paletteCount; $i++) {
+            $p = 40 + $i * 4;
+
+            if ($p + 3 > strlen($data)) {
+                break;
+            }
+
+            $palette[$i] = [ord($data[$p + 2]), ord($data[$p + 1]), ord($data[$p])];
+        }
+
+        $bytesPerRow = (int) (ceil($w * $bits / 32) * 4);
+        $maskStride = (int) (ceil($w / 32) * 4);
+        $maskOffset = $offset + $bytesPerRow * $h;
+        $maskAvail = strlen($data) >= $maskOffset + $maskStride * $h;
+
+        $img = imagecreatetruecolor($w, $h);
+        imagealphablending($img, false);
+        imagesavealpha($img, true);
+        imagefill($img, 0, 0, imagecolorallocatealpha($img, 255, 255, 255, 127));
+
+        for ($y = 0; $y < $h; $y++) {
+            $srcRow = $bottomUp ? ($h - 1 - $y) : $y;
+            $row = $offset + $srcRow * $bytesPerRow;
+
+            if ($row + $bytesPerRow > strlen($data)) {
+                break;
+            }
+
+            for ($x = 0; $x < $w; $x++) {
+                $a = 255;
+
+                if ($bits === 32) {
+                    $p = $row + $x * 4;
+                    $b = ord($data[$p]);
+                    $g = ord($data[$p + 1]);
+                    $r = ord($data[$p + 2]);
+                    $a = ord($data[$p + 3]);
+                } elseif ($bits === 24) {
+                    $p = $row + $x * 3;
+                    $b = ord($data[$p]);
+                    $g = ord($data[$p + 1]);
+                    $r = ord($data[$p + 2]);
+                } elseif ($bits === 8) {
+                    [$r, $g, $b] = $palette[ord($data[$row + $x])] ?? [0, 0, 0];
+                } elseif ($bits === 4) {
+                    $byte = ord($data[$row + (int) ($x / 2)]);
+                    [$r, $g, $b] = $palette[($x % 2 === 0) ? ($byte >> 4) : ($byte & 0x0F)] ?? [0, 0, 0];
+                } else {
+                    $byte = ord($data[$row + (int) ($x / 8)]);
+                    [$r, $g, $b] = $palette[($byte >> (7 - ($x % 8))) & 1] ?? [0, 0, 0];
+                }
+
+                /* AND 掩码为 1 表示全透明：32bpp 的 alpha 常被厂商填 0，靠掩码兜底 */
+                if ($maskAvail) {
+                    $mByte = ord($data[$maskOffset + $srcRow * $maskStride + (int) ($x / 8)]);
+
+                    if ((($mByte >> (7 - ($x % 8))) & 1) === 1) {
+                        $a = 0;
+                    }
+                }
+
+                $alpha = 127 - (int) round($a / 255 * 127);
+                imagesetpixel($img, $x, $y, imagecolorallocatealpha($img, $r, $g, $b, $alpha));
+            }
+        }
+
+        return $img;
+    }
+}
+
+if (!function_exists('navWordmarkAnalyze')) {
+    /** 只做像素判定：给一段图片字节，返回是否「字标型」。 */
+    function navWordmarkAnalyze($raw)
+    {
+        if (!is_string($raw) || $raw === '' || !function_exists('imagecreatetruecolor')) {
+            return false;
         }
 
         $is = false;
 
         try {
-            $raw = @file_get_contents($abs, false, null, 0, 2 * 1024 * 1024);
-            $img = $raw !== false && $raw !== '' ? @imagecreatefromstring($raw) : false;
+            $img = navWordmarkDecodeImage($raw);
 
             if ($img) {
                 $size = 32;
@@ -82,7 +222,7 @@ if (!function_exists('navIsWordmarkIcon')) {
                         $v = 0.299 * (($rgb >> 16) & 0xFF)
                             + 0.587 * (($rgb >> 8) & 0xFF)
                             + 0.114 * ($rgb & 0xFF);
-                        /* 半透明像素按白底合成：透明底不会变成"深墨" */
+                        /* 半透明像素按白底合成：透明底不会变成「深墨」 */
                         $v = $v * (1 - $a) + 255 * $a;
                         $lum[$y][$x] = $v;
                         $sum += $v;
@@ -132,8 +272,8 @@ if (!function_exists('navIsWordmarkIcon')) {
                     }
                 }
 
-                /* 是否"多行并排的窄笔画"：文字每行至少有 2 段、段宽窄；
-                   单笔图形标（星芒、单字母）每行 1 段或段宽很粗。 */
+                /* 是否「多行并排的窄笔画」：小字每行至少 2 段且段宽很窄；
+                   单笔图形标（星芒、单字母、插画）每行 1 段或段宽很粗。 */
                 $narrowRuns = 0;
                 $narrowWidth = 0;
 
@@ -156,17 +296,12 @@ if (!function_exists('navIsWordmarkIcon')) {
                 }
 
                 if ($runs >= 12) {
-                    $avgWidth = $runWidth / $runs;
                     $narrowAvg = $narrowRuns > 0 ? $narrowWidth / $narrowRuns : 99;
                     $lineFlip = $flips / $size;
 
-                    /* 三段证据：细碎（每行翻转多）+ 并排（多段行占一半以上）+
-                       窄笔画（平均段宽 ≤ 3.6）。本地实测：deep 底字母串 lineFlip 3.9、
-                       bilibili 字标 4.4、Claude 星芒字标 5.2 全部命中；React 原子 2.2、
-                       淘宝「淘」1.3、知乎「知」1.3 落在门槛外。 */
-                    $is = $lineFlip >= 3.5
-                        && $narrowAvg <= 3.6
-                        && ($rowsWithTwo / $size) >= 0.5
+                    $is = $lineFlip >= 5.0
+                        && $narrowAvg <= 3.0
+                        && ($rowsWithTwo / $size) >= 0.75
                         && $inkPixels >= 60
                         && $inkPixels <= 620;
                 }
@@ -175,6 +310,42 @@ if (!function_exists('navIsWordmarkIcon')) {
             $is = false;
         }
 
+        return $is;
+    }
+}
+
+if (!function_exists('navIsWordmarkIcon')) {
+    function navIsWordmarkIcon($url)
+    {
+        static $cache = [];
+
+        $url = (string) $url;
+
+        if ($url === '' || !function_exists('imagecreatetruecolor')) {
+            return false;
+        }
+
+        $pathPart = (string) parse_url($url, PHP_URL_PATH);
+        $pos = strpos($pathPart, 'uploads/icons/');
+
+        if ($pos === false) {
+            return false;
+        }
+
+        $abs = __DIR__ . '/../' . ltrim(substr($pathPart, $pos), '/');
+
+        if (!is_file($abs)) {
+            return false;
+        }
+
+        $stamp = (string) @filesize($abs) . '-' . (string) @filemtime($abs);
+
+        if (isset($cache[$abs]) && $cache[$abs]['stamp'] === $stamp) {
+            return $cache[$abs]['is'];
+        }
+
+        $raw = @file_get_contents($abs, false, null, 0, 2 * 1024 * 1024);
+        $is = navWordmarkAnalyze($raw);
         $cache[$abs] = ['stamp' => $stamp, 'is' => $is];
 
         return $is;
@@ -284,7 +455,7 @@ function navBuildCard(array $row, Functions $functions)
         $row['fallback_fg'] = $fallbackPair[1];
         /* v2.18.24 · 问题5：字标型图标在 24px 下不可辨，模板据此收小到 20px。
            只看本地缓存图标（首项即 uploads/icons 的才可能命中）。 */
-        $row['icon_is_wordmark'] = navIsWordmarkIcon((string) ($chain[0] ?? ''));
+        $row['icon_is_wordmark'] = navIsWordmarkIcon($chain);
 
         $row['favicon_chain'] = $chain;
         $row['click_count'] = max(0, (int) ($row['clicks'] ?? 0));

@@ -9494,17 +9494,29 @@ html .hot-swipe-hint.is-scrollable {
 html .hot-swipe-hint.at-end,
 html .hot-strip.at-end > .hot-swipe-hint { display: none !important; }
 
-/* ---- 问题5：站标明度归一 + 字标型图标缩小到图形区 ---- */
-/* 全部图标：明度压到同一区间（白底徽标不再比深色图标亮一个档） */
+/* ---- 问题5：站标明度归一 + 24px 下的小字降噪 ---- */
+/* 全部图标：明度压到同一区间（白底徽标不再比深色图标亮一个档）。
+   ≤960px 时图标只有 24px，小字笔画仅 1px 宽，任何双线性缩小都会把
+   它们切成锯齿噪点；统一加 0.35px 亚像素模糊，笔画被抹成色块，
+   图形标（猫头、字母块、山形）只掉一点锐度，观感反而更整。
+   这一层不依赖任何识别，所以既不误伤也不会漏。 */
 html .site-icon .site-favicon {
     filter: contrast(1.06) saturate(1.02) brightness(0.97) !important;
 }
 html[data-theme="dark"] .site-icon .site-favicon {
     filter: contrast(1.02) saturate(1.0) brightness(1.08) !important;
 }
-/* 字标型图标（服务端像素判定：带文字的徽标）：
-   24px 里文字笔画只有 1–1.5px 宽，1.6px 高斯模糊即可把字形糊掉，
-   同时保留主色与大致轮廓 —— 不再是"读不出来又很像字"的噪点，
+@media (max-width: 960px) {
+    html .site-icon .site-favicon {
+        filter: blur(0.35px) contrast(1.06) saturate(1.02) brightness(0.97) !important;
+    }
+    html[data-theme="dark"] .site-icon .site-favicon {
+        filter: blur(0.35px) contrast(1.02) saturate(1.0) brightness(1.08) !important;
+    }
+}
+/* 字标型图标（服务端像素判定：整张图就是一行小字）：
+   在 0.35px 之上再叠 1.6px 高斯模糊，把字形彻底糊平，
+   同时保留主色与大致轮廓 —— 不再是「读不出来又很像字」的噪点，
    也不会像 2.4px 那样糊成一团。尺寸与普通图标一致（24px），
    保证同列表内占位与可见面积同区间。
    注意：filter 必须写在“双类”选择器上——单类规则里若已有 filter，
