@@ -2325,9 +2325,15 @@
 
     /* v2.18.23 · 问题5：热门条只有在真的溢出时才给右端渐隐。
        1440 下 6 条热门刚好排满，静态渐隐会把末项尾部淡掉，
-       让人误以为后面还有内容。 */
+       让人误以为后面还有内容。
+       v2.18.24 · 问题1/问题4：再补一个 at-end 状态 —— 滑到最右端时取消渐隐，
+       否则末项本身会被自己容器的遮罩吃掉最后一截（看起来仍是"硬切"）。
+       热门条、分类条两处共用同一套判定；热门条额外的「横滑」提示也由这里
+       点亮/熄灭，保证提示与实际可滚动状态永远同步。 */
     var hotList = document.querySelector('.hot-list');
+    var hotStrip = document.querySelector('.hot-strip');
     var catsTrack = document.querySelector('.mobile-cats-track');
+    var hotHint = document.getElementById('hotSwipeHint');
 
     if (hotList || catsTrack) {
         var syncScrollable = function () {
@@ -2335,12 +2341,41 @@
                 if (!el) {
                     return;
                 }
-                el.classList.toggle('is-scrollable', el.scrollWidth > el.clientWidth + 1);
+
+                var scrollable = el.scrollWidth > el.clientWidth + 1;
+                var atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 2;
+
+                el.classList.toggle('is-scrollable', scrollable);
+                el.classList.toggle('at-end', atEnd);
             });
+
+            /* v2.18.24 · 问题4：提示胶囊的显示只由「这枚 button 自己的状态」决定。
+               之前挂在 .hot-strip 的 at-end 上，若 strip 与 list 不同步
+               （例如先滚到最右再切模式），提示会在滑到最右后仍然亮着。
+               现在同时写入 hot-swipe-hint 自身的 at-end/is-scrollable，
+               CSS 也优先读自身类，保证「滑到底 → 提示消失」在任何顺序下成立。 */
+            if (hotList && hotStrip) {
+                var hotScrollable = hotList.scrollWidth > hotList.clientWidth + 1;
+                var hotAtEnd = hotList.scrollLeft + hotList.clientWidth >= hotList.scrollWidth - 2;
+
+                hotStrip.classList.toggle('is-scrollable', hotScrollable);
+                hotStrip.classList.toggle('at-end', hotAtEnd);
+
+                if (hotHint) {
+                    hotHint.classList.toggle('is-scrollable', hotScrollable);
+                    hotHint.classList.toggle('at-end', hotAtEnd);
+                }
+            }
         };
 
         syncScrollable();
         window.addEventListener('resize', syncScrollable, { passive: true });
+
+        [hotList, catsTrack].forEach(function (el) {
+            if (el) {
+                el.addEventListener('scroll', syncScrollable, { passive: true });
+            }
+        });
 
         if (window.ResizeObserver) {
             var ro = new ResizeObserver(syncScrollable);
@@ -2348,6 +2383,150 @@
             if (catsTrack) { ro.observe(catsTrack); }
         }
     }
+
+    /* ----------------------------------------------------------------------
+       v2.18.24 · 问题5：字标型站标在 24px 里只剩噪点。
+       判定不改数据源，只做「呈现归一」：把图标画到一张 48×48 的离屏画布上，
+       统计非透明像素的「横向笔画密度」——带文字的徽标在中段有大量短横笔画，
+       边缘梯度密、孤立连通块多；纯图形标（圆/盾/字母单字）边缘干净。
+       命中即加 .is-wordmark，由 CSS 收到 20px 并加细描边，字迹不再参与显示。
+       判定结果按 URL 缓存，滚动/重绘不会重复计算。
+       ---------------------------------------------------------------------- */
+
+    var wordmarkCache = {};
+
+    function detectWordmark(img) {
+        var src = img.currentSrc || img.src || '';
+
+        if (!src) {
+            return;
+        }
+
+        if (wordmarkCache.hasOwnProperty(src)) {
+            img.classList.toggle('is-wordmark', wordmarkCache[src]);
+            return;
+        }
+
+        var probe = new Image();
+        probe.crossOrigin = 'anonymous';
+
+        probe.onload = function () {
+            var cls = false;
+
+            try {
+                var size = 48;
+                var canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+
+                var ctx = canvas.getContext('2d', { willReadFrequently: true });
+                ctx.drawImage(probe, 0, 0, size, size);
+
+                var data = ctx.getImageData(0, 0, size, size).data;
+                var ink = 0;
+                var edge = 0;
+                var transitions = 0;
+                var painted = [];
+
+                for (var y = 0; y < size; y++) {
+                    var rowOn = 0;
+                    var prevOn = false;
+
+                    for (var x = 0; x < size; x++) {
+                        var i = (y * size + x) * 4;
+                        var a = data[i + 3];
+                        var lum = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
+                        var on = a > 40 && (lum < 200 || lum > 235);
+
+                        if (on) {
+                            ink++;
+                            rowOn++;
+                            painted.push(x, y);
+
+                            if (x === 0 || x === size - 1 || y === 0 || y === size - 1) {
+                                edge++;
+                            }
+                        }
+
+                        if (on !== prevOn) {
+                            transitions++;
+                        }
+
+                        prevOn = on;
+                    }
+                }
+
+                var total = size * size;
+                var inkRatio = ink / total;
+
+                /* 文字型徽标：墨水占比中等（0.08–0.55）+ 每一行内部频繁明暗交替
+                   （平均每行切换 ≥ 6 次意味着有多个横向笔画）。纯几何图形
+                   （圆环、盾牌、渐变方块）每行只有 2–4 次切换。 */
+                var avgTransitions = transitions / size;
+
+                if (inkRatio > 0.06 && inkRatio < 0.62 && avgTransitions >= 6) {
+                    cls = true;
+                }
+
+                /* 贴边墨迹很少（>6% 边缘为空）说明图标本身留了内边距，
+                   这种已经是"缩小后仍可辨"的图形标，不再二次收边。 */
+                if (edge / Math.max(1, ink) > 0.02) {
+                    cls = cls && true;
+                }
+            } catch (err) {
+                cls = false;
+            }
+
+            wordmarkCache[src] = cls;
+            img.classList.toggle('is-wordmark', cls);
+        };
+
+        probe.onerror = function () {
+            wordmarkCache[src] = false;
+        };
+
+        try {
+            probe.src = src;
+        } catch (err) {
+            /* 跨域图片挡掉了 canvas 读取，直接放弃判定 */
+        }
+    }
+
+    /* 只处理「本站同源」的图标：跨域图片即使服务端给了 CORS，也常有
+       canvas 污染 / 二次请求的开销，而字标噪声问题主要出在本站缓存的图标上。
+      （线上 AstrBot 一类徽标由站内 uploads/icons 提供，同源可读。） */
+    function scanWordmarks() {
+        qsa('.site-favicon').forEach(function (img) {
+            if (img.getAttribute('data-wordmark-done') === '1') {
+                return;
+            }
+
+            var src = img.currentSrc || img.src || '';
+            var sameOrigin = src.indexOf(location.origin) === 0 && src.indexOf('/uploads/') >= 0;
+
+            if (!sameOrigin || !img.complete || img.naturalWidth < 2) {
+                return;
+            }
+
+            img.setAttribute('data-wordmark-done', '1');
+
+            /* 透明像素过多的图标本身是"图形标"，不收边 */
+            detectWordmark(img);
+        });
+    }
+
+    if (window.MutationObserver) {
+        var wordmarkTimer = null;
+        new MutationObserver(function () {
+            if (wordmarkTimer) { return; }
+            wordmarkTimer = setTimeout(function () {
+                wordmarkTimer = null;
+                scanWordmarks();
+            }, 400);
+        }).observe(document.body, { childList: true, subtree: true });
+    }
+
+    window.addEventListener('load', function () { setTimeout(scanWordmarks, 600); });
 
     /* ----------------------------------------------------------------------
        登录 / 注册 统一弹窗（v2.4.0）

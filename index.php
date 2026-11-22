@@ -309,7 +309,7 @@ foreach ($categoryRows as $category) {
     ];
 }
 
-/* 左侧分类索引里可能出现两个同名「我的收藏」（一个公共、一个用户自建），
+/* 左侧分类索引里可能出现两个同名「我的收藏」「个人网站」（一个公共、一个用户自建），
    数量不同但名字一样，用户分不清。只给重名的分组追加归属后缀，
    不重名的保持原样，避免所有分类都挂一堆冗余文字。 */
 $railNameCounts = [];
@@ -333,38 +333,38 @@ foreach ($railGroups as $index => $group) {
    之前首页一次性输出两百多张卡片，首屏 HTML 体积大、大部分内容还在屏幕外。 */
 const NAV_FIRST_PAGE = 12;
 
-// 分组卡片区：按分类排序输出，父分类下先放自身链接，再放子分类。
-$sections = [];
-$usedCategoryIds = [];
-
-foreach ($railGroups as $group) {
+/* v2.18.24 · 问题2：分类 chip 与分组标题必须同一个数。
+   旧流程是「先按数据库条数算 chip → 再逐组去重算标题」，chip 读的是
+   $totalCount（含重复条目的原始计数），标题读的是去重后实际渲染条数，
+   于是同一个「个人网站」出现 9 / 8 两个数；「AI 工具」线上 12 / 11、
+   本地 12 / 11，只有「全部」因为走 $visibleSiteTotal 才对得上。
+   现在改为两段式：
+     ① $buildGroup 只负责「按分类抽出卡片 + 跨父子分组同名择优 + 组内同名去重」，
+        得到每组的最终卡片清单，不碰计数；
+     ② 计数统一取 ① 的结果（父级自身去重后的卡片数 + 各子分组去重后的条数），
+        chips、分组标题、分组卡角标、首页「当前视图」全部引用这一个值。 */
+$buildGroup = static function (array $group) use ($links): array {
     $groupCards = [];
 
     foreach ($links as $card) {
-        if ((int) $card['category_id'] === $group['id']) {
+        if ((int) $card['category_id'] === (int) $group['id']) {
             $groupCards[] = $card;
-            $usedCategoryIds[(int) $card['id']] = true;
         }
     }
 
     /* v2.18.22 · 问题5：同名去重必须跨「父分组 + 其全部子分组」生效。
        线上实例：两条「ChatGPT」分属分类 3 与分类 11，但二者同挂在「AI 工具」
-       父分组下，视觉上就是一屏内两个同名行、行内除域名外无区分信息。
-       这里维护父级维度的 $groupSeenNames，子分组命中去重后直接跳过。 */
+       父分组下，视觉上就是一屏内两个同名行、行内除域名外无区分信息。 */
     $children = [];
-    $groupSeenNames = [];
-
-    /* 记录父分组自身每个同名条目所在位置与点击量，供子分组比较择优：
-       若子分组里有同名且点击量更高的条目，就把父分组那条删掉。 */
     $groupNameIndex = [];
 
     foreach ($groupCards as $idx => $card) {
         $key = mb_strtolower(trim((string) $card['display_name']), 'UTF-8');
+
         if ($key === '') {
             continue;
         }
 
-        $groupSeenNames[$key] = true;
         $groupNameIndex[$key] = ['idx' => $idx, 'clicks' => (int) ($card['click_count'] ?? 0)];
     }
 
@@ -372,31 +372,31 @@ foreach ($railGroups as $group) {
         $childCards = [];
 
         foreach ($links as $card) {
-            if ((int) $card['category_id'] === $child['id']) {
-                $usedCategoryIds[(int) $card['id']] = true;
-
-                $key = mb_strtolower(trim((string) $card['display_name']), 'UTF-8');
-                $clicks = (int) ($card['click_count'] ?? 0);
-
-                if ($key !== '' && isset($groupNameIndex[$key])) {
-                    // 同名：保留点击量更高的一条（相等时保留先出现的父分组条目）
-                    $kept = $groupNameIndex[$key];
-
-                    if ($clicks > $kept['clicks']) {
-                        if ($kept['idx'] >= 0) {
-                            $groupCards[$kept['idx']] = null;   // 标记父分组那条待删
-                            $kept['idx'] = -1;
-                        }
-                        $groupNameIndex[$key] = ['idx' => -1, 'clicks' => $clicks];
-                    } else {
-                        continue;
-                    }
-                } elseif ($key !== '') {
-                    $groupNameIndex[$key] = ['idx' => -1, 'clicks' => $clicks];
-                }
-
-                $childCards[] = $card;
+            if ((int) $card['category_id'] !== (int) $child['id']) {
+                continue;
             }
+
+            $key = mb_strtolower(trim((string) $card['display_name']), 'UTF-8');
+            $clicks = (int) ($card['click_count'] ?? 0);
+
+            if ($key !== '' && isset($groupNameIndex[$key])) {
+                // 同名：保留点击量更高的一条（相等时保留先出现的父分组条目）
+                $kept = $groupNameIndex[$key];
+
+                if ($clicks > $kept['clicks']) {
+                    if ($kept['idx'] >= 0) {
+                        $groupCards[$kept['idx']] = null;   // 标记父分组那条待删
+                        $kept['idx'] = -1;
+                    }
+                    $groupNameIndex[$key] = ['idx' => -1, 'clicks' => $clicks];
+                } else {
+                    continue;
+                }
+            } elseif ($key !== '') {
+                $groupNameIndex[$key] = ['idx' => -1, 'clicks' => $clicks];
+            }
+
+            $childCards[] = $card;
         }
 
         if ($childCards) {
@@ -410,12 +410,12 @@ foreach ($railGroups as $group) {
         }
     }
 
-    /* v2.18.22 · 问题5：同分组内同名条目不得并列展示。
-       线上出现两条「xuanyu - 飞牛 fnoS」（nas.pxyblog.top / xuanyunas.fnos.net），
-       行内除域名外无任何区分信息，视觉上像重复收录且误导点击。
-       策略：同一分组内按 display_name 去重，保留点击次数更高的一条；
-       点击次数相同则保留先出现的（排序已按点击数降序，等价于保留更靠前的）。
-       注意只在「同一分组」范围去重——不同分组下同名站点是合法的。 */
+    /* 清理被同名择优淘汰的占位（null），并重建连续索引 */
+    if (in_array(null, $groupCards, true)) {
+        $groupCards = array_values(array_filter($groupCards, static fn($c) => $c !== null));
+    }
+
+    /* v2.18.22 · 问题5：同分组内同名条目不得并列展示（保留点击更高的一条） */
     if ($groupCards) {
         $seenNames = [];
         $dedupedCards = [];
@@ -439,23 +439,43 @@ foreach ($railGroups as $group) {
         $groupCards = $dedupedCards;
     }
 
-    // 清理被同名择优淘汰的占位（null），并重建连续索引
-    if ($groupCards) {
-        $groupCards = array_values(array_filter($groupCards, static fn($c) => $c !== null));
+    $childTotal = array_sum(array_map(static fn($child) => (int) $child['count'], $children));
+
+    return ['cards' => $groupCards, 'children' => $children,
+            'count' => count($groupCards) + $childTotal];
+};
+
+// 分组卡片区：按分类排序输出，父分类下先放自身链接，再放子分类。
+$sections = [];
+$usedCategoryIds = [];
+
+foreach ($railGroups as $group) {
+    $built = $buildGroup($group);
+
+    if (!$built['cards'] && !$built['children']) {
+        continue;
     }
 
-    if (!$groupCards && !$children) {
-        continue;
+    foreach ($built['cards'] as $card) {
+        $usedCategoryIds[(int) $card['id']] = true;
+    }
+
+    foreach ($built['children'] as $child) {
+        foreach ($links as $card) {
+            if ((int) $card['category_id'] === (int) $child['id']) {
+                $usedCategoryIds[(int) $card['id']] = true;
+            }
+        }
     }
 
     $sections[] = [
         'id' => $group['id'],
         'name' => $group['name'],
         // 计数同步去重后的实际条数，避免标题写 9 却只列 8 张
-        'count' => count($groupCards) + array_sum(array_map(static fn($child) => (int) $child['count'], $children)),
-        'total' => count($groupCards),
-        'cards' => array_slice($groupCards, 0, NAV_FIRST_PAGE),
-        'children' => $children,
+        'count' => (int) $built['count'],
+        'total' => count($built['cards']),
+        'cards' => array_slice($built['cards'], 0, NAV_FIRST_PAGE),
+        'children' => $built['children'],
     ];
 }
 
@@ -473,21 +493,37 @@ if ($orphanCards) {
         'id' => 0,
         'name' => '未分类',
         'count' => count($orphanCards),
-        'cards' => $orphanCards,
+        'total' => count($orphanCards),
+        'cards' => array_slice($orphanCards, 0, NAV_FIRST_PAGE),
         'children' => [],
     ];
 }
 
-/* v2.18.23 · 问题4：分类 chips 的「全部」与列表区「当前视图 N 个」必须同源。
-   旧口径下 chips 用 $totalSites（数据库条数），列表用去重后的实际渲染条数，
-   线上 40 / 39、本地 139 / 138 两处对不上，且无任何说明。
-   这里统一改成「去重后实际可见条数」：$sections 的 count 已在 2.18.22 里
-   同步为去重结果（父分组去重 + 跨子分组同名择优 + 未分类兜底），
-   直接求和即得与列表完全一致的数字。 */
+/* v2.18.23 · 问题4 / v2.18.24 · 问题2：分类 chips 的「全部」与列表区
+   「当前视图 N 个」必须同源。这里统一取「去重后实际渲染条数」：
+   $sections 的 count 即为去重结果（父分组去重 + 跨子分组同名择优 + 未分类兜底）之和。 */
 $visibleSiteTotal = 0;
 
 foreach ($sections as $visibleSection) {
     $visibleSiteTotal += (int) $visibleSection['count'];
+}
+
+/* chips 的每个分组计数同样取自 $sections（同一个 $buildGroup 结果），
+   找不到对应 section 的分组说明它被完全去重掉了，chip 直接隐藏，
+   避免出现「chip 有数字、页面里没有这一组」的悬空入口。 */
+$sectionCountById = [];
+
+foreach ($sections as $sectionForCount) {
+    $sectionCountById[(int) $sectionForCount['id']] = (int) $sectionForCount['count'];
+}
+
+$railGroups = array_values(array_filter($railGroups, static function (array $group) use ($sectionCountById): bool {
+    return isset($sectionCountById[(int) $group['id']]);
+}));
+
+foreach ($railGroups as $index => $group) {
+    $group['count'] = $sectionCountById[(int) $group['id']];
+    $railGroups[$index] = $group;
 }
 
 // 热门访问 TopN（仅统计有点击量的站点）。
@@ -726,9 +762,9 @@ $navJsonLd = [
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.23">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.23">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.23">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.24">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.24">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.24">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -740,7 +776,7 @@ $navJsonLd = [
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.23';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.24';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -760,10 +796,10 @@ $navJsonLd = [
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.23" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.18.24" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.23" defer></script>
-    <script src="assets/js/search.js?v=2.18.23" defer></script>
+    <script src="assets/js/nav.js?v=2.18.24" defer></script>
+    <script src="assets/js/search.js?v=2.18.24" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -1145,6 +1181,12 @@ $navJsonLd = [
 
             <main class="site-main" id="siteMain">
                 <!-- 移动端：横向可滑动的分类条，一次点击即可切换分类 -->
+                <!-- v2.18.24 · 问题1/问题6：分类条改为「滚动轨道 + 右侧常驻按钮组」两段式。
+                     v2.18.23 把回顶按钮塞进条内，轨道右缘正好顶到 ＋/☰ 左边，
+                     横滑到头时 chip 被按钮压住；条内还同时存在 ＋（新建分组）与
+                     ☰（分类索引）两枚同语义按钮，加上顶栏 ☰ 与悬浮 ☰ 共四处。
+                     现在：轨道独占剩余宽度并带 8px 右呼吸位，按钮组作为兄弟节点
+                     永远不叠在滚动层上；分类索引只保留这一处 ☰，＋ 收进抽屉底部。 -->
                 <div class="mobile-cats" id="mobileCats" aria-label="网站分类">
                     <div class="mobile-cats-track" id="mobileCatsTrack" role="tablist">
                         <button type="button" class="mcat is-active" role="tab" aria-selected="true"
@@ -1159,17 +1201,8 @@ $navJsonLd = [
                             </button>
                         <?php endforeach; ?>
                     </div>
-                    <?php if ($currentUser): ?>
-                        <!-- v2.12.0：分类 tab 栏上的新建分组入口，未登录访客不显示 -->
-                        <button type="button" class="mobile-cats-add xycq-trigger js-category-create"
-                                aria-label="新建分组" title="新建分组">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                                <path d="M12 5v14M5 12h14"></path>
-                            </svg>
-                        </button>
-                    <?php endif; ?>
                     <!-- v2.18.23 · 问题7：手机端 44px 常驻浮层与 ≥340 宽卡片
-                         物理上放不下（18+354+44+6 > 390），回顶入口收进这条吸顶分类条，
+                         物理上放不下（18+352+44+6 > 390），回顶入口收进这条吸顶分类条，
                          浮层在 ≤640 整体隐藏，与卡片矩形零相交；
                          回顶随吸顶条常驻视口，滚超一屏出现。 -->
                     <button type="button" class="mobile-quick mobile-to-top" id="mobileToTop"
@@ -1178,7 +1211,7 @@ $navJsonLd = [
                             <path d="M12 19V5M6 11l6-6 6 6"></path>
                         </svg>
                     </button>
-                    <button type="button" class="mobile-cats-more" id="mobileCatsMore" aria-label="查看全部分类">
+                    <button type="button" class="mobile-cats-more" id="mobileCatsMore" aria-label="查看全部分类" title="全部分类">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                             <path d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
@@ -1205,6 +1238,13 @@ $navJsonLd = [
                             </svg>
                             热门访问
                         </h2>
+                        <?php /* v2.18.24 · 问题4：热门条可横滑时给一枚静态提示，
+                                 由 JS 在 is-scrollable 时点亮、滑到最右时熄灭。 */ ?>
+                        <span class="hot-swipe-hint" id="hotSwipeHint" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h13M13 6l6 6-6 6"></path>
+                            </svg>横滑
+                        </span>
                         <div class="hot-list">
                             <?php foreach ($hotLinks as $index => $hot): ?>
                                 <a class="hot-item"

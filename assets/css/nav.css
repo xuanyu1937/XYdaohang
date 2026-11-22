@@ -9340,3 +9340,209 @@ html .hot-list {
         width: 100%;
     }
 }
+
+
+/* ==========================================================================
+   v2.18.24 · 分类条按钮压字 / 计数同源 / 星标失衡 / 热门条硬切 / 站标可读 / 菜单重复
+   --------------------------------------------------------------------------
+   问题1 根因：v2.18.23 把回顶按钮塞进 .mobile-cats 后，条内变成
+   「track(flex:1) + 回顶 + 更多」三个子项。回顶按钮 display:none 时就地消失/
+   出现，flex 会重新分配宽度，track 的可用宽度在滚动中途变动；同时 chip 轨道
+   右缘正好顶到 ＋/☰ 的左边，横滑到头时 chip 是"贴着"按钮被切掉的。
+   修法：
+     ① 条内改为「滚动层 track + 右侧常驻按钮组」两段式：轨道单独占满剩余宽度，
+        按钮组独立成块、永远不叠在滚动层上（两者矩形不相交，靠布局而非 z-index）；
+     ② 回顶不再 display:none 参与 flex 计算，固定占位、只改透明度（v2.18.23 的
+        opacity 方案保留），track 宽度全程不变；
+     ③ track 右端留 8px 呼吸位，chip 滑到最右时完整落在可视区内。
+
+   问题3 根因：列表态星标本体是 44×44 命中区，收藏态又给它上
+   rgba(199,119,0,.12) 填充 + 30% 琥珀描边 —— 同列表里一个像色块按钮、
+   其余是裸星形，视觉重量差一个数量级。
+   修法：收藏态**不再上底色/描边**，只用「实心琥珀星 vs 空心灰星」表达状态，
+   两态形状占用（44×44 透明命中区）与底色面积（0）完全一致；琥珀只在星形
+   本体上出现，与主色蓝不冲突，且不再是"大面积色块"。
+
+   问题4 根因：热门条 mask 只在「可滚动」时出现，而 390 下 mask 从 100%-28px
+   开始渐隐，被渐隐吃掉的第 3 项看起来仍像被硬切；同时没有任何"还能滑"的提示。
+   修法：① 渐隐段固定 32px 且在条目之间留 24px 尾距，滑到底时末项完整；
+        ② 在条带右上角加一枚静态「可横向滑动」暗示（两侧渐隐 + 轻微位移提示），
+           只在 is-scrollable 时显示；③ 增加右侧淡出遮罩的对比度。
+
+   问题5 根因：白底带字徽标（AstrBot 的 "astrbot" 字样等）塞进 24px 后
+   字迹变成噪点，且与纯图形标的可视面积、明度都不在一个区间。
+   修法（不改数据源）：24px 下「字标型」图标只保留图形部分 —— 用 CSS 把这类
+   图标统一套进 20px 内圆角方块并加 1px 同色描边，同时用 contrast/brightness
+   归一明度；纯图形标保持 24px。两类图标的最小可视外框都落在 20–24px、
+   明度落在同一区间（见 measure.json 的 iconStats）。
+
+   问题6 根因：同一屏出现三处「菜单/更多」：顶栏 ☰（分类索引）、分类行 ☰ 与 ＋、
+   右下悬浮 ☰。三处语义重叠、图标重复。
+   修法：手机端只保留一处「分类索引」入口（分类行最右侧的 ☰）；顶栏不出现
+   ☰；新建分组 ＋ 收进分类索引抽屉的底部（不再是同屏第三个按钮）。
+   ========================================================================== */
+
+/* ---- 问题1：分类条两段式布局，按钮永不与 chip 相交 ---- */
+@media (max-width: 960px) {
+    html .mobile-cats {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 6px 0 !important;
+        overflow: visible !important;
+    }
+    /* 轨道单独占满剩余宽度：右侧按钮组是兄弟节点，不在滚动层内 */
+    html .mobile-cats > .mobile-cats-track {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        width: auto !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding-right: 8px !important;
+        /* 右端渐隐，提示"还有内容"，但只有 14px，不会把 chip 淡成空圆 */
+        -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 14px), transparent 100%);
+        mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 14px), transparent 100%);
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-size: 100% 100%;
+        mask-size: 100% 100%;
+    }
+    /* 轨道到最右端时不再需要渐隐提示 */
+    html .mobile-cats > .mobile-cats-track.at-end {
+        -webkit-mask-image: none !important;
+        mask-image: none !important;
+    }
+    /* 右侧固定按钮组：独立块，不叠在滚动层上 */
+    html .mobile-cats > .mobile-quick,
+    html .mobile-cats > .mobile-cats-more {
+        flex: 0 0 auto !important;
+        position: static !important;
+        z-index: auto !important;
+        box-shadow: none !important;
+    }
+}
+
+/* ---- 问题3：收藏态只用「实心星」表达，去掉底色与描边 ---- */
+html .site-card[data-starred="1"] .card-star,
+html[data-mode="list"] .site-card[data-starred="1"] .card-star,
+html[data-mode="grid"] .site-card[data-starred="1"] .card-star,
+html[data-mode="compact"] .site-card[data-starred="1"] .card-star {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    color: var(--v224-star-on, #C77700) !important;
+}
+html[data-theme="dark"] .site-card[data-starred="1"] .card-star {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: var(--v224-star-on, #FFB340) !important;
+}
+html .site-card[data-starred="1"] .card-star svg {
+    fill: currentColor !important;
+    stroke: currentColor !important;
+}
+/* 未收藏：空心，颜色与收藏态同为中性灰底稿，仅靠"实心/空心"区分 */
+html .site-card:not([data-starred="1"]) .card-star svg {
+    fill: none !important;
+    stroke: currentColor !important;
+}
+:root { --v224-star-on: #C77700; }
+html[data-theme="dark"] { --v224-star-on: #FFB340; }
+
+/* ---- 问题4：热门条渐隐加深 + 滑到底取消渐隐 ---- */
+html .hot-list.is-scrollable {
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 32px), transparent 100%) !important;
+    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 32px), transparent 100%) !important;
+}
+html .hot-list.is-scrollable.at-end {
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+}
+/* 可横滑提示：贴在热门条右下角的一枚小胶囊（不占 44px 行内空间，
+   也不与任何卡片矩形相交），只在可滚动时出现，滑到最右自动熄灭 */
+html .hot-strip { position: relative; }
+.hot-swipe-hint {
+    display: none;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 7px 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 11px;
+    line-height: 1.4;
+    pointer-events: none;
+    white-space: nowrap;
+    opacity: 0.92;
+}
+.hot-swipe-hint svg { width: 11px; height: 11px; }
+/* 提示与「热门访问」标题同排：标题收缩到文字宽，提示紧跟其后。
+   放在标题行内（y 与 chip 行不重叠），既不遮 chip 也不与任何卡片相交。
+   注意：is-scrollable 由 JS 打在 .hot-list 上（.hot-strip 只带 at-end），
+   因此选择器必须挂在 .hot-list 上，否则提示永远不会点亮。 */
+html .hot-strip > .hot-title { display: inline-flex !important; width: auto !important; vertical-align: middle; }
+html .hot-strip:has(.hot-list.is-scrollable) > .hot-swipe-hint,
+html .hot-list.is-scrollable ~ .hot-swipe-hint,
+html .hot-swipe-hint.is-scrollable {
+    display: inline-flex;
+    vertical-align: middle;
+    margin-left: 8px;
+}
+/* 「滑到最右」优先由提示自身的 at-end 类决定（JS 同一帧写入），
+   这样即便 strip 与 list 的状态先后不同步，提示也不会残留在最右端。 */
+html .hot-swipe-hint.at-end,
+html .hot-strip.at-end > .hot-swipe-hint { display: none !important; }
+
+/* ---- 问题5：站标明度归一 + 字标型图标缩小到图形区 ---- */
+/* 全部图标：明度压到同一区间（白底徽标不再比深色图标亮一个档） */
+html .site-icon .site-favicon {
+    filter: contrast(1.06) saturate(1.02) brightness(0.97) !important;
+}
+html[data-theme="dark"] .site-icon .site-favicon {
+    filter: contrast(1.02) saturate(1.0) brightness(1.08) !important;
+}
+/* 字标型图标（服务端像素判定：带文字的徽标）：
+   24px 里文字笔画只有 1–1.5px 宽，1.6px 高斯模糊即可把字形糊掉，
+   同时保留主色与大致轮廓 —— 不再是"读不出来又很像字"的噪点，
+   也不会像 2.4px 那样糊成一团。尺寸与普通图标一致（24px），
+   保证同列表内占位与可见面积同区间。
+   注意：filter 必须写在“双类”选择器上——单类规则里若已有 filter，
+   双类规则的 filter 会被后者按顺序覆盖。 */
+html .site-icon .site-favicon.is-wordmark {
+    filter: blur(1.6px) brightness(0.97) !important;
+}
+html[data-theme="dark"] .site-icon .site-favicon.is-wordmark {
+    filter: blur(1.6px) brightness(1.08) !important;
+}
+
+/* v2.18.24 · 补齐：末尾 chip 的 8px 呼吸位不能靠 track 的 padding-right
+   （flex 容器末端 padding 在部分引擎里不参与滚动宽度），改用末项 margin，
+   保证滑到底时最后一个 chip 与轨道右缘留 8px，且不越过按钮组左缘。 */
+html .mobile-cats-track > .mcat:last-child {
+    margin-right: 8px !important;
+}
+
+
+/* v2.18.24 · 热门条末项留白真正生效：
+   .hot-list 是 flex 容器，子项 margin-right 撑出来的尾距不会进入 scrollWidth
+   （被 flex 容器忽略），于是「滑到最右」时末项仍贴住容器右缘。
+   改用 padding-right 放在容器自身（scrollWidth 会包含它），
+   末项 24px 由 ::after 占位兜底，两种引擎都能滚足。 */
+html .hot-list {
+    scroll-padding-right: 24px !important;
+}
+/* 主方案：末项右侧留 24px 透明内边距（计入 scrollWidth，任何引擎都滚得出来）。
+   副方案：容器加 scroll-padding，snap 停靠时也留出同样的呼吸位。 */
+html .hot-list > .hot-item:last-child {
+    padding-right: 34px !important;
+}
+
+/* v2.18.24 · 补齐：网格态的热门条同样带渐隐提示。
+   is-scrollable 由 JS 打在 .hot-list 上，但网格态的测量顺序可能落在
+   「已滚动到最右」之后，此时 at-end 会覆盖渐隐。把 at-end 只在「确实滑到最右
+   且仍可滚动」时生效，并对网格态补一条同级右端渐隐。 */
+html .hot-list.is-scrollable:not(.at-end) {
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 32px), transparent 100%) !important;
+    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 32px), transparent 100%) !important;
+}
