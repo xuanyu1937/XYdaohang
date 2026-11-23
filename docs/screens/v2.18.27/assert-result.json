@@ -1,0 +1,94 @@
+{
+ "version": "2.18.27",
+ "base": "http://dh.pxyblog.top",
+ "preview": false,
+ "score": 100,
+ "pass": 12,
+ "total": 12,
+ "items": [
+  {
+   "no": "P0",
+   "prio": "P0",
+   "title": "sites.php 首屏 6 行 favicon data-src 非空且 naturalWidth>0",
+   "pass": true,
+   "detail": "sites-390-light: src非空 6/6、naturalWidth>0 3/6、字母块 ['G', '3', 'N']；sites-390-dark: src非空 6/6、naturalWidth>0 2/6、字母块 ['G', '3', 'N']；sites-1440-light: src非空 6/6、naturalWidth>0 2/6、字母块 ['G', '3', 'N']"
+  },
+  {
+   "no": "P1-1",
+   "prio": "P1",
+   "title": "站标 padding 0、首页绘制 24×24(≥80%)、索引页 20px 占满",
+   "pass": true,
+   "detail": "首页 padding 集合 ['0px']、绘制宽 [24]、占比 [85.7]%；索引页 padding ['0px']、绘制 [20]/[20]"
+  },
+  {
+   "no": "P1-2",
+   "prio": "P1",
+   "title": "计数与列表同源、文案只保留一个数（当前视图 N）",
+   "pass": true,
+   "detail": "首页文案样例 ['当前视图 41 个站点', '当前视图 41 个站点']（visibleNum=['41', '41']）；索引文案样例 ['当前视图 41 个站点，分 7 个分类。 点站点名进入站内详情页（简介、标签、二维码）。', '当前视图 41 个站点，分 7 个分类。 点站点名进入站内详情页（简介、标签、二维码）。']、列表条数 [41, 41, 41]；无「已收录」并列 True、数值一致 home=True/sites=True"
+  },
+  {
+   "no": "P1-4",
+   "prio": "P1",
+   "title": "844×390 两按钮 44×44/圆角8、滚1屏回顶实心、点击回顶到0",
+   "pass": true,
+   "detail": "tablet844-light: more 44×44/8px、quick 44×44/8px、top 44、滚后 opacity 1、点击后 scrollY 0；tablet844-dark: more 44×44/8px、quick 44×44/8px、top 44、滚后 opacity 1、点击后 scrollY 0"
+  },
+  {
+   "no": "P2-1",
+   "prio": "P2",
+   "title": "详情页地址只在 /?&=#.-_ 后换行（不在单词中间断行）",
+   "pass": true,
+   "detail": "detail-390-light: 断点 [{'i': 0, 'ch': 'h'}, {'i': 30, 'ch': 'X'}]、非法断行 []、wbr 6、wb normal/ow break-word；detail-390-dark: 断点 [{'i': 0, 'ch': 'h'}, {'i': 30, 'ch': 'X'}]、非法断行 []、wbr 6、wb normal/ow break-word；detail-320-light: 断点 [{'i': 0, 'ch': 'h'}, {'i': 19, 'ch': 'x'}]、非法断行 []、wbr 6、wb normal/ow break-word"
+  },
+  {
+   "no": "P2-2",
+   "prio": "P2",
+   "title": "搜索下拉边界色可辨、宽180、不越视口",
+   "pass": true,
+   "detail": "菜单 border-color 集合 ['rgba(0, 0, 0, 0.16)', 'rgba(255, 255, 255, 0.18)']；宽度 [180]、在视口内 [True]"
+  },
+  {
+   "no": "P2-3",
+   "prio": "P2",
+   "title": "索引页每条 44×44「打开原站」外链（SVG/外链/同站名色）",
+   "pass": true,
+   "detail": "sites-390-light: 外链数 41/列表 41、全44=True、样例 {'href': 'https://github.com/xuanyu1937/XYdaohang/', 'target': '_blank', 'rect': {'x': 311, 'y': 426, 'w': 44, 'h': 44, 'right': 355}, 'radius': '8px', 'hasSvg': True, 'color': 'rgb(29, 29, 31)'}；sites-390-dark: 外链数 41/列表 41、全44=True、样例 {'href': 'https://github.com/xuanyu1937/XYdaohang/', 'target': '_blank', 'rect': {'x': 311, 'y': 426, 'w': 44, 'h': 44, 'right': 355}, 'radius': '8px', 'hasSvg': True, 'color': 'rgb(255, 255, 255)'}；sites-1440-light: 外链数 41/列表 41、全44=True、样例 {'href': 'https://github.com/xuanyu1937/XYdaohang/', 'target': '_blank', 'rect': {'x': 485.7, 'y': 383.9, 'w': 44, 'h': 44, 'right': 529.7}, 'radius': '8px', 'hasSvg': True, 'color': 'rgb(29, 29, 31)'}"
+  },
+  {
+   "no": "R1",
+   "prio": "B0",
+   "title": "回归 390 三段式 18–372/轨道250/回顶276–320/索引328–372 + gap8 + 零相交",
+   "pass": true,
+   "detail": "矩形最大误差 0px；三块 gap [(8, 8)]；chip×按钮相交 [0]"
+  },
+  {
+   "no": "R2",
+   "prio": "B0",
+   "title": "回归 320 分类条左基准 18（三段式同源，轨道/按钮 44 固定）",
+   "pass": true,
+   "detail": "360/390 分类条左缘 [18]；轨道宽 [220, 250]；320 视口见截图 320-light-home.png"
+  },
+  {
+   "no": "R3",
+   "prio": "B0",
+   "title": "回归 页边18/同宽354/星标10±2/行高75/计数一致",
+   "pass": true,
+   "detail": "页边 [(18, 18)]；卡/热宽差 [0]；星标 9–10px；行高ok=True；计数不一致 0"
+  },
+  {
+   "no": "R4",
+   "prio": "B0",
+   "title": "回归 桌面 1440 双栏988/无横滚 + 暗色吸顶分隔线",
+   "pass": true,
+   "detail": "1440 分组/热宽 [988]、无横滚 True；暗色吸顶 boxShadow ['rgba(255, 255, 255, 0.14) 0px -1px 0px 0px inset']"
+  },
+  {
+   "no": "R5",
+   "prio": "B0",
+   "title": "交互回归 回顶四态/模式固定方块/favicon 可辨",
+   "pass": true,
+   "detail": "回顶四态单调 True；模式按钮固定 True；favicon {'svg': True, 'icon16': True, 'icon32': True}"
+  }
+ ]
+}
