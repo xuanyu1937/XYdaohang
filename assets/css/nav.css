@@ -9715,9 +9715,10 @@ html .hot-strip.at-end .hot-list {
 html .site-icon .site-favicon { padding: 0 !important; }
 html .site-icon .site-favicon.is-wordmark { padding: 2px !important; }
 
-/* P2-1 详情页地址断行：anywhere 让长 URL 在任意字符处换行，但不再出现
-   「单词中间被硬切后半个字符挂到下一行」的观感（配合正常 word-break）。 */
-html .detail-url a { overflow-wrap: anywhere !important; }
+/* P2-1 详情页地址断行：显示文本在 / ? & = # . - _ 后插入 <wbr>，只在结构性
+   边界换行；word-break:normal + overflow-wrap:break-word 保证不在连续字母/数字
+   中间硬切（如「…/XYdaoh」+「ang/」），<wbr> 是唯一优先断点。detail.php 已同步。 */
+html .detail-url a { word-break: normal !important; overflow-wrap: break-word !important; }
 
 /* P2-2 搜索下拉边界：白底下边框太淡看不出面板轮廓，加深到可辨；宽度仍 180、不越视口。 */
 html .search-engine-menu { border-color: rgba(0, 0, 0, .16) !important; }

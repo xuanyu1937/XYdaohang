@@ -57,6 +57,19 @@ $relatedLinks = $relatedStmt->fetchAll();
 $urlParts = parse_url($link['url']);
 $domain = isset($urlParts['host']) ? $urlParts['host'] : $link['url'];
 
+/* v2.18.27 P2-1 · 详情页地址断行：只在结构性分隔符后提供换行点（<wbr>），
+   避免「…/XYdaoh」+「ang/」这种连续字母被硬切。href 仍用原始 URL，仅显示文本插入 <wbr>。 */
+$detailUrlBreakHtml = '';
+$_detailUrl = (string) ($link['url'] ?? '');
+$_detailUrlLen = strlen($_detailUrl);
+for ($_detailUrlI = 0; $_detailUrlI < $_detailUrlLen; $_detailUrlI++) {
+    $_detailUrlCh = $_detailUrl[$_detailUrlI];
+    $detailUrlBreakHtml .= $functions->escape($_detailUrlCh);
+    if (strpos('/?&=#.-_', $_detailUrlCh) !== false) {
+        $detailUrlBreakHtml .= '<wbr>';
+    }
+}
+
 $detailCategory = trim((string) ($link['category_name'] ?? ''));
 /* v2.18.3 · 标题补上分类，避免几百个详情页只有「名称 - 站名」这一种模板 */
 $pageTitle = $link['name'] . ($detailCategory !== '' ? '（' . $detailCategory . '）' : '') . ' - ' . $siteTitle;
@@ -239,7 +252,7 @@ $detailTotalSites = (int) $detailTotalStmt->fetchColumn();
         html[data-theme="dark"] .detail-url-icon { border-color: rgba(255,255,255,.12); }
         .detail-url-icon img { width: 100%; height: 100%; object-fit: contain; }
         .detail-url-label { margin: 0 0 2px; color: var(--muted); font-size: var(--a-fs-fine); }
-        .detail-url a { color: var(--link); font-size: 14px; word-break: break-all; }
+        .detail-url a { color: var(--link); font-size: 14px; word-break: normal; overflow-wrap: break-word; }
         .detail-related { margin-top: 40px; }
         .section-head { display: flex; align-items: baseline; gap: 8px; margin: 0 0 16px; }
         .section-head h2 { margin: 0; color: var(--text); font-size: 15px; font-weight: 600; }
@@ -386,7 +399,7 @@ $detailTotalSites = (int) $detailTotalStmt->fetchColumn();
                     <?php endif; ?>
                     <div>
                         <p class="detail-url-label">网站地址</p>
-                        <a href="<?php echo $functions->escape($link['url']); ?>" target="_blank" rel="noopener noreferrer"><?php echo $functions->escape($link['url']); ?></a>
+                        <a href="<?php echo $functions->escape($link['url']); ?>" target="_blank" rel="noopener noreferrer"><?php echo $detailUrlBreakHtml; ?></a>
                     </div>
                 </div>
             </section>
