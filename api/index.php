@@ -49,7 +49,7 @@ header('Referrer-Policy: strict-origin-when-cross-origin');
 <title>开放 API 文档 · 轩宇导航</title>
 <?php /* v2.18.1 · canonical（doc 页只有这一个地址，无查询参数变体） */ ?>
 <link rel="canonical" href="<?php echo $esc(str_replace('/api/', '/api/index.php', $baseUrl)); ?>">
-<link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.26">
+<link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.27">
 <style>
 :root {
     --primary: var(--a-primary);

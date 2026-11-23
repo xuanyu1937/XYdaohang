@@ -23,7 +23,6 @@ $brandSubtitle = trim((string) $functions->getSetting('site_description')) ?: '�
 $siteLogoUrl = $functions->getLogoUrl($functions->getSetting('site_logo'));
 
 $rows = navPublicIndexLinks($functions);
-$categories = navIndexCategories($rows);
 
 /* v2.18.16：为每条索引记录构建与首页同源的站点图标数据（favicon 三级兜底链 +
    域名首字母兜底色）。navBuildCard 需要 safe_url/url 等字段，此处只取图标相关结果。 */
@@ -43,16 +42,35 @@ foreach ($rows as &$__row) {
 }
 unset($__row);
 
+/* v2.18.27 P0：navIndexCategories 会把每行按值拷贝进分类快照，必须在图标字段
+   补全之后再归档；原先放在 foreach 之前，渲染读的是旧快照，导致 42 行
+   .site-favicon 的 data-src 与字母兜底全空。 */
+$categories = navIndexCategories($rows);
+
 $totalSites = count($rows);
 $totalCategories = count($categories);
 
-/* v2.18.16 提交2：与首页 $publishedSiteTotal / detail $detailTotalSites 同源的全库已发布数，
-   用于「已收录 {total} 个站点 · 当前视图 {visible} 个」统一文案。 */
+/* v2.18.27 P1-3：与列表同源的站点数。旧逻辑用「全库 is_active=1」统计（含其他用户与私有
+   分类），与当前视图列表不一致；现在 $rows 已由 navPublicIndexLinks 按当前视图用户 +
+   is_active=1 + 分类非私有 + 未删除筛出，count($rows) 即同源权威数。文案只保留一个数。 */
 $publishedSiteTotal = $totalSites;
 try {
     $__db = Database::getInstance()->getConnection();
-    $publishedSiteStmt = $__db->query("SELECT COUNT(*) FROM nav_links WHERE is_active = 1");
-    $publishedSiteTotal = (int) $publishedSiteStmt->fetchColumn();
+    $__users = new UserService($functions);
+    $__viewUserId = (int) $__users->defaultViewUserId();
+    if ($__viewUserId > 0) {
+        $publishedSiteStmt = $__db->prepare(
+            "SELECT COUNT(*) FROM nav_links nl
+             LEFT JOIN categories c ON c.id = nl.category_id
+             WHERE nl.user_id = ? AND nl.is_active = 1 AND nl.deleted_at IS NULL
+               AND COALESCE(c.is_private, 0) = 0"
+        );
+        $publishedSiteStmt->execute([$__viewUserId]);
+        $__cnt = (int) $publishedSiteStmt->fetchColumn();
+        // 空站自愈场景：defaultViewUserId 无数据而列表回退到了别的视图用户，
+        // 此时以列表实际条数为准，避免两口径打架。
+        if ($__cnt > 0) { $publishedSiteTotal = $__cnt; }
+    }
 } catch (Throwable $ignored) {
     // 老库兼容：查询失败时退回当前视图数
 }
@@ -117,7 +135,7 @@ $jsonLd = [
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.26">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.27">
     <style>
         :root { color-scheme: light; --fg: var(--a-ink); --muted: var(--a-muted); --line: var(--a-hairline); --accent: var(--a-primary); --bg: var(--a-canvas); }
         /* v2.18.11 P1-3：暗色改由 html[data-theme="dark"] 驱动（与首页 / 关于页同源），
@@ -273,6 +291,16 @@ $jsonLd = [
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         html[data-theme="dark"] body li .d { color: var(--a-muted); }
+        /* v2.18.27 P2-3：每条右侧「打开原站」外链图标，44×44 触控区，
+           与站名同色（var(--fg)），左侧 1px hairline 与内容分隔，不引入测速逻辑。 */
+        body li .site-open {
+            flex: 0 0 44px; width: 44px; height: 44px;
+            display: grid; place-items: center; margin-left: 2px;
+            color: var(--fg); text-decoration: none; border-radius: 8px;
+            border-left: 1px solid var(--a-hairline);
+        }
+        html[data-theme="dark"] body li .site-open { border-left-color: rgba(255,255,255,.12); }
+        body li .site-open svg { width: 17px; height: 17px; }
         body h1 { font-size: var(--a-fs-display); }
         body .lead, body .top label, .u-search input[type="search"] { font-size: var(--a-fs-fine); }
     </style>
@@ -300,7 +328,7 @@ $jsonLd = [
     <nav class="crumb" aria-label="面包屑"><a href="index.php">首页</a> › 全部站点</nav>
     <h1>全部网站索引</h1>
     <p class="lead">
-        已收录 <strong><?php echo $publishedSiteTotal; ?></strong> 个站点 · 当前视图 <strong><?php echo $totalSites; ?></strong> 个，分 <strong><?php echo $totalCategories; ?></strong> 个分类。
+        当前视图 <strong><?php echo $totalSites; ?></strong> 个站点，分 <strong><?php echo $totalCategories; ?></strong> 个分类。
         点站点名进入站内详情页（简介、标签、二维码）。
     </p>
 
@@ -338,6 +366,16 @@ $jsonLd = [
                                 <span class="d" title="<?php echo $functions->escape($desc); ?>"><?php echo $functions->escape($desc); ?></span>
                             <?php endif; ?>
                         </span>
+                        <?php $siteOpenUrl = trim((string) ($row['url'] ?? '')); ?>
+                        <?php if ($siteOpenUrl !== ''): ?>
+                        <a class="site-open" href="<?php echo $functions->escape($siteOpenUrl); ?>"
+                           target="_blank" rel="noopener noreferrer" aria-label="打开原站：<?php echo $functions->escape($siteName); ?>" title="打开原站">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M14 4h6v6M20 4l-8.5 8.5"></path>
+                                <path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"></path>
+                            </svg>
+                        </a>
+                        <?php endif; ?>
                     </li>
                 <?php endforeach; ?>
             </ul>

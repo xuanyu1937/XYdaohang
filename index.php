@@ -234,12 +234,19 @@ foreach ($rawLinks as $row) {
 
 $totalSites = count($links);
 
-/* v2.18.15 P0-3：站点总数统一口径 = 全库已发布站点（is_active = 1）。
-   与 detail.php 的 $detailTotalSites 同源，不随当前视图 / 登录态 / 明暗变化。
-   $totalSites 仍保留「当前视图可见数」用于列表与分类计数，两者语义不再混用。 */
+/* v2.18.27 P1-3：站点总数与列表同源（不再混用全库口径）。
+   旧逻辑用「全库 is_active=1」统计（含其他用户与私有分类），与当前视图列表 42 条不一致。
+   现在按当前视图用户 + is_active=1 + 分类非私有 + 未删除统计，与列表口径一致。
+   两数必然相等，文案因此只保留「当前视图 N 个站点」一个数。 */
 $publishedSiteTotal = $totalSites;
 try {
-    $publishedSiteStmt = $db->query("SELECT COUNT(*) FROM nav_links WHERE is_active = 1");
+    $publishedSiteStmt = $db->prepare(
+        "SELECT COUNT(*) FROM nav_links nl
+         LEFT JOIN categories c ON c.id = nl.category_id
+         WHERE nl.user_id = ? AND nl.is_active = 1 AND nl.deleted_at IS NULL
+           AND COALESCE(c.is_private, 0) = 0"
+    );
+    $publishedSiteStmt->execute([$viewUserId]);
     $publishedSiteTotal = (int) $publishedSiteStmt->fetchColumn();
 } catch (Throwable $ignored) {
     // 老库兼容：查询失败时退回当前视图数，不影响渲染
@@ -762,9 +769,9 @@ $navJsonLd = [
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.26">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.26">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.26">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.27">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.27">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.27">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -776,7 +783,7 @@ $navJsonLd = [
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.26';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.27';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -796,10 +803,10 @@ $navJsonLd = [
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.26" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.18.27" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.26" defer></script>
-    <script src="assets/js/search.js?v=2.18.26" defer></script>
+    <script src="assets/js/nav.js?v=2.18.27" defer></script>
+    <script src="assets/js/search.js?v=2.18.27" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -841,7 +848,7 @@ $navJsonLd = [
                         <h1 class="brand-title" translate="no"><?php echo $functions->escape($brandName); ?></h1>
                         <span class="brand-subtitle"><?php echo $functions->escape($brandSubtitle); ?></span>
                         <span class="brand-stats">
-                            已收录 <strong><?php echo $publishedSiteTotal; ?></strong> 个站点 · 当前视图 <strong class="js-visible-count"><?php echo $visibleSiteTotal; ?></strong> 个
+                            当前视图 <strong class="js-visible-count"><?php echo $visibleSiteTotal; ?></strong> 个站点
                             <?php if ($isOwner && $currentUser): ?>· 我的导航<?php endif; ?>
                         </span>
                     </span>

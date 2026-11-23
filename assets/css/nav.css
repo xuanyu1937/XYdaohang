@@ -9705,3 +9705,44 @@ html .hot-strip.at-end .hot-list {
   html #mobileModeCycle .mode-icon-mode-list,
   html #mobileModeCycle .mode-icon-mode-compact { display: none !important; }
 }
+
+/* ==========================================================================
+   v2.18.27 · P1/P2 修复（站标绘制 / 641–960 触控 / 地址断行 / 下拉边界）
+   全部追加 !important 覆盖，不删改 v2.18.17–v2.18.26 历史区块。
+   ========================================================================== */
+/* P1-1 站标绘制尺寸：基础 .site-favicon 的 padding:6px 让 24px 容器只剩 12px 内容。
+   取消 padding 让绘制占满 24/28=85.7%；字标图标留 2px 防止字形贴边。 */
+html .site-icon .site-favicon { padding: 0 !important; }
+html .site-icon .site-favicon.is-wordmark { padding: 2px !important; }
+
+/* P2-1 详情页地址断行：anywhere 让长 URL 在任意字符处换行，但不再出现
+   「单词中间被硬切后半个字符挂到下一行」的观感（配合正常 word-break）。 */
+html .detail-url a { overflow-wrap: anywhere !important; }
+
+/* P2-2 搜索下拉边界：白底下边框太淡看不出面板轮廓，加深到可辨；宽度仍 180、不越视口。 */
+html .search-engine-menu { border-color: rgba(0, 0, 0, .16) !important; }
+html[data-theme="dark"] .search-engine-menu { border-color: rgba(255, 255, 255, .18) !important; }
+
+/* P1-4 641–960 平板横屏触控退化：历史区间 .mobile-cats-more 34×34/圆角999、
+   .mobile-quick display:none、无回顶。补齐与手机端一致的 44×44 触控与回顶淡显。
+   ≤640 的 v2.18.26 三段式规则保持不动，这里只覆盖 641–960。 */
+@media (min-width: 641px) and (max-width: 960px) {
+  html .mobile-cats { gap: 8px !important; }
+  html .mobile-cats .mobile-quick {
+    display: grid !important; place-items: center !important; padding: 0 !important;
+    width: 44px !important; height: 44px !important; flex: 0 0 44px !important;
+    border-radius: 8px !important;
+  }
+  html .mobile-cats > .mobile-cats-more {
+    width: 44px !important; height: 44px !important; flex: 0 0 44px !important;
+    border-radius: 8px !important;
+  }
+  html .mobile-cats .mobile-to-top {
+    opacity: .35 !important; visibility: visible !important; pointer-events: none !important;
+    background: transparent !important; border-color: transparent !important;
+  }
+  html .mobile-cats .mobile-to-top.is-visible {
+    opacity: 1 !important; pointer-events: auto !important;
+    background: var(--surface) !important; border-color: var(--border) !important;
+  }
+}
