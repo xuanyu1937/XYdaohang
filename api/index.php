@@ -35,9 +35,12 @@ $esc = static function ($value) {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 };
 
+/* v2.19 A6：X-Content-Type-Options / Referrer-Policy 已由 web.config/customHeaders
+   统一下发（覆盖静态资源），此处去重只保留 Content-Type；同时去掉 PHP 版本暴露，
+   生产环境关闭错误回显（错误只写日志，不外泄路径与版本号）。 */
+header_remove('X-Powered-By');
+@ini_set('display_errors', '0');
 header('Content-Type: text/html; charset=utf-8');
-header('X-Content-Type-Options: nosniff');
-header('Referrer-Policy: strict-origin-when-cross-origin');
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">

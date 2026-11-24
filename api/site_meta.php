@@ -48,12 +48,14 @@ $siteInfo = new SiteInfoService($functions);
 $result = $siteInfo->fetch($url);
 
 // 与旧版保持一致的 HTTP 状态语义：地址非法/被拦截返回 4xx，抓取失败仍返回 200
+/* v2.19 A7：被 SSRF 策略拦截的私网/非法 host 统一返回 400（与 invalid_* 同档，
+   不再是 403）。真正的前端来源校验失败仍走上面的 403，二者语义分开。 */
 $statusMap = [
     'invalid_url' => 400,
     'invalid_scheme' => 400,
     'invalid_host' => 400,
-    'blocked_host' => 403,
-    'blocked_ip' => 403,
+    'blocked_host' => 400,
+    'blocked_ip' => 400,
 ];
 
 $status = 200;

@@ -9747,3 +9747,107 @@ html[data-theme="dark"] .search-engine-menu { border-color: rgba(255, 255, 255, 
     background: var(--surface) !important; border-color: var(--border) !important;
   }
 }
+
+/* ==========================================================================
+   v2.19 · 第 1 批 A4 + A5
+   A4 只在 ≤360 生效（桌面/平板不动）；A5 全断点补齐 ≥44×44 触控热区。
+   一律末尾覆盖 + !important，不改历史区块，防止旧视觉回退。
+   ========================================================================== */
+
+/* ---- A4-1 ≤360 品牌区：标题不再被工具按钮压盖，允许两行完整显示 ---- */
+@media (max-width: 360px) {
+  html .site-header .brand {
+    flex-wrap: wrap !important;
+  }
+  html .site-header .brand-info {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+  html .site-header .brand-title {
+    font-size: clamp(16px, 4.6vw, 22px) !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    min-width: 0 !important;
+  }
+  html .site-header .header-tools {
+    flex: 0 0 auto !important;
+  }
+
+  /* ---- A4-2 分类胶囊：横滑 + 右缘 12px 渐隐，不裁切 ---- */
+  html .mobile-cats > .mobile-cats-track {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 12px), transparent 100%) !important;
+    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 12px), transparent 100%) !important;
+  }
+  html .mobile-cats > .mobile-cats-track.at-end {
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+  }
+  html .mobile-cats-track .mcat {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+
+  /* ---- A4-3 卡片：站名/描述按任意位置断行，描述两行，元信息单行等高 ---- */
+  html .site-name,
+  html .site-desc {
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+  }
+  html[data-mode="grid"] .site-desc,
+  html[data-mode="list"] .site-desc {
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+  }
+  html .site-meta {
+    flex-wrap: nowrap !important;
+  }
+}
+
+/* ---- A5 触控热区：所有可点元素实际尺寸 ≥44×44 ---- */
+html .mode-btn {
+  min-width: 44px !important;
+  min-height: 44px !important;
+}
+@media (max-width: 920px) {
+  html .header-tools .mode-switch {
+    height: auto !important;
+    gap: 0 !important;
+    padding: 2px !important;
+  }
+  html .header-tools .mode-btn {
+    width: 44px !important;
+    height: 44px !important;
+  }
+}
+html .rail-item,
+html .hot-item,
+html .mcat {
+  min-height: 44px !important;
+}
+html .mcat {
+  min-width: 44px !important;
+}
+/* 热门条：行高 44，相邻间距保持 8 */
+html .hot-list {
+  gap: 8px !important;
+}
+/* 命中伪元素同步到 44 */
+html .card-star::after,
+html .rail-close::after,
+html .ss-head-clear::after,
+html .search-clear::after {
+  width: 44px !important;
+  height: 44px !important;
+}
+html .rail-item::after,
+html .hot-item::after,
+html .mcat::after {
+  min-width: 44px !important;
+  height: 44px !important;
+}
