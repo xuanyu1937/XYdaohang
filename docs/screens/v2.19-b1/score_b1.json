@@ -1,0 +1,122 @@
+{
+  "total": 23,
+  "passed": 23,
+  "score": 100,
+  "checks": [
+    {
+      "name": "A6-1 sites.php 401=JSON且无乱码",
+      "ok": true,
+      "detail": "HTTP 401 application/json; charset=utf-8"
+    },
+    {
+      "name": "A6-2 user_sites.php 405=JSON",
+      "ok": true,
+      "detail": "HTTP 405"
+    },
+    {
+      "name": "A6-3 响应头无 X-Powered-By / 无 Server IIS 版本",
+      "ok": true,
+      "detail": "所有 API 采样 xpowered=null server=null"
+    },
+    {
+      "name": "A6-4 API 文档页安全头去重(各1份)",
+      "ok": true,
+      "detail": "curl -I 实测各1份（见部署验证输出）"
+    },
+    {
+      "name": "A7-1 私网 127.0.0.1 → 400 JSON",
+      "ok": true,
+      "detail": "HTTP 400 {\"ok\":false,\"error\":\"blocked_ip\",\"host\":"
+    },
+    {
+      "name": "A7-2 私网 169.254.169.254 → 400 JSON",
+      "ok": true,
+      "detail": "HTTP 400"
+    },
+    {
+      "name": "A7-3 公网 URL 仍 200 JSON",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "A4-1 320/360 品牌标题不与工具按钮重叠且完整",
+      "ok": true,
+      "detail": "overlap=[False, False, False, False]"
+    },
+    {
+      "name": "A4-2 分类胶囊可横滑不裁切(移动端)",
+      "ok": true,
+      "detail": "320/360/390 均 canScroll=true"
+    },
+    {
+      "name": "A4-3 站名/描述无硬切(clipped=0)",
+      "ok": true,
+      "detail": "clipped=0"
+    },
+    {
+      "name": "A5 热区<44元素数=0(全10态)",
+      "ok": true,
+      "detail": "smallTargets=0"
+    },
+    {
+      "name": "E-1 10态截图齐备",
+      "ok": true,
+      "detail": "12 张"
+    },
+    {
+      "name": "E-2 横向溢出=0(全10态)",
+      "ok": true,
+      "detail": "hOverflow 全 false"
+    },
+    {
+      "name": "E-3 裂图=0(全10态)",
+      "ok": true,
+      "detail": "brokenCount 全 0"
+    },
+    {
+      "name": "D1 分类徽标与数量正确",
+      "ok": true,
+      "detail": "[{'t': '全部', 'c': '41'}, {'t': '我的收藏', 'c': '13'}, {'t': '小智', 'c': '4'}]"
+    },
+    {
+      "name": "D2 分类切换正常",
+      "ok": true,
+      "detail": "{'activeCat': 'AI', 'visibleCards': 12}"
+    },
+    {
+      "name": "D3 热门排行序号/名称/点击数",
+      "ok": true,
+      "detail": "[{'rank': '1', 'name': '开源轩宇导航', 'count': '310'}, {'rank': '2', 'name': '三维主机', 'count': '15'}]"
+    },
+    {
+      "name": "D4 延迟状态文案非空",
+      "ok": true,
+      "detail": "['6415 毫秒 · 慢', '76 毫秒 · 快', '874 毫秒 · 一般']"
+    },
+    {
+      "name": "D6 搜索框 id=siteSearch",
+      "ok": true,
+      "detail": "{'exists': True, 'tag': 'INPUT'}"
+    },
+    {
+      "name": "D7 主题切换+localStorage键",
+      "ok": true,
+      "detail": "{'toggle': True, 'before': 'light', 'after': 'dark', 'ls': 'dark'}"
+    },
+    {
+      "name": "D10 移动端视图循环按钮存在",
+      "ok": true,
+      "detail": "True"
+    },
+    {
+      "name": "D5 外链 36 个可达(≤405视IIS限制)",
+      "ok": true,
+      "detail": "count=36 ok200=35 other={'403': 1}"
+    },
+    {
+      "name": "D8 API页tab切换+复制按钮",
+      "ok": true,
+      "detail": "{'tabs': ['列表', '新建', '更新', '删除'], 'activeAfterClick': '新建', 'copyButtons': 13}"
+    }
+  ]
+}

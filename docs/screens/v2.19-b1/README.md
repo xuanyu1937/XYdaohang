@@ -46,6 +46,7 @@
 | 360 | false | true | 0 | **0**（改前 16） |
 | 390 | false | true | 0 | **0**（改前 16） |
 | 768 | false | true | 0 | **0**（改前 27） |
+| 1024 | false | true | 0 | **0**（改前 27 同档） |
 | 1440 | false | —（桌面无条） | 0 | **0**（改前 19） |
 
 改法：≤360 品牌区 `flex-wrap:wrap`、标题 `clamp(16px,4.6vw,22px)` + `white-space:normal`（完整两行）；分类轨道 `overflow-x:auto` + 右缘 12px 渐隐；站名/描述 `overflow-wrap:anywhere`、描述两行 clamp、元信息单行；A5 全断点 `mode-btn/rail-item/hot-item/mcat ≥44×44`，命中伪元素同步 44。仅 `nav.css` 末尾追加 104 行（+3,097B），未改历史区块。
@@ -83,6 +84,11 @@
 **23/23 PASS，score = 100**（详见 `.archify/b219/score_b1.json`）。扣分：无。
 唯一残留 D5 的 1 条 403 外链属 C1（第 5 批）范围，非本批 A6/A7/A4/A5 目标，不计入本批扣分。
 
-## 八、截图清单（10 态 + 1 对照）
+## 八、截图清单（E 要求 12 态 + 1 改前对照）
 
-`320-light` `320-dark` `360-light` `360-dark` `390-light` `390-dark` `768-light` `768-dark` `1440-light` `1440-dark` `preview-320`（改前对照）
+E 自审要求 320/390/768/1024/1440 × 明暗 = 10 态，本批额外加 360×明暗（覆盖 A4 ≤360 硬伤）= 12 态：
+
+`320-light` `320-dark` `360-light` `360-dark` `390-light` `390-dark` `768-light` `768-dark` `1024-light` `1024-dark` `1440-light` `1440-dark` + `preview-320`（改前对照）
+
+每态实测：`hOverflow=false`、`brokenCount=0`、`brandOverlap=false`、`smallTargets=0`、`clipped=0`、`siteCards=36`。
+附量取原始 JSON：`audit_b1.json`（12 态 measure + A6/A7 + D 回归）、`audit_extra_b1.json`（D5/D8/体积）、`score_b1.json`（23/23 PASS）、`measure_a4a5_before.json` / `measure_a4a5_after.json`（A4/A5 改前改后）。

@@ -1,0 +1,55 @@
+{
+  "D5_links": {
+    "200": 35,
+    "other": {
+      "403": 1
+    },
+    "count": 36,
+    "bad": [
+      {
+        "url": "https://bbs.binmt.cc/",
+        "code": 403
+      }
+    ]
+  },
+  "D8_api": {
+    "tabs": [
+      "列表",
+      "新建",
+      "更新",
+      "删除"
+    ],
+    "activeAfterClick": "新建",
+    "copyButtons": 13
+  },
+  "volume": {
+    "apple-tokens.css": {
+      "raw": 34492,
+      "gzip": 9840
+    },
+    "nav.css": {
+      "raw": 296779,
+      "gzip": 71558
+    },
+    "category-quick-add.css": {
+      "raw": 6570,
+      "gzip": 1871
+    },
+    "category-quick-add.js": {
+      "raw": 12876,
+      "gzip": 4101
+    },
+    "nav.js": {
+      "raw": 201010,
+      "gzip": 47164
+    },
+    "search.js": {
+      "raw": 58772,
+      "gzip": 14043
+    },
+    "index.php": {
+      "raw": 113433,
+      "gzip": 20426
+    }
+  }
+}

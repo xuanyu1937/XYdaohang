@@ -1,0 +1,328 @@
+{
+  "shots": {
+    "320-light": "320-light.png",
+    "320-dark": "320-dark.png",
+    "360-light": "360-light.png",
+    "360-dark": "360-dark.png",
+    "390-light": "390-light.png",
+    "390-dark": "390-dark.png",
+    "768-light": "768-light.png",
+    "768-dark": "768-dark.png",
+    "1440-light": "1440-light.png",
+    "1440-dark": "1440-dark.png",
+    "1024-light": "1024-light.png",
+    "1024-dark": "1024-dark.png"
+  },
+  "measure": {
+    "320-light": {
+      "vw": 320,
+      "hOverflow": false,
+      "brokenCount": 0,
+      "brandOverlap": false,
+      "catCanScroll": true,
+      "smallTargets": 0,
+      "smallList": [],
+      "clipped": 0,
+      "modeCount": 3,
+      "httpModeCycle": true,
+      "theme": "light",
+      "siteCards": 36,
+      "hotItems": 8
+    },
+    "320-dark": {
+      "vw": 320,
+      "hOverflow": false,
+      "brokenCount": 0,
+      "brandOverlap": false,
+      "catCanScroll": true,
+      "smallTargets": 0,
+      "smallList": [],
+      "clipped": 0,
+      "modeCount": 3,
+      "httpModeCycle": true,
+      "theme": "dark",
+      "siteCards": 36,
+      "hotItems": 8
+    },
+    "360-light": {
+      "vw": 360,
+      "hOverflow": false,
+      "brokenCount": 0,
+      "brandOverlap": false,
+      "catCanScroll": true,
+      "smallTargets": 0,
+      "smallList": [],
+      "clipped": 0,
+      "modeCount": 3,
+      "httpModeCycle": true,
+      "theme": "light",
+      "siteCards": 36,
+      "hotItems": 8
+    },
+    "360-dark": {
+      "vw": 360,
+      "hOverflow": false,
+      "brokenCount": 0,
+      "brandOverlap": false,
+      "catCanScroll": true,
+      "smallTargets": 0,
+      "smallList": [],
+      "clipped": 0,
+      "modeCount": 3,
+      "httpModeCycle": true,
+      "theme": "dark",
+      "siteCards": 36,
+      "hotItems": 8
+    },
+    "390-light": {
+      "vw": 390,
+      "hOverflow": false,
+      "brokenCount": 0,
+      "brandOverlap": false,
+      "catCanScroll": true,
+      "smallTargets": 0,
+      "smallList": [],
+      "clipped": 0,
+      "modeCount": 3,
+      "httpModeCycle": true,
+      "theme": "light",
+      "siteCards": 36,
+      "hotItems": 8
+    },
+    "390-dark": {
+      "vw": 390,
+      "hOverflow": false,
+      "brokenCount": 0,
+      "brandOverlap": false,
+      "catCanScroll": true,
+      "smallTargets": 0,
+      "smallList": [],
+      "clipped": 0,
+      "modeCount": 3,
+      "httpModeCycle": true,
+      "theme": "dark",
+      "siteCards": 36,
+      "hotItems": 8
+    },
+    "768-light": {
+      "vw": 768,
+      "hOverflow": false,
+      "brokenCount": 0,
+      "brandOverlap": false,
+      "catCanScroll": true,
+      "smallTargets": 0,
+      "smallList": [],
+      "clipped": 0,
+      "modeCount": 3,
+      "httpModeCycle": true,
+      "theme": "light",
+      "siteCards": 36,
+      "hotItems": 8
+    },
+    "768-dark": {
+      "vw": 768,
+      "hOverflow": false,
+      "brokenCount": 0,
+      "brandOverlap": false,
+      "catCanScroll": true,
+      "smallTargets": 0,
+      "smallList": [],
+      "clipped": 0,
+      "modeCount": 3,
+      "httpModeCycle": true,
+      "theme": "dark",
+      "siteCards": 36,
+      "hotItems": 8
+    },
+    "1440-light": {
+      "vw": 1440,
+      "hOverflow": false,
+      "brokenCount": 0,
+      "brandOverlap": false,
+      "catCanScroll": false,
+      "smallTargets": 0,
+      "smallList": [],
+      "clipped": 0,
+      "modeCount": 3,
+      "httpModeCycle": true,
+      "theme": "light",
+      "siteCards": 36,
+      "hotItems": 8
+    },
+    "1440-dark": {
+      "vw": 1440,
+      "hOverflow": false,
+      "brokenCount": 0,
+      "brandOverlap": false,
+      "catCanScroll": false,
+      "smallTargets": 0,
+      "smallList": [],
+      "clipped": 0,
+      "modeCount": 3,
+      "httpModeCycle": true,
+      "theme": "dark",
+      "siteCards": 36,
+      "hotItems": 8
+    },
+    "1024-light": {
+      "vw": 1024,
+      "hOverflow": false,
+      "brokenCount": 0,
+      "brandOverlap": false,
+      "catCanScroll": false,
+      "smallTargets": 0,
+      "smallList": [],
+      "clipped": 0,
+      "modeCount": 3,
+      "httpModeCycle": true,
+      "theme": "light",
+      "siteCards": 36,
+      "hotItems": 8
+    },
+    "1024-dark": {
+      "vw": 1024,
+      "hOverflow": false,
+      "brokenCount": 0,
+      "brandOverlap": false,
+      "catCanScroll": false,
+      "smallTargets": 0,
+      "smallList": [],
+      "clipped": 0,
+      "modeCount": 3,
+      "httpModeCycle": true,
+      "theme": "dark",
+      "siteCards": 36,
+      "hotItems": 8
+    }
+  },
+  "api": {
+    "sites_401": {
+      "code": 401,
+      "ct": "application/json; charset=utf-8",
+      "body": "{\"ok\":false,\"error\":\"unauthorized\",\"message\":\"缺少访问令牌，请在请求头中提供 Authorization: Bearer <token>\"}",
+      "xpowered": null,
+      "server": null
+    },
+    "user_sites_405": {
+      "code": 405,
+      "ct": "application/json; charset=utf-8",
+      "body": "{\"ok\":false,\"error\":\"method_not_allowed\"}",
+      "xpowered": null,
+      "server": null
+    },
+    "ssrf_127": {
+      "code": 400,
+      "ct": "application/json; charset=utf-8",
+      "body": "{\"ok\":false,\"error\":\"blocked_ip\",\"host\":\"127.0.0.1\"}",
+      "xpowered": null,
+      "server": null
+    },
+    "ssrf_169": {
+      "code": 400,
+      "ct": "application/json; charset=utf-8",
+      "body": "{\"ok\":false,\"error\":\"blocked_ip\",\"host\":\"169.254.169.254\"}",
+      "xpowered": null,
+      "server": null
+    },
+    "ssrf_public": {
+      "code": 200,
+      "ct": "application/json; charset=utf-8",
+      "body": "{\"ok\":true,\"title\":\"Example Domain\",\"description\":\"\",\"host\":\"example.com\",\"icons\":[\"http:\\/\\/example.com\\/apple-touch-ic",
+      "xpowered": null,
+      "server": null
+    },
+    "doc_headers": {
+      "code": 200,
+      "ct": "text/html; charset=utf-8",
+      "body": "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, ini",
+      "xpowered": null,
+      "server": null
+    }
+  },
+  "func": {
+    "D1_categories": [
+      {
+        "t": "全部",
+        "c": "41"
+      },
+      {
+        "t": "我的收藏",
+        "c": "13"
+      },
+      {
+        "t": "小智",
+        "c": "4"
+      },
+      {
+        "t": "AI",
+        "c": "16"
+      },
+      {
+        "t": "影视",
+        "c": "1"
+      },
+      {
+        "t": "开发工具",
+        "c": "4"
+      },
+      {
+        "t": "论坛",
+        "c": "1"
+      },
+      {
+        "t": "各类资源",
+        "c": "2"
+      }
+    ],
+    "D2_after_AI_click": {
+      "activeCat": "AI",
+      "visibleCards": 12
+    },
+    "D3_hot": [
+      {
+        "rank": "1",
+        "name": "开源轩宇导航",
+        "count": "310"
+      },
+      {
+        "rank": "2",
+        "name": "三维主机",
+        "count": "15"
+      },
+      {
+        "rank": "3",
+        "name": "MoreTools GitHub 文件加速",
+        "count": "15"
+      },
+      {
+        "rank": "4",
+        "name": "GMSSH极目远程桌面",
+        "count": "12"
+      },
+      {
+        "rank": "5",
+        "name": "小智 MCP — 开源 ESP32 智能服务平台",
+        "count": "10"
+      }
+    ],
+    "D4_speed": [
+      "6415 毫秒 · 慢",
+      "76 毫秒 · 快",
+      "874 毫秒 · 一般",
+      "276 毫秒 · 快",
+      "93 毫秒 · 快",
+      "160 毫秒 · 快"
+    ],
+    "D6_search_id": {
+      "exists": true,
+      "tag": "INPUT"
+    },
+    "D7_theme": {
+      "toggle": true,
+      "before": "light",
+      "after": "dark",
+      "ls": "dark"
+    },
+    "D10_mobileCycle": true
+  }
+}
