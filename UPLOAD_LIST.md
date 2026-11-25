@@ -13,11 +13,11 @@
 | 任务1 P0 | `api/home_list.php`、`includes/functions.php` | 前台两处列表 `SELECT nl.*` 改显式列清单，字段覆盖卡片模板全部引用 |
 | 任务2 P0 | `cron/daily_check.php` | 加 visit_logs 90 天前日志清理（预处理+走 idx_visited_at+失败不中断） |
 | 任务3 P0 | `README.md`、`uploads/web.config`、`uploads/.htaccess`、`includes/functions.php` | 统一 SVG 口径（前台上传禁 SVG / 后台抓取 SVG 仅作图片引用），仅改文字与报错文案 |
-| 任务4/5 P1 | `web.config`、`.htaccess` | 静态资源 30 天缓存 + www 规范化 301 占位规则（避开被锁节点，需上传主机生效） |
+| 任务4/5 P1 | `web.config`、`.htaccess` | 静态资源 30 天缓存（仅 .htaccess；IIS staticContent 经部署实测致 SVG 破图已回退）+ www 规范化 301 占位规则 |
 | 任务7 P1 | `apply(1).php` | 申请收录页补唯一 meta description |
 | 任务8 P2 | 无 | 搜索/PWA/移动端复核通过，未改 |
 
-**升级须知**：本版含 web.config 改动（staticContent/clientCache + rewrite 占位规则）。该站共享 IIS 曾因 authentication/location 节点触发 500.19，本版已避开这两类节点；部署后请立即确认首页 HTTP 200。占位规则 `__CANONICAL_HOST__` 未替换前恒不匹配、不改变任何请求。
+**升级须知**：本版 web.config 仅含 www 规范化占位 rewrite 规则（staticContent 已因实测致 SVG 破图而回退）。该站共享 IIS 曾因 authentication/location 节点触发 500.19，本版已避开这两类节点；部署后请立即确认首页 HTTP 200 与 SVG 头像正常。占位规则 `__CANONICAL_HOST__` 未替换前恒不匹配、不改变任何请求。
 
 > **v2.18.11 视觉协调性修复**：v2.18.9 换完了变量层，但版式层仍是「米白底 + 白卡片」。本版把结构彻底改成**满屏分节 + 组件卡**，并修掉已确认的交互与排版偏差。分三个提交：P0 后台登录页样式崩溃（**全文没有一行 `<link rel="stylesheet">`，内联 style 里的 `var(--a-*)` 全部失效**）、P1 版式层三处规范冲突（皮肤选择器点击无效、画布色、分节语法）、P2 交互与排版九项。**只动表现层，不碰后端权限、路由、SQL、会话逻辑。**
 > **累计无障碍覆盖 28 页 × 明暗主题 + 本版 8 页 × 2 视图，0 违规。**

@@ -10,7 +10,7 @@
 3. **SVG 口径统一**：README / uploads 规则 / 上传报错文案统一为"前台上传仅位图与 ICO、后台远程抓取 SVG 经校验后仅作图片引用"；未开放前台 SVG、未降低校验强度。
 
 ### P1
-1. **静态资源长缓存**：web.config 用 `staticContent/clientCache`、.htaccess 用 mod_expires，对 css/js/字体/图片设 30 天；动态 PHP 页缓存不变。刻意避开曾致 500 的 `<location>` 节点。
+1. **静态资源长缓存**：.htaccess 用 mod_expires 对 css/js/字体/图片设 30 天；动态 PHP 页缓存不变。IIS 侧 `staticContent/clientCache` 经部署实测会让共享主机把 `.svg` 的 MIME 变成畸形值 `svgimage/svg+xml`、配合 nosniff 致 SVG 破图，**已回退该节点**（v2.19.1 hotfix），IIS 长缓存改由站长在面板配置并需确认 svg MIME 正常。刻意避开曾致 500 的 `<location>` 节点。
 2. **域名规范化 301**：两份规则文件加 www→规范域 Permanent 301，用 `__CANONICAL_HOST__` 占位符（取不到域名时自动跳过），不跳 HTTPS、不影响 api/sites 路由。
 3. **SEO**：`apply(1).php` 补唯一 meta description；其余公开页 title/description/canonical/JSON-LD 核对齐全，首页 WebSite 结构化数据已有不重复输出。
 
