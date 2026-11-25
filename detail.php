@@ -185,9 +185,9 @@ $detailTotalSites = (int) $detailTotalStmt->fetchColumn();
             } catch (e) {}
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.19.2">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.19.2">
-    <link rel="stylesheet" href="assets/css/page.css?v=2.19.2">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.19.3">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.19.3">
+    <link rel="stylesheet" href="assets/css/page.css?v=2.19.3">
     <script src="assets/js/jquery3.7.1.js"></script>
     <?php require_once __DIR__ . '/includes/asset_fallbacks.php'; ?>
     <script src="assets/js/qrcode.min.js"></script>

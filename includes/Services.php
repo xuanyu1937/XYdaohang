@@ -3303,6 +3303,92 @@ class IconCacheService extends BaseService
             'done' => count($rows) < $limit,
         ];
     }
+
+    /**
+     * v2.19.3 · 把「logo 是外链」的历史条目本地化：下载到 uploads/icons/ 并回写 logo，
+     * 原外链存进 logo_remote 以便回滚。已经是本地路径的行天然不入选 → 幂等。
+     *
+     * 与 backfillEmptyLogos() 并列：后者补 logo 为空的条目，本方法处理 logo 为外链的条目。
+     * cacheFromUrl() 内部不校验 SSL，可拉到浏览器因证书问题拉不到的站。
+     */
+    public function backfillExternalLogos($limit = 10, $offset = 0, array $skipIds = [])
+    {
+        $limit = max(1, min(50, (int) $limit));
+        $skipIds = array_values(array_filter(array_map('intval', $skipIds)));
+        $notIn = $skipIds !== [] ? ' AND id NOT IN (' . implode(',', $skipIds) . ')' : '';
+
+        $where = " WHERE logo IS NOT NULL AND logo <> ''"
+               . " AND logo NOT LIKE '" . self::DIRECTORY . "/%'"
+               . " AND (logo LIKE 'http://%' OR logo LIKE 'https://%')"
+               . " AND is_active = 1 AND deleted_at IS NULL" . $notIn;
+
+        $countStmt = $this->db->query("SELECT COUNT(*) AS total FROM nav_links" . $where);
+        $total = (int) ($countStmt->fetch()['total'] ?? 0);
+
+        $stmt = $this->db->prepare("SELECT id, url, logo FROM nav_links" . $where . " ORDER BY id LIMIT ?");
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll();
+
+        $success = 0;
+        $failed = [];
+        $processed = 0;
+
+        foreach ($rows as $row) {
+            $processed++;
+            $host = (string) parse_url((string) $row['url'], PHP_URL_HOST);
+
+            if ($host === '') {
+                $failed[] = ['id' => (int) $row['id'], 'host' => '', 'error' => 'invalid_url'];
+                continue;
+            }
+
+            /* 内网设备（NAS / 192.168.x / 10.x / 172.16-31）不下载，跳过且不记失败 */
+            if (preg_match('/^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/', $host)) {
+                continue;
+            }
+
+            $candidates = ['https://' . $host . '/favicon.ico'];
+            if (defined('NAV_ICON_PROXY') && NAV_ICON_PROXY !== '') {
+                $candidates[] = sprintf(NAV_ICON_PROXY, $host);
+            }
+
+            $saved = [];
+            $lastError = 'fetch_failed';
+
+            foreach ($candidates as $cand) {
+                $res = $this->cacheFromUrl($cand, $host);   // 已有方法，内部 SSL 不校验，可拉到浏览器拉不到的站
+                if (!empty($res['ok'])) { $saved = $res; break; }
+                $lastError = $res['error'] ?? 'fetch_failed';
+            }
+
+            if (empty($saved['ok'])) {
+                $failed[] = ['id' => (int) $row['id'], 'host' => $host, 'error' => $lastError];
+                continue;
+            }
+
+            /* 尺寸校验：小于 16px 或非位图的当作无效，删掉文件、保留原外链 */
+            $abs = dirname(__DIR__) . '/' . $saved['path'];
+            $info = @getimagesize($abs);
+            if (!$info || $info[0] < 16 || $info[1] < 16) {
+                @unlink($abs);
+                $failed[] = ['id' => (int) $row['id'], 'host' => $host, 'error' => 'too_small'];
+                continue;
+            }
+
+            $upd = $this->db->prepare(
+                "UPDATE nav_links SET logo = ?, logo_remote = COALESCE(NULLIF(logo_remote, ''), ?) WHERE id = ?"
+            );
+            $upd->execute([$saved['path'], (string) $row['logo'], (int) $row['id']]);
+            $success++;
+        }
+
+        return [
+            'ok' => true, 'processed' => $processed, 'success' => $success,
+            'failed' => $failed, 'remaining' => max(0, $total - $processed),
+            'done' => ($total - $processed) <= 0,
+        ];
+    }
 }
 
 /* ==========================================================================

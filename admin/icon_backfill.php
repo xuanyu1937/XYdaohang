@@ -33,10 +33,15 @@ $offset = isset($_POST['offset']) ? max(0, (int) $_POST['offset']) : 0;
 $limit = isset($_POST['limit']) ? (int) $_POST['limit'] : 10;
 $skipRaw = isset($_POST['skip']) ? (string) $_POST['skip'] : '';
 $skipIds = $skipRaw === '' ? [] : array_slice(array_filter(array_map('intval', explode(',', $skipRaw))), 0, 500);
+$mode = isset($_POST['mode']) ? (string) $_POST['mode'] : 'empty';
 
 try {
     $service = new IconCacheService($functions);
-    $result = $service->backfillEmptyLogos($limit, $offset, $skipIds);
+    if ($mode === 'external') {
+        $result = $service->backfillExternalLogos($limit, $offset, $skipIds);
+    } else {
+        $result = $service->backfillEmptyLogos($limit, $offset, $skipIds);
+    }
     echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 } catch (Throwable $error) {
     http_response_code(500);

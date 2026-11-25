@@ -689,8 +689,8 @@ $tableLabels = [
     <title>系统工具 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
-    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.19.2">
-    <link href="../assets/css/admin.css?v=2.19.2" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.19.3">
+    <link href="../assets/css/admin.css?v=2.19.3" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -1638,6 +1638,32 @@ $tableLabels = [
                             <div id="iconBackfillFailed" class="small text-danger"></div>
                         </div>
                     </div>
+
+                    <!-- v2.19.3 · 本地化已有外链图标 -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <i class="fas fa-file-import me-2"></i>本地化已有外链图标
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-3">
+                                把历史「外链 logo」下载到本站 <code>uploads/icons/</code>，原外链存入 <code>logo_remote</code> 以便回滚，
+                                失败会保留原样。请<strong>先点上面的「批量补齐本地图标」</strong>补空 logo，再点这里。
+                            </p>
+                            <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                                <button type="button" class="btn btn-primary" id="iconLocalizeStart">
+                                    <i class="fas fa-download me-1"></i>开始本地化（每批 10 条）
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="iconLocalizeStop" disabled>
+                                    <i class="fas fa-stop me-1"></i>停止
+                                </button>
+                                <span class="text-muted small" id="iconLocalizeStats">尚未开始</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 10px;">
+                                <div class="progress-bar" id="iconLocalizeBar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="本地化进度"></div>
+                            </div>
+                            <div id="iconLocalizeFailed" class="small text-danger"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ============================================================
@@ -1992,6 +2018,122 @@ $tableLabels = [
             success = 0;
             failedCount = 0;
             total = 0;
+            skipIds = [];
+            failedEl.textContent = '';
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            paint('正在处理…', 0);
+            step();
+        });
+
+        stopBtn.addEventListener('click', function () {
+            cancelled = true;
+            stopBtn.disabled = true;
+            paint('正在停止…', null);
+        });
+    })();
+    </script>
+
+    <script>
+    /* v2.19.3 · 本地化已有外链图标：mode=external，每次 10 条，循环到 done。
+       逻辑复用上面的「批量补齐本地图标」，仅请求参数与返回字段名适配 external 模式。 */
+    (function () {
+        var startBtn = document.getElementById('iconLocalizeStart');
+        var stopBtn = document.getElementById('iconLocalizeStop');
+        var statsEl = document.getElementById('iconLocalizeStats');
+        var barEl = document.getElementById('iconLocalizeBar');
+        var failedEl = document.getElementById('iconLocalizeFailed');
+
+        if (!startBtn) {
+            return;
+        }
+
+        var running = false;
+        var cancelled = false;
+        var offset = 0;
+        var total = 0;
+        var success = 0;
+        var failedCount = 0;
+        var skipIds = [];
+
+        function paint(text, percent) {
+            statsEl.textContent = text;
+            if (typeof percent === 'number') {
+                barEl.style.width = Math.max(0, Math.min(100, percent)) + '%';
+                barEl.setAttribute('aria-valuenow', String(Math.round(percent)));
+            }
+        }
+
+        function step() {
+            if (cancelled) {
+                running = false;
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                return;
+            }
+
+            var body = new URLSearchParams();
+            body.append('mode', 'external');
+            body.append('offset', String(offset));
+            body.append('limit', '10');
+            if (skipIds.length) {
+                body.append('skip', skipIds.join(','));
+            }
+
+            fetch('icon_backfill.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                body: body.toString()
+            }).then(function (res) {
+                return res.json();
+            }).then(function (data) {
+                if (!data || !data.ok) {
+                    throw new Error('server');
+                }
+
+                success += data.success || 0;
+                offset = data.next || offset + (data.processed || 0);
+                var remaining = typeof data.remaining === 'number' ? data.remaining : 0;
+                total = offset + remaining;
+
+                if (data.failed && data.failed.length) {
+                    failedCount += data.failed.length;
+                    data.failed.forEach(function (item) {
+                        if (skipIds.indexOf(item.id) === -1) {
+                            skipIds.push(item.id);
+                        }
+                    });
+                    failedEl.textContent = '最近失败：' + data.failed.slice(-5).map(function (item) {
+                        return (item.host || item.url || item.id);
+                    }).join('、');
+                }
+
+                var base = total > 0 ? Math.min(100, Math.round((offset / total) * 100)) : 100;
+                paint('已处理 ' + offset + ' / ' + (total || offset) + '，成功 ' + success + '，失败 ' + failedCount, base);
+
+                if (data.done || (data.processed || 0) === 0) {
+                    running = false;
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    paint('完成：共 ' + offset + ' 条，成功 ' + success + '，失败 ' + failedCount, 100);
+                    return;
+                }
+
+                setTimeout(step, 250);
+            }).catch(function () {
+                running = false;
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                paint('已中断：成功 ' + success + '，失败 ' + failedCount + '（可再次点击继续）', null);
+            });
+        }
+
+        startBtn.addEventListener('click', function () {
+            if (running) { return; }
+            running = true;
+            cancelled = false;
+            offset = 0; total = 0; success = 0; failedCount = 0;
             skipIds = [];
             failedEl.textContent = '';
             startBtn.disabled = true;

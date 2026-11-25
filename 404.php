@@ -48,8 +48,8 @@ $escape = static function ($value) {
     <meta name="theme-color" content="#ffffff" id="themeColor">
     <link rel="icon" type="image/svg+xml" href="assets/img/icons/favicon.svg">
     <link rel="icon" type="image/x-icon" href="assets/img/icons/favicon.ico">
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.19.2">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.19.2">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.19.3">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.19.3">
     <script>
         (function () {
             try {

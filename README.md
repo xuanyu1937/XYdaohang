@@ -85,7 +85,7 @@
 - `upgrade_*.sql` 多为幂等 UPDATE / 索引脚本；`upgrade_v2.18.1.sql` 中的 `ADD COLUMN` 在列已存在时会报 `Duplicate column`，忽略即可
 - 数据库变更版本只有两个：`v2.16.0`（`upgrade_v2.16.0.sql`，两个索引）与 `v2.18.1`（`upgrade_v2.18.1.sql`，`skipped` 枚举 + `skip_check` 列）；**v2.18.2 / v2.18.3 / v2.18.4 / v2.18.5 / v2.18.6 / v2.18.7 / v2.18.8 / v2.18.9 / v2.18.10 / v2.18.11 / v2.18.12 / v2.18.13 / v2.18.14 / v2.18.15 / v2.18.16 / v2.18.17 / v2.18.18 / v2.18.19 / v2.18.21 无任何数据库变更**
 
-### 升级到当前版本 v2.19.2（2026-11-25）
+### 升级到当前版本 v2.19.3（2026-11-25）
 
 | 你的当前版本 | 需要执行的 SQL | 说明 |
 | --- | --- | --- |
@@ -94,11 +94,14 @@
 | v2.15.2 及更早 | `upgrade_v2.16.0.sql` + `upgrade_v2.18.1.sql` | 按版本顺序各执行一次 |
 
 > 已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，升到 v2.18.2 ~ v2.18.27 及 v2.19.0 / v2.19.1 / v2.19.2 **不需要再执行任何 SQL**。全新安装直接用 `install/install.sql`（v2.18.4 修订已内置 `skip_check` 列与 `skipped` 枚举）。
+>
+> **v2.19.3 需执行一条 ADD COLUMN（只增不改）**：`ALTER TABLE nav_links ADD COLUMN logo_remote VARCHAR(500) DEFAULT NULL; COMMIT;`（改表前先备份）。该列仅用于保存被本地化替换掉的外链 logo 以便回滚；不执行也不影响站点运行，只是无法用一条 SQL 回滚图标本地化。
 
 **v2.19.x / v2.18.x 版本序列**（完整清单见 [CHANGELOG.md](CHANGELOG.md) / [UPLOAD_LIST.md](UPLOAD_LIST.md)）：
 
 | 版本 | 一句话 |
 | --- | --- |
+| v2.19.3 | **图标本地化（数据变更）**：外链 logo 下载到 uploads/icons 并回写，原值存 logo_remote 供回滚；新增后台按钮与 CLI；加载逻辑一行未动（需执行一条 ADD COLUMN） |
 | v2.19.2 | **P0 回归修复**：图标去掉 api.iowen.cn 单点依赖，恢复本地缓存→原站https/http→可关闭第三方四级兜底；失败只隐身不删节点 |
 | v2.19.1 | P0/P1 改造：前台列表去 SELECT *、visit_logs 日志清理、SVG 口径统一、静态资源长缓存规则、域名规范化占位规则、申请页 SEO |
 | v2.18.0 | 图标抓取重写、开放 API 收录自动补图标/分组/标签、首页首屏瘦身、PWA 添加到桌面 |
@@ -237,7 +240,7 @@
 - 完整变更记录见 [CHANGELOG.md](CHANGELOG.md)
 - 版本发布与安装包下载见 [Releases](https://github.com/xuanyu1937/XYdaohang/releases)
 
-当前版本：`VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` = **2.19.2**（2026-11-25）；静态资源 `?v=` 与 PWA 缓存名同为 `2.19.2`。
+当前版本：`VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` = **2.19.3**（2026-11-25）；静态资源 `?v=` 与 PWA 缓存名同为 `2.19.3`。
 
 ## 📄 许可证
 

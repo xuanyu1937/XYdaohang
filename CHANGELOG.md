@@ -1,5 +1,21 @@
 # 轩宇-导航 · 版本记录
 
+## v2.19.3（2026-11-25）
+
+**图标本地化（数据变更，不改加载逻辑）**。把历史「外链 logo」下载到 `uploads/icons/` 并回写 logo，原外链存进 `logo_remote` 供回滚。前端 `loadFavicon()` 三级回退一行未动。
+
+- **数据库变更（需站长执行，只增不改）**：
+  ```sql
+  ALTER TABLE nav_links ADD COLUMN logo_remote VARCHAR(500) DEFAULT NULL;
+  COMMIT;
+  ```
+  改表前先备份。回滚一条 SQL：`UPDATE nav_links SET logo = logo_remote WHERE logo_remote IS NOT NULL AND logo LIKE 'uploads/icons/%';`
+- **includes/Services.php**：`IconCacheService` 新增 `backfillExternalLogos()`（与 `backfillEmptyLogos()` 并列），处理 logo 为外链的行，内网 IP 跳过、尺寸 <16px 判无效、原外链写 `logo_remote`；已本地化的行天然不入选 → 幂等。
+- **admin/icon_backfill.php**：加 `mode=external` 分派，默认 `empty` 行为不变。
+- **admin/tools.php**：新增「本地化已有外链图标」按钮与循环 JS（mode=external，失败原因/进度复用）。执行顺序：先「批量补齐本地图标」补空 logo，再点本按钮。
+- **bin/localize-icons.php（新增）**：CLI 版，避免浏览器 30 秒超时，`php bin/localize-icons.php` 一批跑完。
+- 资源 `?v=` 与 PWA 缓存名同步升到 2.19.3。
+
 ## v2.19.2（2026-11-25）
 
 **P0 回归修复 · 图标全部不显示**。v2.19.1 G6 曾把全站图标收敛到单点 `api.iowen.cn`，该服务证书过期（`ERR_CERT_DATE_INVALID`）导致列表图标全变字母块，且失败时 `removeChild` 删除节点造成卡片数量缺失。本版撤销单点依赖，恢复多级兜底。
