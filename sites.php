@@ -135,7 +135,7 @@ $jsonLd = [
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.19.1">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.19.2">
     <style>
         :root { color-scheme: light; --fg: var(--a-ink); --muted: var(--a-muted); --line: var(--a-hairline); --accent: var(--a-primary); --bg: var(--a-canvas); }
         /* v2.18.11 P1-3：暗色改由 html[data-theme="dark"] 驱动（与首页 / 关于页同源），
@@ -394,15 +394,23 @@ $jsonLd = [
         function loadFavicon(img) {
             if (!img || img.getAttribute('data-fav-done') === '1') { return; }
             img.setAttribute('data-fav-done', '1');
+            /* v2.19.2：读服务端写好的兜底链（本地缓存 → 原站 https/http → 可关闭的第三方），
+               http 源统一升 https；失败只隐身不删节点，露出字母块（见 nav.js 文件头硬规则）。 */
             var chain = ['data-src', 'data-fb1', 'data-fb2']
-                .map(function (k) { return img.getAttribute(k); })
-                .filter(function (u) { return typeof u === 'string' && u.length > 0; });
-            if (!chain.length) { return; }
+                .map(function (k) { return (img.getAttribute(k) || '').trim(); })
+                .filter(function (u) { return u !== ''; })
+                .map(function (u) { return u.indexOf('http://') === 0 ? 'https://' + u.slice(7) : u; });
+            if (!chain.length) { img.style.opacity = '0'; return; }
             var i = 0;
-            function advance() { i++; if (i < chain.length) { img.src = chain[i]; } }
+            function advance() {
+                i++;
+                if (i < chain.length) { img.src = chain[i]; }
+                else { img.style.opacity = '0'; }   /* 全链失败：保留节点，露出字母块 */
+            }
             img.addEventListener('load', function () {
                 if (img.naturalWidth <= 1 || img.naturalHeight <= 1) { advance(); return; }
                 img.classList.add('is-loaded');
+                img.style.opacity = '';
             });
             img.addEventListener('error', advance);
             img.src = chain[i];

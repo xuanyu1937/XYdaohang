@@ -391,23 +391,28 @@ function navBuildCard(array $row, Functions $functions)
         $logoUrl = $functions->getLogoDisplayUrl($rawLogo);
         $chain = [];
 
-        /* v2.18.1 · 图标兜底链收敛：
-           ① 本地缓存图标（uploads/icons/，由后台「批量补齐本地图标」生成）；
-           ② 站点自身 favicon；
-           ③ 第三方只保留一个（iowen 国内可达，google/duckduckgo 已移除）。
-           只有「本地缓存生效」时才砍掉第③层：本地图标是下载后校验过的，
-           缺了就是真缺；外链 logo 仍可能 404，需要第三方兜底。 */
+        /* v2.19.2 · 图标兜底链（顺序即优先级，见 nav.js 文件头硬规则）：
+           ① 本地缓存图标（后台「批量补齐本地图标」产出的 uploads/icons/…，命中则只留这一条）；
+           ② 原站 https；③ 原站 http（仅当站点本身是 http）；
+           ④ 第三方兜底：域名写在配置 NAV_ICON_PROXY 里，置空即表示关闭。
+           v2.19.1 曾把全部图标收敛到 api.iowen.cn 单点，证书过期致全站变字母块（P0 回归），
+           故第三方降级为最后一道可关闭兜底，绝不再当唯一来源。 */
         $isLocalLogo = $rawLogo !== ''
             && stripos(ltrim($rawLogo, '/'), IconCacheService::DIRECTORY . '/') === 0;
 
-        if ($logoUrl !== '') {
-            $chain[] = $logoUrl;
+        if ($isLocalLogo) {
+            $chain = [$logoUrl];
+        } else {
+            if ($logoUrl !== '') { $chain[] = $logoUrl; }
+            // ② 原站 https，③ 原站 http（仅当站点本身是 http）
+            $chain[] = 'https://' . $host . '/favicon.ico';
+            if ($scheme === 'http') { $chain[] = 'http://' . $host . '/favicon.ico'; }
         }
 
-        $chain[] = $scheme . '://' . $host . '/favicon.ico';
-
-        if (!$isLocalLogo) {
-            $chain[] = 'https://api.iowen.cn/favicon/' . $host . '.png';
+        // ④ 第三方兜底：域名写在配置里，置空即表示关闭
+        $iconProxy = defined('NAV_ICON_PROXY') ? NAV_ICON_PROXY : '';
+        if (!$isLocalLogo && $iconProxy !== '') {
+            $chain[] = sprintf($iconProxy, $host);
         }
 
         $chain = array_values(array_unique(array_filter($chain, function ($url) {

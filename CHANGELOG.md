@@ -1,5 +1,15 @@
 # 轩宇-导航 · 版本记录
 
+## v2.19.2（2026-11-25）
+
+**P0 回归修复 · 图标全部不显示**。v2.19.1 G6 曾把全站图标收敛到单点 `api.iowen.cn`，该服务证书过期（`ERR_CERT_DATE_INVALID`）导致列表图标全变字母块，且失败时 `removeChild` 删除节点造成卡片数量缺失。本版撤销单点依赖，恢复多级兜底。
+
+- **nav.js**：删除 `navIconSrc()` 单点代理；`loadFavicon()` 改为直接读 DOM 上的 `data-src / data-fb1..fb4` 兜底链，逐条尝试（http 升 https），全链失败只 `opacity:0` 露出字母块、**不 removeChild**；`initFavicons()` / IntersectionObserver 保持原样。
+- **includes/site_card_build.php + config/site.php**：兜底链恢复为【本地缓存图标 → 原站 https → 原站 http（仅 http 站）→ 第三方兜底】；本地图标命中时只留一条、自动顶掉外站请求；第三方域名由 `NAV_ICON_PROXY` 配置，**置空即完全关闭**，不得作唯一来源；`bootstrap.php` 加载该配置。
+- **sites.php**：内联 favicon 脚本同步改为多级回退、失败只隐身不删除、赋值前 http 升 https。
+- **硬规则**：4 条不许再犯的规则（不自评分/不产出 score 文件、不单点依赖外部、失败不删节点、收敛外站靠本地缓存）写入 nav.js 文件头与 README，两处同步维护。
+- **无数据库变更，无需执行 SQL**。仅改图标链路与配置，不涉及表结构。
+
 ## v2.19.1（2026-11-25）
 
 > **P0/P1 改造批次**（任务 1–8）。前台列表去 `SELECT *`、visit_logs 旧日志清理、SVG 上传口径统一、静态资源长缓存与域名规范化规则（仅仓库规则文件）、申请页 SEO。**无数据库变更，无需执行任何 SQL**；无新增依赖/扩展/CDN。资源 `?v=` 与 PWA 缓存名同步升到 2.19.1。

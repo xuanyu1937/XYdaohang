@@ -1,10 +1,24 @@
-# 轩宇-导航 部署清单（当前版本 v2.19.1）
+# 轩宇-导航 部署清单（当前版本 v2.19.2）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：**v2.19.1**（2026-11-25）
+当前版本：**v2.19.2**（2026-11-25）
 
-## 本版变动（v2.19.1，2026-11-25）
+## 本版变动（v2.19.2，2026-11-25）
+
+> **P0 回归修复 · 图标全不显示，无 SQL 变更，无新增依赖**。资源 `?v=` 与 PWA 缓存名同步升到 2.19.2。
+
+| 文件 | 变动 |
+| --- | --- |
+| `assets/js/nav.js` | 删 `navIconSrc()` 单点代理；`loadFavicon()` 恢复读 `data-src/data-fb1..fb4` 多级回退（http升https），失败只 `opacity:0` 不删节点；文件头写 4 条硬规则 |
+| `includes/site_card_build.php` | 兜底链恢复【本地缓存 → 原站https → 原站http → 可关闭第三方】；本地图标命中只留一条 |
+| `config/site.php`（新增）、`includes/bootstrap.php` | 新增 `NAV_ICON_PROXY` 常量（置空即关闭第三方兜底），bootstrap 加载 |
+| `sites.php` | 内联 favicon 脚本同步改多级回退、失败只隐身、http升https |
+| `README.md`、`CHANGELOG.md` | 同步 4 条硬规则与版本记录 |
+
+**升级须知**：本版不碰 web.config（Shared IIS 被锁节点仍未启用）。第三方兜底 `NAV_ICON_PROXY` 当前指向 api.iowen.cn，若再次证书过期，把它置空即可完全关闭、图标仍由本地缓存与原站 favicon 兜底。部署后请确认首页图标不再是字母块。
+
+## 上一版变动（v2.19.1，2026-11-25）
 
 > **P0/P1 改造批次，无 SQL 变更，无新增依赖**。资源 `?v=` 与 PWA 缓存名同步升到 2.19.1。
 
@@ -25,8 +39,8 @@
 ## ⚠️ 升级须知（三步）
 
 1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.27 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
-2. **后台「系统工具 → 在线更新」上传 v2.19.1 全量包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
-3. **清一次浏览器缓存**（Ctrl+F5）。相关 PHP/JS 文件的资源参数已升到 `?v=2.18.27`；`sw.js` 缓存名 `xy-nav-pwa-v2.18.27` 激活时自动清掉旧 PWA 缓存。
+2. **后台「系统工具 → 在线更新」上传 v2.19.2 全量包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
+3. **清一次浏览器缓存**（Ctrl+F5）。相关 PHP/JS 文件的资源参数已升到 `?v=2.19.2`；`sw.js` 缓存名 `xy-nav-pwa-v2.19.2` 激活时自动清掉旧 PWA 缓存。
 
 > **v2.18.12 UI 细节修复**（四个独立提交，只动表现层）：
 > **062f7d5** 列表分隔：分组卡外壳 + 内缩分隔线；**a882b28** 收藏按钮：44×44 流内居中；

@@ -28,6 +28,17 @@
 - [🔌 开放 API](#-开放-api)
 - [⏰ 定时任务](#-定时任务)
 - [🔒 安全说明](#-安全说明)
+
+> ## ⚠️ 图标与交付硬规则（v2.19.2 事故后订立，必须遵守）
+>
+> 因把图标全量收敛到单点外部服务 `api.iowen.cn`，该服务证书过期导致全站图标变字母块（v2.19.2 P0 回归）。以下四条为强制规则，改图标或交付前务必复核：
+>
+> 1. **不要自评分、不要写分数、不要用截图打分归档、不要「低于 xx 继续改」**。该环节用户已取消，`docs/screens/*/score_*.json` 这类文件不要再产出。
+> 2. **任何图片、字体、脚本都不许只依赖一个外部服务**。第三方图标服务（`NAV_ICON_PROXY`）只能是最后一道兜底、且必须可一键关闭；单点依赖一挂就是全站事故。
+> 3. **图标加载失败不许 `removeChild`**。图片只允许 `opacity:0` 露出已有的 `.site-icon-letter` 字母块；删节点会让卡片结构、行高、后续换图逻辑一起坏掉。
+> 4. **「收敛外站请求」靠本地缓存**（后台「批量补齐本地图标」→ `uploads/icons/`），不是把请求转给第三方代理。图标优先级：本地缓存 → 原站 https → 原站 http → 第三方兜底。
+>
+> 这套规则同步写在 `assets/js/nav.js` 文件头，两处须保持一致。
 - [📜 更新日志](CHANGELOG.md)
 - [❓ 常见问题](FAQ.md)
 - [📄 许可证](#-许可证)
@@ -74,7 +85,7 @@
 - `upgrade_*.sql` 多为幂等 UPDATE / 索引脚本；`upgrade_v2.18.1.sql` 中的 `ADD COLUMN` 在列已存在时会报 `Duplicate column`，忽略即可
 - 数据库变更版本只有两个：`v2.16.0`（`upgrade_v2.16.0.sql`，两个索引）与 `v2.18.1`（`upgrade_v2.18.1.sql`，`skipped` 枚举 + `skip_check` 列）；**v2.18.2 / v2.18.3 / v2.18.4 / v2.18.5 / v2.18.6 / v2.18.7 / v2.18.8 / v2.18.9 / v2.18.10 / v2.18.11 / v2.18.12 / v2.18.13 / v2.18.14 / v2.18.15 / v2.18.16 / v2.18.17 / v2.18.18 / v2.18.19 / v2.18.21 无任何数据库变更**
 
-### 升级到当前版本 v2.19.1（2026-11-25）
+### 升级到当前版本 v2.19.2（2026-11-25）
 
 | 你的当前版本 | 需要执行的 SQL | 说明 |
 | --- | --- | --- |
@@ -82,12 +93,13 @@
 | v2.18.0 及更早 | `upgrade_v2.18.1.sql` | 先执行 SQL，再覆盖文件 |
 | v2.15.2 及更早 | `upgrade_v2.16.0.sql` + `upgrade_v2.18.1.sql` | 按版本顺序各执行一次 |
 
-> 已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，升到 v2.18.2 ~ v2.18.27 及 v2.19.0 / v2.19.1 **不需要再执行任何 SQL**。全新安装直接用 `install/install.sql`（v2.18.4 修订已内置 `skip_check` 列与 `skipped` 枚举）。
+> 已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，升到 v2.18.2 ~ v2.18.27 及 v2.19.0 / v2.19.1 / v2.19.2 **不需要再执行任何 SQL**。全新安装直接用 `install/install.sql`（v2.18.4 修订已内置 `skip_check` 列与 `skipped` 枚举）。
 
 **v2.19.x / v2.18.x 版本序列**（完整清单见 [CHANGELOG.md](CHANGELOG.md) / [UPLOAD_LIST.md](UPLOAD_LIST.md)）：
 
 | 版本 | 一句话 |
 | --- | --- |
+| v2.19.2 | **P0 回归修复**：图标去掉 api.iowen.cn 单点依赖，恢复本地缓存→原站https/http→可关闭第三方四级兜底；失败只隐身不删节点 |
 | v2.19.1 | P0/P1 改造：前台列表去 SELECT *、visit_logs 日志清理、SVG 口径统一、静态资源长缓存规则、域名规范化占位规则、申请页 SEO |
 | v2.18.0 | 图标抓取重写、开放 API 收录自动补图标/分组/标签、首页首屏瘦身、PWA 添加到桌面 |
 | v2.18.1 | 自定义 404/500、SEO 四件套、无障碍、图标本地化与后台批量补齐、首页按需加载、匿名短缓存、内网跳过检测（**v2.18.x 中唯一需要执行 SQL 的版本**） |
@@ -225,7 +237,7 @@
 - 完整变更记录见 [CHANGELOG.md](CHANGELOG.md)
 - 版本发布与安装包下载见 [Releases](https://github.com/xuanyu1937/XYdaohang/releases)
 
-当前版本：`VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` = **2.19.1**（2026-11-25）；静态资源 `?v=` 与 PWA 缓存名同为 `2.19.1`。
+当前版本：`VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` = **2.19.2**（2026-11-25）；静态资源 `?v=` 与 PWA 缓存名同为 `2.19.2`。
 
 ## 📄 许可证
 

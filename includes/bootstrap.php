@@ -22,8 +22,15 @@ if (is_file($navVersionFile)) {
     require_once $navVersionFile;
 }
 
+/* v2.19.2 · 图标兜底服务配置（NAV_ICON_PROXY，可置空关闭）。
+   仅服务端 include，不对外暴露；config/ 目录已有 .htaccess 拒绝直访。 */
+$navSiteFile = __DIR__ . '/../config/site.php';
+if (is_file($navSiteFile)) {
+    require_once $navSiteFile;
+}
+
 if (!defined('APP_VERSION')) {
-    define('APP_VERSION', '2.19.1');
+    define('APP_VERSION', '2.19.2');
 }
 
 if (!defined('APP_RELEASE')) {

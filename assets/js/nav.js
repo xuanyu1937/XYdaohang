@@ -6,6 +6,17 @@
    - favicon 多级兜底、可用性与响应速度检测
    - 官网标题异步校正、点击量统计
    - 卡片 3D 悬浮倾斜、回到顶部
+
+   ⚠️ 不许再犯的硬规则（v2.19.2 · 因 api.iowen.cn 单点证书过期致全站图标变字母块事故订立）
+   1. 不要自评分、不要写分数、不要用截图打分归档、不要「低于 xx 继续改」。
+      用户已取消这个环节，docs/screens 各子目录下的 score_*.json 不要再产出。
+   2. 任何图片、字体、脚本都不许只依赖一个外部服务。第三方图标服务只能是最后一道
+      兜底、且必须可一键关闭；单点依赖一挂就是全站事故（本次根因）。
+   3. 图标加载失败时不许 removeChild。图片只允许 opacity:0 露出已有的 .site-icon-letter
+      字母块；删节点会让卡片结构、行高、后续换图逻辑一起坏掉。
+   4. 要「收敛外站请求」，正确做法是本地缓存（后台批量补齐本地图标 → uploads/icons），
+      不是把请求转给第三方代理。优先级：本地缓存 → 原站 https → 原站 http → 第三方兜底。
+   本文件与 README 的规则同步维护；任何图标改动不得违背以上四条。
    ========================================================================== */
 
 (function () {
@@ -1509,7 +1520,8 @@
     })();
 
     /* ----------------------------------------------------------------------
-       favicon：站点 favicon → 第三方图标服务 → 首字母占位
+       favicon：本地缓存 → 原站 https → 原站 http → 第三方兜底 → 首字母块
+       （v2.19.2 恢复三级回退，失败只隐身不删节点，见文件头硬规则）
        ---------------------------------------------------------------------- */
 
     /* v2.18.0 · favicon 懒加载：仅当图片接近视口时才挂 data-src 兜底链 */
@@ -1528,57 +1540,52 @@
         }, { root: null, rootMargin: '200px 0px', threshold: 0 });
     }
 
-    /* v2.19 G6：图标 src 收敛到此函数——本站 uploads 上传的 logo 原样保留，
-       其余一律走 api.iowen.cn 代理，不再直连原站（杜绝外站大图 / 软 404 / 裂图）。
-       所有图标分支都必须经它计算，禁止各自拼外站原图地址。 */
-    function navIconSrc(host, raw) {
-        raw = (raw || '').trim();
-        if (raw.indexOf('/uploads/') >= 0) {
-            return raw;
-        }
-        return 'https://api.iowen.cn/favicon/' + (host || '') + '.png';
-    }
-
     function loadFavicon(img) {
         if (!img || img.getAttribute('data-fav-done') === '1') {
             return;
         }
-
         img.setAttribute('data-fav-done', '1');
-        /* v2.19 G6：统一图片加载属性，尺寸锁 44×44 防布局抖动 */
         img.setAttribute('decoding', 'async');
         img.setAttribute('referrerpolicy', 'no-referrer');
         img.setAttribute('width', '44');
         img.setAttribute('height', '44');
 
-        var card = (typeof img.closest === 'function') ? img.closest('.site-card') : null;
-        var host = card ? (card.getAttribute('data-host') || '') : '';
-        var raw = img.getAttribute('data-src') || '';
-        var src = navIconSrc(host, raw);
+        /* 兜底链直接读 DOM：site_card.php / sites.php 已经把链写在 data-src/data-fb1..fb4。
+           http 源统一升到 https 再试，避免上 https 后被混合内容拦。 */
+        var chain = ['data-src', 'data-fb1', 'data-fb2', 'data-fb3', 'data-fb4']
+            .map(function (k) { return (img.getAttribute(k) || '').trim(); })
+            .filter(function (u) { return u !== ''; })
+            .map(function (u) { return u.indexOf('http://') === 0 ? 'https://' + u.slice(7) : u; });
 
-        /* v2.19 G6：失败即移除图标、露出同级首字母兜底块；禁止重试、禁止换域名重试 */
-        function toInitial() {
-            img.classList.remove('is-loaded');
-            if (img.parentNode) {
-                img.parentNode.removeChild(img);
-            }
-        }
-
-        if (!host && raw.indexOf('/uploads/') < 0) {
-            toInitial();
+        if (chain.length === 0) {
+            img.style.opacity = '0';   /* 只隐藏，不删除，字母块自己会露出来 */
             return;
         }
 
+        var i = 0;
+        function tryNext() {
+            if (i >= chain.length) {
+                img.style.opacity = '0';   /* 全链失败：保留节点，露出字母块 */
+                return;
+            }
+            img.src = chain[i];
+        }
+
         img.addEventListener('load', function () {
-            /* 图标服务返回 1x1 透明图时 HTTP 200 但视觉空白，同样按失败处理 */
             if (img.naturalWidth <= 1 || img.naturalHeight <= 1) {
-                toInitial();
+                i++;
+                tryNext();
                 return;
             }
             img.classList.add('is-loaded');
+            img.style.opacity = '';
         });
-        img.addEventListener('error', toInitial);
-        img.src = src;
+        img.addEventListener('error', function () {
+            i++;
+            tryNext();
+        });
+
+        tryNext();
     }
 
     function initFavicons() {
