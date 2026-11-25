@@ -13,7 +13,7 @@
    也避免每次刷新都重新走一遍 PHP。 */
 header('Cache-Control: public, max-age=300');
 
-$version = '2.18.16';
+$version = '2.19.1';
 $versionFile = __DIR__ . '/../VERSION';
 
 if (is_readable($versionFile)) {
@@ -52,7 +52,7 @@ header('Content-Type: text/html; charset=utf-8');
 <title>开放 API 文档 · 轩宇导航</title>
 <?php /* v2.18.1 · canonical（doc 页只有这一个地址，无查询参数变体） */ ?>
 <link rel="canonical" href="<?php echo $esc(str_replace('/api/', '/api/index.php', $baseUrl)); ?>">
-<link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.27">
+<link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.19.1">
 <style>
 :root {
     --primary: var(--a-primary);
@@ -311,7 +311,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
         <div class="basebar">
             <span class="basebar-label">Base URL</span>
             <code id="baseUrl"><?php echo $esc($baseUrl); ?>sites.php</code>
-            <button class="copy-btn" type="button" data-copy="#baseUrl">复制</button>
+            <button class="copy-btn" type="button" aria-label="复制调用示例" data-copy="#baseUrl">复制</button>
         </div>
 
         <div class="notice">
@@ -341,14 +341,14 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
             </div>
 
             <div class="codebox">
-                <button class="copy-btn" type="button" data-copy="#code-first">复制</button>
+                <button class="copy-btn" type="button" aria-label="复制调用示例" data-copy="#code-first">复制</button>
 <pre id="code-first"><span class="c-com"># 第一个请求：读取 1 条导航，验证令牌是否可用</span>
 <span class="c-cmd">curl</span> <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php?size=1"</span> \
   -H <span class="c-str">"Authorization: Bearer YOUR_TOKEN"</span></pre>
             </div>
 
             <div class="codebox">
-                <button class="copy-btn" type="button" data-copy="#code-first-resp">复制</button>
+                <button class="copy-btn" type="button" aria-label="复制调用示例" data-copy="#code-first-resp">复制</button>
 <pre id="code-first-resp">{
   <span class="c-key">"ok"</span>: true,
   <span class="c-key">"page"</span>: 1,
@@ -416,7 +416,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
                 </table>
             </div>
             <div class="codebox">
-                <button class="copy-btn" type="button" data-copy="#code-method">复制</button>
+                <button class="copy-btn" type="button" aria-label="复制调用示例" data-copy="#code-method">复制</button>
 <pre id="code-method"><span class="c-com"># 更新：POST + _method=PUT</span>
 <span class="c-cmd">curl</span> -X POST <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php"</span> \
   -H <span class="c-str">"Authorization: Bearer YOUR_TOKEN"</span> \
@@ -535,14 +535,14 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
 
             <h3>示例 A：按名称指定分类（不存在自动创建）</h3>
             <div class="codebox">
-                <button class="copy-btn" type="button" data-copy="#code-cat-name">复制</button>
+                <button class="copy-btn" type="button" aria-label="复制调用示例" data-copy="#code-cat-name">复制</button>
 <pre id="code-cat-name"><span class="c-cmd">curl</span> -X POST <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php"</span> \
   -H <span class="c-str">"Authorization: Bearer YOUR_TOKEN"</span> \
   -H <span class="c-str">"Content-Type: application/json"</span> \
   -d <span class="c-str">'{"name":"Midjourney","url":"https://midjourney.com","category_name":"AI 绘画"}'</span></pre>
             </div>
             <div class="codebox">
-                <button class="copy-btn" type="button" data-copy="#code-cat-name-resp">复制</button>
+                <button class="copy-btn" type="button" aria-label="复制调用示例" data-copy="#code-cat-name-resp">复制</button>
 <pre id="code-cat-name-resp">{
   <span class="c-key">"ok"</span>: true,
   <span class="c-key">"message"</span>: <span class="c-str">"创建成功"</span>,
@@ -556,14 +556,14 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
             <h3>示例 B：AI 自动推荐分类</h3>
             <p class="sec-desc">AI 从当前令牌可见的分类里挑选；都不合适时会建议一个新分类名并自动创建。前提是后台已启用 AI 并配置了模型与密钥。</p>
             <div class="codebox">
-                <button class="copy-btn" type="button" data-copy="#code-cat-ai">复制</button>
+                <button class="copy-btn" type="button" aria-label="复制调用示例" data-copy="#code-cat-ai">复制</button>
 <pre id="code-cat-ai"><span class="c-cmd">curl</span> -X POST <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php"</span> \
   -H <span class="c-str">"Authorization: Bearer YOUR_TOKEN"</span> \
   -H <span class="c-str">"Content-Type: application/json"</span> \
   -d <span class="c-str">'{"name":"Figma","url":"https://figma.com","description":"在线协作设计工具","ai_recommend":1}'</span></pre>
             </div>
             <div class="codebox">
-                <button class="copy-btn" type="button" data-copy="#code-cat-ai-resp">复制</button>
+                <button class="copy-btn" type="button" aria-label="复制调用示例" data-copy="#code-cat-ai-resp">复制</button>
 <pre id="code-cat-ai-resp">{
   <span class="c-key">"ok"</span>: true,
   <span class="c-key">"message"</span>: <span class="c-str">"创建成功"</span>,
@@ -598,7 +598,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
             </div>
 
             <div class="codebox" id="ex-list" data-pane-body>
-                <button class="copy-btn" type="button" data-copy="#code-list">复制</button>
+                <button class="copy-btn" type="button" aria-label="复制调用示例" data-copy="#code-list">复制</button>
 <pre id="code-list"><span class="c-com"># 按分类 + 关键词分页查询</span>
 <span class="c-cmd">curl</span> -G <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php"</span> \
   -H <span class="c-str">"Authorization: Bearer YOUR_TOKEN"</span> \
@@ -608,7 +608,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
             </div>
 
             <div class="codebox" id="ex-create" data-pane-body hidden>
-                <button class="copy-btn" type="button" data-copy="#code-create">复制</button>
+                <button class="copy-btn" type="button" aria-label="复制调用示例" data-copy="#code-create">复制</button>
 <pre id="code-create"><span class="c-cmd">curl</span> -X POST <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php"</span> \
   -H <span class="c-str">"Authorization: Bearer YOUR_TOKEN"</span> \
   -H <span class="c-str">"Content-Type: application/json"</span> \
@@ -616,7 +616,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
             </div>
 
             <div class="codebox" id="ex-update" data-pane-body hidden>
-                <button class="copy-btn" type="button" data-copy="#code-update">复制</button>
+                <button class="copy-btn" type="button" aria-label="复制调用示例" data-copy="#code-update">复制</button>
 <pre id="code-update"><span class="c-com"># IIS 环境：POST + _method=PUT（原生 PUT 会被 IIS 拦截成 405）</span>
 <span class="c-cmd">curl</span> -X POST <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php"</span> \
   -H <span class="c-str">"Authorization: Bearer YOUR_TOKEN"</span> \
@@ -625,7 +625,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
             </div>
 
             <div class="codebox" id="ex-delete" data-pane-body hidden>
-                <button class="copy-btn" type="button" data-copy="#code-delete">复制</button>
+                <button class="copy-btn" type="button" aria-label="复制调用示例" data-copy="#code-delete">复制</button>
 <pre id="code-delete"><span class="c-com"># 软删除，条目进入回收站，可在后台恢复</span>
 <span class="c-com"># IIS 环境：POST + _method=DELETE</span>
 <span class="c-cmd">curl</span> -X POST <span class="c-str">"<?php echo $esc($baseUrl); ?>sites.php"</span> \
@@ -639,7 +639,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
             <h2>响应格式</h2>
             <p class="sec-desc">列表响应示例。</p>
             <div class="codebox">
-                <button class="copy-btn" type="button" data-copy="#code-resp">复制</button>
+                <button class="copy-btn" type="button" aria-label="复制调用示例" data-copy="#code-resp">复制</button>
 <pre id="code-resp">{
   <span class="c-key">"ok"</span>: true,
   <span class="c-key">"page"</span>: 1,
@@ -772,6 +772,13 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
 (function () {
     'use strict';
 
+    /* v2.19 G9：复制成功的无障碍播报区（视觉隐藏，屏幕阅读器可读）。
+       13 个 copy-btn 的 aria-label 已写在 HTML 源码中；这里只补复制结果的 aria-live 提示。 */
+    var copyLive = document.createElement('span');
+    copyLive.setAttribute('aria-live', 'polite');
+    copyLive.style.cssText = 'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0';
+    document.body.appendChild(copyLive);
+
     var themeBtn = document.getElementById('themeBtn');
     var root = document.documentElement;
 
@@ -825,6 +832,7 @@ footer { border-top: 1px solid var(--border); padding-top: 18px; color: var(--fa
             var original = btn.textContent;
             copyText(target.textContent.trim()).then(function () {
                 btn.textContent = '已复制';
+                copyLive.textContent = '已复制';
                 btn.classList.add('is-ok');
                 window.setTimeout(function () {
                     btn.textContent = original;

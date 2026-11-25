@@ -1,8 +1,8 @@
 # 上传目录：只允许图片访问，禁止脚本执行。
 #
-# v2.16.3：svg 从禁止列表移出——用户上传的网站图标可以是 SVG，落盘前已在
-# userSiteCleanSvg() 里剥掉 script / 事件属性 / 外链引用，且只作 <img> 引用，
-# 浏览器不会执行其中的脚本。其余可执行后缀仍然一律拒绝。
+# v2.19 任务3 · 全站统一口径：前台用户上传仅允许位图与 ICO（禁 SVG）；
+# 后台远程抓取的 SVG 经校验后仅作 <img> 图片引用，配合本文件下方的 nosniff +
+# CSP sandbox 隔离，不执行其中脚本。故 svg 不在禁止列表内。其余可执行后缀一律拒绝。
 <FilesMatch "\.(php|phtml|phar|asp|aspx|cgi|pl|py|sh)$">
     <IfModule mod_authz_core.c>
         Require all denied

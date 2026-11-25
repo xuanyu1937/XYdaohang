@@ -1,5 +1,24 @@
 # 轩宇-导航 · 版本记录
 
+## v2.19.1（2026-11-25）
+
+> **P0/P1 改造批次**（任务 1–8）。前台列表去 `SELECT *`、visit_logs 旧日志清理、SVG 上传口径统一、静态资源长缓存与域名规范化规则（仅仓库规则文件）、申请页 SEO。**无数据库变更，无需执行任何 SQL**；无新增依赖/扩展/CDN。资源 `?v=` 与 PWA 缓存名同步升到 2.19.1。
+
+### P0
+1. **前台列表去 SELECT \***：`api/home_list.php` 与 `includes/functions.php` 的 `SELECT nl.*` 改显式列清单，字段从 `navBuildCard()` + 卡片模板逐字段提取，保留 `is_starred` 等模板读取的原始字段，派生字段不入 SQL；分页/排序/缓存/私密过滤不变。
+2. **visit_logs 日志清理**：`cron/daily_check.php` 顶部 `$logKeepDays = 90`，检测主流程后按 `visited_at < ?` 预处理删除（走 idx_visited_at），失败只写日志不中断，不动 visitor_stats。
+3. **SVG 口径统一**：README / uploads 规则 / 上传报错文案统一为"前台上传仅位图与 ICO、后台远程抓取 SVG 经校验后仅作图片引用"；未开放前台 SVG、未降低校验强度。
+
+### P1
+1. **静态资源长缓存**：web.config 用 `staticContent/clientCache`、.htaccess 用 mod_expires，对 css/js/字体/图片设 30 天；动态 PHP 页缓存不变。刻意避开曾致 500 的 `<location>` 节点。
+2. **域名规范化 301**：两份规则文件加 www→规范域 Permanent 301，用 `__CANONICAL_HOST__` 占位符（取不到域名时自动跳过），不跳 HTTPS、不影响 api/sites 路由。
+3. **SEO**：`apply(1).php` 补唯一 meta description；其余公开页 title/description/canonical/JSON-LD 核对齐全，首页 WebSite 结构化数据已有不重复输出。
+
+### 复核（P2 / 任务6）
+- 搜索高亮/分类筛选/空结果推荐、PWA 静默降级、移动端触控尺寸均复核通过，未改。
+- 登录限流 IP 维度按任务授权保留 session 现状（详见交付报告遗留清单）。
+- 上批 P0（web.config 节点锁定致全站 500）已闭环；本批 web.config 改动均避开被锁节点。
+
 ## v2.18.27（2026-11-23）
 
 > **P0 数据 bug + 3 项 P1 + 3 项观感**。改 sites.php / index.php 的 PHP 统计口径，nav.css 追加一个 v2.18.27 覆盖区块（全部 !important），不删改 v2.18.17–v2.18.26 历史区块；资源参数与 sw.js 缓存名同步升到 2.18.27。

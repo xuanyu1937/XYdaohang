@@ -1,8 +1,23 @@
-# 轩宇-导航 部署清单（当前版本 v2.18.26）
+# 轩宇-导航 部署清单（当前版本 v2.19.1）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：**v2.18.27**（2026-11-23）
+当前版本：**v2.19.1**（2026-11-25）
+
+## 本版变动（v2.19.1，2026-11-25）
+
+> **P0/P1 改造批次，无 SQL 变更，无新增依赖**。资源 `?v=` 与 PWA 缓存名同步升到 2.19.1。
+
+| 任务 | 文件 | 变动 |
+| --- | --- | --- |
+| 任务1 P0 | `api/home_list.php`、`includes/functions.php` | 前台两处列表 `SELECT nl.*` 改显式列清单，字段覆盖卡片模板全部引用 |
+| 任务2 P0 | `cron/daily_check.php` | 加 visit_logs 90 天前日志清理（预处理+走 idx_visited_at+失败不中断） |
+| 任务3 P0 | `README.md`、`uploads/web.config`、`uploads/.htaccess`、`includes/functions.php` | 统一 SVG 口径（前台上传禁 SVG / 后台抓取 SVG 仅作图片引用），仅改文字与报错文案 |
+| 任务4/5 P1 | `web.config`、`.htaccess` | 静态资源 30 天缓存 + www 规范化 301 占位规则（避开被锁节点，需上传主机生效） |
+| 任务7 P1 | `apply(1).php` | 申请收录页补唯一 meta description |
+| 任务8 P2 | 无 | 搜索/PWA/移动端复核通过，未改 |
+
+**升级须知**：本版含 web.config 改动（staticContent/clientCache + rewrite 占位规则）。该站共享 IIS 曾因 authentication/location 节点触发 500.19，本版已避开这两类节点；部署后请立即确认首页 HTTP 200。占位规则 `__CANONICAL_HOST__` 未替换前恒不匹配、不改变任何请求。
 
 > **v2.18.11 视觉协调性修复**：v2.18.9 换完了变量层，但版式层仍是「米白底 + 白卡片」。本版把结构彻底改成**满屏分节 + 组件卡**，并修掉已确认的交互与排版偏差。分三个提交：P0 后台登录页样式崩溃（**全文没有一行 `<link rel="stylesheet">`，内联 style 里的 `var(--a-*)` 全部失效**）、P1 版式层三处规范冲突（皮肤选择器点击无效、画布色、分节语法）、P2 交互与排版九项。**只动表现层，不碰后端权限、路由、SQL、会话逻辑。**
 > **累计无障碍覆盖 28 页 × 明暗主题 + 本版 8 页 × 2 视图，0 违规。**
@@ -10,7 +25,7 @@
 ## ⚠️ 升级须知（三步）
 
 1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.27 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
-2. **后台「系统工具 → 在线更新」上传 v2.18.27 全量包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
+2. **后台「系统工具 → 在线更新」上传 v2.19.1 全量包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
 3. **清一次浏览器缓存**（Ctrl+F5）。相关 PHP/JS 文件的资源参数已升到 `?v=2.18.27`；`sw.js` 缓存名 `xy-nav-pwa-v2.18.27` 激活时自动清掉旧 PWA 缓存。
 
 > **v2.18.12 UI 细节修复**（四个独立提交，只动表现层）：

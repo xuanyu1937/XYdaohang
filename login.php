@@ -3,6 +3,8 @@
  * 轩宇-导航 · 前台用户登录
  */
 require_once __DIR__ . '/includes/bootstrap.php';
+// v2.19 G4：匿名不自动建会话，登录入口显式启动，写入身份前必须有活动会话。
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once 'includes/functions.php';
 require_once 'includes/Services.php';
 
@@ -98,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.27">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.19.1">
     <link rel="stylesheet" href="assets/css/auth.css">
 </head>
 <body>

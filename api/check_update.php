@@ -28,7 +28,9 @@ require_once __DIR__ . '/../includes/functions.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, max-age=0');
-header('X-Content-Type-Options: nosniff');
+if (stripos($_SERVER['SERVER_SOFTWARE'] ?? '', 'Microsoft-IIS') === false) {
+    header('X-Content-Type-Options: nosniff');
+}
 header('X-Robots-Tag: noindex, nofollow');
 /**
  * 跨域兼容（v2.13.0 修正）：只信任与本站同主机、或反向代理显式声明的主机。

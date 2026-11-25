@@ -3,6 +3,8 @@
  * 轩宇-导航 · 前台用户注册
  */
 require_once __DIR__ . '/includes/bootstrap.php';
+// v2.19 G4：注册成功需写入会话身份，显式启动。
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once 'includes/functions.php';
 require_once 'includes/Services.php';
 
@@ -90,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.27">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.19.1">
     <link rel="stylesheet" href="assets/css/auth.css">
 </head>
 <body>

@@ -10,12 +10,16 @@
  */
 
 require_once __DIR__ . '/../includes/bootstrap.php';
+// v2.19 G4：登录/注册 API 需写入会话身份，显式启动。
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/Services.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, max-age=0');
-header('X-Content-Type-Options: nosniff');
+if (stripos($_SERVER['SERVER_SOFTWARE'] ?? '', 'Microsoft-IIS') === false) {
+    header('X-Content-Type-Options: nosniff');
+}
 header('X-Robots-Tag: noindex, nofollow');
 @ini_set('display_errors', '0');
 

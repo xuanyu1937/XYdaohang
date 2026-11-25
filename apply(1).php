@@ -721,6 +721,8 @@ $categories = $db->query("SELECT * FROM categories ORDER BY sort_order, id")->fe
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>申请收录 - <?php echo $functions->escape($siteTitle); ?></title>
+    <?php /* v2.19 任务7 · 补齐本站唯一缺失的公开页 description（约 90 字，与其它页不重复）。 */ ?>
+    <meta name="description" content="<?php echo $functions->escape('向 ' . $siteTitle . ' 提交网站收录申请，填写站点名称、网址、分类与简介，管理员审核通过后将展示在对应分类中。'); ?>">
     <?php /* v2.18.1 · canonical（无查询参数） */ ?>
     <link rel="canonical" href="<?php echo $functions->escape(navSiteBaseUrl() . '/apply.php'); ?>">
     <script src="assets/js/tailwind.min.js"></script>

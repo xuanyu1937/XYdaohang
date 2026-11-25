@@ -57,7 +57,7 @@ $relatedLinks = $relatedStmt->fetchAll();
 $urlParts = parse_url($link['url']);
 $domain = isset($urlParts['host']) ? $urlParts['host'] : $link['url'];
 
-/* v2.18.27 P2-1 · 详情页地址断行：只在结构性分隔符后提供换行点（<wbr>），
+/* v2.19.0 P2-1 · 详情页地址断行：只在结构性分隔符后提供换行点（<wbr>），
    避免「…/XYdaoh」+「ang/」这种连续字母被硬切。href 仍用原始 URL，仅显示文本插入 <wbr>。 */
 $detailUrlBreakHtml = '';
 $_detailUrl = (string) ($link['url'] ?? '');
@@ -185,9 +185,9 @@ $detailTotalSites = (int) $detailTotalStmt->fetchColumn();
             } catch (e) {}
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.27">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.27">
-    <link rel="stylesheet" href="assets/css/page.css?v=2.18.27">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.19.1">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.19.1">
+    <link rel="stylesheet" href="assets/css/page.css?v=2.19.1">
     <script src="assets/js/jquery3.7.1.js"></script>
     <?php require_once __DIR__ . '/includes/asset_fallbacks.php'; ?>
     <script src="assets/js/qrcode.min.js"></script>

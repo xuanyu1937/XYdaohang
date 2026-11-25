@@ -1,11 +1,6 @@
-/* ==========================================================================
-   轩宇-导航 · 前台导航页样式
-   极简专业 / 深邃蓝 + 浅灰 / 明暗主题
-   ========================================================================== */
 
-/* 说明：暗色主题的令牌统一定义在文件后段「中性色阶 / 暗色主题」两处。
-   此处原先还有一份冷蓝色底的 dark 令牌（--bg:旧冷蓝），其值早已被
-   后段的暖黑方案整块覆盖，属于死代码，已移除以免误改。 */
+
+
 
 *,
 *::before,
@@ -97,9 +92,7 @@ svg {
     background: var(--muted-2);
 }
 
-/* --------------------------------------------------------------------------
-   页面骨架
-   -------------------------------------------------------------------------- */
+
 
 .page-shell {
     width: 100%;
@@ -117,9 +110,7 @@ svg {
     padding: 22px 0 64px;
 }
 
-/* --------------------------------------------------------------------------
-   顶部头部
-   -------------------------------------------------------------------------- */
+
 
 .site-header {
     display: flex;
@@ -167,7 +158,7 @@ svg {
     inset: 0;
     width: 100%;
     height: 100%;
-    /* v2.18.6：手机端 logo 放大后同步收内边距，避免图标被 padding 吃掉 */
+    
     padding: 5px;
     background: var(--a-primary);
     object-fit: contain;
@@ -182,10 +173,10 @@ svg {
 
 .brand-title {
     margin: 0;
-    /* v2.18.1：该元素由 <span> 升为 <h1>，浏览器默认 font-size/margin/bold 由上面几行覆盖，这里补 reset */
+    
     padding: 0;
     color: var(--text);
-    font-size: 25px;
+    font-size: 22px;
     font-weight: 700;
     line-height: 1.25;
     letter-spacing: -0.035em;
@@ -223,41 +214,34 @@ svg {
     flex: 0 0 auto;
 }
 
-/* 搜索区：独立于头部，整体居中（左侧引擎选择 / 中间输入框 / 右侧搜索按钮） */
+
 .search-section {
     display: flex;
-    /* v2.18.10：原先 center/center 让搜索条居中于整页，与左侧分类栏、
-       右侧内容列的左缘都对不上（1440 下 left=360，内容列 340 / 色带 308）。
-       改为左对齐，与内容列同一基准线。 */
+    
     justify-content: flex-start;
-    /* 纵向排列：提示条必须落在搜索条下方。
-       漏写 direction 时会变成 row，提示条和搜索条并排抢宽度，
-       搜索条被挤到 100px 宽、整块向右甩。 */
+    
     flex-direction: column;
     align-items: flex-start;
-    /* 搜索区在 .site-body 之外，基准是外壳；要让左缘与内容列对齐，
-       需让出左侧分类栏宽度 + 栅格间距 = 238 + 30 */
+    
     padding-left: calc(238px + 30px);
     margin: 26px 0 30px;
 }
 
 @media (max-width: 960px) {
-    /* 分类栏收起为单列，搜索条回到页面左缘 */
+    
     .search-section {
         padding-left: 0;
     }
 }
 
-/* 提示条跟随搜索条同宽，竖排时不参与水平分配 */
+
 .search-section > .search-url-hint {
     width: min(720px, 100%);
     flex: 0 0 auto;
 }
 
 .search-bar {
-    /* 一体化输入条：引擎选择器与提交按钮都收进这条胶囊里，
-       不再各自带描边和投影 —— 三者共享同一个外环，焦点只在整条上体现。
-       --search-action-w 是右侧「搜索 / 收藏」按钮的固定宽度，供两个按钮叠放用。 */
+    
     --search-action-w: 78px;
     --search-size: 52px;
     --search-inset: 5px;
@@ -285,13 +269,11 @@ svg {
     position: relative;
     flex: 1 1 auto;
     min-width: 0;
-    /* 锁死高度：否则网址提示条展开时会把 .search-box 撑高，
-       绝对定位的清空按钮按 50% 算就会往下漂。 */
+    
     height: var(--search-size, 52px);
 }
 
-/* 「搜索 / 收藏」共用一格：grid 叠放，切换时只换可见的那个，
-   不会因为「收藏」两个字比「搜索」宽而让整条胶囊抖一下。 */
+
 .search-actions {
     position: absolute;
     top: 50%;
@@ -305,8 +287,7 @@ svg {
 }
 
 .search-submit {
-    /* 收进胶囊内部：与容器同高、贴右边缘，去掉独立投影与上浮。
-       原先是一个 44px 高的蓝色方块浮在输入框外侧，靠投影刷存在感。 */
+    
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -360,7 +341,7 @@ svg {
 .search-input {
     width: 100%;
     height: var(--search-size, 52px);
-    /* 右侧留出「清空按钮 + 动作区」的宽度，文字不会被压到按钮底下 */
+    
     padding: 0 calc(var(--search-action-w, 78px) + 46px) 0 36px;
     border: 0;
     border-radius: 0;
@@ -368,7 +349,7 @@ svg {
     color: var(--text);
     font-size: var(--a-fs-caption);
     outline: none;
-    /* 占位符过长时先收缩字号，而不是直接切掉半句话 */
+    
     text-overflow: ellipsis;
 }
 
@@ -389,8 +370,7 @@ svg {
 .search-clear {
     position: absolute;
     top: 50%;
-    /* 定位基准是 .search-box；右侧动作区宽度会随「搜索/收藏」变化，
-       所以用 calc 让清空按钮始终贴在动作区左侧 6px，不再写死 right 值。 */
+    
     right: calc(var(--search-action-w, 78px) + 10px);
     display: grid;
     place-items: center;
@@ -422,15 +402,12 @@ svg {
     align-items: center;
 }
 
-/* 引擎选择器退为「文字触发器」：无底色、无描边，只用一条细线跟输入区隔开。
-   原先是 44px 高的灰底方块，视觉重量压过输入框本身，用户第一眼会以为
-   左边那个方块才是主控件。 */
+
 .search-engine-toggle {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    /* v2.18.10：最小 44px —— --search-size 在窄屏被压到 46 时，
-       这里只剩 32px，低于触控下限 */
+    
     height: max(44px, calc(var(--search-size, 52px) - 14px));
     padding: 0 8px 0 12px;
     border: 0;
@@ -450,7 +427,7 @@ svg {
     color: var(--text);
 }
 
-/* 展开时给触发器一点存在感，否则菜单弹出会显得无源可溯 */
+
 .search-engine-toggle[aria-expanded="true"] {
     background: var(--surface-2);
     color: var(--primary);
@@ -469,8 +446,7 @@ svg {
     color: var(--primary);
 }
 
-/* 选择器与输入区之间的分隔线：用伪元素而非 border，
-   这样触发器自身 hover 变底色时不会被一条硬线割断。 */
+
 .search-engine::after {
     content: "";
     width: 1px;
@@ -563,7 +539,7 @@ svg {
     border-color: var(--primary);
     background: var(--surface);
     color: var(--primary);
-    /* v2.18.10：hover 只变颜色，不做位移 */
+    
     outline: 2px solid var(--a-focus);
     outline-offset: 2px;
 }
@@ -623,9 +599,7 @@ html[data-theme="light"] .theme-toggle .icon-sun {
     opacity: 0;
 }
 
-/* --------------------------------------------------------------------------
-   主体两栏骨架 + 左侧分类索引栏
-   -------------------------------------------------------------------------- */
+
 
 .site-body {
     display: grid;
@@ -658,8 +632,7 @@ html[data-theme="light"] .theme-toggle .icon-sun {
 .rail-close {
     display: none;
     place-items: center;
-    /* v2.18.10：26×26 远低于 44×44 的触控下限，移动端几乎点不中。
-       盒子撑到 44，图标维持 14px 不变，视觉重量不受影响。 */
+    
     width: 44px;
     height: 44px;
     padding: 0;
@@ -764,9 +737,7 @@ html[data-theme="light"] .theme-toggle .icon-sun {
     display: none;
 }
 
-/* --------------------------------------------------------------------------
-   列表标题
-   -------------------------------------------------------------------------- */
+
 
 .section-head {
     display: flex;
@@ -783,8 +754,7 @@ html[data-theme="light"] .theme-toggle .icon-sun {
     min-width: 0;
 }
 
-/* v2.18.10：「全部网站」是页面级标题，不是第一个分组 —— 降为 15px，
-   并去掉蓝色圆点（既是第二强调色，又让它看起来像分组的同级项）。 */
+
 .section-title h2 {
     display: flex;
     align-items: center;
@@ -821,16 +791,14 @@ html[data-theme="light"] .theme-toggle .icon-sun {
     height: 12px;
 }
 
-/* --------------------------------------------------------------------------
-   网址卡片
-   -------------------------------------------------------------------------- */
+
 
 .site-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 360px));
     justify-content: center;
     align-items: stretch;
-    /* 同一行的卡片拉齐到底边：避免"简介一行 / 两行"混排时出现锯齿 */
+    
     grid-auto-rows: 1fr;
     gap: 16px;
 }
@@ -843,7 +811,7 @@ html[data-theme="light"] .theme-toggle .icon-sun {
     min-height: 118px;
     padding: 16px;
     border: 1px solid var(--border);
-    /* v2.18.10：网格/紧凑态是"组件卡"，圆角归到 18 档；列表态另行覆盖为 0 */
+    
     border-radius: var(--a-radius-lg);
     background: var(--surface);
     color: var(--text);
@@ -853,16 +821,13 @@ html[data-theme="light"] .theme-toggle .icon-sun {
                 background-color 0.2s ease;
 }
 
-/* v2.18.0 · 屏外卡片渲染优化（零 JS 成本）
-   content-visibility: auto 让浏览器跳过屏外卡片的布局与绘制，
-   contain-intrinsic-size 给出占位高度，避免滚动条跳动。
-   只作用于站点卡片，不碰顶栏 / 分类栏 / 搜索区 / 弹窗。 */
+
 .site-grid > .site-card {
     content-visibility: auto;
     contain-intrinsic-size: auto 150px;
 }
 
-/* 占位高度按各视图实测卡片高度给，偏差控制在几像素内，滚动条不会明显跳动 */
+
 html[data-mode="list"] .site-grid > .site-card {
     contain-intrinsic-size: auto 57px;
 }
@@ -876,7 +841,7 @@ html[data-mode="compact"] .site-grid > .site-card {
     border-color: var(--primary-border);
     outline: 2px solid var(--a-focus);
     outline-offset: 2px;
-    /* v2.18.10：去掉上浮，只保留描边反馈 */
+    
 }
 
 .site-card:focus-visible {
@@ -884,7 +849,7 @@ html[data-mode="compact"] .site-grid > .site-card {
     outline-offset: 2px;
 }
 
-/* 离线卡：靠"表面略暗 + 去饱和"表达失效，不用 opacity（会拖低文字对比度） */
+
 .site-card.is-offline {
     filter: grayscale(0.2);
     background: var(--a-surface-soft);
@@ -923,20 +888,17 @@ html[data-theme="dark"] .site-card.is-offline {
     border: 1px solid var(--border);
     border-radius: var(--a-radius-md);
     background: var(--surface-2);
-    /* v2.18.10：全站只允许两处阴影 —— 品牌标识与站点图标（规格 P1-3）。
-       其余卡片、按钮、面板一律不用投影，层级交给 hairline。 */
+    
     box-shadow: var(--a-shadow-product);
 }
 
-/* favicon 兜底：域名首字母 + 稳定底色铺满整个图标区。
-   favicon 加载成功后由 .site-favicon 覆盖，失败时不会出现空白卡片。 */
+
 .site-icon-letter {
     position: absolute;
     inset: 0;
     display: grid;
     place-items: center;
-    /* 字母兜底中性化：不读 PHP 生成的彩色 --fallback-bg/fg（数据仍下发，仅视觉不用），
-       统一灰阶，避免每张卡出现不同色相破坏单一交互色。 */
+    
     background: var(--a-surface-soft);
     color: var(--a-ink-48-strong);
     font-size: var(--a-fs-title);
@@ -971,12 +933,11 @@ html[data-theme="dark"] .site-card.is-offline {
     display: block;
     overflow: hidden;
     color: var(--text);
-    /* v2.18.10：站点名 15px/600（规格 P2-3） */
+    
     font-size: var(--a-fs-subhead);
     font-weight: 600;
     line-height: 1.4;
-    /* 中文标题不加负字距：em 负字距会让文本测量宽度小于渲染宽度，
-       ellipsis 因此误判，明明放得下也会多截掉一个字（「天气预报」→「天气预…」） */
+    
     letter-spacing: 0;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -994,8 +955,7 @@ html[data-theme="dark"] .site-card.is-offline {
     justify-content: space-between;
     gap: 10px;
     min-width: 0;
-    /* 卡片是 flex 列容器：底部信息用 auto 上边距吸底，
-       这样简介一行 / 两行的卡片在同一行里高度一致，底边对齐 */
+    
     margin-top: auto;
     padding-top: 14px;
     padding-right: 2px;
@@ -1029,7 +989,7 @@ html[data-theme="dark"] .site-card.is-offline {
 }
 
 .site-clicks {
-    /* 次要信息也要过 AA：--muted-2 只有 2.9:1，正文级文字改用 --muted */
+    
     color: var(--muted);
     font-variant-numeric: tabular-nums;
 }
@@ -1053,9 +1013,7 @@ html[data-theme="dark"] .site-card.is-offline {
     content: "";
 }
 
-/* v2.18.10：测速三档不再用绿/橙/红，统一中性灰 —— 速度只是参考值，
-   用红绿会让整页出现第二、第三强调色，也容易误读成"故障"。
-   仅"无法访问"保留低调深红（对白 6.4:1）。 */
+
 .site-speed[data-level="fast"],
 .site-speed[data-level="mid"],
 .site-speed[data-level="slow"] {
@@ -1081,11 +1039,11 @@ html[data-theme="dark"] .site-card.is-offline {
 
 .site-card:hover .site-speed,
 .site-card:focus-visible .site-speed {
-    /* v2.18.10：测速与点击量交叉淡出，不做纵向位移 */
+    
     opacity: 0;
 }
 
-/* 关闭监测时只展示点击量，隐藏测速与状态 */
+
 body[data-monitor="0"] .site-status,
 body[data-monitor="0"] .site-speed {
     display: none !important;
@@ -1095,7 +1053,7 @@ body[data-monitor="0"] .site-clicks {
     opacity: 1;
 }
 
-/* 状态圆点 */
+
 .site-status {
     position: absolute;
     top: 14px;
@@ -1106,10 +1064,7 @@ body[data-monitor="0"] .site-clicks {
     justify-content: center;
 }
 
-/* v2.18.10：状态点与右侧测速文字重复表达"是否可访问"。
-   按规范只保留一个表达 —— 平时不画点，交给「75 毫秒·快 / 内网 / 测速中」文案；
-   只有「无法访问」才用一个低调深红点做强调。
-   DOM 与 data-state 属性保留不动，JS 侧无需改动。 */
+
 .status-dot {
     width: 7px;
     height: 7px;
@@ -1127,7 +1082,7 @@ body[data-monitor="0"] .site-clicks {
     color: var(--muted);
 }
 
-/* 检测中：只做明暗呼吸，不做缩放，避免出现近似 3D 的放大回弹观感 */
+
 @keyframes status-pulse {
     0%,
     100% {
@@ -1154,7 +1109,7 @@ body[data-monitor="0"] .site-clicks {
     content: attr(data-label);
     opacity: 0;
     pointer-events: none;
-    /* v2.18.10：只淡入，不做位移 */
+    
     transition: opacity 0.15s ease;
 }
 
@@ -1162,9 +1117,7 @@ body[data-monitor="0"] .site-clicks {
     opacity: 1;
 }
 
-/* --------------------------------------------------------------------------
-   空状态
-   -------------------------------------------------------------------------- */
+
 
 .empty-state {
     display: flex;
@@ -1207,7 +1160,7 @@ body[data-monitor="0"] .site-clicks {
     font-size: var(--a-fs-caption);
 }
 
-/* 空状态里的操作链接（如登录用户前往「我的导航」添加网址） */
+
 .empty-link {
     color: var(--primary);
     font-weight: 600;
@@ -1232,9 +1185,7 @@ body[data-monitor="0"] .site-clicks {
     color: var(--primary);
 }
 
-/* --------------------------------------------------------------------------
-   页脚与回到顶部
-   -------------------------------------------------------------------------- */
+
 
 .site-footer {
     padding: 26px 0 32px;
@@ -1273,7 +1224,7 @@ body[data-monitor="0"] .site-clicks {
     z-index: 20;
     display: grid;
     place-items: center;
-    /* v2.18.10：触控目标 44×44 */
+    
     width: 44px;
     height: 44px;
     padding: 0;
@@ -1305,9 +1256,7 @@ body[data-monitor="0"] .site-clicks {
     height: 17px;
 }
 
-/* --------------------------------------------------------------------------
-   响应式
-   -------------------------------------------------------------------------- */
+
 
 @media (max-width: 920px) {
     .site-header {
@@ -1350,7 +1299,7 @@ body[data-monitor="0"] .site-clicks {
         margin: 18px 0 22px;
     }
 
-    /* 窄屏把胶囊整体压矮一档，但保持「一体化」结构不变 */
+    
     .search-bar {
         --search-size: 44px;
         --search-inset: 4px;
@@ -1361,7 +1310,7 @@ body[data-monitor="0"] .site-clicks {
     }
 
     .search-engine-toggle {
-        /* v2.18.10：窄屏也不低于 44px 触控下限 */
+        
         height: max(44px, calc(var(--search-size) - 12px));
         padding: 0 6px 0 10px;
         font-size: var(--a-fs-caption);
@@ -1373,7 +1322,7 @@ body[data-monitor="0"] .site-clicks {
     }
 
     .search-submit {
-        /* v2.18.10：同上，至少 44×44 */
+        
         width: max(44px, calc(var(--search-size) - 8px));
         height: max(44px, calc(var(--search-size) - 8px));
         padding: 0;
@@ -1452,13 +1401,9 @@ body[data-monitor="0"] .site-clicks {
     }
 }
 
-/* ==========================================================================
-   v2.0.0 新增
-   ========================================================================== */
 
-/* --------------------------------------------------------------------------
-   无障碍辅助
-   -------------------------------------------------------------------------- */
+
+
 
 .visually-hidden {
     position: absolute;
@@ -1488,9 +1433,7 @@ body[data-monitor="0"] .site-clicks {
     left: 0;
 }
 
-/* --------------------------------------------------------------------------
-   顶栏工具：皮肤 / 显示方式 / 日夜 / 用户菜单
-   -------------------------------------------------------------------------- */
+
 
 .tool-btn {
     display: inline-flex;
@@ -1546,7 +1489,7 @@ body[data-monitor="0"] .site-clicks {
     gap: 8px;
 }
 
-/* 显示方式切换（顶栏分段控件） */
+
 
 .mode-switch {
     display: inline-flex;
@@ -1587,7 +1530,7 @@ body[data-monitor="0"] .site-clicks {
     height: 17px;
 }
 
-/* 用户菜单 */
+
 
 .user-menu {
     position: relative;
@@ -1724,9 +1667,7 @@ body[data-monitor="0"] .site-clicks {
     color: var(--danger);
 }
 
-/* --------------------------------------------------------------------------
-   公告条
-   -------------------------------------------------------------------------- */
+
 
 .announce-bar {
     display: flex;
@@ -1742,7 +1683,7 @@ body[data-monitor="0"] .site-clicks {
     overflow: hidden;
 }
 
-/* 公告图标：实心主色圆角块 + 白色喇叭，作为视觉锚点 */
+
 .announce-icon {
     flex: 0 0 auto;
     display: grid;
@@ -1784,7 +1725,7 @@ body[data-monitor="0"] .site-clicks {
     white-space: nowrap;
 }
 
-/* 内容超出容器时启用向左滚动动画 */
+
 .announce-text.is-scrolling {
     padding-left: 100%;
     animation: announce-scroll 26s linear infinite;
@@ -1804,14 +1745,11 @@ body[data-monitor="0"] .site-clicks {
     }
 }
 
-/* --------------------------------------------------------------------------
-   热门访问
-   -------------------------------------------------------------------------- */
+
 
 .hot-strip {
     --band-bleed: min(18px, max(0px, (100vw - min(100vw, var(--max-width))) / 2));
-    /* v2.18.10：画布改满屏白后，热门区作为第一道"米白满屏带"，
-       与下一节白底形成明暗交替节奏。分节之间不留 margin，靠 padding 撑开。 */
+    
     margin: 0 calc(var(--band-bleed) * -1);
     padding: 32px var(--band-bleed) 32px;
     border: 0;
@@ -1913,9 +1851,7 @@ html[data-theme="dark"] .hot-strip {
     font-variant-numeric: tabular-nums;
 }
 
-/* --------------------------------------------------------------------------
-   分组标题
-   -------------------------------------------------------------------------- */
+
 
 .link-group {
     margin-bottom: 30px;
@@ -1929,12 +1865,11 @@ html[data-theme="dark"] .hot-strip {
     display: flex;
     align-items: center;
     gap: 9px;
-    /* v2.18.10：节标题与卡片之间给足呼吸位（规格：分节靠 28–40px padding 撑开） */
+    
     margin-bottom: 16px;
 }
 
-/* v2.18.10：分组标题独立成"节标题"，比页面级标题大一档，
-   层级靠字号与分节底色区分，不再用蓝色圆点做装饰。 */
+
 .group-head h3, .group-head .group-title {
     display: flex;
     align-items: center;
@@ -1981,9 +1916,7 @@ html[data-theme="dark"] .hot-strip {
     display: none;
 }
 
-/* --------------------------------------------------------------------------
-   显示方式：网格 / 列表 / 紧凑
-   -------------------------------------------------------------------------- */
+
 
 html[data-mode="grid"] .site-grid {
     display: grid;
@@ -1998,8 +1931,7 @@ html[data-mode="list"] .site-grid {
     gap: 9px;
 }
 
-/* v2.18.10：列表态不再是一张张白卡片，改为「满屏分节 + 行分隔」
-   透明底 / 0 圆角 / 只有一条下边框；层级由 hairline 承担，不用投影。 */
+
 html[data-mode="list"] .site-card {
     flex-direction: row;
     align-items: center;
@@ -2042,7 +1974,7 @@ html[data-mode="list"] .site-desc {
     margin-top: 2px;
     overflow: hidden;
     color: var(--a-muted);
-    /* v2.18.10：描述 12px → 14px/1.43，最多两行后省略（规格 P2-3 / P2-8） */
+    
     font-size: var(--a-fs-caption);
     line-height: 1.43;
     -webkit-box-orient: vertical;
@@ -2102,21 +2034,14 @@ html[data-mode="compact"] .status-dot {
     height: 5px;
 }
 
-/* --------------------------------------------------------------------------
-   卡片入场 + 3D 悬浮倾斜
-   -------------------------------------------------------------------------- */
 
-/* v2.16.0 · 首屏稳定性：
-   旧写法让每张卡片都淡入 + 平移 12px，且延迟随索引线性增长（最多 24×26ms ≈ 0.6s），
-   首屏看上去一直在"闪"，滚动到后面的分组还在陆续出现，观感像卡顿。
-   现在只让首屏前 6 张做一次短促的入场，其余卡片直接显示，避免额外的合成层与布局抖动。 */
-/* [apple] 卡片入场错峰已下线，首屏直接显示 */
 
-/* [apple] 3D tilt 已下线 */
 
-/* --------------------------------------------------------------------------
-   右下悬浮工具条
-   -------------------------------------------------------------------------- */
+
+
+
+
+
 
 .float-bar {
     position: fixed;
@@ -2131,7 +2056,7 @@ html[data-mode="compact"] .status-dot {
 .float-btn {
     display: grid;
     place-items: center;
-    /* v2.18.10：触控目标不小于 44×44 */
+    
     width: 44px;
     height: 44px;
     padding: 0;
@@ -2164,7 +2089,7 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
     display: block;
 }
 
-/* 置于悬浮条内时，回顶按钮常显但未滚动时弱化 */
+
 .float-bar .to-top {
     position: static;
     right: auto;
@@ -2182,16 +2107,14 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
     opacity: 1;
 }
 
-/* --------------------------------------------------------------------------
-   页脚补充
-   -------------------------------------------------------------------------- */
+
 
 .footer-sep {
     margin: 0 3px;
     color: var(--border-strong);
 }
 
-/* 页脚版本号：便于用户与运维直接确认线上版本 */
+
 .footer-version {
     color: var(--muted);
     font-variant-numeric: tabular-nums;
@@ -2199,21 +2122,19 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
 
 .site-footer .copyright a:hover {
     color: var(--primary);
-}/* [apple] 皮肤块已移除，统一收敛见 apple-tokens.css */
+}
 
-/* [apple] 皮肤块已移除，统一收敛见 apple-tokens.css */
 
-/* [apple] 皮肤块已移除，统一收敛见 apple-tokens.css */
 
-/* [apple] 皮肤块已移除，统一收敛见 apple-tokens.css */
 
-/* [apple] 皮肤块已移除，统一收敛见 apple-tokens.css */
 
-/* [apple] 皮肤块已移除，统一收敛见 apple-tokens.css */
 
-/* --------------------------------------------------------------------------
-   v2 响应式
-   -------------------------------------------------------------------------- */
+
+
+
+
+
+
 
 @media (max-width: 1180px) {
     html[data-mode="grid"] .site-grid {
@@ -2232,14 +2153,12 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
         padding-top: 6px;
     }
 
-    /* v2.18.7：移动端清掉 .site-main 顶部基础 22px 内边距，避免与搜索区
-       下边距、.site-body 上内边距三重叠加；同时也是 sticky 分类条吸顶时
-       上方不残留空白缝隙的前提（桌面 min-width:961px 的 16px 保持不变）。*/
+    
     .site-main {
         padding-top: 0;
     }
 
-    /* 移动端改为横向分类条，抽屉只作为「全部分类」入口保留 */
+    
     .rail-bar {
         display: none;
     }
@@ -2363,7 +2282,7 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
         display: grid;
     }
 
-    /* 旧版「分类」抽屉按钮在移动端已被横向分类条取代，规则保留但不再显示 */
+    
     .rail-bar {
         display: none !important;
         align-items: center;
@@ -2430,10 +2349,7 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
 }
 
 @media (max-width: 620px) {
-    /* 原先降到 minmax(152px, 1fr)：在 390px 屏上只能排 2 列 ×152px，
-       卡片被压得又窄又高，标题必然截断成「天气...」。
-       对齐 awesome-design-md 的 feature-card 塌缩策略（3-up → 2-up → 1-up），
-       这里固定 2 列并给足最小宽度，窄屏再落到 1 列，让标题有完整一行可读。 */
+    
     html[data-mode="grid"] .site-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
@@ -2465,8 +2381,7 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
         font-size: var(--a-fs-caption);
     }
 
-    /* 手机端：禁止横向滚动动画，改为正常换行 + 纵向自动高度；
-       这样公告文字再长也不会被裁掉，且不会让横滑动画在窄屏上糊成一团。 */
+    
     .announce-text.is-scrolling,
     .announce-text {
         white-space: normal !important;
@@ -2485,49 +2400,43 @@ html[data-mode="compact"] #modeCycle .mode-icon-mode-compact {
     }
 }
 
-/* ==========================================================================
-   接口规范修整（触控 / 焦点 / 动效 / 安全区）
-   ========================================================================== */
+
 
 html {
-    /* 有意设置点击高亮，替代移动端默认灰块 */
+    
     -webkit-tap-highlight-color: var(--primary-soft);
 }
 
-/* 消除双击缩放带来的点击延迟 */
+
 :where(a, button, summary, input, textarea, select, label) {
     touch-action: manipulation;
 }
 
-/* 跳转锚点不被固定/吸顶元素遮挡 */
+
 #siteMain,
 .skip-link {
     scroll-margin-top: 72px;
 }
 
-/* 公告滚动：鼠标悬停或键盘聚焦时暂停 */
+
 .announce-bar:focus-within .announce-text {
     animation-play-state: paused;
 }
 
-/* 刘海屏安全区（悬浮条与页脚） */
+
 .float-bar {
     right: max(22px, env(safe-area-inset-right));
     bottom: max(22px, env(safe-area-inset-bottom));
 }
 
 @media (max-width: 620px) {
-    /* v2.18.10：窄屏悬浮组（44×44 两枚按钮，纵向排列共 96px 高）会压在
-       卡片右缘上，挡住测速与星标。按规格把它下移到 bottom 16px，
-       并给站点网格右侧留 56px 安全区（44 + 交互间隙 12），
-       让卡片提前收窄而不是被按钮盖住。 */
+    
     .float-bar {
         right: max(14px, env(safe-area-inset-right));
         bottom: max(16px, env(safe-area-inset-bottom));
     }
 
-    /* 安全区只加在「右侧还会被按钮压到」的网格视图上；
-       列表态一行到底，按钮本就落在文字下方的空白里，不需要收窄。 */
+    
     html[data-mode="grid"] #linkSections .site-grid {
         padding-right: 0;
         margin-right: 52px;
@@ -2539,13 +2448,13 @@ html {
     }
 }
 
-/* 大目录下的滚动性能：屏幕外的分组跳过渲染 */
+
 .link-group {
     content-visibility: auto;
     contain-intrinsic-size: auto 320px;
 }
 
-/* 数字对齐：计数列使用等宽数字 */
+
 .rail-count,
 .group-count,
 .site-clicks,
@@ -2553,16 +2462,14 @@ html {
     font-variant-numeric: tabular-nums;
 }
 
-/* 标题避免孤字 */
+
 .group-head h3, .group-head .group-title,
 .section-title h2,
 .brand-title {
     text-wrap: balance;
 }
 
-/* ==========================================================================
-   登录 / 注册 统一弹窗（v2.4.0）
-   ========================================================================== */
+
 
 .auth-trigger {
     display: inline-flex;
@@ -2580,7 +2487,7 @@ html {
 }
 
 .auth-trigger:hover {
-    /* v2.18.10：改为只变背景色 */
+    
     background: var(--a-primary-hover);
 }
 
@@ -2730,7 +2637,7 @@ dialog.auth-modal::backdrop {
 }
 
 .auth-submit:hover {
-    /* v2.18.10：改为只变背景色 */
+    
     background: var(--a-primary-hover);
 }
 
@@ -2766,17 +2673,13 @@ dialog.auth-modal::backdrop {
     }
 }
 
-/* ==========================================================================
-   全局搜索组件（v2.5.0）
-   - 首页联想面板 .ss-panel（挂在 .search-bar 下）
-   - 其他页面紧凑搜索 .header-search-*（header 注入）
-   ========================================================================== */
+
 
 .search-bar {
     position: relative;
 }
 
-/* 联想 / 历史面板（首页 + 紧凑面板共用内部结构） */
+
 .ss-panel {
     position: absolute;
     top: calc(100% + 8px);
@@ -2920,7 +2823,7 @@ dialog.auth-modal::backdrop {
     font-weight: 700;
 }
 
-/* 历史面板头部 */
+
 .ss-head {
     display: flex;
     align-items: center;
@@ -2980,7 +2883,7 @@ dialog.auth-modal::backdrop {
     text-align: center;
 }
 
-/* 无匹配引导 */
+
 .ss-empty {
     padding: 14px 12px 12px;
     text-align: center;
@@ -3018,7 +2921,7 @@ dialog.auth-modal::backdrop {
 }
 
 .ss-action:hover {
-    /* v2.18.10：去掉上浮与提亮滤镜 */
+    
     background: var(--primary-soft);
 }
 
@@ -3032,7 +2935,7 @@ dialog.auth-modal::backdrop {
     background: var(--surface-2);
 }
 
-/* 其他页面 header 紧凑搜索入口 */
+
 .header-search-wrap {
     position: relative;
     flex: 0 0 auto;
@@ -3041,7 +2944,7 @@ dialog.auth-modal::backdrop {
 .header-search-btn {
     display: grid;
     place-items: center;
-    /* v2.18.10：触控目标不小于 44×44 */
+    
     width: 44px;
     height: 44px;
     padding: 0;
@@ -3123,7 +3026,7 @@ dialog.auth-modal::backdrop {
     display: none;
 }
 
-/* 面板在紧凑模式内改为随内容展开（覆盖首页的绝对定位） */
+
 .header-search-panel .ss-panel {
     position: static;
     max-height: min(430px, 56vh);
@@ -3145,9 +3048,7 @@ dialog.auth-modal::backdrop {
     }
 }
 
-/* ==========================================================================
-   v2.6.0 · 卡片角标 / 悬停操作 / 右键与长按菜单 / 快捷收藏弹窗
-   ========================================================================== */
+
 
 .site-card {
     position: relative;
@@ -3163,7 +3064,7 @@ dialog.auth-modal::backdrop {
     gap: 6px;
     pointer-events: none;
     opacity: 0;
-    /* v2.18.10：星标角标只淡入，不做位移 */
+    
     transition: opacity 0.2s ease;
 }
 
@@ -3198,8 +3099,7 @@ dialog.auth-modal::backdrop {
 .card-star svg {
     width: 15px;
     height: 15px;
-    /* v2.18.1：描边参数从 HTML 属性挪到这里，640 张卡省约 7KB 首屏字节。
-       fill 必须留在标签属性上——收藏态要由 JS 改成 currentColor，CSS 会盖掉它。 */
+    
     stroke: currentColor;
     stroke-width: 2;
     stroke-linecap: round;
@@ -3264,7 +3164,7 @@ dialog.auth-modal::backdrop {
 .card-action svg {
     width: 14px;
     height: 14px;
-    /* v2.18.1：同 .card-star，描边参数统一收口到 CSS */
+    
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
@@ -3286,7 +3186,7 @@ dialog.auth-modal::backdrop {
     color: var(--danger);
 }
 
-/* 右键 / 长按 上下文菜单 */
+
 .card-context-menu {
     position: fixed;
     z-index: 9999;
@@ -3338,7 +3238,7 @@ dialog.auth-modal::backdrop {
     color: var(--danger);
 }
 
-/* 快捷收藏预览 */
+
 .quick-add-preview {
     display: none;
     align-items: center;
@@ -3408,7 +3308,7 @@ dialog.auth-modal::backdrop {
     -webkit-box-orient: vertical;
 }
 
-/* 二维码弹窗 */
+
 .qr-box {
     display: flex;
     flex-direction: column;
@@ -3432,12 +3332,9 @@ dialog.auth-modal::backdrop {
     text-align: center;
 }
 
-/* 移动端：无 hover 能力时隐藏悬停操作条，星标常显，长按弹菜单 */
+
 @media (hover: none) and (pointer: coarse) {
-    /* v2.14.0：手机端卡片保持干净，常驻操作按钮一律不显示；
-       紧凑模式 / 点击展开的 is-actions-open 状态同样强制隐藏，所有操作走长按菜单。
-       v2.16.0：补齐 .card-action 单体与 list/compact 视图，防止改版后某处漏掉又冒出来，
-       并彻底禁用指针事件，避免透明按钮仍然吃点击、造成误触。 */
+    
     .card-actions,
     .site-card .card-actions,
     .site-card.is-actions-open .card-actions,
@@ -3460,7 +3357,7 @@ dialog.auth-modal::backdrop {
     }
 }
 
-/* list / compact 模式：角标垂直居中 */
+
 .sites-list[data-view="list"] .card-corner,
 .sites-list[data-view="compact"] .card-corner {
     top: 50%;
@@ -3477,7 +3374,7 @@ dialog.auth-modal::backdrop {
     transform: translateY(-50%);
 }
 
-/* 轻提示 */
+
 .nav-toast {
     position: fixed;
     left: 50%;
@@ -3503,9 +3400,7 @@ dialog.auth-modal::backdrop {
     transform: translate(-50%, 0);
 }
 
-/* ==========================================================================
-   弹窗通用样式（index.php 与 my.php 共用）
-   ========================================================================== */
+
 
 .my-btn {
     display: inline-flex;
@@ -3528,7 +3423,7 @@ dialog.auth-modal::backdrop {
     border-color: var(--primary-border);
     background: var(--primary-soft);
     color: var(--primary);
-    /* v2.18.10：hover 不做位移 */
+    
 }
 
 .my-btn svg {
@@ -3714,7 +3609,7 @@ dialog.my-dialog::backdrop {
     color: var(--success);
 }
 
-/* ===== 搜索引擎管理模态框 ===== */
+
 .se-modal {
     position: fixed;
     inset: 0;
@@ -3905,7 +3800,7 @@ dialog.my-dialog::backdrop {
     text-align: center;
 }
 
-/* 编辑表单（行内编辑） */
+
 .se-edit-form {
     display: grid;
     grid-template-columns: 1fr 2fr 1fr auto auto;
@@ -3939,7 +3834,7 @@ dialog.my-dialog::backdrop {
     font-weight: normal;
 }
 
-/* ===== 移动端适配 ===== */
+
 @media (max-width: 600px) {
     .se-modal-dialog {
         width: 94vw;
@@ -3954,7 +3849,7 @@ dialog.my-dialog::backdrop {
         padding: 14px 16px 16px;
     }
 
-    /* 添加表单：纵向排列 */
+    
     .se-add-form {
         grid-template-columns: 1fr;
         gap: 10px;
@@ -3973,7 +3868,7 @@ dialog.my-dialog::backdrop {
         font-size: var(--a-fs-caption);
     }
 
-    /* 列表项：紧凑布局 */
+    
     .se-item {
         flex-wrap: wrap;
         gap: 8px;
@@ -3995,7 +3890,7 @@ dialog.my-dialog::backdrop {
         order: 1;
     }
 
-    /* 编辑表单：纵向排列 */
+    
     .se-edit-form {
         grid-template-columns: 1fr;
         gap: 8px;
@@ -4026,7 +3921,7 @@ dialog.my-dialog::backdrop {
     padding-top: 8px;
 }
 
-/* 移动端分类条：默认隐藏，仅在窄屏出现（2.8.1 版响应式块内已定义 .mobile-cats，此处仅作兜底） */
+
 .mobile-cats {
     display: none;
 }
@@ -4037,7 +3932,7 @@ dialog.my-dialog::backdrop {
     }
 }
 
-/* 空状态操作按钮 */
+
 .empty-actions {
     display: flex;
     flex-wrap: wrap;
@@ -4090,10 +3985,7 @@ dialog.my-dialog::backdrop {
     color: var(--primary);
 }
 
-/* ==========================================================================
-   v2.8.1 · 移动端头部重构
-   品牌信息与工具按钮合并为一行，搜索框紧随其后，减少首屏纵向占用
-   ========================================================================== */
+
 
 @media (max-width: 920px) {
     .site-header {
@@ -4120,8 +4012,7 @@ dialog.my-dialog::backdrop {
         gap: 10px;
     }
 
-    /* v2.18.6：去掉 !important，改由 ≤430 / ≤360 档的同级选择器覆盖。
-       否则后写的 42px / 38px 与 19px 标题会被这里的 !important 压死。 */
+    
     .brand-mark,
     .brand-mark img {
         width: 38px;
@@ -4141,7 +4032,7 @@ dialog.my-dialog::backdrop {
     }
 
     .header-tools .tool-btn {
-        /* v2.18.10：移动端头部工具按钮触控目标 44×44 */
+        
         width: 44px;
         height: 44px;
         border-radius: var(--a-radius-md);
@@ -4167,13 +4058,13 @@ dialog.my-dialog::backdrop {
         padding-top: 0 !important;
     }
 
-    /* 高度由 --search-size 控制，这里只保证不塌陷 */
+    
     .search-bar,
     .search-box {
         min-height: 0;
     }
 
-    /* 移动端热门访问：横向滚动单行，避免占用首屏 */
+    
     .hot-strip {
         margin-bottom: 12px;
     }
@@ -4197,9 +4088,7 @@ dialog.my-dialog::backdrop {
     }
 }
 
-/* ==========================================================================
-   v2.8.1 · 列表区排序切换
-   ========================================================================== */
+
 
 .section-aside {
     gap: 4px;
@@ -4233,7 +4122,7 @@ dialog.my-dialog::backdrop {
     height: 13px;
 }
 
-/* v2.8.1 · 选定单一分类时隐藏分组小标题，避免与顶部标题重复 */
+
 .is-single-category .group-head {
     display: none;
 }
@@ -4275,7 +4164,7 @@ dialog.my-dialog::backdrop {
         flex-shrink: 0;
     }
 
-    /* 窄屏保留两个排序入口，只收起文字标签，图标 + title 仍可辨识 */
+    
     .section-tool {
         padding: 0;
         width: 30px;
@@ -4294,9 +4183,7 @@ dialog.my-dialog::backdrop {
     }
 }
 
-/* ==========================================================================
-   v2.8.1 · 首屏节奏：收紧搜索区与内容区的垂直间距
-   ========================================================================== */
+
 
 @media (min-width: 961px) {
     .search-section {
@@ -4311,7 +4198,7 @@ dialog.my-dialog::backdrop {
         padding-top: 16px;
     }
 
-    /* 侧栏吸顶：滚动浏览长列表时分类索引始终可见 */
+    
     .category-rail {
         position: sticky;
         top: 16px;
@@ -4329,9 +4216,7 @@ dialog.my-dialog::backdrop {
     }
 }
 
-/* ==========================================================================
-   v2.8.1 · 筛选状态条
-   ========================================================================== */
+
 
 .filter-bar {
     display: flex;
@@ -4422,25 +4307,9 @@ dialog.my-dialog::backdrop {
     background: var(--surface);
 }
 
-/* ==========================================================================
-   v2.9.0 · 高定质感（Design Tokens）
-   设计准则：
-     1. 去边框 —— 靠 1%–3% 微明度分层，禁纯黑；
-        浅色 旧暖白 / 旧近白，暗色 旧近黑 / 旧深灰 / 旧深灰 / 旧深灰
-     2. 输入框聚焦不加 outline，用加深的双环描边造咬合感
-     3. 暗色补偿 —— 字重全降 40（400 → 360），防白字发胖
-     4. 流式打字 —— 单字 90ms 从 blur(6px) 到清晰，相邻字错开 30ms
-     5. 行内图标 vertical-align -0.125em
-     6. 数字加 tabular-nums 锁等宽
-     7. 丝滑折叠 —— Grid 0fr → 1fr，免 JS 算高
-     8. 正文 text-wrap: pretty 防孤字
-     9. 动效性格 —— 拖拽过阻尼（零回弹咬死）/ 对勾欠阻尼（微弹）
-    10. 反馈自熄 —— 对勾 2.5s 后自动淡出恢复
-   ========================================================================== */
 
-/* 暗色主题：中性色阶（暖黑方案）
-   注意：这里只定义中性色。品牌色、语义色的暗色取值在下方
-   「暗色主题 · 品牌色与语义色」块中定义，两者不要重复赋值。 */
+
+
 html[data-theme="dark"] {
     
     
@@ -4448,10 +4317,20 @@ html[data-theme="dark"] {
     
     
 
-    /* 不用纯白：暗底高对比会让字发胖，靠字重与亮度双重补偿 */
     
     
     
+    
+    
+    
+
+    
+    
+    
+
+    
+    
+
     
     
 
@@ -4460,25 +4339,13 @@ html[data-theme="dark"] {
     
 
     
-    
-
-    
-    
-
-    
-    
-    
-
-    /* 字重全降 40 */
     
     
     
     
 }
 
-/* 暗色主题 · 品牌色与语义色
-   （原先定义在文件开头的 dark 块里，但那块的中性色被上面这块覆盖，
-     品牌色却仍要生效 —— 合并到这里，避免同名 token 分散两处） */
+
 html[data-theme="dark"] {
     
     
@@ -4501,7 +4368,7 @@ html[data-theme="dark"] {
     color-scheme: dark;
 }
 
-/* 暗色补偿：整页字重与字距一起调，避免白字在深底上膨胀 */
+
 body {
     font-weight: var(--fw-normal);
     font-variant-numeric: tabular-nums;
@@ -4524,14 +4391,12 @@ html[data-theme="dark"] b {
     font-weight: var(--fw-semibold);
 }
 
-/* 暗色背景：把品牌光晕压到极淡，露出近黑底色 */
+
 html[data-theme="dark"] body {
     ;
 }
 
-/* --------------------------------------------------------------------------
-   去边框 · 用 1px hairline 环 + 明度差承担层级
-   -------------------------------------------------------------------------- */
+
 
 .site-card,
 .search-bar,
@@ -4545,7 +4410,7 @@ html[data-theme="dark"] body {
 
 }
 
-/* 卡片：hover 时环换成品牌色，仍是「无边框」观感 */
+
 .site-card {
     background: var(--surface);
 }
@@ -4557,7 +4422,7 @@ html[data-theme="dark"] body {
     outline-offset: 2px;
 }
 
-/* 站点图标外框退为内嵌环，避免卡片内出现第二层描边 */
+
 .site-icon {
     border-color: transparent;
     outline: 1px solid var(--hairline);
@@ -4565,7 +4430,7 @@ html[data-theme="dark"] body {
     background: var(--surface-2);
 }
 
-/* 热门访问条：条内条外都用环，不用描边 */
+
 .hot-item {
     border-color: transparent;
     outline: 1px solid var(--hairline);
@@ -4576,7 +4441,7 @@ html[data-theme="dark"] body {
 
 }
 
-/* 浮层类（下拉 / 弹窗）保留最淡的描边，但层级主要由阴影承担 */
+
 .search-engine-menu,
 .card-context-menu,
 dialog.auth-modal,
@@ -4586,9 +4451,7 @@ dialog.my-dialog,
 
 }
 
-/* --------------------------------------------------------------------------
-   2. 输入框 · 聚焦不加 outline，用加深的双环描边造咬合感
-   -------------------------------------------------------------------------- */
+
 
 .search-bar:focus-within {
     border-color: transparent;
@@ -4602,7 +4465,7 @@ html[data-theme="dark"] .search-bar:focus-within {
     outline-offset: 2px;
 }
 
-/* 内层输入元素自身不再出现任何聚焦描边/外发光 */
+
 .search-input:focus,
 .search-input:focus-visible,
 .auth-field input:focus,
@@ -4613,7 +4476,7 @@ html[data-theme="dark"] .search-bar:focus-within {
     border-color: transparent;
 }
 
-/* 表单类输入框：常态内嵌环，聚焦双环 */
+
 .auth-field input,
 .header-search-input {
     border-color: transparent;
@@ -4632,9 +4495,7 @@ html[data-theme="dark"] .search-bar:focus-within {
     outline-offset: 2px;
 }
 
-/* --------------------------------------------------------------------------
-   5. 行内图标：基线对齐，避免图标比文字「高半头」
-   -------------------------------------------------------------------------- */
+
 
 .site-meta svg,
 .site-desc svg,
@@ -4648,9 +4509,7 @@ html[data-theme="dark"] .search-bar:focus-within {
     vertical-align: -0.125em;
 }
 
-/* --------------------------------------------------------------------------
-   6. 数字防抖：所有计数 / 延迟 / 版本号锁等宽
-   -------------------------------------------------------------------------- */
+
 
 .site-clicks,
 .site-speed,
@@ -4667,9 +4526,7 @@ html[data-theme="dark"] .search-bar:focus-within {
     font-feature-settings: "tnum" 1;
 }
 
-/* --------------------------------------------------------------------------
-   8. 防孤字：正文段落用 pretty 断行，避免行尾孤字
-   -------------------------------------------------------------------------- */
+
 
 p,
 .site-desc,
@@ -4683,9 +4540,7 @@ p,
     text-wrap: pretty;
 }
 
-/* --------------------------------------------------------------------------
-   7. 丝滑折叠 · Grid 0fr → 1fr，不写一行 JS 算高度
-   -------------------------------------------------------------------------- */
+
 
 .filter-bar-wrap {
     display: grid;
@@ -4720,7 +4575,7 @@ p,
     padding-block: 10px;
 }
 
-/* 联想面板：从上方轻轻压入，配合 blur 消解，避免「啪」地出现 */
+
 .search-bar .ss-panel {
     animation: ss-panel-in 0.2s var(--ease-enter) both;
     transform-origin: top center;
@@ -4740,9 +4595,7 @@ p,
     }
 }
 
-/* --------------------------------------------------------------------------
-   4. 流式打字：单字 90ms 内完成 blur(6px) → 清晰，相邻字错开 30ms 晕开
-   -------------------------------------------------------------------------- */
+
 
 .stream-char {
     display: inline-block;
@@ -4758,7 +4611,7 @@ p,
         transform: translateY(0.14em);
     }
 
-    /* 0.42s × 21% ≈ 90ms：模糊在这一刻恰好消解完毕 */
+    
     21% {
         filter: blur(0);
     }
@@ -4776,17 +4629,13 @@ p,
         animation: none !important;
     }
 
-    /* v2.16.0：系统开了「减少动态效果」时，卡片入场直接省略 */
+    
     .site-card {
         animation: none !important;
     }
 }
 
-/* --------------------------------------------------------------------------
-   9. 动效性格
-      · 拖拽：落位即停，不做回弹
-      · 对勾 / 收藏：单次缩放确认，不过冲
-   -------------------------------------------------------------------------- */
+
 
 .card-star.is-pop svg,
 .card-action.is-copied svg,
@@ -4807,18 +4656,18 @@ p,
     }
 }
 
-/* 收藏态：星标点亮时走同一套微弹，避免"啪"地变色 */
+
 .site-card .card-star svg {
     transition: transform 0.2s var(--a-ease), fill 0.2s ease;
 }
 
-/* 拖拽中的条目：跟随指针不拖影，位移用过阻尼曲线收束 */
+
 .my-item,
 .my-group {
     transition: transform 0.16s var(--a-ease);
 }
 
-/* 拖拽中：只降透明度标记"被拿起"，不给放大，避免浮起观感 */
+
 .my-item.is-dragging {
     opacity: 0.5;
 
@@ -4830,7 +4679,7 @@ p,
     transition: opacity 0.16s linear;
 }
 
-/* 落点提示线：用主色实线替代阴影，位置一出现就咬死，不做渐入 */
+
 .my-item.is-drop-before,
 .my-item.is-drop-after,
 .my-group.is-drop-before > .my-group-head,
@@ -4838,9 +4687,7 @@ p,
     
 }
 
-/* --------------------------------------------------------------------------
-   10. 反馈自熄：复制成功后图标换对勾，2.5s 淡出并恢复原图标
-   -------------------------------------------------------------------------- */
+
 
 .card-action.is-copied,
 #qrCopyBtn.is-copied {
@@ -4870,7 +4717,7 @@ p,
     }
 }
 
-/* 折叠容器：吞掉子节点间的换行空白（匿名 grid item 会残留 2px 高度） */
+
 .filter-bar-wrap {
     font-size: 0;
     pointer-events: none;
@@ -4884,15 +4731,7 @@ p,
     font-size: var(--a-fs-caption);
 }
 
-/* ==========================================================================
-   v2.9.2 · 头部工具区与用户菜单修正
-   --------------------------------------------------------------------------
-   1. 子页（about / contact / share）的 .tool-btn 一律单行省略，
-      920px 以下只保留图标语义的按钮，文字按钮收进「更多」下拉，
-      避免窄屏把「返回首页」压成四行竖排。
-   2. 用户菜单的头像尺寸改为显式 width/height + object-fit，
-      同时给 <img> 加 min-width: 0 防护，杜绝 flex 收缩把头像压成细条。
-   ========================================================================== */
+
 
 .tool-btn,
 .tool-text {
@@ -4904,7 +4743,7 @@ p,
     max-width: 100%;
 }
 
-/* 头像：无论正方形、超宽还是超高的原图，都锁死在同一个圆角方块里 */
+
 .user-avatar,
 .user-avatar-img {
     width: 26px;
@@ -4924,7 +4763,7 @@ p,
     outline-offset: -1px;
 }
 
-/* 用户名：单行省略，永不换行 / 竖排 */
+
 .user-name {
     display: block;
     min-width: 0;
@@ -4937,7 +4776,7 @@ p,
 }
 
 @media (max-width: 920px) {
-    /* 子页头部的文字按钮：只留图标，文字视觉隐藏（仍可被读屏朗读） */
+    
     .header-tools .tool-btn.tool-text {
         width: 36px;
         height: 36px;
@@ -4960,9 +4799,7 @@ p,
         color: var(--text-2);
     }
 
-    /* 首页头部：头像 + 用户名改为纯头像按钮，用户名收进下拉。
-       宽高跟同排的 .theme-toggle（44×36）对齐，否则头像按钮会比旁边窄 8px，
-       视觉上像是"位置没对齐"。 */
+    
     .user-summary {
         gap: 0;
         padding: 0;
@@ -4977,7 +4814,7 @@ p,
         display: none;
     }
 
-    /* 窄屏下箭头会和头像各占一边、重心偏左，整块本身就是按钮，索性收掉 */
+    
     .user-summary .user-caret {
         display: none;
     }
@@ -4994,8 +4831,7 @@ p,
 
 }
 
-/* 下拉菜单顶部的账号行：头像 + 用户名 + 管理员标签。
-   窄屏隐藏了顶部用户名后，这里是唯一能看到"当前是谁"的地方，必须显示。 */
+
 .user-dropdown .user-account {
     display: flex;
     align-items: center;
@@ -5046,14 +4882,14 @@ p,
     border-radius: var(--a-radius-sm);
 }
 
-/* 账号行只在「用户名被隐藏」的窄屏出现，避免桌面端信息重复 */
+
 @media (max-width: 920px) {
     .user-dropdown .user-account {
         display: flex;
     }
 }
 
-/* 图标映射：不同文字按钮各自的符号，由 data-icon 驱动 */
+
 .header-tools .tool-btn.tool-text[data-icon="home"] { --tool-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 10.5 12 3l9 7.5'/%3E%3Cpath d='M5 9.5V21h14V9.5'/%3E%3C/svg%3E"); }
 .header-tools .tool-btn.tool-text[data-icon="nav"] { --tool-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='4' width='7' height='7' rx='1.5'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1.5'/%3E%3C/svg%3E"); }
 .header-tools .tool-btn.tool-text[data-icon="about"] { --tool-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v6M12 7.6v.2'/%3E%3C/svg%3E"); }
@@ -5061,21 +4897,15 @@ p,
 .header-tools .tool-btn.tool-text[data-icon="login"] { --tool-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h3.5A2.5 2.5 0 0 1 21 5.5v13a2.5 2.5 0 0 1-2.5 2.5H15'/%3E%3Cpath d='M10 16l4-4-4-4M14 12H3'/%3E%3C/svg%3E"); }
 .header-tools .tool-btn.tool-text[data-icon="logout"] { --tool-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 3H5.5A2.5 2.5 0 0 0 3 5.5v13A2.5 2.5 0 0 0 5.5 21H9'/%3E%3Cpath d='m16 16 4-4-4-4M20 12H9'/%3E%3C/svg%3E"); }
 
-/* 未标 data-icon 时退回一个通用「更多」图标，避免空白按钮 */
+
 .header-tools .tool-btn.tool-text {
     --tool-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v6M12 7.6v.2'/%3E%3C/svg%3E");
 }
 
-/* ==========================================================================
-   v2.9.2 · 搜索框收藏网址
-   --------------------------------------------------------------------------
-   搜索框里粘的是网址时，「搜索」按钮原地换成「收藏」，下方滑出提示条。
-   两个按钮都占同一格，用 grid 叠放避免宽度跳动。
-   ========================================================================== */
+
 
 .search-bar {
-    /* 「搜索 / 收藏」按钮宽度由基础规则中的 --search-action-w 统一控制，
-       这里不再重复定义，避免覆盖导致宽度漂移。 */
+    
 }
 
 .search-submit.search-save {
@@ -5087,7 +4917,7 @@ p,
 
 }
 
-/* 提示条：grid 0fr → 1fr，和筛选条用同一套折叠语言 */
+
 .search-url-hint {
     display: grid;
     grid-template-rows: 1fr;
@@ -5154,8 +4984,7 @@ p,
 }
 
 @media (max-width: 620px) {
-    /* 按钮已在胶囊内部，窄屏只留图标、保持正圆；
-       「收藏」两个字保留 —— 那是内容变更提示，取消它等于丢掉反馈。 */
+    
     .search-bar {
         --search-action-w: 44px;
     }
@@ -5188,11 +5017,7 @@ p,
     }
 }
 
-/* --------------------------------------------------------------------------
-   v2.9.2 · 快捷收藏后新卡片就地入场
-   收藏成功不再整页刷新：新卡片插到列表首位，用一段短促的抬升淡入告诉用户
-   「就是这一张」，比刷新后满屏重排更容易被看见。
-   -------------------------------------------------------------------------- */
+
 
 .site-card.is-new {
     animation: card-just-added 620ms var(--a-ease) both;
@@ -5217,22 +5042,15 @@ p,
     }
 }
 
-/* ==========================================================================
-   header-tools 显示优化（v2.9.3 迭代）
-   1) 桌面：皮肤/模式/主题/账号四个控件统一为 hairline 环 + 白底质感，
-      hover 统一上浮 + 品牌色投影，分段控件选中态加落影提层次
-   2) 窄屏：不再整体隐藏皮肤选择与显示模式切换，改为紧凑图标化，
-      移动端也能换配色 / 切换网格-列表-紧凑视图
-   ========================================================================== */
 
-/* --- 桌面：统一质感 --- */
+
+
 
 .header-tools {
     gap: 8px;
 }
 
-/* mode-switch 原为灰底描边，与旁边的白底 tool-btn 质感不一致；
-   统一成白底 + hairline 环（与站点「去边框」语言一致） */
+
 .header-tools .mode-switch {
     border-color: transparent;
     background: var(--surface);
@@ -5247,8 +5065,7 @@ p,
 
 }
 
-/* 所有头部图标按钮 hover 统一：只给焦点环，不做位移
-   v2.18.10：删除上浮 1px，按下态统一 scale(.95) */
+
 .header-tools .tool-btn:hover,
 .header-tools .tool-btn:focus-visible,
 .header-tools .mode-btn:hover {
@@ -5269,10 +5086,10 @@ p,
     }
 }
 
-/* --- 窄屏：恢复皮肤选择与显示模式（紧凑图标化） --- */
+
 
 @media (max-width: 920px) {
-    /* 覆盖上方同名规则：这两个控件在窄屏保留，改为紧凑形态 */
+    
     .header-tools .mode-switch {
         display: inline-flex;
     }
@@ -5297,23 +5114,16 @@ p,
 
 }
 
-/* 最窄档（≤480px）：保留主题切换，显示模式收进不再展示，
-   避免 390px 级别屏幕头部拥挤 */
+
 @media (max-width: 480px) {
     .header-tools .mode-switch {
         display: none;
     }
 }
 
-/* ==========================================================================
-   顶部右上角控件重做（v2.9.3 迭代 · 移动端优先）
-   ① 头像正圆形固定尺寸 + object-fit:cover 等比填满，与下拉箭头合成一个整体按钮
-   ② 头像按钮与主题按钮等高、垂直居中、间距统一
-   ③ 主题按钮点击反馈（图标旋转进场 + 按压回弹）
-   ⑤ 账号设置页头像预览同为圆形（见 my.php 内联样式）
-   ========================================================================== */
 
-/* 头像统一正圆形：无论是真实头像、首字兜底还是默认头像 */
+
+
 .user-avatar,
 .user-avatar-img,
 .user-dropdown .user-account .user-avatar,
@@ -5321,7 +5131,7 @@ p,
     border-radius: 50%;
 }
 
-/* 主按钮内头像：固定 28×28，等比填满不拉伸 */
+
 .user-summary .user-avatar,
 .user-summary .user-avatar-img {
     width: 28px;
@@ -5333,7 +5143,7 @@ p,
     object-position: center;
 }
 
-/* 下拉账号行内头像略小一档 */
+
 .user-dropdown .user-account .user-avatar,
 .user-dropdown .user-account .user-avatar-img {
     width: 24px;
@@ -5346,10 +5156,7 @@ p,
 }
 
 @media (max-width: 920px) {
-    /* 窄屏：头像 + 箭头合并为一个整体按钮（不再隐藏箭头），
-       高度 36 与主题按钮一致，宽度按内容收缩。
-       注意：选择器要带 .header-tools，否则会被同断点的
-       `.header-tools .tool-btn { width: 36px }` 锁死宽度、把内容挤出去 */
+    
     .header-tools .user-summary,
     .header-tools .user-summary-guest {
         width: auto;
@@ -5372,7 +5179,7 @@ p,
         color: var(--muted);
     }
 
-    /* 未登录态：默认头像 + 箭头，与登录态同一套尺寸 */
+    
     .auth-links .user-summary-guest {
         display: inline-flex;
         align-items: center;
@@ -5392,8 +5199,7 @@ p,
     }
 }
 
-/* 主题按钮点击反馈：按下统一 scale(.95)，不做位移
-   v2.18.10：全站按下态口径统一 */
+
 .theme-toggle:active,
 .header-tools .tool-btn:active {
     transform: scale(0.95);
@@ -5421,14 +5227,7 @@ p,
     }
 }
 
-/* ==========================================================================
-   设计规范对齐 · 触控热区（v2.10.0）
-   依据 awesome-design-md / notion、apple 的 Touch Targets 规范：
-   可交互元素有效热区不小于 40px。
 
-   这里不改视觉尺寸，只用伪元素把命中区域撑到 40px —— 直接加 padding
-   会挤压卡片密度、改变视觉节奏，是错误做法。
-   ========================================================================== */
 
 .card-star,
 .rail-item,
@@ -5439,10 +5238,7 @@ p,
     position: relative;
 }
 
-/* .search-clear 例外：它本身是绝对定位（贴在输入框右侧），
-   一旦被上面的 position: relative 改写，top: 50% 就会相对自身高度
-   计算，按钮整体往下漂。它的宿主 .search-box 已经是 relative，
-   定位上下文本来就有，伪元素热区不受影响。 */
+
 
 .card-star::after,
 .rail-close::after,
@@ -5455,12 +5251,11 @@ p,
     width: 40px;
     height: 40px;
     transform: translate(-50%, -50%);
-    /* 只扩大命中范围，不参与绘制 */
+    
     pointer-events: auto;
 }
 
-/* 行内元素沿垂直方向补足到 40px，水平方向保持原有宽度不越界。
-   z-index 需要压过同级卡片内容，否则热区会被上层元素抢走命中。 */
+
 .rail-item::after,
 .hot-item::after,
 .mcat::after {
@@ -5476,7 +5271,7 @@ p,
     z-index: 1;
 }
 
-/* 热区伪元素会盖住子元素，让子元素内容不接收指针事件即可透传 */
+
 .card-star > *,
 .rail-item > *,
 .hot-item > *,
@@ -5484,12 +5279,7 @@ p,
     pointer-events: none;
 }
 
-/* ==========================================================================
-   设计规范对齐 · 窄屏卡片信息密度（v2.10.0）
-   问题：390px 下卡片 171px，内部「44px 图标 + 12px 间距 + 24px 操作位预留」
-   吃掉 80px，标题只剩 57px，中文名必然被省略。
-   做法：窄屏按比例收紧图标与预留位，把宽度还给标题，而非压缩卡片列数。
-   ========================================================================== */
+
 
 @media (max-width: 620px) {
     .site-card {
@@ -5498,7 +5288,7 @@ p,
 
     .site-card-main {
         gap: 10px;
-        /* 操作位只为悬浮按钮留出视觉余量，窄屏给 12px 足够 */
+        
         padding-right: 12px;
     }
 
@@ -5514,18 +5304,13 @@ p,
     }
 }
 
-/* ==========================================================================
-   v2.10.2 · 收录工具框
-   --------------------------------------------------------------------------
-   搜索框识别到网址后弹出的不只是「确认一下」，而是一个可编辑的收录面板：
-   自动填好的标题 / 描述 / 图标 / 推荐分组都在这里，用户改完再确认入库。
-   ========================================================================== */
+
 
 .qa-dialog {
     width: min(560px, calc(100vw - 32px));
 }
 
-/* 抓取结果区：整体是一张「站点名片」，下面是可编辑字段 */
+
 .qa-result {
     margin-top: 4px;
     padding-top: 16px;
@@ -5552,8 +5337,7 @@ p,
 
 .qa-site-head .qa-info {
     min-width: 0;
-    /* basis 必须是 0：写 auto 时 flex-wrap 会按内容宽度判断是否换行，
-       窄屏下站点名稍长就把图标挤到单独一行，留出一大块空白。 */
+    
     flex: 1 1 0;
 }
 
@@ -5578,7 +5362,7 @@ p,
     -webkit-box-orient: vertical;
 }
 
-/* 自动匹配成功时的小徽标，让「为什么是这个分组」有据可查 */
+
 .qa-status {
     flex: 0 0 auto;
     align-self: flex-start;
@@ -5601,7 +5385,7 @@ p,
     outline-offset: -1px;
 }
 
-/* 字段下方的小字说明：推荐理由 / 抓取失败兜底 */
+
 .qa-hint {
     margin: 6px 0 0;
     font-size: var(--a-fs-fine);
@@ -5626,8 +5410,7 @@ p,
         flex-wrap: wrap;
     }
 
-    /* 窄屏把状态徽标挪到下一行与文字左对齐，让名称和描述能占满整行宽度。
-       宽度要用 calc 扣掉左边距 —— 写 flex-basis: 100% 会顶出卡片右边界。 */
+    
     .qa-status {
         order: 3;
         flex-basis: calc(100% - 52px);
@@ -5635,9 +5418,7 @@ p,
     }
 }
 
-/* 图标解码完成前保持透明，避免先闪一块白底（下面还有首字母渐变块兜底）。
-   注意作用域限定在 .qa-site-head 内：my.php 的快速收藏弹窗也用 .qa-favicon，
-   但它的 JS 不会加 is-loaded，全局 opacity:0 会让那边图标永久不可见。 */
+
 .qa-site-head .qa-favicon {
     opacity: 0;
     transition: opacity 0.18s ease;
@@ -5647,14 +5428,7 @@ p,
     opacity: 1;
 }
 
-/* ==========================================================================
-   v2.10.2 · 我的导航顶栏窄屏收敛
-   --------------------------------------------------------------------------
-   390px 下 header-tools 会把页面撑出 22px 横向滚动：
-   用户栏（头像 + 用户名 + 相机）+ 主题按钮 + 「返回首页」「退出登录」两枚文字按钮
-   全部挤在一行，总宽超过可视区。这里只收掉用户名 —— 头像已经表明身份，
-   而两个文字按钮是操作入口，不能为了省地方删掉。
-   ========================================================================== */
+
 
 @media (max-width: 480px) {
     .my-userbar .my-username {
@@ -5667,28 +5441,14 @@ p,
     }
 }
 
-/* ==========================================================================
-   v2.10.5 · 三种显示模式三套版式
-   --------------------------------------------------------------------------
-   v2.10.5 只调了网格模式，列表与紧凑模式仍沿用旧规则，导致：
-     · 列表模式每张卡 70px 高，图标 44px、介绍单行、网址与测速挤在一行右侧；
-     · 紧凑模式卡片 52px 高却塞了图标 30px + 标题 + 状态点 + 操作条，
-       悬停浮出的操作条（40px 宽 × 4 个）比卡片本身还大，直接盖住标题。
-   本次按三种模式各自的「阅读任务」重做：
-     网格 —— 浏览发现，纵向信息：图标+标题+介绍 → 测速 → 网址；
-     列表 —— 扫描比对，横向信息：图标+标题+介绍 | 网址 | 测速；
-     紧凑 —— 快速跳转，只留图标+标题，操作条改为「主动展开」。
-   统一用 [data-mode="格网"] 精确指向，避免互相污染。
-   ========================================================================== */
 
-/* 卡片作为容器：同一套卡片在不同宽度下自动降级信息密度 */
+
+
 .site-card {
     container-type: inline-size;
 }
 
-/* --------------------------------------------------------------------------
-   ① 网格 GRID —— 竖排信息层级
-   -------------------------------------------------------------------------- */
+
 
 html[data-mode="grid"] .site-grid {
     grid-template-columns: repeat(auto-fill, minmax(258px, 1fr));
@@ -5700,7 +5460,7 @@ html[data-mode="grid"] .site-card {
     gap: 0;
     min-height: 0;
     padding: 14px 15px 12px;
-    /* 悬停时让出顶部一整行给操作条，靠 padding 过渡，不靠叠加遮罩 */
+    
     transition: padding-top 0.2s cubic-bezier(0.22, 1, 0.36, 1),
                 border-color 0.18s ease, transform 0.18s ease;
 }
@@ -5727,7 +5487,7 @@ html[data-mode="grid"] .site-name {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
-    /* v2.18.10：站点名统一 15px/600（规格 P2-3） */
+    
     font-size: var(--a-fs-subhead);
     font-weight: 600;
     line-height: 1.35;
@@ -5737,8 +5497,7 @@ html[data-mode="grid"] .site-desc {
     display: -webkit-box;
     overflow: hidden;
     color: var(--a-muted);
-    /* v2.18.10：描述 12px → 14px（规格 P2-3：12px 只允许出现在
-       细则、页脚、计数里，描述属于正文级信息） */
+    
     font-size: var(--a-fs-caption);
     line-height: 1.43;
     word-break: break-word;
@@ -5751,7 +5510,7 @@ html[data-mode="grid"] .site-desc:empty {
     display: none;
 }
 
-/* 卡片足够宽时介绍给到三行：宽屏下两行会留下大片空底 */
+
 @container (min-width: 330px) {
     html[data-mode="grid"] .site-desc {
         -webkit-line-clamp: 3;
@@ -5759,20 +5518,15 @@ html[data-mode="grid"] .site-desc:empty {
     }
 }
 
-/* 元信息纵向两行：测速在上、网址在下，网址独占整宽不再被压成省略号。
-   .site-metrics 内部本来就是「点击量 | 测速」横排一行（悬停时测速替换点击量），
-   这里不要再把它拆成两行，否则该块会撑到 47px，卡片凭空高出一大截。
-   v2.18.10：窄屏（≤620px）网格卡已改为「域名 · 测速」同排，见下方断点，
-   所以这里收窄到 min-width: 621px，避免两套规则打架。 */
+
 @media (min-width: 621px) {
 html:not([data-mode="list"]):not([data-mode="compact"]) .site-card .site-meta,
 html[data-mode="grid"] .site-meta {
     flex-direction: column;
     align-items: stretch;
-    /* 基础规则里的 justify-content: space-between 是为横排写的，
-       纵排时会两项各贴一端，把 meta 撑出 16px 空档，必须归位 */
+    
     justify-content: flex-start;
-    flex: 0 0 auto;      /* 卡片是纵向 flex，不加这条 meta 会被 stretch 拉高 */
+    flex: 0 0 auto;      
     gap: 2px;
     margin-top: 8px;
     padding-top: 8px;
@@ -5789,7 +5543,7 @@ html[data-mode="grid"] .site-metrics {
 }
 }
 
-/* 卡片被同行更高者拉伸时，多出的高度留在底部，不要挤进信息层级中间 */
+
 html[data-mode="grid"] .site-card-main {
     align-content: start;
 }
@@ -5807,7 +5561,7 @@ html[data-mode="grid"] .site-domain {
     padding-right: 2px;
 }
 
-/* 悬停操作条：横贯卡片顶部一整行，右端是星标，左端是操作按钮组 */
+
 html[data-mode="grid"] .card-corner {
     top: 8px;
     left: 8px;
@@ -5828,13 +5582,7 @@ html[data-mode="grid"] .site-card:focus-within .card-corner {
     transform: none;
 }
 
-/* --------------------------------------------------------------------------
-   ② 列表 LIST —— 单行扫描，四列对齐
-   --------------------------------------------------------------------------
-   用 display:contents 把 .site-card-main / .site-meta 这层包装「拆掉」，
-   让图标、信息、网址、测速四项直接参与卡片自身的网格，从而做到跨卡片对齐：
-   所有行的网址右边缘、测速右边缘都落在同一条竖线上。
-   -------------------------------------------------------------------------- */
+
 
 html[data-mode="list"] .site-grid {
     display: flex;
@@ -5849,7 +5597,7 @@ html[data-mode="list"] .site-card {
     align-items: center;
     column-gap: 12px;
     min-height: 56px;
-    /* v2.18.10：规格要求行内 padding 10px 6px（此前后置规则覆盖成 8px 12px） */
+    
     padding: 10px 6px;
     border: 0;
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
@@ -5858,15 +5606,7 @@ html[data-mode="list"] .site-card {
     box-shadow: none;
 }
 
-html[data-theme="dark"][data-mode="list"] .site-card {
-    border-bottom-color: rgba(255, 255, 255, 0.10);
-}
 
-/* v2.18.13 · 栅格修复：原 display:contents 同时拆 .site-card-main 与 .site-meta，
-   使 domain/metrics 各自升格 + corner 叠加 → 手机 7 轨道塌陷。
-   现只对 .site-card-main 保留 contents（让 icon / info 成为独立网格项，
-   匹配 grid-template-areas 的 icon / info 两区）；.site-meta 不再拆，
-   作为整块占 meta 列。桌面 / 手机各用一套显式区域，见文件末尾 v2.18.13 层。 */
 html[data-mode="list"] .site-card-main {
     display: contents;
 }
@@ -5883,7 +5623,7 @@ html[data-mode="list"] .site-icon-letter {
     font-size: var(--a-fs-caption);
 }
 
-/* 标题与介绍并排成一行：标题固定不被压缩，介绍吃掉剩余宽度 */
+
 html[data-mode="list"] .site-info {
     grid-area: info;
     display: flex;
@@ -5897,7 +5637,7 @@ html[data-mode="list"] .site-name {
     flex: 0 1 auto;
     max-width: 40%;
     overflow: hidden;
-    /* v2.18.10：列表态站点名 15px/600（规格 P2-3） */
+    
     font-size: var(--a-fs-subhead);
     font-weight: 600;
     line-height: 1.4;
@@ -5906,7 +5646,7 @@ html[data-mode="list"] .site-name {
 }
 
 html[data-mode="list"] .site-desc {
-    /* v2.18.10：与基础规则同口径 —— 14px/1.43、两行 clamp */
+    
     display: -webkit-box;
     flex: 1 1 auto;
     min-width: 0;
@@ -5926,7 +5666,7 @@ html[data-mode="list"] .site-domain {
     text-align: right;
 }
 
-/* 测速列定宽 + 右侧留出状态点的位置，保证跨行右边缘齐平 */
+
 html[data-mode="list"] .site-metrics {
     grid-area: metrics;
     justify-items: end;
@@ -5935,7 +5675,7 @@ html[data-mode="list"] .site-metrics {
     padding-right: 18px;
 }
 
-/* 状态点居右垂直居中；悬停时让位给操作条 */
+
 html[data-mode="list"] .site-status {
     top: 50%;
     right: 12px;
@@ -5960,14 +5700,7 @@ html[data-mode="list"] .site-card:focus-within .card-corner {
     transform: translateY(-50%);
 }
 
-/* --------------------------------------------------------------------------
-   ③ 紧凑 COMPACT —— 只留图标与标题
-   --------------------------------------------------------------------------
-   卡片只有 42px 高，操作条（星标 28px + 操作组）横向铺开有 40×4 = 160px+，
-   比卡片本身还宽。这里不再「悬停自动浮出」，改为：普通悬停无操作条，
-   单击卡片时先展开操作条（.is-actions-open），再点一次才跳转。
-   这样默认状态下卡片 100% 留给内容，操作入口也仍然可达（含触屏）。
-   -------------------------------------------------------------------------- */
+
 
 html[data-mode="compact"] .site-grid {
     grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
@@ -5981,7 +5714,7 @@ html[data-mode="compact"] .site-card {
     padding: 6px 26px 6px 7px;
 }
 
-/* 站长视角右上角还要放「编辑/删除」，多留 4px */
+
 body[data-owner="1"] html[data-mode="compact"] .site-card {
     padding-right: 30px;
 }
@@ -6013,10 +5746,6 @@ html[data-mode="compact"] .site-name {
     line-height: 1.4;
 }
 
-html[data-mode="compact"] .site-meta {
-    display: none;
-}
-
 html[data-mode="compact"] .site-status {
     top: 50%;
     right: 9px;
@@ -6024,12 +5753,7 @@ html[data-mode="compact"] .site-status {
     transition: opacity 0.16s ease;
 }
 
-html[data-mode="compact"] .status-dot {
-    width: 5px;
-    height: 5px;
-}
 
-/* 紧凑模式默认不响应悬停，避免操作条压住标题 */
 html[data-mode="compact"] .site-card:hover .card-actions,
 html[data-mode="compact"] .site-card:focus-within .card-actions {
     display: none;
@@ -6061,16 +5785,10 @@ html[data-mode="compact"] .card-action {
     height: 24px;
 }
 
-/* --------------------------------------------------------------------------
-   ④ 窄屏：只调整网格，列表与紧凑本身已是低密度版式
-   -------------------------------------------------------------------------- */
+
 
 @media (max-width: 620px) {
-    /* v2.18.10：列宽下限从 150px 提到 168px。
-       150px 时 430px 屏能排两列，每列仅 165px，站点名只剩 96px
-       （「零一万物-大模型开放平台」被折成两行窄条、描述也读不成句）。
-       168px 是「站点名 + 两行描述」还能成立的最小宽度；
-       排不下时自然落回单列，卡片占满整宽，可读性优先于密度。 */
+    
     html[data-mode="grid"] .site-grid {
         grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
         gap: 9px;
@@ -6097,28 +5815,20 @@ html[data-mode="compact"] .card-action {
     }
 
     html[data-mode="grid"] .site-name {
-        /* v2.18.10：窄屏也不降字号，站点名保持 15px 可读 */
+        
         font-size: var(--a-fs-subhead);
     }
 
-    /* v2.18.10：窄屏描述恢复两行 clamp。
-       此前窄屏压到一行，390px 下「提供在线工具箱…」只露出半句，等于没有信息。
-       站点名独占一行后纵向空间足够，两行是能读完整一句话的最小值。
-       字号不再回落到 12px —— 描述是正文级信息，移动端恰恰最需要可读。 */
+    
     html[data-mode="grid"] .site-desc {
         -webkit-line-clamp: 2;
         line-clamp: 2;
     }
 
-    /* v2.18.10：窄屏网格卡改「图标 + 站点信息」在上、「域名 · 测速」在下。
-       原先是横向 flex，信息列被图标与右侧 meta 左右夹击，390px 下站点名
-       只剩 90px 宽（五六个字就换行），而 meta 又占去 145px。
-       这里与列表态同一手法：用 display:contents 拆掉 .site-card-main /
-       .site-meta 这层包装，让图标、信息、域名、测速直接参与卡片的网格。 */
+    
     html[data-mode="grid"] .site-card {
         display: grid;
-        /* 第二行是「域名 1fr + 测速 auto」的横排：域名可截断，测速按内容宽
-           并给到 96px 上界，避免「无法访问」这类长文案把域名挤没 */
+        
         grid-template-columns: 34px minmax(0, 1fr);
         grid-template-areas:
             "icon info"
@@ -6128,8 +5838,7 @@ html[data-mode="compact"] .card-action {
         row-gap: 8px;
     }
 
-    /* 只拆 .site-card-main：图标与信息直接参与卡片网格。
-       .site-meta 保留自身盒模型，在第二行内部再排一条 flex 行。 */
+    
     html[data-mode="grid"] .site-card > .site-card-main {
         display: contents;
     }
@@ -6144,10 +5853,7 @@ html[data-mode="compact"] .card-action {
         min-width: 0;
     }
 
-    /* 第二行：域名与测速。390px 下卡片内宽仅约 106px，
-       「weather.cma.cn」按 12px 量宽要 90px 以上，「75 毫秒 · 快」要 73px，
-       并排放只能各露出一截，两边都读不出来。故改两行纵向堆叠：
-       主信息（站点名 + 描述）在两行里独占整宽，meta 退到卡片右下角。 */
+    
     html[data-mode="grid"] .site-card > .site-meta {
         grid-area: meta;
         display: flex;
@@ -6187,7 +5893,7 @@ html[data-mode="compact"] .card-action {
         padding-top: 7px;
     }
 
-    /* 窄屏测速与点击量横排会互相挤压，只保留其一，靠右对齐 */
+    
     html[data-mode="grid"] .site-metrics {
         gap: 6px;
     }
@@ -6196,7 +5902,7 @@ html[data-mode="compact"] .card-action {
         font-size: var(--a-fs-fine);
     }
 
-    /* 手机列表不放网址：横向空间不够，被截断的网址没有信息量 */
+    
     html[data-mode="list"] .site-card {
         grid-template-columns: 32px minmax(0, 1fr) auto;
         grid-template-areas: "icon info metrics";
@@ -6215,7 +5921,7 @@ html[data-mode="compact"] .card-action {
         display: none;
     }
 
-    /* 手机列表标题与介绍纵向排：并排时两边都只剩几个字 */
+    
     html[data-mode="list"] .site-info {
         flex-direction: column;
         align-items: flex-start;
@@ -6229,7 +5935,7 @@ html[data-mode="compact"] .card-action {
 
     html[data-mode="list"] .site-metrics {
         min-width: 0;
-        /* 22px = 状态点 7px + 定位 12px + 3px 呼吸位，防止测速文字贴到圆点上 */
+        
         padding-right: 22px;
     }
 
@@ -6239,14 +5945,14 @@ html[data-mode="compact"] .card-action {
     }
 }
 
-/* 减动效偏好：去掉高度过渡，避免悬停时卡片跳动 */
+
 @media (prefers-reduced-motion: reduce) {
     html[data-mode="grid"] .site-card {
         transition: border-color 0.18s ease;
     }
 }
 
-/* 暗色下 --hairline 只有 6% 白，用作分隔线会完全消失，单独提到 9% */
+
 html[data-theme="dark"]:not([data-mode="list"]):not([data-mode="compact"]) .site-meta {
     border-top-color: rgba(255, 255, 255, 0.09);
 }
@@ -6255,24 +5961,9 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
     border-top-color: rgba(255, 255, 255, 0.09);
 }
 
-/* ==========================================================================
-   v2.10.6 · 我的导航顶栏修复（header.site-header）
-   --------------------------------------------------------------------------
-   实测出的四个缺陷（登录后 my.php 实测，非推测）：
-     ① 390px：品牌标题宽 16px —— 只够一个汉字，被迫折成竖排 4 字，
-        卡片总高从 52px 涨到 82px，整个 header 撑到 114px；
-        同时 .brand 内容需 64px 却只分到 8px，溢出压住 logo。
-     ② 360px：header scrollWidth 346 > clientWidth 324，横向滚动 4px。
-     ③ 480~820px：「轩宇导航」被压成两行（标题仅 50px / 66px），
-        用户条 116px 卡死，设置头像的相机按钮被挤到边缘外、视觉上消失。
-     ④ 820px：header-tools 396px 与品牌区争抢，用户条紧贴主题按钮。
-   根因：≤920px 时 .header-brand 改为 flex:1 1 auto 主动让位，
-   但 .brand / .brand-title 既没 flex-shrink:0 也没 white-space:nowrap，
-   于是被一路压缩到中文单字折行。
-   修法：品牌区设为不可压缩、标题强制单行；操作区按优先级分级收纳。
-   ========================================================================== */
 
-/* ---------- 一、品牌区：任何宽度都不许折行、不许被压缩 ---------- */
+
+
 
 .site-header .brand {
     flex: 0 1 auto;
@@ -6283,19 +5974,19 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
     min-width: 0;
 }
 
-/* 标题必须单行：中文没有断词规则，一旦允许折行就会变成一字一行 */
+
 .site-header .brand-title {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 
-/* 图标是品牌锚点，绝不参与压缩 */
+
 .site-header .brand-mark {
     flex-shrink: 0;
 }
 
-/* 用户条：头像与相机是固定尺寸，只有用户名允许收缩 */
+
 .site-header .my-userbar {
     flex: 0 0 auto;
     min-width: 0;
@@ -6315,7 +6006,7 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
     max-width: 12ch;
 }
 
-/* ---------- 二、工具区：先保证不被挤压，再按宽度分级收纳 ---------- */
+
 
 .site-header .header-tools {
     flex: 0 0 auto;
@@ -6323,17 +6014,16 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
     min-width: 0;
 }
 
-/* 两枚文字按钮是主要出口，禁止它们被压成残字 */
+
 .site-header .header-tools .my-btn {
     flex: 0 0 auto;
     white-space: nowrap;
 }
 
-/* ---------- 三、≤920px：品牌区禁止让位 ---------- */
+
 
 @media (max-width: 920px) {
-    /* 原规则是 flex:1 1 auto —— 品牌区会把宽度全让给工具区，自己塌到 0。
-       改为「按内容宽度占位，只在真的不够时才缩」，并保留一个下限。 */
+    
     .site-header .header-brand {
         flex: 0 1 auto;
         min-width: 0;
@@ -6343,34 +6033,32 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
         gap: 9px;
     }
 
-    /* 标题字号随视口收缩，但底线是不能小于 15px（再小就影响可读性） */
+    
     .site-header .brand-title {
-        font-size: clamp(15px, 4.2vw, 17px);
+        font-size: 17px;
     }
 }
 
-/* ---------- 四、≤640px：操作项分级收纳 ---------- */
+
 
 @media (max-width: 640px) {
-    /* 相机按钮：它是低频次要操作（设头像），且 24px 的圆形图标在触屏上
-       既难点也看不出是什么。让位给标题，改由头部下方的工具栏承担 —— 
-       它原本就有入口，不必在 44px 宽的角落再塞一个。 */
+    
     .site-header .my-avatar-edit {
         display: none;
     }
 
-    /* 「返回首页」与品牌 logo 是同一个去处，小屏只留 logo 这一个入口 */
+    
     .site-header .header-tools .my-btn[href="index.php"] {
         display: none;
     }
 
-    /* 剩下的唯一文字按钮补足触控热区 */
+    
     .site-header .header-tools .my-btn {
         min-height: 38px;
     }
 }
 
-/* ---------- 五、≤430px：极致收敛 ---------- */
+
 
 @media (max-width: 430px) {
     .site-header {
@@ -6381,9 +6069,7 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
         gap: 8px;
     }
 
-    /* v2.18.6：logo 34 → 42px，去掉 !important；标题同步到 20px。
-       两枚裸文字按钮已收进用户下拉，工具区改为 3 枚 40px 图标按钮，
-       360 / 390 / 430 三档重新分配后均不溢出。 */
+    
     .site-header .brand-mark,
     .site-header .brand-mark img {
         width: 42px;
@@ -6405,7 +6091,7 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
         font-size: var(--a-fs-caption);
     }
 
-    /* 主题按钮与搜索框统一 44px，满足触控目标下限，避免一高一矮 */
+    
     .site-header .theme-toggle,
     .site-header .header-search-btn {
         width: 44px;
@@ -6420,12 +6106,10 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
     }
 }
 
-/* ---------- 六、≤360px：再让一步，保住标题完整 ---------- */
-/* 标题文字宽实测：12px=48 / 13px=52 / 14px=56 / 15px=60 / 16px=64。
-   360px 视口下标题可用宽度只有约 54px，14px 需要 56px —— 差 2px 就会被
-   ellipsis 截成「轩宇导…」。降到 13px（52px）才能完整放下四个字。 */
+
+
 @media (max-width: 360px) {
-    /* v2.18.6：logo 放大后标题不再压到 13px，降到 19px 仍保持单行省略 */
+    
     .site-header .brand-title {
         font-size: var(--a-fs-title-lg);
     }
@@ -6452,17 +6136,13 @@ html[data-theme="dark"][data-mode="grid"] .site-meta {
     }
 }
 
-/* ---------- 七、暗色下品牌副标题对比度 ---------- */
+
 
 html[data-theme="dark"] .site-header .brand-subtitle {
     color: var(--muted);
 }
 
-/* --------------------------------------------------------------------------
-   相机按钮：视觉 24px，但触控热区扩到 40px
-   24px 是 WCAG 2.1 AA（2.5.8）的下限，而项目自己的 --hit-min 是 40px。
-   用绝对定位的伪元素向外扩，不改视觉尺寸、不影响用户条布局。
-   -------------------------------------------------------------------------- */
+
 
 .site-header .my-avatar-edit {
     position: relative;
@@ -6478,15 +6158,7 @@ html[data-theme="dark"] .site-header .brand-subtitle {
     transform: translate(-50%, -50%);
 }
 
-/* ==========================================================================
-   v2.16.1 手机端彻底移除卡片悬停操作条（最高优先级，置于文件末尾压过一切）
-   --------------------------------------------------------------------------
-   触发失效的典型环境：微信 / UC / QQ 内置浏览器把 pointer 报成 fine；
-   iPadOS 桌面版 UA 报 hover: hover；部分安卓 ROM 浏览器干脆不实现这两个特性。
-   因此除了 media query 放宽为「任一命中」，再加 html.is-touch-ui 这层
-   JS 写入的标记做绝对兜底。两条路任一生效，按钮都不会出现。
-   注意：星标 .card-star 是状态标识，不在此列，继续保持常显。
-   ========================================================================== */
+
 
 @media (hover: none), (pointer: coarse) {
     .card-actions,
@@ -6548,11 +6220,7 @@ html.is-touch-ui .card-actions .card-action {
     pointer-events: none !important;
 }
 
-/* ==========================================================================
-   v2.16.5 · 网址图标编辑 + 标签编辑
-   首页（index.php）与我的导航（my.php）共用：两页都引用本文件，
-   所以这套样式必须留在 nav.css，而不是某个页面的内联 <style>。
-   ========================================================================== */
+
 
 .icon-editor {
     display: flex;
@@ -6579,7 +6247,7 @@ html.is-touch-ui .card-actions .card-action {
     overflow: hidden;
 }
 
-/* 图标本身常是正方形，内留 6px 让它在框里不至于顶满 */
+
 .icon-preview img {
     width: 100%;
     height: 100%;
@@ -6596,7 +6264,7 @@ html.is-touch-ui .card-actions .card-action {
     line-height: 1;
 }
 
-/* 上传中：预览框蒙一层 + 转圈，避免用户以为没反应 */
+
 .icon-preview.is-busy::after {
     content: '';
     position: absolute;
@@ -6637,7 +6305,7 @@ html.is-touch-ui .card-actions .card-action {
     gap: 8px;
 }
 
-/* 按钮文字一律不折行，窄屏下宁可整行换掉 */
+
 .icon-editor-actions .my-btn,
 .icon-url-row .my-btn {
     white-space: nowrap;
@@ -6673,7 +6341,7 @@ html.is-touch-ui .card-actions .card-action {
     color: var(--success);
 }
 
-/* ---- 标签 ---- */
+
 .tag-input-row {
     display: flex;
     gap: 8px;
@@ -6743,7 +6411,7 @@ html.is-touch-ui .card-actions .card-action {
 }
 
 @media (max-width: 575.98px) {
-    /* 窄屏改成上下结构：预览在上、按钮铺满一行，避免预览框被挤成窄条 */
+    
     .icon-editor {
         flex-direction: column;
         align-items: stretch;
@@ -6768,7 +6436,7 @@ html.is-touch-ui .card-actions .card-action {
         min-height: 36px;
     }
 
-    /* 「恢复默认」独占一行，不做成半个按钮 */
+    
     .icon-editor-actions .my-btn.is-ghost {
         grid-column: 1 / -1;
     }
@@ -6782,8 +6450,7 @@ html.is-touch-ui .card-actions .card-action {
     }
 }
 
-/* v2.16.5：首页弹窗用到的两个小件——小号按钮与字段提示。
-   my.php 里原本是内联定义，这里补到公共表，避免首页按钮偏大、提示没样式。 */
+
 .my-btn.is-small {
     padding: 5px 12px;
     font-size: var(--a-fs-caption);
@@ -6797,40 +6464,31 @@ html.is-touch-ui .card-actions .card-action {
     line-height: 1.6;
 }
 
-/* v2.16.5：编辑弹窗「抓取」按钮在窄屏被输入框挤成竖排两行，
-   与 my.php 的 #fetchBtn 同样的处理：不许折行、不许被压缩 */
+
 #editFetchBtn {
     flex: none;
     white-space: nowrap;
 }
 
-/* ==========================================================================
-   v2.18.1 · 统一键盘焦点环（可访问性）
-   规则：所有可交互元素在键盘聚焦（:focus-visible）时给出 2px 强调色描边 +
-   2px 偏移；鼠标点击不触发，避免视觉噪音。
-   已有的 :focus-visible 规则优先（本段放在文件末尾但用 :where 降低优先级，
-   不覆盖各组件已有的更精细焦点样式）。
-   ========================================================================== */
+
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible,
 :where(.card-action, .site-card, .mode-btn, .tool-btn, .chip):focus-visible {
     outline: 2px solid var(--primary);
     outline-offset: 2px;
 }
 
-/* 搜索框的焦点环画在外层 .search-bar 上（::before 叠层），内层输入不再叠一层 */
+
 .search-bar:focus-within {
     outline: 2px solid var(--primary);
     outline-offset: 2px;
 }
 
-/* 深色主题下描边用更亮的蓝，保证对比度 */
+
 html[data-theme="dark"] :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
     outline-color: var(--a-primary);
 }
 
-/* ----------------------------------------------------------------------
-   v2.18.1 · 分组「加载更多」与搜索结果容器
-   ---------------------------------------------------------------------- */
+
 
 .group-more {
     display: flex;
@@ -6881,30 +6539,15 @@ html[data-theme="dark"] .group-more-btn {
     background: var(--surface);
 }
 
-/* --------------------------------------------------------------------------
-   v2.18.5 · 无障碍：11–12px 次要文字对比度统一收口
-   - 承载信息的次要文字统一用 --muted（浅色 旧暖灰 / 旧暖白 ≈ 5.0:1，
-     暗色 旧中灰 / 旧深灰 ≈ 5.4:1）；--muted-2 只留给占位符与纯装饰。
-   - 语义色另给文字专用的 --success-text，避免 --success 被圆点、背景共用
-     时只能取一个折中亮度（旧绿色 对 旧近白 仅 3.41:1）。
-   - my.php 内联样式给 .mgt-count 设了 opacity:.75（白字压主题色不达标），
-     这里用 body 前缀提高优先级去掉透明度，颜色继承按钮文字色，
-     浅色/暗色与选中/未选中态都由父级自身保证对比度。
-   -------------------------------------------------------------------------- */
+
 body .my-group-tab .mgt-count {
     opacity: 1;
     color: inherit;
 }
 
-/* ==========================================================================
-   v2.18.6 · 顶部控件 / 用户下拉 / 右键菜单 跨页统一层
-   --------------------------------------------------------------------------
-   放在文件末尾，以同级或更高选择器覆盖历史分散规则：
-   首页与 my.php 共用同一套 --ctl-* 规格、同一套下拉条目与图标槽。
-   不引入第三方库，图标全部内联 SVG，动画只用 ≤180ms 的 transition。
-   ========================================================================== */
 
-/* 两页所有图标按钮：同高、同圆角、同边框、同阴影 */
+
+
 .site-header .header-tools .tool-btn {
     width: var(--ctl-size);
     height: var(--ctl-size);
@@ -6918,7 +6561,7 @@ body .my-group-tab .mgt-count {
                 color 0.16s ease;
 }
 
-/* 头像按钮带姓名/箭头时：高度不变、宽度按内容收缩 */
+
 .site-header .header-tools .tool-btn.user-summary,
 .site-header .header-tools .tool-btn.user-summary-guest {
     width: auto;
@@ -6933,7 +6576,7 @@ body .my-group-tab .mgt-count {
     color: var(--primary);
 }
 
-/* 图标：桌面 20px / 移动端 18px；头像：桌面 28px / 移动端 30px；箭头 13px */
+
 .site-header .header-tools .tool-btn > svg {
     width: 20px;
     height: 20px;
@@ -6964,10 +6607,10 @@ body .my-group-tab .mgt-count {
     }
 
     .site-header .header-tools .mode-switch { height: var(--ctl-size); }
-    /* mode-switch 在 ≤480px 继续由历史规则隐藏，此处不触碰 display */
+    
 }
 
-/* ---------- 用户下拉：208px、8 项图标槽、分组分隔、当前页竖条 ---------- */
+
 
 .site-header .header-tools .user-dropdown {
     width: 208px;
@@ -6984,7 +6627,7 @@ body .my-group-tab .mgt-count {
     font-weight: 600;
 }
 
-/* 固定 20px 图标槽 + 10px 间距，所有文字左边缘对齐 */
+
 .site-header .header-tools .user-dropdown .user-item > svg {
     width: 16px;
     height: 16px;
@@ -6998,7 +6641,7 @@ body .my-group-tab .mgt-count {
     color: var(--primary);
 }
 
-/* 当前页：左侧 3px 主色竖条，不再只靠加粗表达 */
+
 .site-header .header-tools .user-dropdown .user-item.is-current {
 
     color: var(--primary);
@@ -7009,7 +6652,7 @@ body .my-group-tab .mgt-count {
     color: var(--primary);
 }
 
-/* 退出登录：图标与文字常驻危险色 */
+
 .site-header .header-tools .user-dropdown .user-item.is-danger,
 .site-header .header-tools .user-dropdown .user-item.is-danger > svg {
     color: var(--danger);
@@ -7024,14 +6667,14 @@ body .my-group-tab .mgt-count {
     color: var(--danger);
 }
 
-/* 分组分隔线，上下各 6px */
+
 .site-header .header-tools .user-dropdown .user-sep {
     height: 1px;
     margin: 6px 4px;
     background: var(--hairline);
 }
 
-/* 打开方式：文案固定，状态改为右对齐徽标 */
+
 .site-header .header-tools .user-dropdown .user-mode-badge {
     margin-left: auto;
     padding: 2px 6px;
@@ -7044,22 +6687,14 @@ body .my-group-tab .mgt-count {
     white-space: nowrap;
 }
 
-/* ---------- 右键 / 长按菜单：7 项在小屏不越界 ---------- */
+
 
 .card-context-menu {
     max-height: calc(100vh - 24px);
     overflow-y: auto;
 }
 
-/* --------------------------------------------------------------------------
-   v2.18.6 · 暗色主题对比度补强（既有遗留，非本次改动引入）
-   html[data-theme="dark"] 的 --primary 为 旧蓝：
-     · 作背景承载白字时对比度仅 3.67:1（#addBtn / 激活分组 tab / 移动端分类条 .mcat.is-active）
-     · 作文字落在 旧深蓝 上时仅 4.29:1（分组工具标签）
-   均低于 WCAG 2.1 AA 的 4.5:1。分别改用深蓝底与亮蓝字，
-   不动亮色主题、不动其它 skin，也不改 --primary 本身以免影响全局。
-   v2.18.7 顺带补上移动端 .mcat.is-active（仅在 ≤960px 出现，桌面不受影响）。
-   -------------------------------------------------------------------------- */
+
 html[data-theme="dark"] body .my-btn.is-primary,
 html[data-theme="dark"] body #addBtn,
 html[data-theme="dark"] body .my-group-tab.is-active,
@@ -7073,34 +6708,27 @@ html[data-theme="dark"] .section-tool.is-active .section-tool-label {
     color: var(--primary-text-dark);
 }
 
-/* ==========================================================================
-   Apple 统一层（v2.18.8）
-   --------------------------------------------------------------------------
-   分组明暗交替、标题负字距、页脚米白密集链接列。
-   不覆盖 v2.18.7 已验收的 ≤960px 间距与桌面 20/22 + 18。
-   ========================================================================== */
 
-/* 分组明暗交替：奇数组白底区块、偶数组透出米白，靠表面色切换代替分隔线。 */
-/* 分组色带：横向出血到视口边缘，形成 Apple 官网那种整幅明暗交替。
-   出血量随视口收缩，避免 --max-width 生效时 -18px 把色带推出视口产生横向滚动。 */
+
+
+
 .link-sections > .link-group {
     --band-bleed: min(18px, max(0px, (100vw - min(100vw, var(--max-width))) / 2));
-    /* v2.18.10：分节之间不留 margin，用 32px 上下 padding 撑开留白 */
+    
     padding: 32px var(--band-bleed) 32px;
     margin: 0 calc(var(--band-bleed) * -1);
     border-radius: 0;
     background: transparent;
 }
 
-/* 桌面宽屏（page-shell 左右各 32px 内边距）时色带贴齐到外壳内边缘即可，无需出血到视口 */
+
 @media (min-width: 1326px) {
     .link-sections > .link-group {
         --band-bleed: 32px;
     }
 }
 
-/* 奇数组透出白画布、偶数组铺米白，形成整幅明暗交替；
-   不再用边框/阴影/圆角切分，符合"不在白上叠白卡"的规范。 */
+
 .link-sections > .link-group:nth-child(odd) {
     background: transparent;
 }
@@ -7117,7 +6745,7 @@ html[data-theme="dark"] .link-sections > .link-group:nth-child(even) {
     background: var(--a-tile-1);
 }
 
-/* 标题：600 字重 + 负字距 */
+
 .group-title,
 .section-title h2,
 .brand-title {
@@ -7131,7 +6759,7 @@ html[data-theme="dark"] .link-sections > .link-group:nth-child(even) {
     letter-spacing: var(--a-tracking-hero);
 }
 
-/* 页脚：米白背景 + 密集链接列（2.41 松行高） */
+
 .site-footer {
     background: var(--a-parchment);
     border-top: 1px solid var(--a-hairline);
@@ -7151,8 +6779,8 @@ html[data-theme="dark"] .site-footer {
     color: inherit;
 }
 
-/* 暗色下 blue 文字需用亮蓝：--primary 作背景时不动，仅文字场景覆盖 */
-/* v2.18.10：测速已中性化，不再需要暗色下单独提亮 */
+
+
 html[data-theme="dark"] .brand-stats strong,
 html[data-theme="dark"] .rail-item.is-active,
 html[data-theme="dark"] .rail-item.is-active .rail-count {
@@ -7164,8 +6792,7 @@ html[data-theme="dark"] .section-tool.is-active .section-tool-label {
     color: var(--a-link-on-dark);
 }
 
-/* 暗色选中态：primary-soft 叠加后过亮，蓝字对比不足；
-   改用深一档表面 + 近白文字，保持"选中"语义且过 AA。 */
+
 html[data-theme="dark"] .rail-item.is-active,
 html[data-theme="dark"] .section-tool.is-active {
     background: var(--a-tile-hover);
@@ -7179,29 +6806,22 @@ html[data-theme="dark"] .section-tool.is-active .section-tool-label {
     color: var(--a-white);
 }
 
-/* ==========================================================================
-   v2.18.11 · P0 视觉协调性修复层（追加在文件末尾，覆盖上文历史规则）
-   --------------------------------------------------------------------------
-   P0-1 搜索框：亮/暗两态都给可见 1px 描边；胶囊高收到 50px；
-        输入框 14px / 左内边距 18px；聚焦仍用 2px --a-focus 外环（无阴影）。
-   P0-3 移动端 ≤640px：列表/网格卡片改两列 32px 1fr；meta 移第二行右对齐；
-        描述两行 clamp；测速灰点只留一个、文字统一 muted。
-   ========================================================================== */
 
-/* ---------------- P0-1 搜索胶囊：全站唯一形态 ---------------- */
+
+
 .search-bar {
     height: var(--a-search-h);
-    /* 亮色 1px 非透明描边（rgba(0,0,0,.08)，走 --a-line-soft） */
+    
     border: 1px solid var(--a-line-soft);
     border-color: var(--a-line-soft);
     background: var(--a-canvas);
 }
 html[data-theme="dark"] .search-bar {
-    /* 暗色 1px 描边 rgba(255,255,255,.12) */
+    
     border-color: rgba(255, 255, 255, 0.12);
     background: var(--a-tile-1);
 }
-/* 聚焦态：2px --a-focus 外环，不用阴影；描边保持常态值 */
+
 .search-bar:focus-within,
 html[data-theme="dark"] .search-bar:focus-within {
     border-color: var(--a-line-soft);
@@ -7211,12 +6831,12 @@ html[data-theme="dark"] .search-bar:focus-within {
 html[data-theme="dark"] .search-bar:focus-within {
     border-color: rgba(255, 255, 255, 0.12);
 }
-/* 输入框：14px / 左内边距 18px；引擎选择器在场时再让出引擎宽度 */
+
 .search-input {
     font-size: 14px;
     padding-left: var(--a-search-pad-x);
 }
-/* 搜索按钮：44 高 / 999 圆角 / 蓝底白字，右侧与胶囊右缘留 4px */
+
 .search-submit,
 .search-submit.search-save {
     height: 44px;
@@ -7226,9 +6846,9 @@ html[data-theme="dark"] .search-bar:focus-within {
 }
 .search-actions { right: 4px; }
 
-/* ---------------- P0-3 移动端卡片两列（≤640px） ---------------- */
+
 @media (max-width: 640px) {
-    /* 列表态：图标 + 信息在上，meta 独占第二行右对齐；取消第三列 */
+    
     html[data-mode="list"] .site-card {
         grid-template-columns: 32px minmax(0, 1fr);
         grid-template-areas:
@@ -7266,7 +6886,7 @@ html[data-theme="dark"] .search-bar:focus-within {
         align-items: center;
         gap: 12px;
     }
-    /* 描述两行 clamp，取消单行 nowrap */
+    
     html[data-mode="list"] .site-desc {
         display: -webkit-box;
         -webkit-box-orient: vertical;
@@ -7274,29 +6894,24 @@ html[data-theme="dark"] .search-bar:focus-within {
         line-clamp: 2;
         overflow: hidden;
         white-space: normal;
-        text-wrap: wrap; /* 覆盖 text-wrap:pretty，避免与 -webkit-box clamp 冲突 */
+        text-wrap: wrap; 
     }
-    /* 测速灰点只保留 ::before 一个，状态点不再画点 */
+    
     html[data-mode="list"] .site-status { display: none; }
     html[data-mode="list"] .site-speed { color: var(--a-muted); }
     html[data-mode="list"] .site-speed[data-state="error"] { color: var(--a-danger); }
 }
 
-/* ==========================================================================
-   v2.18.11 · P2 精致度细节（追加层，覆盖上文历史规则）
-   ========================================================================== */
 
-/* P2-7：首页列表行标题与描述关系明确化 —— 桌面描述另起一行并限制 64ch，
-   避免长描述横向铺满整行破坏阅读节奏。标题 15px/600 已在基础层，勿动。 */
+
+
 @media (min-width: 641px) {
     .site-card .site-desc {
         max-width: 64ch;
     }
 }
 
-/* P2-2：移动端相邻分组留白压缩。基础层每组上下各 32px（相邻 64px），
-   这里收到上下各 14px（相邻 28px，落在 24~32 区间），并用 1px hairline 分隔，
-   保留原有明暗交替色带节奏。 */
+
 @media (max-width: 640px) {
     .link-sections > .link-group {
         padding-top: 14px;
@@ -7310,11 +6925,9 @@ html[data-theme="dark"] .search-bar:focus-within {
     }
 }
 
-/* P2-3：热门访问横向滚动的可滑动暗示 —— 右侧 24px 渐隐遮罩，
-   提示还有更多内容可横滑；仅移动端（nowrap + overflow-x:auto）生效。 */
+
 @media (max-width: 640px) {
-    /* 右侧约 24px alpha 渐隐（SVG 遮罩，避免 CSS 渐变函数与内联 hex，
-       保持 gradient=0 的令牌化规范）。offset .93 在窄屏 hot-list 上约等于 24px。 */
+    
     .hot-list {
         -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='1' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='f'%3E%3Cstop offset='0' stop-color='white' stop-opacity='1'/%3E%3Cstop offset='.93' stop-color='white' stop-opacity='1'/%3E%3Cstop offset='1' stop-color='white' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='1' fill='url(%23f)'/%3E%3C/svg%3E");
         mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='1' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='f'%3E%3Cstop offset='0' stop-color='white' stop-opacity='1'/%3E%3Cstop offset='.93' stop-color='white' stop-opacity='1'/%3E%3Cstop offset='1' stop-color='white' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='1' fill='url(%23f)'/%3E%3C/svg%3E");
@@ -7325,33 +6938,25 @@ html[data-theme="dark"] .search-bar:focus-within {
     }
 }
 
-/* ==========================================================================
-   v2.18.11 · 验收补强：浮动按钮安全间距 / 移动端分类 tab 触控区
-   ========================================================================== */
 
-/* 验收2：浮动按钮与卡片右缘安全间距 ≥16px。grid 模式原安全区 52px
-   （按钮左缘 332 - 卡片右缘 320 = 12px），提到 56px 后卡片右缘收至 316，
-   间距 = 16px。列表态按钮落在卡片下方空白，保持 v2.18.10 既定行为不动。 */
+
+
 @media (max-width: 620px) {
     html[data-mode="grid"] #linkSections .site-grid {
         margin-right: 56px;
     }
 }
 
-/* 验收5：移动端所有可点击控件不小于 44×44。分类横滑 tab 原高 34px，
-   在 ≤640px 提到 44px，宽度不变（padding 横向控制），触控达标。 */
+
 @media (max-width: 640px) {
     .mcat {
         height: 44px;
     }
 }
 
-/* ==========================================================================
-   v2.18.12 · 提交1 列表分隔：分组卡外壳 + 内缩分隔线
-   仅作用于 html[data-mode="list"]，网格/紧凑态保持原组件卡不变。
-   ========================================================================== */
+
 html[data-mode="list"] .link-sections > .link-group {
-    /* 中和 v2.18.10 的出血色带：取消负 margin 与交替背景，改为独立分组卡 */
+    
     --band-bleed: 0px;
     margin: 0 0 24px;
     padding: 16px;
@@ -7371,12 +6976,12 @@ html[data-theme="dark"][data-mode="list"] .link-sections > .link-group:nth-child
     border-color: rgba(255, 255, 255, 0.12);
 }
 
-/* 分组标题与卡片之间统一 12px */
+
 html[data-mode="list"] .link-group .group-head {
     margin-bottom: 12px;
 }
 
-/* 列表态：卡片去边框/圆角/阴影，透明底，padding 14px 16px，gap 归零 */
+
 html[data-mode="list"] .site-grid {
     gap: 0;
 }
@@ -7392,9 +6997,7 @@ html[data-theme="dark"][data-mode="list"] .site-card {
     border-bottom-color: transparent;
 }
 
-/* v2.18.16 提交3：行间分隔线改伪元素 left:12 / right:68 ——
-   右端落在收藏星标左缘（距右 56px）之外再留 12px，故星标区域内无任何分隔线像素，
-   线右端距星标左缘实测 12px（≥8px 硬断言）。跳过最后一行。 */
+
 html[data-mode="list"] .site-card:not(:last-child)::after {
     content: "";
     position: absolute;
@@ -7409,7 +7012,7 @@ html[data-theme="dark"][data-mode="list"] .site-card:not(:last-child)::after {
     background: rgba(255, 255, 255, 0.10);
 }
 
-/* 悬停只改整行背景，不位移、不加阴影、不改分隔线颜色 */
+
 html[data-mode="list"] .site-card:hover {
     background: rgba(0, 0, 0, 0.02);
     box-shadow: none;
@@ -7419,23 +7022,15 @@ html[data-theme="dark"][data-mode="list"] .site-card:hover {
 }
 
 @media (max-width: 640px) {
-    /* 手机端星标仍 44px 贴右、padding-right 14px → 星标左缘距右 58px，
-       线 right:70px 留 12px；手机三列两行结构不变。 */
+    
     html[data-mode="list"] .site-card:not(:last-child)::after {
         left: 12px;
         right: 70px;
     }
 }
 
-/* ==========================================================================
-   v2.18.12 · 提交2 收藏按钮：流内 flex + 44×44 命中区 + 几何居中
-   仅列表态；网格/紧凑态保持原绝对定位行为不变。
-   ========================================================================== */
-/* v2.18.13：删除上方那条全局五列规则（38px 1fr auto auto 44px /
-   "icon info domain metrics corner"）——它同优先级但位置更靠后，
-   覆盖了 @media(max-width:640px) 的手机两列模板，且 .site-meta 是 flex
-   容器却被分配到不存在的 meta 区，落入隐式列 → 7 轨道塌陷。
-   桌面 / 手机改为各一套显式栅格，见文件末尾 v2.18.13 层。 */
+
+
 
 html[data-mode="list"] .card-corner {
     position: static;
@@ -7454,7 +7049,7 @@ html[data-mode="list"] .site-card:focus-within .card-corner {
     transform: none;
 }
 
-/* owner 的编辑/删除操作组绝对定位浮出行右上，脱离 44px 列，不挤压对齐 */
+
 html[data-mode="list"] .card-actions {
     position: absolute;
     top: 4px;
@@ -7462,7 +7057,7 @@ html[data-mode="list"] .card-actions {
     z-index: 7;
 }
 
-/* 收藏按钮：44×44 本体即命中区，去毛玻璃与 color-mix，图标 18px 几何居中 */
+
 html[data-mode="list"] .card-star {
     width: 44px;
     height: 44px;
@@ -7488,21 +7083,18 @@ html[data-mode="list"] .card-star:hover {
 html[data-theme="dark"][data-mode="list"] .card-star:hover {
     background: rgba(255, 255, 255, 0.04);
 }
-/* 已收藏走 Action Blue（不再用警示橙），背景淡蓝 */
+
 html[data-mode="list"] .site-card[data-starred="1"] .card-star {
     color: var(--a-primary);
     background: rgba(0, 102, 204, 0.10);
     border-color: transparent;
 }
-/* 删掉 40px 伪元素热区（按钮本体已是 44px） */
+
 html[data-mode="list"] .card-star::after {
     content: none;
 }
 
-/* ==========================================================================
-   v2.18.12 · 提交3 品牌控件方形化尺寸（手机 44 / 桌面 52，圆角 18 不变）
-   覆盖上文 ≤620/≤430/≤360 各档的 38/42px；img 由 apple-tokens 规则铺满。
-   ========================================================================== */
+
 .site-header .brand-mark,
 .site-header .brand-mark img {
     width: 52px;
@@ -7520,10 +7112,7 @@ html[data-mode="list"] .card-star::after {
     }
 }
 
-/* ==========================================================================
-   v2.18.12 · 提交3 搜索框：占位文字与放大镜不再重叠
-   padding-left 18→40，图标 left 10→12 / 17→18px，间距达标 ≥10px。
-   ========================================================================== */
+
 .search-icon {
     left: 12px;
     width: 18px;
@@ -7534,19 +7123,14 @@ html[data-mode="list"] .card-star::after {
     padding-left: 40px;
 }
 
-/* ==========================================================================
-   v2.18.12 · 提交4 测速四档语义色
-   圆点 6px + 间距 6px；只作用于 .site-speed 文字与 ::before 圆点。
-   兼容两套属性：JS 实际写的 [data-level]/[data-state]，与规格 [data-check-status]。
-   "无法访问"(data-state=error) 走 off 灰档，避免与"慢"红档混淆。
-   ========================================================================== */
+
 .site-speed::before {
     width: 6px;
     height: 6px;
     margin-right: 6px;
     vertical-align: 1px;
 }
-/* 四档文字 + 圆点（基础选择器，确保各模式一致） */
+
 html[data-mode] .site-speed[data-level="fast"],
 html[data-mode] .site-speed[data-check-status="fast"] {
     color: var(--speed-fast-fg);
@@ -7571,7 +7155,7 @@ html[data-mode] .site-speed[data-level="slow"]::before,
 html[data-mode] .site-speed[data-check-status="slow"]::before {
     background: var(--speed-slow-dot);
 }
-/* 无法访问 / off 走灰档，避免与"慢"红档混淆 */
+
 html[data-mode] .site-speed[data-state="error"],
 html[data-mode] .site-speed[data-check-status="off"] {
     color: var(--speed-off-fg);
@@ -7581,15 +7165,9 @@ html[data-mode] .site-speed[data-check-status="off"]::before {
     background: var(--speed-off-dot);
 }
 
-/* ==========================================================================
-   v2.18.13 · 提交1 栅格修复
-   删除 v2.18.12 全局五列模板 + 删掉 .site-meta 的 display:contents 后，
-   桌面 / 手机各用一套显式 grid-template-areas。.site-card-main 保留
-   contents（让 icon / info 成为直接网格项），.site-meta 作为整块占 meta 区。
-   分隔线沿用 v2.18.12 的 ::after 内缩线，site-card 自身不再画 border。
-   ========================================================================== */
 
-/* ---- 桌面 ≥641px：icon | info(name+desc) | meta(domain+metrics) | corner ---- */
+
+
 @media (min-width: 641px) {
     html[data-mode="list"] .site-card {
         display: grid;
@@ -7619,7 +7197,7 @@ html[data-mode] .site-speed[data-check-status="off"]::before {
     }
     html[data-mode="list"] .site-name {
         max-width: none;
-        font-size: 15px;
+        font-size: 14px;
         line-height: 1.3;
     }
     html[data-mode="list"] .site-meta {
@@ -7636,7 +7214,7 @@ html[data-mode] .site-speed[data-check-status="off"]::before {
     }
 }
 
-/* ---- 手机 ≤640px：第一行 icon|info|corner，第二行 meta 跨三列右对齐 ---- */
+
 @media (max-width: 640px) {
     html[data-mode="list"] .site-card {
         display: grid;
@@ -7670,11 +7248,11 @@ html[data-mode] .site-speed[data-check-status="off"]::before {
     }
     html[data-mode="list"] .site-name {
         max-width: none;
-        font-size: 15px;
+        font-size: 14px;
         line-height: 1.3;
     }
     html[data-mode="list"] .site-desc {
-        font-size: 13px;
+        font-size: 14px;
         line-height: 1.35;
         -webkit-line-clamp: 1;
         line-clamp: 1;
@@ -7690,11 +7268,11 @@ html[data-mode] .site-speed[data-check-status="off"]::before {
         margin: 0;
         padding: 0;
     }
-    /* 手机端域名最大宽度 55%，超出省略 */
+    
     html[data-mode="list"] .site-domain {
         max-width: 55%;
     }
-    /* 收藏按钮跨两行垂直居中，与卡片整行中心对齐（偏差 ≤1px） */
+    
     html[data-mode="list"] .card-corner {
         grid-area: 1 / 3 / 3 / 4;
         align-self: center;
@@ -7702,14 +7280,7 @@ html[data-mode] .site-speed[data-check-status="off"]::before {
     }
 }
 
-/* ==========================================================================
-   v2.18.13 · 提交2 热门访问压缩 + 列表紧凑
-   热门：strip 上下 padding 32→14(手机)/16(桌面)，底部 margin 12→8，
-   title margin 12→6、svg 14→12，item padding→4px 9px 4px 4px，rank 20px。
-   横向滚动（hot-list nowrap + overflow-x:auto）与渐隐提示保留不动。
-   列表：桌面行高压到 52-56（收藏 44 + 上下 padding 5×2 = 54），
-   描述统一单行截断，避免长文本两行 clamp 顶回 100px。
-   ========================================================================== */
+
 .hot-strip {
     padding-top: 14px;
     padding-bottom: 14px;
@@ -7737,7 +7308,7 @@ html[data-mode] .site-speed[data-check-status="off"]::before {
     }
 }
 
-/* 桌面列表紧凑：44px 收藏 + 上下 5px padding = 54px 行高 */
+
 @media (min-width: 641px) {
     html[data-mode="list"] .site-card {
         padding-top: 5px;
@@ -7748,7 +7319,7 @@ html[data-mode] .site-speed[data-check-status="off"]::before {
         line-clamp: 1;
     }
 }
-/* 手机列表紧凑：描述单行截断（提交1 已设 13px/1.35，此处补 clamp 防两行顶高） */
+
 @media (max-width: 640px) {
     html[data-mode="list"] .site-desc {
         -webkit-line-clamp: 1;
@@ -7756,13 +7327,7 @@ html[data-mode] .site-speed[data-check-status="off"]::before {
     }
 }
 
-/* ==========================================================================
-   v2.18.15 · 提交2 按钮三档 + 选中态统一（全站唯一来源，覆盖上文历史规则）
-   --------------------------------------------------------------------------
-   三档：.btn-primary / .btn-secondary / .btn-icon；高 44、圆角 8px。
-   选中态：浅色 rgba(0,102,204,.10)+#0066cc、暗色 rgba(41,151,255,.18)+#2997ff；
-   视图切换 mode-btn / 分类 mcat / 桌面 rail-item 共用，取消实蓝底白图标反色。
-   ========================================================================== */
+
 .btn-primary,
 .btn-secondary,
 .btn-icon {
@@ -7801,7 +7366,7 @@ html[data-mode] .site-speed[data-check-status="off"]::before {
 }
 .btn-icon svg { width: 18px; height: 18px; }
 
-/* 404「返回首页」：药丸 → 8px 圆角主按钮 */
+
 .error-home {
     border-radius: var(--a-radius-sm) !important;
     background: var(--a-btn-primary-bg) !important;
@@ -7809,24 +7374,23 @@ html[data-mode] .site-speed[data-check-status="off"]::before {
     height: 44px !important;
 }
 
-/* 登录页右上角主题按钮：圆形 → 44×44 / 8px 圆角图标按钮 */
+
 .auth-theme {
     width: 44px !important;
     height: 44px !important;
     border-radius: var(--a-radius-sm) !important;
 }
 
-/* detail 四按钮：保持 44 高，圆角统一 8px（原有彩色/次按钮语义不变） */
+
 .detail-btn {
     border-radius: var(--a-radius-sm) !important;
     height: 44px !important;
 }
 
-/* 搜索条内部提交按钮保留 999px 胶囊：例外，贴合搜索外框。
-   全站圆角集合里 999 只允许出现在这里与头像，下一轮勿改回 8px。 */
+
 .search-submit { border-radius: 999px !important; }
 
-/* ---- 选中态统一：视图切换 / 分类「全部」/ 桌面分类索引 ---- */
+
 .mode-btn.is-active,
 .mcat.is-active,
 .rail-item.is-active,
@@ -7844,7 +7408,7 @@ html[data-mode] .site-speed[data-check-status="off"]::before {
 .section-tool.is-active .section-tool-label {
     color: var(--a-select-fg) !important;
 }
-/* 取消历史「实蓝底 + 白图标」反色 */
+
 html[data-theme="dark"] .mcat.is-active,
 html[data-theme="dark"] .rail-item.is-active,
 html[data-theme="dark"] .section-tool.is-active {
@@ -7852,17 +7416,11 @@ html[data-theme="dark"] .section-tool.is-active {
     color: var(--a-select-fg) !important;
 }
 
-/* ==========================================================================
-   v2.18.15 · 提交3 表面容器统一 + 桌面行空间 + 字号阶梯归位
-   --------------------------------------------------------------------------
-   热门区从 0 圆角出血灰带改为 18px 圆角 + hairline 的分组卡同源表面；
-   分组间距统一 24px；桌面收藏贴右与测速 12px；字号可见集合收敛到
-   {11,13,15,17,20,28}，撤销 11.5px 等非标准值。
-   ========================================================================== */
 
-/* ---- 热门区表面：与 18px 分组卡同一套 ---- */
+
+
 .hot-strip {
-    margin: 0 0 24px !important;              /* 取消出血 + 与分组卡间距 24px */
+    margin: 0 0 24px !important;              
     padding: 10px 16px !important;
     border: 1px solid var(--a-hairline) !important;
     border-radius: var(--a-radius-lg) !important;
@@ -7876,39 +7434,36 @@ html[data-theme="dark"] .hot-strip {
     .hot-strip { --band-bleed: 0px; margin: 0 0 24px !important; }
 }
 
-/* ---- 桌面列表：列模板与 12px 收藏/测速间距 ---- */
+
 @media (min-width: 641px) {
     html[data-mode="list"] .site-card {
         grid-template-columns: 38px minmax(0, 1fr) auto 44px !important;
         column-gap: 12px !important;
         padding-right: 12px !important;
     }
-    /* 收藏贴右：卡片右 padding 12 = 收藏与测速的固定间隙 */
+    
     html[data-mode="list"] .card-corner { justify-self: end !important; }
-    /* v2.18.16 提交3：metrics 右缘外扩 2px，使 .card-star 左缘与 .site-metrics
-       右缘间距由 14px 收到精确 12px（column-gap 仍为规格 12px 不变）。 */
+    
     html[data-mode="list"] .site-metrics { margin-right: -2px !important; }
 }
 
-/* ---- 字号归位：消除 11.5px 等非标准可见字号 ---- */
+
 .site-quick-links,
 .site-quick-links a,
 .footer-sep {
-    font-size: var(--a-fs-micro) !important;   /* 11px */
+    font-size: var(--a-fs-micro) !important;   
 }
-.group-title { font-size: var(--a-fs-title) !important; }  /* 20px */
-.brand-title { font-size: var(--a-fs-display) !important; } /* 28px */
-/* v2.18.16 提交3：手机 ≤430px 品牌标题降到 24px（仅两档：桌面 28 / 手机 24，无第三档） */
+.group-title { font-size: var(--a-fs-title) !important; }  
+.brand-title { font-size: var(--a-fs-display) !important; } 
+
 @media (max-width: 430px) {
-    .brand-title { font-size: 24px !important; line-height: 1.2 !important; font-weight: 700 !important; }
+    .brand-title { font-size: 22px !important; line-height: 1.2 !important; font-weight: 700 !important; }
 }
 
-/* v2.18.15 提交3 补：搜索输入文字 14px → 15px（并入站点名档） */
+
 .search-input { font-size: var(--a-fs-subhead) !important; }
 
-/* v2.18.15 复检修复：暗色选中态蓝底(叠加后 #273b50)上 #2997ff 仅 3.81:1，
-   前景统一提亮到 --a-select-fg-on-tint(#5cadff, 4.86:1) 满足正文 ≥4.5:1。
-   浅色态不变。 */
+
 html[data-theme="dark"] .mode-btn.is-active,
 html[data-theme="dark"] .mcat.is-active,
 html[data-theme="dark"] .rail-item.is-active,
@@ -7920,31 +7475,19 @@ html[data-theme="dark"] .section-tool.is-active .section-tool-label {
     color: var(--a-select-fg-on-tint) !important;
 }
 
-/* ==========================================================================
-   v2.18.17 · 提交1 悬浮安全区（覆盖层，覆盖上文历史规则）
-   --------------------------------------------------------------------------
-   P0-1：390px 下收藏星标 x301–345，旧悬浮层 x332–372 两按钮竖排(44×96)，
-   横向重叠 13px。策略：
-   1) 悬浮层默认收起为单一 44×44 按钮（.to-top 默认 display:none，
-      仅滚动到一定位置或 hover/focus 时作为第二按钮出现，窄屏不常驻）；
-   2) 手机端给内容区 .link-sections 右让 56px 安全区，卡片右缘(含星标)
-      从 x345 收至 x≈289，悬浮层左缘 x332 与星标之间空出 ≥40px；
-   3) 热门横滑最右条目同样受安全区保护，右缘不被覆盖。
-   验收：JS 取 .float-bar 与 .card-star 矩形相交判断恒为 false。
-   ========================================================================== */
+
 @media (max-width: 620px) {
-    /* 内容区整体右让 56px：列表 / 网格 / 紧凑三态统一生效，
-       热门横滑区(.hot-strip)同样右让，保护最右条目不被悬浮球覆盖 */
+    
     .link-sections,
     #linkSections,
     .hot-strip {
         padding-right: 56px !important;
     }
-    /* 旧规则只给 grid 的 .site-grid 加 margin，这里三态统一，避免重复叠加 */
+    
     html[data-mode="grid"] #linkSections .site-grid {
         margin-right: 0 !important;
     }
-    /* 悬浮层默认收起为单一 44×44：回到顶部按钮不再常驻，避免 96px 高覆盖两行卡片 */
+    
     .float-bar .to-top {
         display: none !important;
     }
@@ -7954,22 +7497,7 @@ html[data-theme="dark"] .section-tool.is-active .section-tool-label {
     }
 }
 
-/* ==========================================================================
-   v2.18.17 · 提交2 登录态卡片同源（覆盖层，覆盖上文历史规则）
-   --------------------------------------------------------------------------
-   P0-2：登录态曾出现描述两行、域名与测速分行、星标只在首段居中、行高涨到
-   ~95px。根因是 v2.18.13 那套 3列2行栅格只写在 html[data-mode="list"] 下，
-   grid 模式（登录态默认视图差异）走另一套两行描述栅格、corner 还被 absolute
-   定位导致星标偏上。compact 是紧凑图标网格，语义不同，保持原样。
-   修复：手机端(≤640px)让 grid 与 list 两态的 .site-card 统一采用
-     列 32px / minmax(0,1fr) / 44px，区域
-     行1 "icon info corner" / 行2 "meta meta meta"；
-   描述 -webkit-line-clamp:1；meta 单行 nowrap、域名 max-width 55% 省略、
-   测速 nowrap；星标 44×44 + grid-area:1/3/3/4 + align-self:center，
-   且 corner 回 static，使其相对整卡居中。
-   验收：登录态 390px 行高 72–78px、星标中心与整卡中心偏差 ≤1px、
-        描述高度 = 单行行高。
-   ========================================================================== */
+
 @media (max-width: 640px) {
     html[data-mode="grid"] .site-card,
     html[data-mode="list"] .site-card {
@@ -8012,7 +7540,7 @@ html[data-theme="dark"] .section-tool.is-active .section-tool-label {
     html[data-mode="grid"] .site-card .site-name,
     html[data-mode="list"] .site-card .site-name {
         max-width: none !important;
-        font-size: 15px !important;
+        font-size: 14px !important;
         line-height: 1.3 !important;
     }
     html[data-mode="grid"] .site-card .site-desc,
@@ -8022,7 +7550,7 @@ html[data-theme="dark"] .section-tool.is-active .section-tool-label {
         -webkit-line-clamp: 1 !important;
         line-clamp: 1 !important;
         overflow: hidden !important;
-        font-size: 13px !important;
+        font-size: 14px !important;
         line-height: 1.35 !important;
         margin-top: 1px !important;
     }
@@ -8052,8 +7580,7 @@ html[data-theme="dark"] .section-tool.is-active .section-tool-label {
         flex: 0 0 auto !important;
         white-space: nowrap !important;
     }
-    /* 星标跨两行、相对整卡垂直居中（偏差 ≤1px）。
-       grid 态旧规则把 corner 设为 absolute，这里强制回 static 使 grid-area 生效。 */
+    
     html[data-mode="grid"] .site-card .card-corner,
     html[data-mode="list"] .site-card .card-corner {
         position: static !important;
@@ -8065,7 +7592,7 @@ html[data-theme="dark"] .section-tool.is-active .section-tool-label {
         align-self: center !important;
         justify-self: end !important;
     }
-    /* 两态同源：手机端收藏星标统一 44×44 触控区 */
+    
     html[data-mode="grid"] .site-card .card-star,
     html[data-mode="list"] .site-card .card-star {
         width: 44px !important;
@@ -8073,17 +7600,8 @@ html[data-theme="dark"] .section-tool.is-active .section-tool-label {
     }
 }
 
-/* ==========================================================================
-   v2.18.17 · 提交3 边界与细节（覆盖层，覆盖上文历史规则）
-   --------------------------------------------------------------------------
-   P0-3：浅色分组卡边框 rgb(224,224,224)=1.32:1 不可辨。规格原写 rgba(0,0,0,.14)
-         声称约2.1:1，但标准 WCAG 实测合成后仅 1.38:1（未达验收 ≥2:1）；
-         第2轮数据驱动修正为 rgba(0,0,0,.30)（实测 2.12:1，仍属 hairline 区间、不新增阴影）。
-         暗色同步修正为 rgba(255,255,255,.24)（实测 2.19:1）。
-   P1-5：星标与测速间距手机/桌面统一 12±2px。
-   P2-7：手机标题 24px 与 44px 品牌块光学居中（偏差 ≤1px）。
-   ========================================================================== */
-/* P0-3 分组卡边界可见 */
+
+
 html[data-mode="list"] .link-sections > .link-group {
     border: 1px solid rgba(0, 0, 0, 0.30) !important;
 }
@@ -8091,7 +7609,7 @@ html[data-theme="dark"][data-mode="list"] .link-sections > .link-group {
     border-color: rgba(255, 255, 255, 0.24) !important;
 }
 
-/* P1-5 星标↔测速间距：桌面 metrics 右缘外扩使 gap=12 */
+
 @media (min-width: 641px) {
     html[data-mode="list"] .site-metrics {
         margin-right: -2px !important;
@@ -8100,14 +7618,14 @@ html[data-theme="dark"][data-mode="list"] .link-sections > .link-group {
         column-gap: 12px !important;
     }
 }
-/* P1-5 手机：meta 内 gap 收至 12，星标与测速间距达标 */
+
 @media (max-width: 640px) {
     html[data-mode="list"] .site-card .site-meta {
         gap: 12px !important;
     }
 }
 
-/* P2-7 手机标题相对 44px 品牌块垂直居中（光学偏差 ≤1px） */
+
 @media (max-width: 430px) {
     .brand-title {
         line-height: 44px !important;
@@ -8115,15 +7633,7 @@ html[data-theme="dark"][data-mode="list"] .link-sections > .link-group {
     }
 }
 
-/* ==========================================================================
-   v2.18.18 · 问题7 全站标识统一：站内品牌块拉回盾牌
-   --------------------------------------------------------------------------
-   根因：历史 .brand-mark:has(img) 系列规则（v2.18.11/12）让后台上传的
-   白底横版 JPG 铺满品牌块，特异性高于 v2.18.14 的盾牌 mask 规则，导致
-   站内品牌块实际显示白底 JPG（与 favicon/应用图标三套不一致）。
-   修复：用更高特异性 + !important 强制所有品牌块（含 :has(img)）统一为
-   令牌蓝盾牌 mask，隐藏内部 img/svg/文字，与 favicon/应用图标同一图形语言。
-   ========================================================================== */
+
 html .brand-mark,
 html .site-header .brand-mark,
 html .auth-mark,
@@ -8162,27 +7672,9 @@ html .login-card .brand-mark > svg {
     display: none !important;
 }
 
-/* ==========================================================================
-   v2.18.19 · 遗留问题 1-6 + 新增问题 10 修复层（覆盖上文全部历史规则）
-   --------------------------------------------------------------------------
-   P0-1/2/3：撤销 v2.18.17 的 56px 右安全区——它让 .link-sections 内容区
-     缩窄 56px，分组卡 w298/right316 与热门条 w354/right372 不等宽，
-     卡片内容列仅 148px 致标题 9 字截断；悬浮层为 position:fixed，
-     本就不参与文档流，去掉安全区后 .site-card 宽度不再随悬浮态变化。
-   P0-4：分组卡与热门条统一 border 计算值（同为 1px solid rgba(0,0,0,.30)，
-     暗色 rgba(255,255,255,.24)），比正文浅且 100% 缩放肉眼可辨。
-   P1-5：内容列由 148px 回到 ≥200px，13px 描述单行可容 ≥14 汉字。
-   P1-6：把"全部网站"标题栏与筛选占位移到热门条之前，热门条与分组卡
-     之间只留统一 24px margin（详见 index.php 顺序调整）。
-   P0-10：撤销 v2.18.18 把 mask 直接作用于 .brand-mark 容器的做法——
-     容器恢复白底/1px 描边/8px 圆角/44(手机)·52(桌面)，与右侧图标按钮
-     同一组件语言；盾牌改画到 ::before 伪元素（mask 只在伪元素上），
-     灰色描边不再沿盾形轮廓绘制，盾形 center 定位保证上下留白均衡。
-     判定口径同步：问题7 的"同主色"改看盾牌伪元素主色(令牌蓝)，
-     容器底色不再作为主色判据，7-9 视觉结果不回退。
-   ========================================================================== */
 
-/* ---- P0-10 品牌块容器归位（盾牌下沉到伪元素） ---- */
+
+
 html .brand-mark,
 html .site-header .brand-mark,
 html .auth-mark,
@@ -8235,7 +7727,7 @@ html[data-theme="dark"] .login-card .brand-mark::before {
     background-color: #2997ff !important;
 }
 
-/* ---- P0-1/2/3 撤销 56px 右安全区，两块表面同宽、内容列 ≥200px ---- */
+
 @media (max-width: 620px) {
     .link-sections,
     #linkSections {
@@ -8246,7 +7738,7 @@ html[data-theme="dark"] .login-card .brand-mark::before {
     }
 }
 
-/* ---- P0-4 分组卡与热门条边框同源（计算值字符串一致） ---- */
+
 html .link-sections > .link-group,
 html .hot-strip {
     border: 1px solid rgba(0, 0, 0, 0.30) !important;
@@ -8256,7 +7748,7 @@ html[data-theme="dark"] .hot-strip {
     border-color: rgba(255, 255, 255, 0.24) !important;
 }
 
-/* ---- P1-6 两块表面间距统一 24px（DOM 顺序调整后 hot→分组卡只隔 margin） ---- */
+
 .hot-strip {
     margin-bottom: 24px !important;
 }
@@ -8264,21 +7756,7 @@ html[data-theme="dark"] .hot-strip {
     .hot-strip { margin-bottom: 24px !important; }
 }
 
-/* ==========================================================================
-   v2.18.20 · 问题11：悬浮控件与收藏星标零重叠（四视口 / 收起展开两态）
-   --------------------------------------------------------------------------
-   根因：星标右缘 345(390)/707(768)/963(1024) 伸入悬浮层 x 区间
-   （float.x=334/702/958），滚动时星标穿过悬浮层矩形造成遮挡。
-   方案：星标列整体左移，使星标右缘恒小于悬浮层左缘：
-   - ≤640：卡片栅格 32px/1fr/44px + gap10 + pad 10/10 改为
-     28px/1fr/44px + gap5 + pad 10/24，图标 32→28；星标右缘 = vw-59，
-     悬浮层右让 12px（断点 620→640）→ float.x = vw-56，恒 gap 3px；
-     内容列 204px 不变（28+204+44+2×5 = 卡宽-34）。
-   - ≥641：卡片 padding-right 12→21，星标右缘 707→698(768)/954(1024)，
-     恒 gap ≥4px。
-   验收：四视口 list 模式收起/展开两态，悬浮层与任一星标矩形不相交，
-   .site-card 宽度不随悬浮态改变。
-   ========================================================================== */
+
 @media (max-width: 640px) {
     html[data-mode="grid"] .site-card,
     html[data-mode="list"] .site-card {
@@ -8290,12 +7768,11 @@ html[data-theme="dark"] .hot-strip {
     html[data-mode="list"] .site-card .site-icon {
         width: 28px !important;
         height: 28px !important;
-        /* v2.18.22：历史规则 flex:0 0 32px 会把 28px 图标列的内在最小宽顶到 32px，
-           弹性列凭空少 4px（×2 列 = 内容列被多压 8px），一并复位为 28px */
+        
         flex: 0 0 28px !important;
         min-width: 0 !important;
     }
-    /* 悬浮层右让 12px + 收起态单按钮：断点从 620 扩到 640，与手机栅格断点一致 */
+    
     .float-bar {
         right: max(12px, env(safe-area-inset-right)) !important;
         bottom: max(14px, env(safe-area-inset-bottom)) !important;
@@ -8311,20 +7788,7 @@ html[data-theme="dark"] .hot-strip {
     }
 }
 
-/* ==========================================================================
-   v2.18.22 · 提交1 品牌块盾形居中放大（P0）
-   --------------------------------------------------------------------------
-   根因：apple-tokens.css 给 .brand-mark::before 写死 width/height 24px(44块)
-   /28px(52块) + display:block，且 v2.18.19 覆盖层把它设为 position:relative、
-   inset:0 被 auto 宽高挤掉 —— 于是 24×24 的伪元素落在内容流左上角，
-   mask 再按 68% 裁，可见盾形只剩约 16px，呈"白方块左上角一个小蓝点"。
-   修复：伪元素改为绝对定位铺满整块（inset:0 + width/height:100%），
-   mask 用 center/contain 的 76% 尺寸 —— 盾形 viewBox 0 0 24 24 在 76% 框内
-   本体占框高 23/24，故可见盾形 ≈ 块高 72%（手机 44→31.7px，桌面 52→37.4px），
-   几何中心与块中心重合（transform 均为中心对齐），上下留白对称。
-   盾形轮廓本身上下不对称（M12 1.5 起、底到 23.4），这里用 contain + center
-   保证外接矩形中心落在块中心，偏差 ≤1px。
-   ========================================================================== */
+
 html .brand-mark::before,
 html .site-header .brand-mark::before,
 html .auth-mark::before,
@@ -8359,31 +7823,13 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
     background-color: #2997ff !important;
 }
 
-/* ==========================================================================
-   v2.18.22 · 提交2 收藏星标右移到距卡右缘 10±2px（P0）
-   --------------------------------------------------------------------------
-   目标：card.right − star.right = 10±2px，星标 44×44、与整卡垂直居中 ≤1px。
-   手机 padding-right 24→10：卡右缘 355，星标右缘 = 345，留白恰 10px。
-   内容列核算（390 列表态）：卡宽 320 − padding 10×2 = 可用 300，
-   减固定列 28(图标) + 44(星标) + 2×5(列间距) = 82，自适应列 = 218px。
-   218 ≥ 基线 204，且是 24→10 收窄 padding 后单调放大的结果
-   （padding 24 时恰为 204），故内容列基线不回退；下方再显式锁 204 下限，
-   防止后续调 padding 时跌破。
-   桌面 padding-right 21→10，四视口实测留白均 10px。
-   横向相交前提：手机星标右缘 = vw-74（390 → 316），悬浮层右贴 6px 后
-   左缘 = vw-50（340），与星标右缘恒留 24px；滚动到任何位置星标都在
-   悬浮层左侧，永不相交。
-   ========================================================================== */
+
 @media (max-width: 640px) {
     html[data-mode="grid"] .site-card,
     html[data-mode="list"] .site-card {
         padding: 8px 10px 6px 10px !important;
     }
-    /* 内容列基线兜底：基线「204px」的语义是容量（标题 ≥10 汉字、描述 ≥14 汉字），
-       不是必须锁死的像素值。24px 右让后卡宽 296、可用 276，
-       减图标 28 + 星标 44 + 列间距 10 = 96，内容列 180…194（视列间距而定），
-       用 canvas 实测：194px 容 12 汉字标题 / 14 汉字描述，仍满足基线。
-       这里不写死 min-width，避免窄容器里 28+204+44 溢出把星标挤到贴边。 */
+    
 }
 @media (min-width: 641px) {
     html[data-mode="grid"] .site-card,
@@ -8392,24 +7838,7 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
     }
 }
 
-/* ==========================================================================
-   v2.18.22 · 提交3 恢复一键回顶 + 悬浮层与星标零相交（P0）
-   --------------------------------------------------------------------------
-   现状：v2.18.17 在 ≤640px 把 .float-bar .to-top 设为 display:none，
-   手机端没有回到顶部入口。
-   目标：手机与桌面都有 44×44 回顶按钮，滚动过一屏出现（JS is-visible），
-   点击平滑回顶；四视口 × 收起/展开 × 回顶可见/隐藏 全组合下
-   .float-bar / .to-top / .card-star 两两不相交；两按钮垂直间距 8±1px。
-   实现：
-   1) 撤销 display:none，恢复 .float-bar .to-top 为 flex 子项 44×44；
-      悬浮层 gap = 8px，垂直间距实测 8px。
-   2) 横向：浮层右贴 6px（left = vw-50），星标右缘 vw-74（手机）/
-      vw-89（768）/ vw-91（1024）/ vw-113（1440），恒留 ≥24px。
-   3) 回顶隐藏态用 opacity 0 + visibility hidden（保留布局高度，避免
-      出现/消失时按钮位移），其矩形仍在浮层内、恒不与星标相交。
-   4) 悬浮层 max-width:44px 且 flex-direction:column，保证整组不与
-      卡片内容列（x ≤ 卡右缘-54）重叠。
-   ========================================================================== */
+
 :root { --v221-gap: 8px; }
 .float-bar {
     gap: var(--v221-gap) !important;
@@ -8435,44 +7864,23 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
     visibility: visible;
 }
 
-/* ==========================================================================
-   v2.18.22 · 提交4 手机端右侧安全区 24px（P0-3 零相交的结构解）
-   --------------------------------------------------------------------------
-   冲突：v2.18.19 撤销 56px 右让后，#linkSections 右缘 = vw-18 = 372，
-   卡片右缘 355、星标右缘 345，而 44px 浮层右贴 6px 后左缘 = vw-50 = 340
-   —— 345 > 340，横向必然重叠 5px。390 视口里
-   「18(页边) + 354(卡) + 10(留白) + 44(浮层)」= 426 > 390，物理放不下，
-   所以要么让出安全区，要么放弃 44×44 回顶按钮，二者不可兼得。
-   解：只让 24px（不是 v2.18.19 撤销的 56px）。核算（390）：
-     内容区右缘 372-24 = 348，卡片右缘 347，星标右缘 337，
-     浮层左缘 340 —— 337 < 340，零相交且留 3px 呼吸位；
-     卡片宽 312，内容列 = 312-20(内边距)-28(图标)-44(星标)-10(列间距) = 210px，
-     仍 ≥ 基线 204；标题可容 14 汉字、描述 16 汉字，不打折。
-   基线「分组卡与热门条同宽同右缘」按相对口径守住：两者都右让 24px，
-   右缘同为 348、宽度同为 330，左右外边距对称（左 18 / 右 42 只作用于
-   内容区，两块表面之间仍完全对齐）。
-   ========================================================================== */
+
 @media (max-width: 640px) {
     .link-sections,
     #linkSections {
         padding-right: 24px !important;
     }
-    /* hot-strip 的 padding 是内部留白（10px 24px 10px 16px），改它只动内容
-       不改外框。分组卡外框已因 #linkSections 右让退到 348，热门条必须用
-       margin-right 同步退让，两块表面才继续同宽同右缘。 */
+    
     .hot-strip {
         margin-right: 24px !important;
     }
-    /* 兜底：浮层左缘恒 ≥ 星标右缘 + 2px，任何滚动位置都不相交 */
+    
     .float-bar {
         right: max(6px, env(safe-area-inset-right)) !important;
     }
 }
 
-/* ---- 提交4 续：≥641 同样给 24px 右侧安全区（浮层 44px 恒不压星标） ----
-   768 实测：网格最右列卡片右缘 719、星标右缘 726（卡右缘 736-10），
-   浮层左缘 718 —— 压住 8px。桌面宽度充裕，让 24px 即可完全错开，
-   且网格仍排得下原列数（768/1024/1440 列数不变）。 */
+
 @media (min-width: 641px) {
     .link-sections,
     #linkSections {
@@ -8483,11 +7891,7 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
     }
 }
 
-/* ---- 提交4 续：列表态分组卡内边距 16 → 8，补回被 24px 安全区吃掉的内容列 ----
-   390 实测：.link-group padding 0 16px 时卡宽 296（330-32-2），
-   内容列 = 296-20-28-44-10 = 194；收到 8px 后卡宽 312、内容列 210，
-   回到 ≥204 且标题可容 14 汉字。分组卡外框宽度不变（仍 330/右缘 348），
-   只是内层留白变窄，外观上是卡片更「满」，与网格态（内边距本为 0）一致。 */
+
 @media (max-width: 640px) {
     html[data-mode="list"] .link-sections > .link-group,
     html[data-mode="list"] #linkSections > .link-group {
@@ -8496,16 +7900,7 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
     }
 }
 
-/* ---- 提交4 续：星标绝对居中于卡片盒，消除行轨道溢出带来的 3px 偏移 ----
-   现象：390 列表态 41 张「无描述」卡片（高 71）星标中心比整卡中心低 3.02px。
-   根因：card-corner 用 grid-area 1/3/-1/4 跨两行，高度 = 行1(39.05) +
-   row-gap(4) + 行2(18) = 61.05，而卡片内容盒只有 71-8-6 = 57 —— 行轨道
-   已溢出 4px，corner 的居中基准(61)比真实内容盒(57)高 4px，偏移 2px；
-   再叠加 padding 上下不等(8/6) 的 1px，正好 3px。
-   修法：星标脱离 grid 轨道，绝对定位 top: calc(50% - 22px)。只给 top
-   不给 bottom（避免 over-constrained 让 top 被忽略），基准是卡片 padding box，
-   与行轨道、row-gap、padding 不对称都无关，任意卡高偏差恒 0。
-   水平仍由 right:10px 决定，星标右留白不受影响。 */
+
 @media (max-width: 640px) {
     html[data-mode="list"] .site-card .card-corner,
     html[data-mode="grid"] .site-card .card-corner {
@@ -8517,10 +7912,7 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
         transform: none !important;
         margin: 0 !important;
         align-self: auto !important;
-        /* 关键：绝对定位的 grid 子项默认以 grid-area 为包含块，
-           grid-area 1/3/3/4 高 61 → 50% 解析成 30.5，算出 top 8.5px。
-           这里把 grid-area 复位为 auto，包含块回到卡片 padding box(71)，
-           50% = 35.5，top = 13.5，星标中心正好落在卡中心。 */
+        
         grid-area: auto !important;
         grid-row: auto !important;
         grid-column: auto !important;
@@ -8536,19 +7928,9 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
     }
 }
 
-/* ---- 提交5 基线回归修复：右让 24px 后两块表面重新同宽同右缘 ----
-   1) 热门条：padding(10px 24px 10px 16px) 是内部留白，改它不动外框。
-      已改为 margin-right:24px，与分组卡同步右让（390 实测 330/348 完全对齐）。
-   2) 分组卡：历史出血用 margin:0 -32px + padding:0 32px 自平衡，
-      #linkSections 再加 24px 右 padding 后，负 margin 不再对称，
-      外框右缘比内容区多出 8px（1440 实测 1376 vs 1368）。
-      右侧负 margin 由 -32 收到 -24，出血量跟随右让，外框回到内容区右缘。
-   ========================================================================== */
+
 @media (min-width: 641px) {
-    /* 出血整体取消：历史 margin:0 -32px + padding:0 32px 只在与内容区等宽时
-       才自平衡，一旦 #linkSections 有右 padding，左右就不对称。
-       这里 margin 归零 + 左右 padding 归零，分组卡外框 = 内容区宽度，
-       与热门条（无出血）严格同宽同右缘；内部留白交给卡片自身 padding。 */
+    
     html .link-sections > .link-group,
     html #linkSections > .link-group {
         margin-left: 0 !important;
@@ -8558,15 +7940,7 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
     }
 }
 
-/* ---- 提交5 续：桌面列表态用显式 grid-column 定位，杜绝 0px 轨道 ----
-   现象：768/1024 列表态 42 张卡片（第 13 张起）列模板 38px / 538px / 0px / 44px，
-   第 3 列为 0，.site-meta 实测宽 258.9 却溢出压在第 2 列上。
-   根因：只靠 grid-template-areas 命名区域定位时，一旦 1fr 列吃掉全部余量，
-   auto/max-content 列可能被算成 0，而 meta 因 flex:0 0 auto + justify-self:end
-   仍按内容宽绘制，视觉上就压到相邻列。
-   修法：改用显式 grid-column / grid-row 定位（不依赖命名区域），
-   并给第 3 列 min-content 下限，保证「域名 + 测速」永远有实宽。
-   ========================================================================== */
+
 @media (min-width: 641px) {
     html[data-mode="list"] .site-card {
         grid-template-columns: 38px minmax(0, 1fr) minmax(min-content, max-content) 44px !important;
@@ -8594,8 +7968,7 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
         align-self: center !important;
         justify-self: end !important;
         white-space: nowrap !important;
-        /* min-content 会被 flex 子项压到 0（.site-domain 是 0 1 auto 可收缩），
-           实测列宽因此塌成 0；这里给实测最小实宽 190px，保证列不塌。 */
+        
         min-width: 190px !important;
         max-width: 320px !important;
     }
@@ -8612,63 +7985,29 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
     }
 }
 
-/* ==========================================================================
-   v2.18.22 · 提交1 问题1 对称外边距（撤销单侧右让，整页不再左偏）+ P0
-   --------------------------------------------------------------------------
-   现状（390 实测）：.link-group 左缘 18、右缘 348（视口 390），左右边距
-   18 / 42，差 24px。这 24px 是 v2.18.22 为让悬浮层不压星标而加的单侧右让
-   （#linkSections padding-right:24px），结果整页重心左偏、右侧常驻空白带。
-   核算（390，卡片贴内容区、padding 10/10、图标 28 + 星标 44 + 2×gap 5）：
-     页边 18 对称 → 卡片 354，内容列 252，star.right 344 ≥ fb.left 340 → 相交
-     页边 24 对称 → 卡片 342，内容列 240，star.right 332 <  fb.left 340 → 零相交 ✓
-     页边 30 对称 → 卡片 330，内容列 228，star.right 320 → 零相交 ✓
-   取 24：内容列 240（≥204），左右各 24 完全对称，且与悬浮层留 8px 呼吸位。
-   桌面（≥641）：浮层占 44 + 右贴 6 + 呼吸 2 = 52，故左右各让 52 对称：
-     768 → 内容列 536；1024 → 792；1440 → 1072，全部 ≥204 且零相交。
-   实现：撤销 v2.18.22 的单侧 padding-right，改为容器左右 padding 同值；
-   热门条与外层 .link-sections 同步，保证 group / hot / card 三者仍同宽同右缘。
-   ========================================================================== */
+
 :root {
-    /* 手机：左右对称页边，同时也是悬浮层安全区。
-       核算（390，卡片贴内容区，内边距 10/10，图标 28 + 列间距 10 + 星标 44）：
-         gutter 18 → 卡右缘 371、星标右缘 361，浮层左缘 340 → 相交 21px ✗
-         gutter 24 → 卡右缘 365、星标右缘 355，浮层左缘 340 → 相交 15px ✗
-         gutter 30 → 卡右缘 359、星标右缘 349，浮层左缘 340 → 相交  9px ✗
-         gutter 36 → 卡右缘 353、星标右缘 343，浮层左缘 340 → 相交  3px ✗
-         gutter 40 → 卡右缘 349、星标右缘 339，浮层左缘 340 → 零相交 ✓
-       但 gutter 40 会把内容列压到 249-40-10 = 199（< 基线 204）。取 39：
-         卡右缘 350、星标右缘 340、浮层左缘 340 → 恰好相邻（0px 相交，需 1px 呼吸）
-       最终取 40 并在后面把星标右留白从 10 收到 8（基线允许 10±2），
-       内容列 = 350-20-28-44-10 = 248 → 实际渲染 238（列间距与描边占 10），
-       仍 ≥ 204。结论：**手机 gutter = 40px 左右对称**，其余全部靠 10±2 留白吸收。 */
+    
     --v222-gutter: 40px;
 }
 @media (min-width: 641px) {
-    :root { --v222-gutter: 52px; }   /* 桌面：容纳 44px 浮层 + 6px 贴边 + 2px 呼吸 */
+    :root { --v222-gutter: 52px; }   
 }
 
-/* 撤销单侧右让，三处容器统一左右 padding */
-/* 外层统一收缩：.site-main 是全体内容的宿主，左右各收 --v222-gutter，
-   分组卡 / 热门条 / 卡片全部继承同一对称边距，不再各自加 padding。 */
-/* 页边只在一层生效：.page-shell 的 18px 与内层 gutter 会叠加，
-   这里把 .page-shell 的左右内边距归零（保留其 max-width 居中能力）。 */
+
+
+
 .page-shell {
     padding-left: 0 !important;
     padding-right: 0 !important;
 }
-/* 侧栏展开（≥1024 两列网格）时，把左右 gutter 提到 .site-body 上：
-   这样「侧栏 + 内容区」作为整体一起内缩，页面左右外边距仍然相等。
-   只加在 .site-main 上会让内容区在侧栏右侧再缩一次，左宽右窄更明显。 */
+
 .site-body {
     box-sizing: border-box !important;
 }
 @media (min-width: 1024px) {
     .site-body {
-        /* 用「收窄宽度 + 居中」而不是「加 padding」：
-           padding 需要容器本身已占满视口才能靠 margin:auto 居中，
-           而 <1440 时容器本就 100% 宽，margin:auto 无处发力，
-           结果左 padding 生效、右侧却多出一段空白 → 仍不对称。
-           直接 width = 100% - 2×gutter，配合 margin:auto 必然左右相等。 */
+        
         width: 920px !important;
         max-width: none !important;
         margin-left: auto !important;
@@ -8676,7 +8015,7 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
         padding-left: 0 !important;
         padding-right: 0 !important;
     }
-    /* 此时 .site-main 不再自己缩，宽度由网格列分配 */
+    
     .site-main {
         width: auto !important;
         max-width: none !important;
@@ -8685,34 +8024,14 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
         justify-self: stretch !important;
     }
 }
-/* 超宽屏：内容列上限 1200，同样用「收窄 + 居中」而不是 padding，
-   否则 .site-main 在网格里固定 1200 后剩余空间全堆到右侧。 */
+
 @media (min-width: 1490px) {
     .site-body {
         width: 1304px !important;
         max-width: 1304px !important;
     }
 }
-/* ---- 桌面（≥1024）左右对称页边：最终且唯一实现 ----
-   --------------------------------------------------------------------------
-   DOM：body(flex) > .page-shell(flex column) > .site-body(grid: 238px + 30 + 内容列)
 
-   之前的错法（三次踩坑记录，勿重犯）：
-   ① 只在 .site-main 上加 padding  → 网格第二列内再缩，右侧多出一圈；
-   ② 只在 .site-body 上加 padding  → grid 的 padding 在内侧，侧栏被右推，
-      内容列右缘仍是「52 + padding」，左右不等；
-   ③ 给 .page-shell 加 padding 但没设 box-sizing:border-box
-      → width:100% 不含 padding，内容盒 = 100%+104，溢出且右侧多 104。
-
-   正解：把 .page-shell 当成唯一的内容盒，
-     · box-sizing: border-box（width 含 padding）
-     · padding 左右各 --v222-gutter（手机 24 / 桌面 52）
-     · 自身 margin:auto + max-width 1360 居中
-   于是内容盒 = 视口 - 2×gutter（≤1360 时），左右外边距必然相等。
-   下层全部放开、不再二次收窄：
-     · .site-body  width:100%（占满内容盒），padding/margin 归零
-     · .site-main  width:100%（占满网格第二列），padding/margin 归零
-   这样 group / hot / card 三者宽度只由内容盒决定，与悬浮控件是否存在无关。 */
 @media (min-width: 1024px) {
     .page-shell {
         box-sizing: border-box !important;
@@ -8744,10 +8063,7 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
         align-self: start !important;
     }
 }
-/* 内容区（<1024）：.site-body 是单列网格、侧栏为抽屉，
-   收窄职责落在 .site-main 上：width = 视口 - 2×gutter，margin:auto 居中。
-   注意 desktop 断点（≥1024）里已把 .site-main 放开为 100%（见上），
-   这里用 max-width:1023px 限定，避免两条规则互相打架。 */
+
 @media (max-width: 1023px) {
     .site-main {
         box-sizing: border-box !important;
@@ -8761,8 +8077,7 @@ html[data-theme="dark"] .auth-mark:has(img)::before {
         align-self: start !important;
     }
 }
-/* .link-group 的内边距在任何断点、任何模式下都必须为 0：
-   它一旦带 padding，卡片的实际宽度就比 .hot-strip 窄一圈，同宽同右缘破功。 */
+
 html[data-mode="list"] .link-sections > .link-group,
 html[data-mode="list"] #linkSections > .link-group,
 html[data-mode="grid"] .link-sections > .link-group,
@@ -8770,13 +8085,11 @@ html[data-mode="grid"] #linkSections > .link-group,
 html .link-sections > .link-group,
 html #linkSections > .link-group {
     padding: 0 !important;
-    /* 只归零左右，纵向间距必须保留 —— 全部归零会让组间 gap 变 0，
-       分组卡首尾相接，分不清边界（v2.18.22 问题8 实测 groupGap=0）。 */
+    
     margin-left: 0 !important;
     margin-right: 0 !important;
 }
-/* 分组卡与热门条：左右 padding / margin 一律归零，宽度完全由外层决定，
-   二者因此天然同宽同右缘（相对口径），也不会因悬浮控件存在与否而变化。 */
+
 .link-sections,
 #linkSections,
 .hot-strip,
@@ -8787,39 +8100,23 @@ html #linkSections > .link-group {
     margin-left: 0 !important;
     margin-right: 0 !important;
 }
-/* 卡片内边距保持 10px 左右对称（v2.18.22 星标右移的成果，不动） */
+
 @media (max-width: 640px) {
     html[data-mode="grid"] .site-card,
     html[data-mode="list"] .site-card {
         padding-left: 10px !important;
         padding-right: 10px !important;
     }
-    /* 含内边距的容器不要再叠内层 padding，否则卡片被双重缩窄 */
+    
     .link-sections > .link-group .site-grid {
         margin-left: 0 !important;
         margin-right: 0 !important;
     }
 }
 
-/* ==========================================================================
-   v2.18.22 · 提交2 问题2 触屏 hover 粘滞 + 问题3 收藏色语义（P0 / P1）
-   --------------------------------------------------------------------------
-   问题2 根因：html[data-mode="list"] .card-star:hover 写了
-   background: rgba(0,0,0,.04)，触摸设备 tap 后 :hover 状态不会自动解除，
-   灰底停在最后触摸的那一行（实测滚动后仍残留 rgba(0,0,0,0.04)）。
-   修法：
-   1) 用 @media (hover: hover) and (pointer: fine) 把 hover 视觉限定给
-      真正的指针设备；触摸设备（hover: none / pointer: coarse）不加载任何
-      hover 背景，tap 后不会留下灰块。
-   2) 触摸设备补 :active 反馈（按下瞬间的 120ms 反馈），不依赖 :hover 表达状态。
-   3) 未聚焦/未按下时全部星标外观完全一致（背景透明、描边透明）。
-   问题3 根因：列表态 [data-starred="1"] 用 var(--a-primary)（主色蓝），
-   与「主色只表达交互与当前视图」冲突，且同屏空心灰 / 实心蓝缺统一图例。
-   修法：收藏态改用语义色 --warning（琥珀），实心填充 + 同色描边；
-   未收藏保持空心灰。明暗两套主题各自固定取值，全部可用肉眼与数值区分。
-   ========================================================================== */
 
-/* ---- 问题2：hover 只在精确指针设备生效 ---- */
+
+
 @media (hover: hover) and (pointer: fine) {
     html[data-mode="list"] .card-star:hover {
         color: var(--a-primary);
@@ -8830,7 +8127,7 @@ html #linkSections > .link-group {
         background: rgba(255, 255, 255, 0.06);
     }
 }
-/* 触摸设备：强制清空 hover 残留，只保留瞬时 :active */
+
 @media (hover: none), (pointer: coarse) {
     html[data-mode="list"] .card-star,
     html[data-mode="list"] .site-card .card-star,
@@ -8851,7 +8148,7 @@ html #linkSections > .link-group {
     }
 }
 
-/* ---- 问题3：收藏态用语义色（琥珀实心），不再占用主色蓝 ---- */
+
 :root { --v222-star-on: #C77700; --v222-star-on-bg: rgba(199, 119, 0, 0.12); }
 html[data-theme="dark"] { --v222-star-on: #FFB340; --v222-star-on-bg: rgba(255, 179, 64, 0.16); }
 
@@ -8866,7 +8163,7 @@ html .site-card[data-starred="1"] .card-star svg {
     fill: var(--v222-star-on) !important;
     stroke: var(--v222-star-on) !important;
 }
-/* 未收藏：空心灰，两套主题各自固定 */
+
 html .site-card:not([data-starred="1"]) .card-star {
     color: #5B5B60 !important;
     background: transparent !important;
@@ -8880,29 +8177,9 @@ html .site-card:not([data-starred="1"]) .card-star svg {
     stroke: currentColor !important;
 }
 
-/* ==========================================================================
-   v2.18.22 · 提交3 问题6 站标风格统一 + 问题7 热门条截断与横滑提示
-   --------------------------------------------------------------------------
-   问题7 现状（390 实测）：.hot-list scrollWidth 942 / clientWidth 340，
-   确实可横滑，但：
-     ① mask 渐隐只在 ≤640 生效，≥641 是 nowrap + overflow auto 却无任何提示；
-     ② 条目没有 scroll-snap，横滑停下来常卡在半个条目上（第 3 项右缘 371.8
-        越过容器右缘 365，被硬切）；
-     ③ 末项右内边距 0，滑到底时最后一项贴着容器右缘，读不全。
-   修法：snap 到条目起点 + 末项留 12px 内边距 + 全断点保留渐隐提示。
-   问题6 现状（28px）：站标两种来源混排——
-     · favicon（<img>）：本身就是品牌图标，形状/底色千差万别；
-     · 字母回退（.site-icon-letter）：本站生成的 --fallback-bg 纯色块 + 首字母。
-   28px 下白底徽标（AstrBot 带 "astrbot" 文字）文字糊成块、线描猫脸与实心图标
-   视觉重量差 2 倍以上。修法（不改数据、不改下载源，只做呈现归一）：
-     ① 统一外框：28×28、圆角 8、1px 描边，底色锁定 --surface-2（明暗各一值）；
-     ② 图标本体 18×18 居中，四周各留 5px 呼吸位，避免贴边显大；
-     ③ 白底/亮底 favicon 用 filter 压到与深色图标同一明度区间，
-        暗色主题反向提亮，保证「同一列表内不出现纯白底与深蓝实底混排」；
-     ④ 字母回退统一为「浅底 + 深字」低对比方案，不抢主体。
-   ========================================================================== */
 
-/* ---- 问题6：站标容器与图标归一 ---- */
+
+
 html .site-icon {
     width: 28px !important;
     height: 28px !important;
@@ -8926,21 +8203,20 @@ html .site-icon .site-favicon {
     object-fit: contain !important;
     border-radius: 4px !important;
     display: block !important;
-    /* 白底徽标压亮度：0.92 会把接近 #FFF 的底色拉到 #EBEBEB 区间，
-       与深色实心图标的明度差从 ~95 收到 ~30，不再出现「一白一黑」跳变 */
+    
     filter: brightness(0.92) saturate(1.05) !important;
 }
 html[data-theme="dark"] .site-icon .site-favicon {
     filter: brightness(1.12) saturate(1.05) !important;
 }
-/* 字母回退：浅底深字，与 favicon 同明度区间，28px 下首字母清晰可读 */
+
 html .site-icon .site-icon-letter {
     width: 100% !important;
     height: 100% !important;
     border-radius: 0 !important;
     display: grid !important;
     place-items: center !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
     line-height: 1 !important;
     letter-spacing: 0 !important;
@@ -8951,13 +8227,13 @@ html[data-theme="dark"] .site-icon .site-icon-letter {
     color: #C8C8CE !important;
 }
 
-/* ---- 问题7：热门条横滑 - 吸附 + 末项留白 + 全断点渐隐 ---- */
+
 html .hot-list {
     scroll-snap-type: x proximity !important;
     scroll-padding-left: 4px !important;
     scroll-padding-right: 16px !important;
     overscroll-behavior-x: contain !important;
-    /* 隐藏滚动条但保留滚动能力（Firefox / Chromium 各一套） */
+    
     scrollbar-width: none !important;
 }
 html .hot-list::-webkit-scrollbar {
@@ -8967,10 +8243,9 @@ html .hot-item {
     scroll-snap-align: start !important;
 }
 html .hot-list > .hot-item:last-child {
-    margin-right: 16px !important;   /* 滑到底时末项与容器右缘留呼吸位 */
+    margin-right: 16px !important;   
 }
-/* 渐隐提示提升到全断点：≥641 也用同一套 mask，保证「可横滑」始终有视觉暗示。
-   只在真能横滑的布局（flex nowrap）生效，wrap 布局下 mask 无害。 */
+
 @media (min-width: 641px) {
     html .hot-list {
         -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 18px), transparent 100%);
@@ -8982,20 +8257,7 @@ html .hot-list > .hot-item:last-child {
     }
 }
 
-/* ==========================================================================
-   v2.18.22 · 提交4 问题8 组内/组间间距节奏归正
-   --------------------------------------------------------------------------
-   现状（390 实测）：组标题→首行 12px，热门条→首张分组卡 76px，相邻分组 gap 0。
-   判定要求「组内标题到首行 ≤ 组间间距」，当前 12 ≤ 0 明显倒挂（组间没了），
-   同时热门条到分组卡 76px 又大得离谱 —— 一头空、一头挤。
-   根因：v2.18.22 提交1 里统一写了 `.link-group { padding: 0 }`，
-   把原来「用 32px 上下 padding 撑开留白」的节奏一起清掉了（见 L7086 注释）。
-   修法：
-     · 分组卡自身保留 24px 上内边距 + 24px 下外边距 → 组间视觉间距 = 48px；
-     · 组标题到首行收到 8px（< 48，节奏自上而下递减）；
-     · 热门条到首张分组卡压到 24px（与组间同值，形成统一垂直韵律）。
-   所有数值走 24±2 / 8 两档，四视口一致，不随模式变化。
-   ========================================================================== */
+
 
 :root {
     --v222-group-pad-top: 24px;
@@ -9003,7 +8265,7 @@ html .hot-list > .hot-item:last-child {
     --v222-title-gap: 8px;
 }
 
-/* 组间：上下各 24（padding-top + margin-bottom），合计 48 */
+
 html .link-sections > .link-group,
 html #linkSections > .link-group {
     padding-top: var(--v222-group-pad-top) !important;
@@ -9015,26 +8277,24 @@ html #linkSections > .link-group:last-child {
     margin-bottom: 0 !important;
 }
 
-/* 组内：标题到首行 8px */
+
 html .link-sections > .link-group > .group-head,
 html #linkSections > .link-group > .group-head {
     margin-bottom: var(--v222-title-gap) !important;
     padding-bottom: 0 !important;
 }
 
-/* 热门条到首张分组卡：24px。热门条自身下外边距 + 首组上内边距会叠加，
-   这里把热门条的下外边距归零，只由首组 padding-top 提供 24px。 */
+
 html .hot-strip {
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
 }
-/* 热门条内部（标题 + 横滑列表）保留 12px 呼吸，不与分组间距混淆 */
+
 html .hot-title {
     margin-bottom: 12px !important;
 }
 
-/* 首组紧跟热门条时（热门条已带自身下外边距，实测叠加到 48~52），
-   把首组上内边距收掉，改由热门条下外边距单独提供 24px 的组间节奏。 */
+
 html .link-sections > .link-group:first-child,
 html #linkSections > .link-group:first-child {
     padding-top: 0 !important;
@@ -9043,14 +8303,7 @@ html .hot-strip {
     margin-bottom: var(--v222-group-gap) !important;
 }
 
-/* v2.18.22 · 问题8 补充：热门条 → 内容首组的视觉间距归 24px
-   实测结构层：.hot-strip(mb 24) → .section-head(36) → .filter-bar-wrap(2)
-              → .link-sections → .link-group
-   即「热门条底边」到「首张分组卡顶边」之间还夹着两排结构件，
-   量出来 72~76px，与组间 24px 完全不在一个量级（节奏倒挂的另一半）。
-   处置：把 section-head 与 filter-bar-wrap 的纵向留白压到最小可读值，
-   使热门条底边到首组顶边落在 24±2，与组间节奏一致。
-   注意：不动 .filter-bar-wrap 的高度（它同时是筛选条的测量基准）。 */
+
 html .hot-strip + .section-head,
 html .section-head {
     margin-bottom: 10px !important;
@@ -9058,8 +8311,7 @@ html .section-head {
 html .hot-strip {
     margin-bottom: 12px !important;
 }
-/* 筛选条容器在无激活筛选时高度为 2px，保留但其下外边距归零，
-   让 .link-sections 紧贴，只由分组卡自身 padding-top 提供上留白 */
+
 html .filter-bar-wrap {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
@@ -9070,14 +8322,7 @@ html .link-sections > .link-group:first-child {
     margin-top: 0 !important;
 }
 
-/* v2.18.22 · 问题8 收束：热门条到首组的间距按「内容块间距」归一
-   剩余 58px 由三部分组成：热门条下边距 12 + .section-head 自身高 36
-   + 其下边距 10。section-head 是「全部网站 / 当前视图 N 个 / 排序」的功能行，
-   属于信息架构而非装饰留白，压到 0 会让排序工具与首张卡粘连、不可点。
-   处置：把 section-head 的高度与两侧留白压到功能可用下限（32 + 8 + 8），
-   使热门条底边到首组顶边 = 12 + 32 + 8 + 0 ≈ 52 → 仍大于组间 24，
-   但满足「组内 ≤ 组间」的判定（8 ≤ 24），且层级可读。
-   同时把三者统一到同一套垂直韵律变量，后续调整只改一处。 */
+
 :root {
     --v222-head-h: 32px;
     --v222-head-gap: 8px;
@@ -9088,40 +8333,15 @@ html .section-head {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
 }
-html .hot-strip {
-    margin-bottom: 12px !important;
-}
-html .filter-bar-wrap {
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-}
 
-/* ==========================================================================
-   v2.18.23 · 横向基准统一 / 手机边距回收 / 站标可读性
-   --------------------------------------------------------------------------
-   问题1 根因：v2.18.22 把 .page-shell 的左右 padding 归零，收窄职责只落在
-   .site-main 上；但 .site-header / .search-section 是 .site-main 的兄弟节点，
-   于是 header 与搜索区顶到视口边缘（x=0），chips / 分组卡 / 热门条却内缩 40。
-   同一屏出现 0 与 40 两套左基准：logo 贴边、搜索框圆角被屏幕边缘切平。
-   修法：把 .page-shell 恢复成「唯一内容盒」，全断点承担 gutter；
-   .site-body / .site-main 一律 100%，任何子块不再自行收窄。
-   这样 header / 搜索 / 分类条 / 分组卡 / 热门条共用同一个左缘。
 
-   问题2：手机 gutter 40 → 18。390 内容宽 354（卡片 354、内容列 252），
-   360 内容宽 324（卡片 324、内容列 222）；两边各 18 ≤ 20。
-
-   问题7：390 视口里「18 页边 + 354 卡 + 44 浮层 + 6 贴边」= 422 > 390，
-   44px 常驻浮层与 ≥340 宽卡片物理上无法共存。解：把「视图切换 / 回顶」
-   两个入口迁入吸顶分类条（.mobile-quick），手机端 .float-bar 整体隐藏，
-   与卡片矩形零相交；回顶按钮随吸顶条常驻视口，滚动超一屏出现且可点。
-   ========================================================================== */
 
 :root { --v223-gutter: 18px; }
 @media (min-width: 641px) {
     :root { --v223-gutter: 52px; }
 }
 
-/* ---- 问题1：唯一内容盒 ---- */
+
 html .page-shell {
     box-sizing: border-box !important;
     width: 100% !important;
@@ -9156,14 +8376,13 @@ html .site-main {
     justify-self: stretch !important;
     align-self: start !important;
 }
-/* 搜索区与头部跟随同一左缘（≤960 时搜索区不再为侧栏让位） */
+
 @media (max-width: 960px) {
     html .search-section {
         padding-left: 0 !important;
         width: 100% !important;
     }
-    /* 分类条原本用负 margin 出血到视口边，在「唯一内容盒」下会跑到基准线左侧
-       16px。归零后条带与卡片同宽同缘，chips 首项左缘 = 页边 = 18px。 */
+    
     html .mobile-cats {
         margin-left: 0 !important;
         margin-right: 0 !important;
@@ -9172,7 +8391,7 @@ html .site-main {
     }
 }
 
-/* ---- 问题2：手机页边 18px，卡片与内容列全部回到可用宽度 ---- */
+
 @media (max-width: 640px) {
     html .link-sections,
     html #linkSections,
@@ -9183,9 +8402,7 @@ html .site-main {
         margin-right: 0 !important;
     }
 }
-/* 页边从 40 收敛到 18 后，390 的内容宽 354 会跨过 minmax(168) 的两列阈值，
-   卡片被劈成 171.5 两张，「卡片 ≥340」直接失守。手机上网格态固定单列：
-   一列大卡的可读性本来也优于两张窄卡。 */
+
 @media (max-width: 460px) {
     html[data-mode="grid"] .site-grid {
         grid-template-columns: minmax(0, 1fr) !important;
@@ -9193,15 +8410,14 @@ html .site-main {
     }
 }
 
-/* 变宽后部分卡片少折一行，行高掉到 71（基线要求 72–78）。
-   手机列表态给 72px 下限，描述两行的卡仍可到 75，区间不变。 */
+
 @media (max-width: 640px) {
     html[data-mode="list"] .site-card {
         min-height: 72px !important;
     }
 }
 
-/* ---- 问题3：站标可见面积 ≥ 容器 80%（24/28 = 85.7%） ---- */
+
 html .site-icon .site-favicon {
     width: 24px !important;
     height: 24px !important;
@@ -9210,10 +8426,10 @@ html .site-icon .site-favicon {
     object-fit: contain !important;
 }
 html .site-icon .site-icon-letter {
-    font-size: 15px !important;
+    font-size: 14px !important;
 }
 
-/* ---- 问题6：组内节奏 —— 标题到首卡 24px，不小于组间 24px ---- */
+
 html .link-sections > .link-group,
 html #linkSections > .link-group,
 html .link-sections > .link-group:first-child,
@@ -9227,11 +8443,7 @@ html #linkSections > .link-group .group-head {
     margin-bottom: 24px !important;
 }
 
-/* ---- 问题7-a：手机端撤掉常驻浮层，回顶改由吸顶分类条承载 ----
-   浮层位置固定在右下 44px，手机页边收到 18 后内容右缘 372，
-   两者必然相交 30px；而 44px 浮层又不可能塞进 18px 页边。
-   因此 ≤640 直接隐藏浮层（DOM 保留，矩形面积 0 → 与卡片零相交），
-   回顶按钮放进 sticky 分类条：它本来就在视口顶部，滚动超一屏时点亮。 */
+
 @media (max-width: 640px) {
     html .float-bar {
         display: none !important;
@@ -9261,7 +8473,7 @@ html #linkSections > .link-group .group-head {
     html .mobile-cats .mobile-quick:active {
         color: var(--primary);
     }
-    /* 回顶按钮：滚动超一屏才出现，占位保留避免 chips 宽度跳动 */
+    
     html .mobile-cats .mobile-to-top {
         opacity: 0;
         visibility: hidden;
@@ -9274,8 +8486,7 @@ html #linkSections > .link-group .group-head {
     }
 }
 
-/* 视图切换：≤480 时 .mode-switch 三按钮被隐藏，用头部这颗单按钮循环切换。
-   481–920 仍由 .mode-switch 承担，避免两套入口同时出现。 */
+
 html .header-tools .mobile-mode-cycle {
     display: none;
 }
@@ -9301,23 +8512,17 @@ html .header-tools .mobile-mode-cycle {
 }
 
 
-/* 分类 chips 溢出时不做渐隐：18px 渐隐会把下一个 chip 淡成一个「空圆」，
-   比截断更让人困惑。改为留 6px 右内边距，让溢出的 chip 稳定地「半露」，
-   既看得到还有内容，也不会直接贴住右侧按钮。 */
+
 html .mobile-cats-track {
     padding-right: 6px;
 }
 
-/* ---- 问题5：热门条右端渐隐 + 末项留白 ----
-   渐隐只在「真的能横滑」时出现（JS 加 is-scrollable）。
-   1440 下 6 条热门刚好排满 988px 不溢出，此时再加渐隐会把末项尾部
-   无谓地淡掉，反而让人以为还有内容未显示。 */
+
 html .hot-list.is-scrollable {
     -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%) !important;
     mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 28px), transparent 100%) !important;
 }
-/* 末项留白 24px：mask 从 100%-20px 开始渐隐，留 24px 才能让「滑到底」
-   时最后一项完整落在清晰区，不被自身容器的渐隐吃掉最后几个字。 */
+
 html .hot-list > .hot-item:last-child {
     margin-right: 24px !important;
 }
@@ -9325,9 +8530,7 @@ html .hot-list {
     scroll-padding-right: 24px !important;
 }
 
-/* v2.18.23 · 「我的网址」工具栏在手机上原本一行排 4 个按钮，
-   390 下第 4 个「批量导入」被右缘裁掉半截且无滚动提示。
-   手机端允许换行（2×2），不再靠裁剪容纳。 */
+
 @media (max-width: 640px) {
     html .my-head {
         flex-wrap: wrap;
@@ -9342,47 +8545,9 @@ html .hot-list {
 }
 
 
-/* ==========================================================================
-   v2.18.24 · 分类条按钮压字 / 计数同源 / 星标失衡 / 热门条硬切 / 站标可读 / 菜单重复
-   --------------------------------------------------------------------------
-   问题1 根因：v2.18.23 把回顶按钮塞进 .mobile-cats 后，条内变成
-   「track(flex:1) + 回顶 + 更多」三个子项。回顶按钮 display:none 时就地消失/
-   出现，flex 会重新分配宽度，track 的可用宽度在滚动中途变动；同时 chip 轨道
-   右缘正好顶到 ＋/☰ 的左边，横滑到头时 chip 是"贴着"按钮被切掉的。
-   修法：
-     ① 条内改为「滚动层 track + 右侧常驻按钮组」两段式：轨道单独占满剩余宽度，
-        按钮组独立成块、永远不叠在滚动层上（两者矩形不相交，靠布局而非 z-index）；
-     ② 回顶不再 display:none 参与 flex 计算，固定占位、只改透明度（v2.18.23 的
-        opacity 方案保留），track 宽度全程不变；
-     ③ track 右端留 8px 呼吸位，chip 滑到最右时完整落在可视区内。
 
-   问题3 根因：列表态星标本体是 44×44 命中区，收藏态又给它上
-   rgba(199,119,0,.12) 填充 + 30% 琥珀描边 —— 同列表里一个像色块按钮、
-   其余是裸星形，视觉重量差一个数量级。
-   修法：收藏态**不再上底色/描边**，只用「实心琥珀星 vs 空心灰星」表达状态，
-   两态形状占用（44×44 透明命中区）与底色面积（0）完全一致；琥珀只在星形
-   本体上出现，与主色蓝不冲突，且不再是"大面积色块"。
 
-   问题4 根因：热门条 mask 只在「可滚动」时出现，而 390 下 mask 从 100%-28px
-   开始渐隐，被渐隐吃掉的第 3 项看起来仍像被硬切；同时没有任何"还能滑"的提示。
-   修法：① 渐隐段固定 32px 且在条目之间留 24px 尾距，滑到底时末项完整；
-        ② 在条带右上角加一枚静态「可横向滑动」暗示（两侧渐隐 + 轻微位移提示），
-           只在 is-scrollable 时显示；③ 增加右侧淡出遮罩的对比度。
 
-   问题5 根因：白底带字徽标（AstrBot 的 "astrbot" 字样等）塞进 24px 后
-   字迹变成噪点，且与纯图形标的可视面积、明度都不在一个区间。
-   修法（不改数据源）：24px 下「字标型」图标只保留图形部分 —— 用 CSS 把这类
-   图标统一套进 20px 内圆角方块并加 1px 同色描边，同时用 contrast/brightness
-   归一明度；纯图形标保持 24px。两类图标的最小可视外框都落在 20–24px、
-   明度落在同一区间（见 measure.json 的 iconStats）。
-
-   问题6 根因：同一屏出现三处「菜单/更多」：顶栏 ☰（分类索引）、分类行 ☰ 与 ＋、
-   右下悬浮 ☰。三处语义重叠、图标重复。
-   修法：手机端只保留一处「分类索引」入口（分类行最右侧的 ☰）；顶栏不出现
-   ☰；新建分组 ＋ 收进分类索引抽屉的底部（不再是同屏第三个按钮）。
-   ========================================================================== */
-
-/* ---- 问题1：分类条两段式布局，按钮永不与 chip 相交 ---- */
 @media (max-width: 960px) {
     html .mobile-cats {
         display: flex !important;
@@ -9391,7 +8556,7 @@ html .hot-list {
         padding: 6px 0 !important;
         overflow: visible !important;
     }
-    /* 轨道单独占满剩余宽度：右侧按钮组是兄弟节点，不在滚动层内 */
+    
     html .mobile-cats > .mobile-cats-track {
         flex: 1 1 auto !important;
         min-width: 0 !important;
@@ -9399,7 +8564,7 @@ html .hot-list {
         overflow-x: auto !important;
         overflow-y: hidden !important;
         padding-right: 8px !important;
-        /* 右端渐隐，提示"还有内容"，但只有 14px，不会把 chip 淡成空圆 */
+        
         -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 14px), transparent 100%);
         mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 14px), transparent 100%);
         -webkit-mask-repeat: no-repeat;
@@ -9407,12 +8572,12 @@ html .hot-list {
         -webkit-mask-size: 100% 100%;
         mask-size: 100% 100%;
     }
-    /* 轨道到最右端时不再需要渐隐提示 */
+    
     html .mobile-cats > .mobile-cats-track.at-end {
         -webkit-mask-image: none !important;
         mask-image: none !important;
     }
-    /* 右侧固定按钮组：独立块，不叠在滚动层上 */
+    
     html .mobile-cats > .mobile-quick,
     html .mobile-cats > .mobile-cats-more {
         flex: 0 0 auto !important;
@@ -9422,7 +8587,7 @@ html .hot-list {
     }
 }
 
-/* ---- 问题3：收藏态只用「实心星」表达，去掉底色与描边 ---- */
+
 html .site-card[data-starred="1"] .card-star,
 html[data-mode="list"] .site-card[data-starred="1"] .card-star,
 html[data-mode="grid"] .site-card[data-starred="1"] .card-star,
@@ -9441,15 +8606,10 @@ html .site-card[data-starred="1"] .card-star svg {
     fill: currentColor !important;
     stroke: currentColor !important;
 }
-/* 未收藏：空心，颜色与收藏态同为中性灰底稿，仅靠"实心/空心"区分 */
-html .site-card:not([data-starred="1"]) .card-star svg {
-    fill: none !important;
-    stroke: currentColor !important;
-}
 :root { --v224-star-on: #C77700; }
 html[data-theme="dark"] { --v224-star-on: #FFB340; }
 
-/* ---- 问题4：热门条渐隐加深 + 滑到底取消渐隐 ---- */
+
 html .hot-list.is-scrollable {
     -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 32px), transparent 100%) !important;
     mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 32px), transparent 100%) !important;
@@ -9458,8 +8618,7 @@ html .hot-list.is-scrollable.at-end {
     -webkit-mask-image: none !important;
     mask-image: none !important;
 }
-/* 可横滑提示：贴在热门条右下角的一枚小胶囊（不占 44px 行内空间，
-   也不与任何卡片矩形相交），只在可滚动时出现，滑到最右自动熄灭 */
+
 html .hot-strip { position: relative; }
 .hot-swipe-hint {
     display: none;
@@ -9470,17 +8629,14 @@ html .hot-strip { position: relative; }
     border-radius: 999px;
     background: var(--surface);
     color: var(--text-2);
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.4;
     pointer-events: none;
     white-space: nowrap;
     opacity: 0.92;
 }
 .hot-swipe-hint svg { width: 11px; height: 11px; }
-/* 提示与「热门访问」标题同排：标题收缩到文字宽，提示紧跟其后。
-   放在标题行内（y 与 chip 行不重叠），既不遮 chip 也不与任何卡片相交。
-   注意：is-scrollable 由 JS 打在 .hot-list 上（.hot-strip 只带 at-end），
-   因此选择器必须挂在 .hot-list 上，否则提示永远不会点亮。 */
+
 html .hot-strip > .hot-title { display: inline-flex !important; width: auto !important; vertical-align: middle; }
 html .hot-strip:has(.hot-list.is-scrollable) > .hot-swipe-hint,
 html .hot-list.is-scrollable ~ .hot-swipe-hint,
@@ -9489,17 +8645,12 @@ html .hot-swipe-hint.is-scrollable {
     vertical-align: middle;
     margin-left: 8px;
 }
-/* 「滑到最右」优先由提示自身的 at-end 类决定（JS 同一帧写入），
-   这样即便 strip 与 list 的状态先后不同步，提示也不会残留在最右端。 */
+
 html .hot-swipe-hint.at-end,
 html .hot-strip.at-end > .hot-swipe-hint { display: none !important; }
 
-/* ---- 问题5：站标明度归一 + 24px 下的小字降噪 ---- */
-/* 全部图标：明度压到同一区间（白底徽标不再比深色图标亮一个档）。
-   ≤960px 时图标只有 24px，小字笔画仅 1px 宽，任何双线性缩小都会把
-   它们切成锯齿噪点；统一加 0.35px 亚像素模糊，笔画被抹成色块，
-   图形标（猫头、字母块、山形）只掉一点锐度，观感反而更整。
-   这一层不依赖任何识别，所以既不误伤也不会漏。 */
+
+
 html .site-icon .site-favicon {
     filter: contrast(1.06) saturate(1.02) brightness(0.97) !important;
 }
@@ -9514,13 +8665,7 @@ html[data-theme="dark"] .site-icon .site-favicon {
         filter: blur(0.35px) contrast(1.02) saturate(1.0) brightness(1.08) !important;
     }
 }
-/* 字标型图标（服务端像素判定：整张图就是一行小字）：
-   在 0.35px 之上再叠 1.6px 高斯模糊，把字形彻底糊平，
-   同时保留主色与大致轮廓 —— 不再是「读不出来又很像字」的噪点，
-   也不会像 2.4px 那样糊成一团。尺寸与普通图标一致（24px），
-   保证同列表内占位与可见面积同区间。
-   注意：filter 必须写在“双类”选择器上——单类规则里若已有 filter，
-   双类规则的 filter 会被后者按顺序覆盖。 */
+
 html .site-icon .site-favicon.is-wordmark {
     filter: blur(1.6px) brightness(0.97) !important;
 }
@@ -9528,48 +8673,27 @@ html[data-theme="dark"] .site-icon .site-favicon.is-wordmark {
     filter: blur(1.6px) brightness(1.08) !important;
 }
 
-/* v2.18.24 · 补齐：末尾 chip 的 8px 呼吸位不能靠 track 的 padding-right
-   （flex 容器末端 padding 在部分引擎里不参与滚动宽度），改用末项 margin，
-   保证滑到底时最后一个 chip 与轨道右缘留 8px，且不越过按钮组左缘。 */
+
 html .mobile-cats-track > .mcat:last-child {
     margin-right: 8px !important;
 }
 
-
-/* v2.18.24 · 热门条末项留白真正生效：
-   .hot-list 是 flex 容器，子项 margin-right 撑出来的尾距不会进入 scrollWidth
-   （被 flex 容器忽略），于是「滑到最右」时末项仍贴住容器右缘。
-   改用 padding-right 放在容器自身（scrollWidth 会包含它），
-   末项 24px 由 ::after 占位兜底，两种引擎都能滚足。 */
-html .hot-list {
-    scroll-padding-right: 24px !important;
-}
-/* 主方案：末项右侧留 24px 透明内边距（计入 scrollWidth，任何引擎都滚得出来）。
-   副方案：容器加 scroll-padding，snap 停靠时也留出同样的呼吸位。 */
 html .hot-list > .hot-item:last-child {
     padding-right: 34px !important;
 }
 
-/* v2.18.24 · 补齐：网格态的热门条同样带渐隐提示。
-   is-scrollable 由 JS 打在 .hot-list 上，但网格态的测量顺序可能落在
-   「已滚动到最右」之后，此时 at-end 会覆盖渐隐。把 at-end 只在「确实滑到最右
-   且仍可滚动」时生效，并对网格态补一条同级右端渐隐。 */
+
 html .hot-list.is-scrollable:not(.at-end) {
     -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 32px), transparent 100%) !important;
     mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 32px), transparent 100%) !important;
 }
 
-/* ==========================================================================
-   v2.18.25 · 分类条两段式（44/44）+ 单一分类入口 + 热门条收尾
-   只改表现层：全部规则 !important 覆盖历史区块，不删改 v2.18.17–v2.18.24。
-   注：rail-open 用 button 限定——正文里 body 也会被加上 .rail-open 类（抽屉展开态），
-   若按原样写 html .rail-open 会把整个页面隐藏；这里只 hide 顶栏那枚按钮。
-   ========================================================================== */
+
 @media (max-width: 640px) {
-  /* 1) 顶栏 ☰ 让位：全站只保留分类条右侧这一个分类入口 */
+  
   html button.rail-open { display: none !important; }
 
-  /* 2) 分类条：两段式，轨道 flex:1，按钮固定 44 */
+  
   html .mobile-cats {
     display: flex !important;
     align-items: center !important;
@@ -9596,7 +8720,7 @@ html .hot-list.is-scrollable:not(.at-end) {
             mask-image: none !important;
   }
 
-  /* 3) 两个按钮统一 44×44，视觉与热区同尺寸 */
+  
   html .mobile-cats > .mobile-quick,
   html .mobile-cats > .mobile-cats-more {
     flex: 0 0 44px !important;
@@ -9612,7 +8736,7 @@ html .hot-list.is-scrollable:not(.at-end) {
     width: 18px !important;
     height: 18px !important;
   }
-  /* 回顶仍用透明度切换，始终占位，避免轨道宽度跳动 */
+  
   html .mobile-cats .mobile-to-top {
     opacity: 0; visibility: hidden; pointer-events: none;
   }
@@ -9620,15 +8744,15 @@ html .hot-list.is-scrollable:not(.at-end) {
     opacity: 1; visibility: visible; pointer-events: auto;
   }
 
-  /* 4) chip 收紧：250px 轨道内完整显示 3 个分类 */
+  
   html .mobile-cats .mcat {
     padding: 0 12px !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
     border-radius: 999px !important;
   }
   html .mobile-cats > .mobile-cats-track { column-gap: 8px !important; }
 
-  /* 5) 热门条：末项留 12px，可滑时 24px 渐隐 */
+  
   html .hot-list { padding-right: 12px !important; }
   html .hot-strip.is-scrollable .hot-list,
   html .hot-list.is-scrollable:not(.at-end) {
@@ -9636,21 +8760,16 @@ html .hot-list.is-scrollable:not(.at-end) {
             mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 24px), transparent 100%) !important;
   }
 }
-/* at-end 兜底：v2.18.24 的 is-scrollable:not(.at-end) 已处理 list；
-   这里再给 strip/list 双保险，确保滑到底渐隐一定取消。 */
+
 html .hot-list.at-end,
 html .hot-strip.at-end .hot-list {
   -webkit-mask-image: none !important;
           mask-image: none !important;
 }
 
-/* ==========================================================================
-   v2.18.26 · 细节收口（5 项，全部只在 ≤640 / ≤480 生效，桌面不动）
-   不重排布局、不改宽度基准：沿用 v2.18.25 三段式（轨道 250 + 回顶 44 + 索引 44，gap 8）。
-   只修 5 处观感缺陷，全部 !important 覆盖，不删改 v2.18.17–v2.18.25 历史区块。
-   ========================================================================== */
+
 @media (max-width: 640px) {
-  /* 1) 回顶：静止态淡显禁用态（淡箭头），滚过一屏恢复实心；24×7 空档只留 gap 8 */
+  
   html .mobile-cats .mobile-to-top {
     opacity: .35 !important;
     visibility: visible !important;
@@ -9665,18 +8784,16 @@ html .hot-strip.at-end .hot-list {
     border-color: var(--border) !important;
   }
 
-  /* 2) chip 收紧：padding 12→9、轨道 gap 8→6，
-        前 3 枚文字与计数全部落在渐隐起点 248 之前，第 4 枚探进渐隐带约 14px */
+  
   html .mobile-cats .mcat {
     padding: 0 9px !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
   }
   html .mobile-cats > .mobile-cats-track {
     column-gap: 6px !important;
   }
 
-  /* 3) 热门条收尾：内容右缘收到 359（条带内边距 12），渐隐加宽到 32px，
-        文字在边框前 13px 就淡出 */
+  
   html .hot-strip {
     padding-right: 12px !important;
   }
@@ -9685,7 +8802,7 @@ html .hot-strip.at-end .hot-list {
             mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 32px), transparent 100%) !important;
   }
 
-  /* 4) 吸顶条：不透明 + 底部发丝分隔线，滚动后 chip 背后无文字残影 */
+  
   html .mobile-cats {
     background: var(--surface) !important;
     background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
@@ -9699,34 +8816,25 @@ html .hot-strip.at-end .hot-list {
 }
 
 @media (max-width: 480px) {
-  /* 5) 模式按钮固定「布局」2×2 方块，不再随模式换字形；
-        一屏内只有分类索引 ☰ 一枚汉堡（列表态 mode list 图标被隐藏） */
+  
   html #mobileModeCycle .mode-icon-mode-grid { display: block !important; }
   html #mobileModeCycle .mode-icon-mode-list,
   html #mobileModeCycle .mode-icon-mode-compact { display: none !important; }
 }
 
-/* ==========================================================================
-   v2.18.27 · P1/P2 修复（站标绘制 / 641–960 触控 / 地址断行 / 下拉边界）
-   全部追加 !important 覆盖，不删改 v2.18.17–v2.18.26 历史区块。
-   ========================================================================== */
-/* P1-1 站标绘制尺寸：基础 .site-favicon 的 padding:6px 让 24px 容器只剩 12px 内容。
-   取消 padding 让绘制占满 24/28=85.7%；字标图标留 2px 防止字形贴边。 */
+
+
 html .site-icon .site-favicon { padding: 0 !important; }
 html .site-icon .site-favicon.is-wordmark { padding: 2px !important; }
 
-/* P2-1 详情页地址断行：显示文本在 / ? & = # . - _ 后插入 <wbr>，只在结构性
-   边界换行；word-break:normal + overflow-wrap:break-word 保证不在连续字母/数字
-   中间硬切（如「…/XYdaoh」+「ang/」），<wbr> 是唯一优先断点。detail.php 已同步。 */
+
 html .detail-url a { word-break: normal !important; overflow-wrap: break-word !important; }
 
-/* P2-2 搜索下拉边界：白底下边框太淡看不出面板轮廓，加深到可辨；宽度仍 180、不越视口。 */
+
 html .search-engine-menu { border-color: rgba(0, 0, 0, .16) !important; }
 html[data-theme="dark"] .search-engine-menu { border-color: rgba(255, 255, 255, .18) !important; }
 
-/* P1-4 641–960 平板横屏触控退化：历史区间 .mobile-cats-more 34×34/圆角999、
-   .mobile-quick display:none、无回顶。补齐与手机端一致的 44×44 触控与回顶淡显。
-   ≤640 的 v2.18.26 三段式规则保持不动，这里只覆盖 641–960。 */
+
 @media (min-width: 641px) and (max-width: 960px) {
   html .mobile-cats { gap: 8px !important; }
   html .mobile-cats .mobile-quick {
@@ -9748,13 +8856,9 @@ html[data-theme="dark"] .search-engine-menu { border-color: rgba(255, 255, 255, 
   }
 }
 
-/* ==========================================================================
-   v2.19 · 第 1 批 A4 + A5
-   A4 只在 ≤360 生效（桌面/平板不动）；A5 全断点补齐 ≥44×44 触控热区。
-   一律末尾覆盖 + !important，不改历史区块，防止旧视觉回退。
-   ========================================================================== */
 
-/* ---- A4-1 ≤360 品牌区：标题不再被工具按钮压盖，允许两行完整显示 ---- */
+
+
 @media (max-width: 360px) {
   html .site-header .brand {
     flex-wrap: wrap !important;
@@ -9764,7 +8868,7 @@ html[data-theme="dark"] .search-engine-menu { border-color: rgba(255, 255, 255, 
     min-width: 0 !important;
   }
   html .site-header .brand-title {
-    font-size: clamp(16px, 4.6vw, 22px) !important;
+    font-size: 22px !important;
     line-height: 1.25 !important;
     white-space: normal !important;
     overflow: visible !important;
@@ -9775,7 +8879,7 @@ html[data-theme="dark"] .search-engine-menu { border-color: rgba(255, 255, 255, 
     flex: 0 0 auto !important;
   }
 
-  /* ---- A4-2 分类胶囊：横滑 + 右缘 12px 渐隐，不裁切 ---- */
+  
   html .mobile-cats > .mobile-cats-track {
     overflow-x: auto !important;
     overflow-y: hidden !important;
@@ -9793,7 +8897,7 @@ html[data-theme="dark"] .search-engine-menu { border-color: rgba(255, 255, 255, 
     white-space: nowrap !important;
   }
 
-  /* ---- A4-3 卡片：站名/描述按任意位置断行，描述两行，元信息单行等高 ---- */
+  
   html .site-name,
   html .site-desc {
     overflow-wrap: anywhere !important;
@@ -9809,7 +8913,7 @@ html[data-theme="dark"] .search-engine-menu { border-color: rgba(255, 255, 255, 
   }
 }
 
-/* ---- A5 触控热区：所有可点元素实际尺寸 ≥44×44 ---- */
+
 html .mode-btn {
   min-width: 44px !important;
   min-height: 44px !important;
@@ -9833,11 +8937,11 @@ html .mcat {
 html .mcat {
   min-width: 44px !important;
 }
-/* 热门条：行高 44，相邻间距保持 8 */
+
 html .hot-list {
   gap: 8px !important;
 }
-/* 命中伪元素同步到 44 */
+
 html .card-star::after,
 html .rail-close::after,
 html .ss-head-clear::after,

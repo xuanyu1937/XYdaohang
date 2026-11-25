@@ -193,8 +193,8 @@ $hasAiKey = trim((string) $functions->getSetting('ai_api_key')) !== '';
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
     <link href="../assets/sweetalert2/sweetalert2.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.27">
-    <link href="../assets/css/admin.css?v=2.18.27" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.19.1">
+    <link href="../assets/css/admin.css?v=2.19.1" rel="stylesheet">
     <style>
         /* ==================================================================
            系统设置页（仅本页使用，颜色与间距统一取自 admin.css 变量）

@@ -24,7 +24,9 @@ require_once __DIR__ . '/../includes/site_card_build.php';
 require_once __DIR__ . '/../includes/site_card.php';
 
 header('Content-Type: application/json; charset=utf-8');
-header('X-Content-Type-Options: nosniff');
+if (stripos($_SERVER['SERVER_SOFTWARE'] ?? '', 'Microsoft-IIS') === false) {
+    header('X-Content-Type-Options: nosniff');
+}
 header('X-Robots-Tag: noindex, follow');
 @ini_set('display_errors', '0');
 
@@ -231,8 +233,15 @@ try {
     $countStmt->execute($params);
     $total = (int) ($countStmt->fetch()['total'] ?? 0);
 
+    // v2.19 任务1：显式列清单替代 SELECT nl.*，只取卡片真正读取的字段。
+    // 派生字段（display_name / safe_url / host / fallback_* / favicon_chain /
+    // icon_is_wordmark / click_count）由 navBuildCard() 在 PHP 里算，不入 SQL。
+    // id/sort_order/clicks 虽主要用于排序与 data 属性，仍显式列出保持一致。
     $stmt = $db->prepare(
-        "SELECT nl.*
+        "SELECT nl.id, nl.name, nl.url, nl.logo, nl.description,
+                nl.category_id, nl.user_id, nl.alias, nl.tags,
+                nl.is_starred, nl.sort_order, nl.clicks,
+                nl.check_status, nl.latency_ms
          FROM nav_links nl
          LEFT JOIN categories c ON c.id = nl.category_id
          WHERE {$sqlWhere}

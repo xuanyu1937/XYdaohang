@@ -1,68 +1,51 @@
-/* ==========================================================================
-   轩宇-导航 · Apple 设计语言 · 唯一变量源
-   --------------------------------------------------------------------------
-   依据：项目根目录 DESIGN.md（VoltAgent/awesome-design-md · design-md/apple）
-   本文件是全站唯一的 :root / data-theme 设计变量定义处。nav.css / auth.css /
-   page.css / admin.css / category-quick-add.css 中的重复变量块已移除，只保留
-   组件样式，值一律通过 var(--*) 引用本文件。
 
-   设计契约（导航站密度适配版）：
-   · 唯一交互色 --primary: #0066cc；focus 环 #0071e3；暗底行内链接 #2997ff
-   · 无第二品牌色、无装饰渐变、无皮肤色、无彩色状态色
-   · 圆角只有 0 / 8 / 11 / 18 / 999 五档
-   · 字重阶梯 400 / 600 / 700（禁止 500 及 360/460/560/640）
-   · 全站唯一阴影 rgba(0,0,0,.22) 3px 5px 30px，仅用于 favicon / LOGO
-   · 正文 17px / 1.47；标题 600 + 负字距；正文行高不低于 1.47
-   · 只定义 Default 与 Pressed(scale .95)，不写 hover 位移/放大/抬升
-   · 密度适配：保留三列网格与效率入口，tile 留白不放大到 100vh
-   ========================================================================== */
 
 :root {
     color-scheme: light;
 
-    /* ---- 1. Apple 原子色板（唯一 hex 定义处） ------------------------- */
-    --a-primary:          #0066cc;   /* Action Blue：唯一交互色 */
-    --a-primary-hover:    #0058b3;   /* 按下/悬停加深一档 */
+    
+    --a-primary:          #0066cc;   
+    --a-primary-hover:    #0058b3;   
     --a-primary-soft:     rgba(0, 102, 204, 0.08);
     --a-primary-border:   rgba(0, 102, 204, 0.28);
-    --a-focus:            #0071e3;   /* 键盘 focus 环 */
-    --a-link-on-dark:     #2997ff;   /* 仅暗底行内链接 */
+    --a-focus:            #0071e3;   
+    --a-link-on-dark:     #2997ff;   
     --a-on-primary:       #ffffff;
 
-    --a-canvas:           #ffffff;   /* 主画布 / 卡片 */
-    --a-parchment:        #f5f5f7;   /* 米白：交替区块 / 页脚 / 磨砂子导航 */
-    --a-pearl:            #fafafc;   /* Pearl 幽灵按钮 */
+    --a-canvas:           #ffffff;   
+    --a-parchment:        #f5f5f7;   
+    --a-pearl:            #fafafc;   
     --a-surface-soft:     #f0f0f2;
     --a-surface-sunken:   #ebebed;
-    --a-black:            #000000;   /* 仅全局导航 / 播放器 */
+    --a-black:            #000000;   
 
-    --a-tile-1:           #272729;   /* 暗色主表面 */
+    --a-tile-1:           #272729;   
     --a-tile-2:           #2a2a2c;
     --a-tile-3:           #252527;
     --a-tile-hover:       #323235;
 
-    --a-ink:              #1d1d1f;   /* 近黑文字 */
+    --a-ink:              #1d1d1f;   
     --a-ink-80:           #333333;
-    --a-ink-48:           #6e6e73;   /* 次级/禁用（对白 5.0:1，对米白 4.7:1） */
-    --a-ink-48-strong:    #5b5b60;   /* 米白底上确保 ≥4.5:1 */
+    --a-ink-48:           #6e6e73;   
+    --a-ink-48-strong:    #5b5b60;   
     --a-white:            #ffffff;
     --a-muted-on-dark:    #cccccc;
 
-    --a-hairline:         #e0e0e0;   /* 1px 细线 */
-    --a-hairline-strong:  #d2d2d7;   /* 需要更实一档的描边（输入框/表格线） */
+    --a-hairline:         #e0e0e0;   
+    --a-hairline-strong:  #d2d2d7;   
     --a-line-soft:        rgba(0, 0, 0, 0.08);
     --a-line-soft-strong: rgba(0, 0, 0, 0.13);
     --a-divider-soft:     #f0f0f0;
 
-    /* 状态色中性化：灰阶点 + 文字标签；错误态保留低调中性深红 */
-    --a-state:            #8a8a8f;   /* 在线 / 检测中 / 跳过 统一灰点 */
+    
+    --a-state:            #8a8a8f;   
     --a-state-soft:       rgba(0, 0, 0, 0.06);
     --a-state-pending:    #b0b0b5;
-    --a-danger:           #a5271f;   /* 对白 6.4:1，低调中性深红 */
+    --a-danger:           #a5271f;   
     --a-danger-soft:      rgba(165, 39, 31, 0.08);
     --a-danger-border:    rgba(165, 39, 31, 0.28);
 
-    /* ---- 2. 排版阶梯 --------------------------------------------------- */
+    
     --a-font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont,
                       "Segoe UI", "PingFang SC", "Hiragino Sans GB",
                       "Microsoft YaHei", system-ui, sans-serif;
@@ -70,23 +53,25 @@
                       "Segoe UI", "PingFang SC", "Hiragino Sans GB",
                       "Microsoft YaHei", system-ui, sans-serif;
 
-    --a-fs-body:      17px;   /* Apple 正文，不是 16px */
-    --a-fs-caption:   13px;   /* v2.18.15 字号阶梯：描述/辅助 = 13px */
-    --a-fs-subhead:   15px;   /* 页面级标题 / 站点名 */
-    --a-fs-fine:      13px;   /* v2.18.15：细则并入 13px（原 12px） */
-    --a-fs-micro:     11px;   /* meta 与徽章 */
-    --a-fs-title:     20px;   /* v2.18.15：原 18px → 20px */
-    --a-fs-title-lg:  20px;
+    /* v2.19 审美红线 5.1：可见字号收敛到 4 级 12/14/17/22。
+       映射 11→12、13→14、15→14、20/21→17、24/25/28→22。 */
+    --a-fs-body:      17px;
+    --a-fs-caption:   14px;
+    --a-fs-subhead:   14px;
+    --a-fs-fine:      14px;
+    --a-fs-micro:     12px;
+    --a-fs-title:     17px;
+    --a-fs-title-lg:  17px;
     --a-fs-heading:   22px;
-    --a-fs-display:   28px;   /* v2.18.15：原 25px → 28px 展示级 */
-    --a-fs-lead:      28px;
-    --a-fs-tagline:   21px;
-    --a-fs-section:   40px;
-    --a-fs-hero:      56px;
+    --a-fs-display:   22px;
+    --a-fs-lead:      22px;
+    --a-fs-tagline:   17px;
+    --a-fs-section:   22px;
+    --a-fs-hero:      22px;
 
     --a-lh-body:      1.47;
     --a-lh-display:   1.10;
-    --a-lh-dense:     2.41;   /* 页脚链接列 */
+    --a-lh-dense:     2.41;   
     --a-tracking-display: -0.374px;
     --a-tracking-caption: -0.224px;
     --a-tracking-hero:    -0.28px;
@@ -95,7 +80,7 @@
     --a-fw-medium:    600;
     --a-fw-bold:      700;
 
-    /* ---- 3. 空间 / 形状 / 深度 ----------------------------------------- */
+    
     --a-sp-xxs: 4px;  --a-sp-xs: 8px;   --a-sp-sm: 12px;  --a-sp-md: 17px;
     --a-sp-lg: 24px;  --a-sp-xl: 32px;  --a-sp-xxl: 48px; --a-sp-section: 80px;
 
@@ -103,7 +88,7 @@
     --a-radius-md:   11px;
     --a-radius-lg:   18px;   --a-radius-pill: 999px;
 
-    /* v2.18.15 三档按钮 + 选中态（浅色） */
+    
     --a-btn-primary-bg:        var(--a-primary);
     --a-btn-primary-fg:        var(--a-on-primary);
     --a-btn-secondary-bg:      var(--a-canvas);
@@ -113,16 +98,12 @@
     --a-select-fg:             var(--a-primary);
 
     --a-shadow-product: rgba(0, 0, 0, 0.22) 3px 5px 30px 0;
-    /* Bootstrap 5 的阴影令牌统一归零：后台大量组件（alert/card/dropdown/modal/toast）
-       都读这四个变量，覆盖它们等于一次性关掉全站投影，无需逐个组件声明。 */
+    
     --bs-box-shadow:      none;
     --bs-box-shadow-sm:   none;
     --bs-box-shadow-lg:   none;
 
-    /* v2.18.10：Bootstrap 的圆角令牌一起归到规范档位。
-       --bs-border-radius-sm 默认 .25rem = 4px，会在页脚快捷链接这类
-       没被单独覆盖的 a 元素上漏出 4px 圆角，破坏「只允许 0/5/8/11/18/9999」。
-       这里把 4 档全部映射到 --a-radius-*，等于把漏网的中间值一起收编。 */
+    
     --bs-border-radius-sm:    var(--a-radius-sm);
     --bs-border-radius:       var(--a-radius-md);
     --bs-border-radius-lg:    var(--a-radius-lg);
@@ -134,9 +115,7 @@
     --a-hit-min: 44px;
     --a-ease: cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* ---- 4. 项目既有变量名 → Apple 值（全站映射层） -------------------
-       下面这些名字在 nav.css / auth.css / page.css / admin.css /
-       category-quick-add.css 中被 var() 引用；在此统一赋值，业务样式无需改。 */
+    
     --primary:              var(--a-primary);
     --primary-hover:        var(--a-primary-hover);
     --primary-filled-hover: var(--a-primary-hover);
@@ -145,51 +124,51 @@
     --primary-border:       rgba(0, 102, 204, 0.28);
     --primary-solid-dark:   var(--a-primary);
     --primary-text-dark:    var(--a-link-on-dark);
-    --link:                 var(--a-primary);        /* 明底文字链接 #0066cc */
+    --link:                 var(--a-primary);        
 
-    /* 语义色：状态一律灰阶，错误态低调深红 */
+    
     --success:        var(--a-state);
     --success-text:   var(--a-ink-48-strong);
     --success-soft:   var(--a-state-soft);
     --danger:         var(--a-danger);
     --danger-soft:    var(--a-danger-soft);
     --danger-border:  var(--a-danger-border);
-    --warning:        var(--a-ink-48-strong);   /* 速度"一般"等文字，对白 4.7:1 */
+    --warning:        var(--a-ink-48-strong);   
     --warning-soft:   var(--a-state-soft);
 
-    /* 光晕 / LOGO 渐变下线：全部退化为纯色或透明 */
+    
     --glow:           transparent;
     --brand-from:     var(--a-primary);
     --brand-to:       var(--a-primary);
     --brand-shadow:   transparent;
 
-    /* 表面（浅色） */
-    --bg:             var(--a-canvas);    /* v2.18.10：画布改满屏白，米白只留给交替分节/页脚 */
+    
+    --bg:             var(--a-canvas);    
     --bg-card:        var(--a-canvas);
     --bg-input:       var(--a-canvas);
     --bg-soft:        var(--a-parchment);
     --surface:        var(--a-canvas);
     --surface-2:      var(--a-pearl);
-    --surface-soft:   var(--a-surface-soft);   /* v2.18.11：柔和描述块表面 */
+    --surface-soft:   var(--a-surface-soft);   
     --surface-hover:  var(--a-surface-soft);
     --surface-sunken: var(--a-surface-sunken);
     --tab-bg:         var(--a-surface-soft);
     --tab-bg-hover:   var(--a-surface-sunken);
 
-    /* 文字（浅色） */
+    
     --text:           var(--a-ink);
     --text-2:         var(--a-ink-80);
     --muted:          var(--a-ink-48-strong);
-    --a-muted:        var(--a-ink-48-strong);  /* 亮色次级文字（≥4.5:1） */
+    --a-muted:        var(--a-ink-48-strong);  
     --muted-2:        var(--a-ink-48);
 
-    /* 细线（浅色） */
+    
     --border:         var(--a-hairline);
     --border-strong:  var(--a-line-soft-strong);
     --hairline:       var(--a-line-soft);
     --hairline-color: var(--a-hairline);
 
-    /* 圆角：五档 */
+    
     --radius-xs:      var(--a-radius-sm);
     --radius-compact: var(--a-radius-sm);
     --radius-sm:      var(--a-radius-sm);
@@ -201,7 +180,7 @@
     --ctl-radius:     var(--a-radius-sm);
     --ctl-radius-sm:  var(--a-radius-sm);
 
-    /* 字号：正文 17px / 1.47，导航站密度适配（标题 600 + 负字距） */
+    
     --fs-micro:       var(--a-fs-micro);
     --fs-caption:     var(--a-fs-fine);
     --fs-sm:          var(--a-fs-caption);
@@ -213,7 +192,7 @@
     --fs-heading:     var(--a-fs-lead);
     --fs-display:     var(--a-fs-section);
 
-    /* 间距：4/8/12/17/24/32/48/80 */
+    
     --sp-xxs: var(--a-sp-xxs);  --sp-xs:  var(--a-sp-xs);
     --sp-sm:  var(--a-sp-sm);   --sp-md:  var(--a-sp-md);
     --sp-lg:  var(--a-sp-lg);   --sp-xl:  var(--a-sp-xl);
@@ -222,7 +201,7 @@
     --hit-min:   var(--a-hit-min);
     --max-width: 1360px;
 
-    /* 阴影：卡片/按钮/弹层一律无阴影，仅 favicon/LOGO 用 --shadow-product */
+    
     --shadow-sm:  none;
     --shadow-md:  none;
     --shadow-lg:  none;
@@ -231,29 +210,29 @@
     --ctl-bg:     var(--a-canvas);
     --ctl-border: 1px solid var(--a-hairline);
 
-    /* 字重：无 500 */
+    
     --fw-normal:   400;
     --fw-medium:   600;
     --fw-semibold: 600;
     --fw-bold:     700;
 
-    /* 动效：删除 spring，统一标准曲线 */
+    
     --ease-stream:       var(--a-ease);
     --ease-spring-drag:  var(--a-ease);
     --ease-spring-soft:  var(--a-ease);
     --ease-enter:        var(--a-ease);
 
-    /* 控件/搜索尺寸（JS 读取，保留数值） */
+    
     --ctl-size:        var(--a-hit-min);
     --search-size:     44px;
     --search-inset:    20px;
     --search-action-w: 92px;
     --tool-icon:       18px;
-    /* v2.18.11 P0-1：全站统一胶囊搜索条尺寸（首页 / sites.php / 404.php 共用） */
-    --a-search-h:      50px;   /* 胶囊总高，落在 48~52 区间 */
-    --a-search-pad-x:  18px;   /* 输入框左内边距 */
+    
+    --a-search-h:      50px;   
+    --a-search-pad-x:  18px;   
 
-    /* ---- 5. 后台变量（admin.css）同源 --------------------------------- */
+    
     --admin-primary:         var(--a-primary);
     --admin-primary-hover:   var(--a-primary-hover);
     --admin-primary-soft:    #e8f1fd;
@@ -294,7 +273,7 @@
     --admin-ease:            var(--a-ease);
     --admin-transition:      background-color .2s var(--a-ease), color .2s var(--a-ease), border-color .2s var(--a-ease);
 
-    /* ---- 6. 快捷收录弹层（category-quick-add.css）同源 ---------------- */
+    
     --xycq-bg:           var(--a-canvas);
     --xycq-surface:      var(--a-parchment);
     --xycq-text:         var(--a-ink);
@@ -303,7 +282,7 @@
     --xycq-primary:      var(--a-primary);
     --xycq-primary-text: var(--a-on-primary);
     --xycq-danger:       var(--a-danger);
-    /* v2.18.12 测速四档语义色（仅测速文字与状态点） */
+    
     --speed-fast-fg:  #1E7A34;
     --speed-fast-dot: #34C759;
     --speed-mid-fg:   #B25000;
@@ -312,17 +291,15 @@
     --speed-slow-dot: #FF3B30;
     --speed-off-fg:   #6E6E73;
     --speed-off-dot:  #8E8E93;
-    /* v2.18.12 列表分组卡暗色外壳 */
+    
     --surface-group:  var(--surface);
 }
 
-/* ==========================================================================
-   暗色主题：唯一例外定义处。近黑 #272729 系列，不铺纯黑。
-   ========================================================================== */
+
 html[data-theme="dark"] {
     color-scheme: dark;
 
-    --primary:              var(--a-primary);       /* 主 CTA 仍 Action Blue */
+    --primary:              var(--a-primary);       
     --primary-hover:        #3d8bdb;
     --primary-filled-hover: #3d8bdb;
     --primary-contrast:     var(--a-on-primary);
@@ -330,9 +307,9 @@ html[data-theme="dark"] {
     --primary-border:       rgba(41, 151, 255, 0.36);
     --primary-solid-dark:   var(--a-primary);
     --primary-text-dark:    var(--a-link-on-dark);
-    --link:                 var(--a-link-on-dark);  /* 暗底文字链接 #2997ff */
+    --link:                 var(--a-link-on-dark);  
 
-    /* v2.18.15 三档按钮 + 选中态（暗色） */
+    
     --a-btn-primary-bg:        var(--a-link-on-dark);
     --a-btn-primary-fg:        var(--a-on-primary);
     --a-btn-secondary-bg:      var(--a-tile-1);
@@ -340,27 +317,26 @@ html[data-theme="dark"] {
     --a-btn-secondary-fg:      #f5f5f7;
     --a-select-bg:             rgba(41, 151, 255, 0.18);
     --a-select-fg:             var(--a-link-on-dark);
-    /* v2.18.15 复检：暗色选中态蓝底叠加后 #2997ff 前景仅 3.81:1，
-       亮一档保证在 rgba(41,151,255,.18) 叠色上 ≥4.5:1（实测 4.86）。 */
+    
     --a-select-fg-on-tint:     #5cadff;
 
-    --bg:             #000000;           /* v2.18.10：暗色画布改纯黑 */
+    --bg:             #000000;           
     --bg-card:        var(--a-tile-1);
     --bg-input:       var(--a-tile-2);
     --bg-soft:        var(--a-tile-3);
     --surface:        var(--a-tile-1);
     --surface-2:      var(--a-tile-2);
-    --surface-soft:   var(--a-tile-1);          /* v2.18.11：暗色柔和表面 */
+    --surface-soft:   var(--a-tile-1);          
     --surface-hover:  var(--a-tile-hover);
     --surface-sunken: var(--a-tile-3);
     --tab-bg:         var(--a-tile-2);
     --tab-bg-hover:   var(--a-tile-hover);
 
-    --text:           #f5f5f7;      /* 不用纯白，防字发胖 */
+    --text:           #f5f5f7;      
     --text-2:         var(--a-muted-on-dark);
-    --muted:          #a1a1a6;      /* 对 #272729 ≥6:1 */
-    --a-muted:        #a1a1a6;      /* 暗色次级文字（对 #272729 ≥6:1） */
-    --muted-2:        #8e8e93;      /* 对 #272729 ≥4.9:1 */
+    --muted:          #a1a1a6;      
+    --a-muted:        #a1a1a6;      
+    --muted-2:        #8e8e93;      
 
     --border:         rgba(255, 255, 255, 0.12);
     --border-strong:  rgba(255, 255, 255, 0.20);
@@ -370,7 +346,7 @@ html[data-theme="dark"] {
     --success:        #9a9a9f;
     --success-text:   #c9c9ce;
     --success-soft:   rgba(255, 255, 255, 0.07);
-    --danger:         #e88a83;      /* 对 #272729 ≥5:1 */
+    --danger:         #e88a83;      
     --danger-soft:    rgba(232, 138, 131, 0.12);
     --danger-border:  rgba(232, 138, 131, 0.34);
     --warning:        #9a9a9f;
@@ -386,7 +362,7 @@ html[data-theme="dark"] {
     --ctl-bg: var(--a-tile-1);
     --ctl-border: 1px solid rgba(255, 255, 255, 0.12);
 
-    /* 暗色字重回落标准阶梯（禁止 360/460/560/640） */
+    
     --fw-normal: 400; --fw-medium: 600; --fw-semibold: 600; --fw-bold: 700;
 
     --admin-bg:             #1c1c1e;
@@ -403,7 +379,7 @@ html[data-theme="dark"] {
     --admin-text-secondary: var(--a-muted-on-dark);
     --admin-muted:          #a1a1a6;
     --admin-secondary-text: var(--a-muted-on-dark);
-    --admin-primary:        #5aa9ff;   /* 暗底后台交互色对 tile 有足够对比 */
+    --admin-primary:        #5aa9ff;   
     --admin-primary-hover:  #82bfff;
     --admin-primary-soft:   rgba(41, 151, 255, 0.16);
     --admin-primary-border: rgba(41, 151, 255, 0.36);
@@ -425,25 +401,21 @@ html[data-theme="dark"] {
     --xycq-primary: var(--a-primary);
     --xycq-primary-text: var(--a-on-primary);
     --xycq-danger:  #e88a83;
-    /* v2.18.12 测速四档语义色（暗色文字与圆点同色） */
+    
     --speed-fast-fg:  #30D158;
     --speed-fast-dot: #30D158;
     --speed-mid-fg:   #FF9F0A;
     --speed-mid-dot:  #FF9F0A;
-    /* v2.18.12：规格 #FF453A 对纯黑 6.16:1，但实测文字落在 #272729 卡片上仅 4.38:1；
-       文字提亮到 #FF5349（对 #272729 4.68:1 过 AA），圆点保留系统色 #FF453A */
+    
     --speed-slow-fg:  #FF5349;
     --speed-slow-dot: #FF453A;
     --speed-off-fg:   #A1A1A6;
     --speed-off-dot:  #A1A1A6;
-    /* v2.18.12 列表分组卡暗色外壳 */
+    
     --surface-group:  #1d1d1f;
 }
 
-/* ==========================================================================
-   皮肤收敛：4 套皮肤全部映射到同一 Action Blue 明度档。
-   保留 data-skin 属性与设置项（JS 不报错），只是不再产生色彩漂移。
-   ========================================================================== */
+
 html[data-skin="purple"],
 html[data-skin="orange"],
 html[data-skin="mint"] {
@@ -471,38 +443,32 @@ html[data-theme="dark"][data-skin="mint"] {
     --brand-shadow: transparent;
 }
 
-/* 响应式控件尺寸
-   v2.18.10：此前在 ≤920px 把 --ctl-size 压到 40px，违反「触控目标不小于
-   44×44」。移动端恰恰是最需要够大手势区的场景，这里不再缩小，
-   统一沿用 --a-hit-min(44px)。 */
+
 @media (max-width: 920px) {
     :root { --ctl-size: var(--a-hit-min); }
 }
 
-/* ==========================================================================
-   全站共用组件契约（Apple 设计语言）
-   业务页面复用这些类；同一语义元素全站只有一套实现。
-   ========================================================================== */
 
-/* 唯一阴影：只给 favicon / 站点 LOGO（落在表面上的内容图） */
+
+
 .site-icon,
 .brand-mark,
 .favicon {
     box-shadow: var(--a-shadow-product);
 }
 
-/* 键盘 focus：统一 2px #0071e3 */
+
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
     outline: 2px solid var(--a-focus);
     outline-offset: 2px;
 }
 
-/* 按下统一 scale(.95)；不写 hover 位移/放大/抬升 */
+
 :where(button, .btn, .my-btn, .mcat, .mode-btn, .chip, [role="button"]):active {
     transform: scale(0.95);
 }
 
-/* 主 CTA：蓝底白字胶囊；次 CTA：透明底 + 1px 蓝描边胶囊 */
+
 .apple-btn-primary,
 .apple-btn-secondary {
     display: inline-flex;
@@ -527,7 +493,7 @@ html[data-theme="dark"][data-skin="mint"] {
 .apple-btn-primary:active,
 .apple-btn-secondary:active { transform: scale(0.95); }
 
-/* 搜索输入：白底胶囊 44px 高 */
+
 .apple-input {
     height: 44px;
     padding: 8px 20px;
@@ -545,7 +511,7 @@ html[data-theme="dark"] .apple-input {
     border-color: rgba(255, 255, 255, 0.12);
 }
 
-/* 卡片：白底 + 1px 细线 + 18px 圆角 + 24px 内边距，无阴影 */
+
 .apple-card {
     background: var(--a-canvas);
     border: 1px solid var(--a-hairline);
@@ -558,7 +524,7 @@ html[data-theme="dark"] .apple-card {
     border-color: rgba(255, 255, 255, 0.12);
 }
 
-/* 页脚：米白 + 密集链接列（松行高 2.41） */
+
 .apple-footer {
     background: var(--a-parchment);
     color: var(--a-ink-80);
@@ -571,14 +537,13 @@ html[data-theme="dark"] .apple-footer {
 }
 html[data-theme="dark"] .apple-footer a { color: var(--a-muted-on-dark); }
 
-/* 分组明暗交替：满屏直角区块，颜色切换即分隔线（导航站密度适配：
-   只在分组区块之间交替，不把每张卡片做成整屏 tile） */
+
 .apple-band { border-radius: 0; }
 .apple-band--light     { background: var(--a-canvas); }
 .apple-band--parchment { background: var(--a-parchment); }
 .apple-band--dark      { background: var(--a-tile-1); color: var(--a-white); }
 
-/* 动效降级 */
+
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: 0.001ms !important;
@@ -587,13 +552,7 @@ html[data-theme="dark"] .apple-footer a { color: var(--a-muted-on-dark); }
     }
 }
 
-/* --------------------------------------------------------------------------
-   Bootstrap 阴影工具类压平
-   .shadow-sm / .shadow / .shadow-lg / .shadow-xl 是内联使用的硬编码工具类，
-   不读上面归零的 --bs-box-shadow-* 变量，需要单独覆盖一次。
-   全站只保留两处阴影：.brand-mark（品牌标识）与 .site-icon（站点图标），
-   见 --a-shadow-product；其余卡片、按钮、面板一律不用投影。
-   -------------------------------------------------------------------------- */
+
 .shadow-sm,
 .shadow,
 .shadow-lg,
@@ -602,16 +561,7 @@ html[data-theme="dark"] .apple-footer a { color: var(--a-muted-on-dark); }
     box-shadow: none !important;
 }
 
-/* ==========================================================================
-   v2.18.11 · P0-2 品牌块统一（首页 / 关于 / 前台登录 / 后台登录共用）
-   --------------------------------------------------------------------------
-   实测问题：site_logo 是「盾牌 + 字标」的横版组合图，却被
-   object-fit:contain + 5px padding 塞进 52×52 的蓝底方块，形成
-   「蓝底 + 白图 + 缩小字标」三层重叠。这里让有真实 logo 的品牌块
-   去掉蓝底与 padding，图片按原比例、固定 40px 高自适应宽展示；
-   无图时回退到原来的方形图标 / 首字母，不裁切文字。
-   用 :has(img) 精确命中"有真实资源"的容器，img onerror 移除后自动回落。
-   ========================================================================== */
+
 .brand-mark:has(img),
 .auth-mark:has(img) {
     display: flex;
@@ -624,10 +574,10 @@ html[data-theme="dark"] .apple-footer a { color: var(--a-muted-on-dark); }
     background: transparent;
     overflow: visible;
 }
-/* 方形 fallback 图标在有真实 logo 时隐藏；文字首字母用 font-size:0 隐去 */
+
 .brand-mark:has(img) > svg { display: none; }
 .auth-mark:has(img) { font-size: 0; }
-/* 标题随容器收窄左移 4px（14px → 10px） */
+
 .brand:has(.brand-mark img),
 .auth-brand:has(.auth-mark img) { gap: 10px; }
 
@@ -643,16 +593,13 @@ html[data-theme="dark"] .apple-footer a { color: var(--a-muted-on-dark); }
     object-fit: contain;
     filter: none;
 }
-/* 暗底上的深色描边图加 1px 提亮描边，保证在 #000 上可见 */
+
 html[data-theme="dark"] .brand-mark:has(img) img,
 html[data-theme="dark"] .auth-mark:has(img) img {
     filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.6));
 }
 
-/* ==========================================================================
-   v2.18.12 · Logo 铺满控件：覆盖上方 v2.18.11 的横版 contain 逻辑。
-   当前站点 logo 已是方形无白边资源（assets/img/logo.svg），改为 img 铺满方形控件。
-   ========================================================================== */
+
 .brand-mark:has(img),
 .auth-mark:has(img) {
     display: grid;
@@ -675,21 +622,13 @@ html[data-theme="dark"] .auth-mark:has(img) img {
     object-position: center;
     filter: none;
 }
-/* 暗色下不再对整图加白色描边（方形资源铺满后描边会在圆角外露白边） */
+
 html[data-theme="dark"] .brand-mark:has(img) img,
 html[data-theme="dark"] .auth-mark:has(img) img {
     filter: none;
 }
 
-/* ==========================================================================
-   v2.18.14 · 品牌块统一：彻底消除白底横版 Logo 残留 + 跨页形态不一致
-   --------------------------------------------------------------------------
-   根因：线上站点 Logo 是用户上传的白底横版 JPG，object-fit:cover 铺满方形
-   控件后露白，暗色下成白椭圆；且 home 带 SVG、detail/sites 只有「轩」字，
-   品牌块形态三套不一致。uploads 用户资源不在版本包内，无法替换文件，
-   因此用纯表现层统一：隐藏内部 img/svg/文字，改用内联 SVG 盾牌 mask +
-   单一令牌蓝填充，亮暗自动一致、零白底、符合「图标只用内联 SVG」。
-   ========================================================================== */
+
 .brand-mark,
 .site-header .brand-mark,
 .auth-mark,
@@ -701,7 +640,7 @@ html[data-theme="dark"] .auth-mark:has(img) img {
     -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5 3.5 4.6v5.9c0 5.4 3.6 10.5 8.5 11.9 4.9-1.4 8.5-6.5 8.5-11.9V4.6L12 1.5z'/%3E%3C/svg%3E") center / 68% 68% no-repeat !important;
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5 3.5 4.6v5.9c0 5.4 3.6 10.5 8.5 11.9 4.9-1.4 8.5-6.5 8.5-11.9V4.6L12 1.5z'/%3E%3C/svg%3E") center / 68% 68% no-repeat !important;
 }
-/* 暗底用亮一档的令牌蓝，保证盾牌在深色表面可辨 */
+
 html[data-theme="dark"] .brand-mark,
 html[data-theme="dark"] .site-header .brand-mark,
 html[data-theme="dark"] .auth-mark,
@@ -719,21 +658,12 @@ html[data-theme="dark"] .login-card .brand-mark {
     display: none !important;
 }
 
-/* ==========================================================================
-   v2.18.15 · 提交1 控件系统统一：暗色图标对比度 + 品牌块白底描边方块
-   --------------------------------------------------------------------------
-   P0-1：暗色图标按钮的实色图标由 --primary(#0066cc，对 #272729 仅 2.68:1)
-   改为 --a-link-on-dark(#2997ff，4.95:1)；浅色统一 --a-primary(#0066cc)。
-   P0-2 / 第四节：品牌块由「无框实色 mask 盾牌」改为白底 + 1px 描边 + 8px
-   圆角方块，内部 24px（桌面 28px）矢量盾牌几何居中；暗色改 #272729 底、
-   亮蓝盾牌。brand-mark 与 auth-mark 同规格，跨页统一同一盾牌同一填充色。
-   ========================================================================== */
+
 .theme-toggle,
 .auth-theme {
     color: var(--a-primary) !important;
 }
-/* 登录/注册/找回/重置页只加载 apple-tokens + auth，不加载 nav.css，
-   主题按钮尺寸在此定义：44×44 / 8px 圆角图标按钮 */
+
 .auth-theme {
     width: 44px !important;
     height: 44px !important;
@@ -807,6 +737,5 @@ html[data-theme="dark"] .auth-mark::before {
     background-color: var(--a-link-on-dark);
 }
 
-/* v2.18.15 控件令牌（三档按钮 + 选中态）已并入上方主 :root 与暗色块，
-   保持全站唯一 :root 源，避免重复定义。 */
+
 

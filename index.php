@@ -234,7 +234,7 @@ foreach ($rawLinks as $row) {
 
 $totalSites = count($links);
 
-/* v2.18.27 P1-3：站点总数与列表同源（不再混用全库口径）。
+/* v2.19.0 P1-3：站点总数与列表同源（不再混用全库口径）。
    旧逻辑用「全库 is_active=1」统计（含其他用户与私有分类），与当前视图列表 42 条不一致。
    现在按当前视图用户 + is_active=1 + 分类非私有 + 未删除统计，与列表口径一致。
    两数必然相等，文案因此只保留「当前视图 N 个站点」一个数。 */
@@ -340,6 +340,11 @@ foreach ($railGroups as $index => $group) {
    之前首页一次性输出两百多张卡片，首屏 HTML 体积大、大部分内容还在屏幕外。 */
 const NAV_FIRST_PAGE = 12;
 
+/* v2.19 G7：首页 HTML 瘦身。首屏只让第一个分组保留 12 条（当前视图），
+   其余分组只出标题 + 前 3 条 + 「加载更多」，点击后走已有的 api/home_list.php 补齐，
+   不再首屏一次性渲染所有分组的 12 条。 */
+const NAV_OTHER_PAGE = 3;
+
 /* v2.18.24 · 问题2：分类 chip 与分组标题必须同一个数。
    旧流程是「先按数据库条数算 chip → 再逐组去重算标题」，chip 读的是
    $totalCount（含重复条目的原始计数），标题读的是去重后实际渲染条数，
@@ -411,8 +416,8 @@ $buildGroup = static function (array $group) use ($links): array {
                 'id' => (int) $child['id'],
                 'name' => $child['name'],
                 'count' => count($childCards),
-                // 首屏只渲染前 NAV_FIRST_PAGE 条，其余由「加载更多」按需拉取
-                'cards' => array_slice($childCards, 0, NAV_FIRST_PAGE),
+                // v2.19 G7：子分组首屏只渲染前 3 条，其余由「加载更多」按需拉取
+                'cards' => array_slice($childCards, 0, NAV_OTHER_PAGE),
             ];
         }
     }
@@ -475,13 +480,15 @@ foreach ($railGroups as $group) {
         }
     }
 
+    // v2.19 G7：第一个分组保留 12 条，其余分组首屏只给 3 条 + 加载更多
+    $pageSize = empty($sections) ? NAV_FIRST_PAGE : NAV_OTHER_PAGE;
     $sections[] = [
         'id' => $group['id'],
         'name' => $group['name'],
         // 计数同步去重后的实际条数，避免标题写 9 却只列 8 张
         'count' => (int) $built['count'],
         'total' => count($built['cards']),
-        'cards' => array_slice($built['cards'], 0, NAV_FIRST_PAGE),
+        'cards' => array_slice($built['cards'], 0, $pageSize),
         'children' => $built['children'],
     ];
 }
@@ -501,7 +508,7 @@ if ($orphanCards) {
         'name' => '未分类',
         'count' => count($orphanCards),
         'total' => count($orphanCards),
-        'cards' => array_slice($orphanCards, 0, NAV_FIRST_PAGE),
+        'cards' => array_slice($orphanCards, 0, NAV_OTHER_PAGE),
         'children' => [],
     ];
 }
@@ -769,9 +776,9 @@ $navJsonLd = [
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.27">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.18.27">
-    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.18.27">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.19.1">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.19.1">
+    <link rel="stylesheet" href="assets/css/category-quick-add.css?v=2.19.1">
     <!-- v2.16.0 · 首屏性能：pinyin-pro 有 320KB，但只服务拼音搜索。
          改为「用户碰搜索框时才加载」，首屏少下载 320KB；
          空闲或聚焦时预热，真正输入时通常已经就绪，不牺牲体验。
@@ -783,7 +790,7 @@ $navJsonLd = [
                 if (loaded || (window.pinyinPro && window.pinyinPro.pinyin)) { return; }
                 loaded = true;
                 var s = document.createElement('script');
-                s.src = 'assets/js/pinyin-pro.min.js?v=2.18.27';
+                s.src = 'assets/js/pinyin-pro.min.js?v=2.19.1';
                 s.async = true;
                 document.head.appendChild(s);
             };
@@ -803,10 +810,10 @@ $navJsonLd = [
             });
         })();
     </script>
-    <script src="assets/js/category-quick-add.js?v=2.18.27" defer></script>
+    <script src="assets/js/category-quick-add.js?v=2.19.1" defer></script>
     <script>window.NAV_USER_ID = <?php echo $currentUser ? (int) $currentUser['id'] : 0; ?>;</script>
-    <script src="assets/js/nav.js?v=2.18.27" defer></script>
-    <script src="assets/js/search.js?v=2.18.27" defer></script>
+    <script src="assets/js/nav.js?v=2.19.1" defer></script>
+    <script src="assets/js/search.js?v=2.19.1" defer></script>
     <noscript>
         <style>
             .site-status,
@@ -1054,14 +1061,12 @@ $navJsonLd = [
                         <path d="m20 20-3.2-3.2"></path>
                     </svg>
                     <label class="visually-hidden" for="siteSearch">搜索网站</label>
-                    <input type="text"
-                           id="siteSearch"
+                    <input type="text" id="siteSearch" aria-label="搜索网站"
                            class="search-input"
                            placeholder="搜索网站或粘贴网址"
                            autocomplete="off"
                            enterkeyhint="search"
-                           spellcheck="false"
-                           aria-label="搜索网站">
+                           spellcheck="false">
                     <button type="button"
                             id="searchClear"
                             class="search-clear"
@@ -1109,7 +1114,7 @@ $navJsonLd = [
             <div class="se-modal-overlay" data-se-close></div>
             <div class="se-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="seModalTitle">
                 <div class="se-modal-header">
-                    <h3 id="seModalTitle">管理我的搜索引擎</h3>
+                    <h2 id="seModalTitle">管理我的搜索引擎</h2>
                     <button type="button" class="se-modal-close" data-se-close aria-label="关闭">×</button>
                 </div>
                 <div class="se-modal-body">

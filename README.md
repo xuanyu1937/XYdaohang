@@ -74,7 +74,7 @@
 - `upgrade_*.sql` 多为幂等 UPDATE / 索引脚本；`upgrade_v2.18.1.sql` 中的 `ADD COLUMN` 在列已存在时会报 `Duplicate column`，忽略即可
 - 数据库变更版本只有两个：`v2.16.0`（`upgrade_v2.16.0.sql`，两个索引）与 `v2.18.1`（`upgrade_v2.18.1.sql`，`skipped` 枚举 + `skip_check` 列）；**v2.18.2 / v2.18.3 / v2.18.4 / v2.18.5 / v2.18.6 / v2.18.7 / v2.18.8 / v2.18.9 / v2.18.10 / v2.18.11 / v2.18.12 / v2.18.13 / v2.18.14 / v2.18.15 / v2.18.16 / v2.18.17 / v2.18.18 / v2.18.19 / v2.18.21 无任何数据库变更**
 
-### 升级到当前版本 v2.18.27（2026-11-23）
+### 升级到当前版本 v2.19.1（2026-11-25）
 
 | 你的当前版本 | 需要执行的 SQL | 说明 |
 | --- | --- | --- |
@@ -82,12 +82,13 @@
 | v2.18.0 及更早 | `upgrade_v2.18.1.sql` | 先执行 SQL，再覆盖文件 |
 | v2.15.2 及更早 | `upgrade_v2.16.0.sql` + `upgrade_v2.18.1.sql` | 按版本顺序各执行一次 |
 
-> 已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，升到 v2.18.2 ~ v2.18.27 **不需要再执行任何 SQL**。全新安装直接用 `install/install.sql`（v2.18.4 修订已内置 `skip_check` 列与 `skipped` 枚举）。
+> 已在 v2.18.1 执行过 `upgrade_v2.18.1.sql` 的站点，升到 v2.18.2 ~ v2.18.27 及 v2.19.0 / v2.19.1 **不需要再执行任何 SQL**。全新安装直接用 `install/install.sql`（v2.18.4 修订已内置 `skip_check` 列与 `skipped` 枚举）。
 
-**v2.18.x 版本序列**（完整清单见 [CHANGELOG.md](CHANGELOG.md) / [UPLOAD_LIST.md](UPLOAD_LIST.md)）：
+**v2.19.x / v2.18.x 版本序列**（完整清单见 [CHANGELOG.md](CHANGELOG.md) / [UPLOAD_LIST.md](UPLOAD_LIST.md)）：
 
 | 版本 | 一句话 |
 | --- | --- |
+| v2.19.1 | P0/P1 改造：前台列表去 SELECT *、visit_logs 日志清理、SVG 口径统一、静态资源长缓存规则、域名规范化占位规则、申请页 SEO |
 | v2.18.0 | 图标抓取重写、开放 API 收录自动补图标/分组/标签、首页首屏瘦身、PWA 添加到桌面 |
 | v2.18.1 | 自定义 404/500、SEO 四件套、无障碍、图标本地化与后台批量补齐、首页按需加载、匿名短缓存、内网跳过检测（**v2.18.x 中唯一需要执行 SQL 的版本**） |
 | v2.18.2 | 修复卡片瘦身移除 `data-url` 导致全站卡片发灰 |
@@ -214,7 +215,7 @@
 - 后台登录支持双源：`admins` 表优先，其次 `users` 表中 `is_admin = 1` 的账号。
 - 前台用户密码同样使用 `password_hash`，长度 8-72 位；封禁用户无法登录且会被自动登出。
 - 所有写操作均有同源校验；Session 使用 HttpOnly + SameSite=Lax。
-- 上传仅允许 JPG/PNG/GIF/WEBP/ICO，并校验 MIME 与图片魔数；禁止 SVG。
+- 上传口径（全站统一）：**前台用户上传仅允许位图与 ICO**（JPG/PNG/GIF/WEBP/ICO，校验 MIME 与图片魔数，禁 SVG）；**后台远程抓取的 SVG 经校验后仅作 `<img>` 图片引用**，配合 uploads 目录的 nosniff + CSP 隔离，不执行其中脚本。
 - 数据库口令支持 `NAV_DB_HOST`、`NAV_DB_NAME`、`NAV_DB_USER`、`NAV_DB_PASS` 环境变量覆盖。
 - `config/`、`includes/`、`install/`、`backups/`、`logs/`、`cache/`、`vendor/` 已通过 IIS/Apache 规则禁止直访。
 - 备份文件（`系统工具 → 数据备份` 导出的 JSON）**包含用户密码哈希与 API 令牌原文**，请当作敏感资料保管。
@@ -224,7 +225,7 @@
 - 完整变更记录见 [CHANGELOG.md](CHANGELOG.md)
 - 版本发布与安装包下载见 [Releases](https://github.com/xuanyu1937/XYdaohang/releases)
 
-当前版本：`VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` = **2.18.21**（2026-11-19）；静态资源 `?v=` 与 PWA 缓存名同为 `2.18.21`。
+当前版本：`VERSION` / `config/version.php` / `includes/bootstrap.php` / `includes/ConfigManager.php` / `api/index.php` = **2.19.1**（2026-11-25）；静态资源 `?v=` 与 PWA 缓存名同为 `2.19.1`。
 
 ## 📄 许可证
 

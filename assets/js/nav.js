@@ -1528,47 +1528,57 @@
         }, { root: null, rootMargin: '200px 0px', threshold: 0 });
     }
 
+    /* v2.19 G6：图标 src 收敛到此函数——本站 uploads 上传的 logo 原样保留，
+       其余一律走 api.iowen.cn 代理，不再直连原站（杜绝外站大图 / 软 404 / 裂图）。
+       所有图标分支都必须经它计算，禁止各自拼外站原图地址。 */
+    function navIconSrc(host, raw) {
+        raw = (raw || '').trim();
+        if (raw.indexOf('/uploads/') >= 0) {
+            return raw;
+        }
+        return 'https://api.iowen.cn/favicon/' + (host || '') + '.png';
+    }
+
     function loadFavicon(img) {
         if (!img || img.getAttribute('data-fav-done') === '1') {
             return;
         }
 
         img.setAttribute('data-fav-done', '1');
+        /* v2.19 G6：统一图片加载属性，尺寸锁 44×44 防布局抖动 */
+        img.setAttribute('decoding', 'async');
+        img.setAttribute('referrerpolicy', 'no-referrer');
+        img.setAttribute('width', '44');
+        img.setAttribute('height', '44');
 
-        var chain = [img.getAttribute('data-src'), img.getAttribute('data-fb1'),
-            img.getAttribute('data-fb2'), img.getAttribute('data-fb3'),
-            img.getAttribute('data-fb4')].filter(function (url) {
-            return typeof url === 'string' && url.length > 0;
-        });
+        var card = (typeof img.closest === 'function') ? img.closest('.site-card') : null;
+        var host = card ? (card.getAttribute('data-host') || '') : '';
+        var raw = img.getAttribute('data-src') || '';
+        var src = navIconSrc(host, raw);
 
-        if (!chain.length) {
+        /* v2.19 G6：失败即移除图标、露出同级首字母兜底块；禁止重试、禁止换域名重试 */
+        function toInitial() {
+            img.classList.remove('is-loaded');
+            if (img.parentNode) {
+                img.parentNode.removeChild(img);
+            }
+        }
+
+        if (!host && raw.indexOf('/uploads/') < 0) {
+            toInitial();
             return;
         }
 
-        var i = 0;
-
-        function advance() {
-            i++;
-
-            if (i < chain.length) {
-                img.src = chain[i];
-            } else {
-                img.classList.remove('is-loaded');
-            }
-        }
-
         img.addEventListener('load', function () {
-            /* 图标服务返回 1x1 透明图时 HTTP 是 200 但视觉空白，当作失败继续走下一级 */
+            /* 图标服务返回 1x1 透明图时 HTTP 200 但视觉空白，同样按失败处理 */
             if (img.naturalWidth <= 1 || img.naturalHeight <= 1) {
-                advance();
+                toInitial();
                 return;
             }
-
             img.classList.add('is-loaded');
         });
-
-        img.addEventListener('error', advance);
-        img.src = chain[i];
+        img.addEventListener('error', toInitial);
+        img.src = src;
     }
 
     function initFavicons() {

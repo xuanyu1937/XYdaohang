@@ -33,7 +33,9 @@ require_once __DIR__ . '/../includes/Services.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, max-age=0');
-header('X-Content-Type-Options: nosniff');
+if (stripos($_SERVER['SERVER_SOFTWARE'] ?? '', 'Microsoft-IIS') === false) {
+    header('X-Content-Type-Options: nosniff');
+}
 header('X-Robots-Tag: noindex, nofollow');
 @ini_set('display_errors', '0');
 

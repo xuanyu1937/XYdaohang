@@ -6,6 +6,17 @@ DirectoryIndex index.php index.html
     RewriteEngine On
     # 不把不存在的路径重写到首页，避免掩盖 404 和扩大攻击面。
 
+    # v2.19 任务5 · 域名规范化 301（默认跳过，零风险）。
+    # 规范主域不写死：站点域名由 bootstrap.php 的 navSiteBaseUrl() 从请求动态获取，
+    # 仓库静态规则取不到；故用占位符 __CANONICAL_HOST__——未替换时本条 RewriteCond
+    # 恒不匹配，规则自动跳过，不报错、不改变任何请求。
+    # 启用：从后台「站点地址」取主机部分，替换下面两处 __CANONICAL_HOST__（正则处点要转义）。
+    # 当前为 HTTP 环境，固定跳 http://，不强制 HTTPS。
+    # 尾斜杠由目录索引处理、URL 大小写在 IIS 无意义（Apache 强制小写会破坏路径），均不启用。
+    # 注：本规则需站长把本文件上传到主机后才生效。
+    RewriteCond %{HTTP_HOST} ^www\.(__CANONICAL_HOST__)$ [NC]
+    RewriteRule ^(.*)$ http://__CANONICAL_HOST__/$1 [R=301,L,QSA]
+
     # 可选：为开放 API 提供不带 .php 的地址（/api/sites → api/sites.php）
     # 只想用 /api/sites.php 直连的话，可以删掉下面这行。
     RewriteRule ^api/sites/?$ api/sites.php [L,QSA]
@@ -41,3 +52,28 @@ RedirectMatch 403 ^/?(config|includes|install|backups|logs|cache|vendor)(/|$)
         Require all granted
     </IfModule>
 </Files>
+
+# v2.19 任务4 · 静态资源长缓存（30 天）。只按扩展名命中 css/js/字体/图片/svg/ico，
+# 不含 .php，因此动态页的短缓存/no-store 策略不变。assets 下的资源均带 ?v= 指纹。
+# 注：本规则需站长把本文件上传到主机后才生效；仓库内改动本身不影响线上。
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css                 "access plus 1 month"
+    ExpiresByType text/javascript          "access plus 1 month"
+    ExpiresByType application/javascript   "access plus 1 month"
+    ExpiresByType application/x-javascript "access plus 1 month"
+    ExpiresByType font/woff2               "access plus 1 month"
+    ExpiresByType application/font-woff2   "access plus 1 month"
+    ExpiresByType font/ttf                 "access plus 1 month"
+    ExpiresByType application/x-font-ttf   "access plus 1 month"
+    ExpiresByType image/png                "access plus 1 month"
+    ExpiresByType image/jpeg               "access plus 1 month"
+    ExpiresByType image/gif                "access plus 1 month"
+    ExpiresByType image/svg+xml            "access plus 1 month"
+    ExpiresByType image/x-icon             "access plus 1 month"
+</IfModule>
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|woff2|ttf|png|jpg|jpeg|gif|svg|ico)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+</IfModule>

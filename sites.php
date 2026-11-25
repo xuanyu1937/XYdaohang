@@ -42,7 +42,7 @@ foreach ($rows as &$__row) {
 }
 unset($__row);
 
-/* v2.18.27 P0：navIndexCategories 会把每行按值拷贝进分类快照，必须在图标字段
+/* v2.19.0 P0：navIndexCategories 会把每行按值拷贝进分类快照，必须在图标字段
    补全之后再归档；原先放在 foreach 之前，渲染读的是旧快照，导致 42 行
    .site-favicon 的 data-src 与字母兜底全空。 */
 $categories = navIndexCategories($rows);
@@ -50,7 +50,7 @@ $categories = navIndexCategories($rows);
 $totalSites = count($rows);
 $totalCategories = count($categories);
 
-/* v2.18.27 P1-3：与列表同源的站点数。旧逻辑用「全库 is_active=1」统计（含其他用户与私有
+/* v2.19.0 P1-3：与列表同源的站点数。旧逻辑用「全库 is_active=1」统计（含其他用户与私有
    分类），与当前视图列表不一致；现在 $rows 已由 navPublicIndexLinks 按当前视图用户 +
    is_active=1 + 分类非私有 + 未删除筛出，count($rows) 即同源权威数。文案只保留一个数。 */
 $publishedSiteTotal = $totalSites;
@@ -135,7 +135,7 @@ $jsonLd = [
             }
         })();
     </script>
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.18.27">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.19.1">
     <style>
         :root { color-scheme: light; --fg: var(--a-ink); --muted: var(--a-muted); --line: var(--a-hairline); --accent: var(--a-primary); --bg: var(--a-canvas); }
         /* v2.18.11 P1-3：暗色改由 html[data-theme="dark"] 驱动（与首页 / 关于页同源），
@@ -291,7 +291,7 @@ $jsonLd = [
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         html[data-theme="dark"] body li .d { color: var(--a-muted); }
-        /* v2.18.27 P2-3：每条右侧「打开原站」外链图标，44×44 触控区，
+        /* v2.19.0 P2-3：每条右侧「打开原站」外链图标，44×44 触控区，
            与站名同色（var(--fg)），左侧 1px hairline 与内容分隔，不引入测速逻辑。 */
         body li .site-open {
             flex: 0 0 44px; width: 44px; height: 44px;

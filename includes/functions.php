@@ -540,7 +540,14 @@ class Functions {
     // ==================== 搜索方法 ====================
     
     public function searchNavLinks($keyword, $categoryId = null, $limit = 20) {
-        $sql = "SELECT nl.*, c.name as category_name 
+        // v2.19 任务1：显式列清单替代 SELECT nl.*。列出 nav_links 全部实际列，
+        // 与原先 nl.* 等价，保证任何外部调用方拿到的字段不缺失；分类名保留。
+        $sql = "SELECT nl.id, nl.name, nl.url, nl.logo, nl.description,
+                       nl.category_id, nl.user_id, nl.remark, nl.alias, nl.tags,
+                       nl.is_starred, nl.sort_order, nl.clicks, nl.is_active,
+                       nl.check_status, nl.latency_ms, nl.skip_check,
+                       nl.last_checked_at, nl.created_at, nl.updated_at, nl.deleted_at,
+                       c.name as category_name
                 FROM nav_links nl
                 LEFT JOIN categories c ON nl.category_id = c.id
                 WHERE (nl.name LIKE ? OR nl.description LIKE ? OR nl.url LIKE ?)";
@@ -610,7 +617,8 @@ class Functions {
         }
         
         if (!isset($allowedMime[$mime])) {
-            return ['success' => false, 'error' => '仅支持 JPG、PNG、GIF、WEBP、ICO 图片'];
+            // v2.19 任务3：文案与 README / uploads 规则统一口径——前台上传仅位图与 ICO，禁 SVG。
+            return ['success' => false, 'error' => '前台上传仅支持 JPG、PNG、GIF、WEBP、ICO 位图，不支持 SVG'];
         }
         
         $fileExt = $allowedMime[$mime];

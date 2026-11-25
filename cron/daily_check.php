@@ -17,6 +17,10 @@ require_once __DIR__ . '/../includes/Services.php';
 @ini_set('display_errors', '0');
 @set_time_limit(900);
 
+// v2.19 任务2：visit_logs 只增不删，最迟要有个兜底清理窗口。
+// 保留天数集中在这里，改这一个常量即可。仅清 visit_logs，不动 visitor_stats 汇总表。
+$logKeepDays = 90;
+
 header('Content-Type: text/plain; charset=utf-8');
 header('Cache-Control: no-store, max-age=0');
 header('X-Robots-Tag: noindex, nofollow');
@@ -112,6 +116,27 @@ if ($downList && $alertEnabled) {
     }
 } elseif ($downList) {
     echo "存在失效链接，但已关闭告警邮件\n";
+}
+
+// v2.19 任务2：清理 visit_logs 中超过保留期的旧记录。
+// visited_at 已有 idx_visited_at 索引，WHERE visited_at < ? 走索引删除。
+// 清理失败只写日志、继续返回，绝不中断上面的检测与告警主流程。
+try {
+    $cutoff = date('Y-m-d H:i:s', time() - 86400 * $logKeepDays);
+    $cleanupStmt = $db->prepare('DELETE FROM visit_logs WHERE visited_at < ?');
+    $cleanupStmt->execute([$cutoff]);
+    $cleaned = $cleanupStmt->rowCount();
+    echo "访问日志清理：删除 {$logKeepDays} 天前的记录 {$cleaned} 条\n";
+    $functions->logMessage(sprintf(
+        '[cron:daily_check] 清理 visit_logs：%d 天前 %d 条（cutoff=%s）',
+        $logKeepDays,
+        $cleaned,
+        $cutoff
+    ));
+} catch (Throwable $cleanupError) {
+    // 老库可能没有 visit_logs 表；清理失败不影响检测主流程
+    echo "访问日志清理失败（已忽略，不影响检测）：" . $cleanupError->getMessage() . "\n";
+    $functions->logMessage('[cron:daily_check] 清理 visit_logs 失败：' . $cleanupError->getMessage());
 }
 
 echo '耗时 ' . round(microtime(true) - $startedAt, 2) . " 秒\n";

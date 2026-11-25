@@ -1,8 +1,4 @@
-/* ==========================================================================
-   轩宇-导航 · 统一「新建分类 / 新建分组」弹窗（v2.12.0）
-   自带配色，不依赖 Bootstrap / Tailwind / nav.css，前台后台通用。
-   所有选择器以 .xycq- 为前缀，避免污染宿主页面。
-   ========================================================================== */
+
 
 .xycq-overlay {
     
@@ -183,7 +179,7 @@ html[data-theme="dark"] .xycq-overlay {
 
 .xycq-btn.is-primary:hover { filter: brightness(1.06); background: var(--xycq-primary); }
 
-/* 创建成功后的轻量提示 */
+
 .xycq-toast {
     position: fixed;
     left: 50%;
@@ -207,7 +203,7 @@ html[data-theme="dark"] .xycq-overlay {
 .xycq-toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 .xycq-toast.is-error { background: var(--a-danger); }
 
-/* 各入口的小按钮（不依赖宿主样式） */
+
 .xycq-trigger {
     display: inline-flex;
     align-items: center;
@@ -232,11 +228,11 @@ label .xycq-trigger-compact { font-weight: 400; margin-bottom: 4px; }
 html[data-theme="dark"] .xycq-trigger {   color: var(--a-muted-on-dark); }
 html[data-theme="dark"] .xycq-trigger:hover { color: var(--a-link-on-dark); }
 
-/* 首页分类抽屉标题栏 */
+
 .rail-title-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
 .rail-add.xycq-trigger { min-height: 24px; padding: 2px 8px; font-size: var(--a-fs-fine); letter-spacing: 0; }
 
-/* 首页移动端分类 tab 栏 */
+
 .mobile-cats-add.xycq-trigger {
     flex: 0 0 auto;
     display: grid;

@@ -3,6 +3,8 @@
  * 轩宇-导航 · 后台登录
  */
 require_once __DIR__ . '/../includes/bootstrap.php';
+// v2.19 G4：管理员登录需写入 admin_* 会话身份，显式启动（仅此一处，未动其它 admin 逻辑/样式）。
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once '../includes/functions.php';
 
 $functions = new Functions();
@@ -117,8 +119,8 @@ function navVerifyAdminUser($functions, $account, $password)
     <title>后台登录 - 轩宇-导航</title>
     <!-- v2.18.10：此前本页未引入任何样式表，内联 style 里的 var(--a-*) 全部失效，
          导致按钮无蓝底、圆角归零、品牌块退化为 20px 方块。按序补引入。 -->
-    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.18.27">
-    <link rel="stylesheet" href="../assets/css/admin.css?v=2.18.27">
+    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.19.1">
+    <link rel="stylesheet" href="../assets/css/admin.css?v=2.19.1">
     <style>
         /* v2.18.10：本页只保留布局与尺寸。
            颜色 / 圆角 / 阴影 / 字重一律走 apple-tokens.css 与 admin.css，

@@ -23,7 +23,7 @@ if (is_file($navVersionFile)) {
 }
 
 if (!defined('APP_VERSION')) {
-    define('APP_VERSION', '2.18.27');
+    define('APP_VERSION', '2.19.1');
 }
 
 if (!defined('APP_RELEASE')) {
@@ -34,6 +34,10 @@ $navIsHttps = (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS'
     || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
     || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);
 
+// v2.19 G4：匿名访客不主动建会话，避免每个响应都带 Set-Cookie: PHPSESSID。
+// 会话安全参数对所有会话无条件配置；仅 session_start() 受 cookie 条件约束——
+// 只有请求自带 session cookie 时才恢复会话，登录/注册等需新建会话的入口
+// 已在各自文件开头显式 session_start()，届时这些参数同样已生效。
 if (session_status() === PHP_SESSION_NONE) {
     if (PHP_VERSION_ID >= 70300) {
         session_set_cookie_params([
@@ -52,7 +56,9 @@ if (session_status() === PHP_SESSION_NONE) {
     @ini_set('session.use_only_cookies', '1');
     @ini_set('session.cookie_httponly', '1');
 
-    session_start();
+    if (!empty($_COOKIE[session_name()])) {
+        session_start();
+    }
 }
 
 /**
@@ -279,12 +285,24 @@ if (!function_exists('navPublicCache')) {
             return;
         }
 
-        // 登录用户（$_SESSION 里有身份信息）一律不缓存
-        if (session_status() !== PHP_SESSION_ACTIVE
-            || !empty($_SESSION['user_id'])
-            || !empty($_SESSION['username'])
+        // v2.19 G4：按登录态分流缓存头。
+        // 匿名（无会话或会话里无身份）→ public 短缓存（下面统一发）；
+        // 已登录（前台 user_* 或后台 admin_*）→ private, no-cache, must-revalidate，
+        //   连同 Vary 一起发出，避免共享缓存复用带身份的响应。
+        $navHasIdentity = session_status() === PHP_SESSION_ACTIVE && (
+            !empty($_SESSION['user_id'])
+            || !empty($_SESSION['user_username'])
+            || !empty($_SESSION['user_is_admin'])
             || !empty($_SESSION['admin_id'])
-        ) {
+            || !empty($_SESSION['admin_username'])
+        );
+        if ($navHasIdentity) {
+            if (!headers_sent()) {
+                header_remove('Expires');
+                header_remove('Pragma');
+                header('Cache-Control: private, no-cache, must-revalidate');
+                header('Vary: Cookie, Accept-Encoding');
+            }
             return;
         }
 
