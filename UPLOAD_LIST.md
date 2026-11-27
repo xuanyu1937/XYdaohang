@@ -1,12 +1,23 @@
-# 轩宇-导航 部署清单（当前版本 v2.19.3）
+# 轩宇-导航 部署清单（当前版本 v2.19.4）
 
 线上地址：http://dh.pxyblog.top/
 运行环境：IIS/Apache + PHP 8.1+ + MySQL 5.7+
-当前版本：**v2.19.3**（2026-11-25）
+当前版本：**v2.19.4**（2026-11-27）
 
-## 本版变动（v2.19.3，2026-11-25）
+## 本版变动（v2.19.4，2026-11-27）
 
-> **图标本地化（数据变更，不改加载逻辑）**。前端 loadFavicon 一行未动。资源 `?v=` 与 PWA 缓存名同步升到 2.19.3。
+> **站内 uploads 图标走相对路径 + 继续本地化到 0 残留**。只改一处 PHP 函数，前端 loadFavicon 一行未动。资源 `?v=` 与 PWA 缓存名同步升到 2.19.4。
+
+| 文件 | 变动 |
+| --- | --- |
+| `includes/functions.php` | `getLogoUrl()` 开头加 uploads 相对路径判断：`uploads/*` → `/uploads/*`，不拼协议域名；首页/详情页/三个 API 共用此函数，一处改全站生效 |
+| **数据库（站长执行，非本版代码）** | 若上一轮未做：`ALTER TABLE nav_links ADD COLUMN logo_remote VARCHAR(500) DEFAULT NULL; COMMIT;`（先备份）；随后 `php bin/localize-icons.php` 跑到 done，目标外链残留 0 |
+
+**验证要点**：http 打开首页，展开分组后已本地化卡片的 `data-src` 应为 `/uploads/icons/xxx`（不带域名），图标 `naturalWidth>0`、带 `is-loaded`；`detail.php` 40×40 图标同样显示。https 证书无效属运维事项，不由代码解决。
+
+## 上一版变动（v2.19.3，2026-11-25）
+
+> **图标本地化（数据变更，不改加载逻辑）**。前端 loadFavicon 一行未动。资源 `?v=` 与 PWA 缓存名同步升到 2.19.4。
 
 | 文件 | 变动 |
 | --- | --- |
@@ -53,8 +64,8 @@
 ## ⚠️ 升级须知（三步）
 
 1. **仅当从 v2.18.0 或更早版本升级时**才执行 `upgrade_v2.18.1.sql`（`check_status` 增 `skipped`、新增 `skip_check` 列）；v2.18.2 ~ v2.18.27 全部无 SQL 变更。全新安装用 `install/install.sql`，不要执行升级脚本。
-2. **后台「系统工具 → 在线更新」上传 v2.19.3 全量包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
-3. **清一次浏览器缓存**（Ctrl+F5）。相关 PHP/JS 文件的资源参数已升到 `?v=2.19.3`；`sw.js` 缓存名 `xy-nav-pwa-v2.19.3` 激活时自动清掉旧 PWA 缓存。
+2. **后台「系统工具 → 在线更新」上传 v2.19.4 全量包并勾选「强制覆盖」**。在线更新只覆盖不删除，不会动 `config/database.local.php` 与 `uploads/`。
+3. **清一次浏览器缓存**（Ctrl+F5）。相关 PHP/JS 文件的资源参数已升到 `?v=2.19.4`；`sw.js` 缓存名 `xy-nav-pwa-v2.19.4` 激活时自动清掉旧 PWA 缓存。
 
 > **v2.18.12 UI 细节修复**（四个独立提交，只动表现层）：
 > **062f7d5** 列表分隔：分组卡外壳 + 内缩分隔线；**a882b28** 收藏按钮：44×44 流内居中；

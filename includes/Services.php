@@ -3305,7 +3305,7 @@ class IconCacheService extends BaseService
     }
 
     /**
-     * v2.19.3 · 把「logo 是外链」的历史条目本地化：下载到 uploads/icons/ 并回写 logo，
+     * v2.19.4 · 把「logo 是外链」的历史条目本地化：下载到 uploads/icons/ 并回写 logo，
      * 原外链存进 logo_remote 以便回滚。已经是本地路径的行天然不入选 → 幂等。
      *
      * 与 backfillEmptyLogos() 并列：后者补 logo 为空的条目，本方法处理 logo 为外链的条目。

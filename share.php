@@ -100,8 +100,8 @@ $tokenParam = rawurlencode($token);
         })();
     </script>
 
-    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.19.3">
-    <link rel="stylesheet" href="assets/css/nav.css?v=2.19.3">
+    <link rel="stylesheet" href="assets/css/apple-tokens.css?v=2.19.4">
+    <link rel="stylesheet" href="assets/css/nav.css?v=2.19.4">
     <link rel="stylesheet" href="assets/css/page.css?v=<?php echo APP_VERSION; ?>">
 </head>
 <body data-monitor="0">
@@ -314,6 +314,6 @@ $tokenParam = rawurlencode($token);
             });
         })();
     </script>
-<script src="assets/js/search.js?v=2.19.3" defer></script>
+<script src="assets/js/search.js?v=2.19.4" defer></script>
 </body>
 </html>

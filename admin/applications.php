@@ -565,8 +565,8 @@ function sendRejectionEmail($data) {
             color: #721c24;
         }
     </style>
-    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.19.3">
-    <link href="../assets/css/admin.css?v=2.19.3" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.19.4">
+    <link href="../assets/css/admin.css?v=2.19.4" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>

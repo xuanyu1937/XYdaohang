@@ -706,7 +706,13 @@ class Functions {
         if (empty($logoPath)) {
             return '';
         }
-        
+
+        /* v2.19.4：站内 uploads 图片一律给相对路径（带前导斜杠），
+           不拼协议和域名，避免 https 证书/协议切换导致图标整片裂。 */
+        if (stripos(ltrim((string) $logoPath, '/'), 'uploads/') === 0) {
+            return '/' . ltrim($logoPath, '/');
+        }
+
         if (filter_var($logoPath, FILTER_VALIDATE_URL)) {
             return $logoPath;
         }

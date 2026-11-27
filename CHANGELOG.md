@@ -1,5 +1,15 @@
 # 轩宇-导航 · 版本记录
 
+## v2.19.4（2026-11-27）
+
+**站内 uploads 图标走相对路径 + 继续本地化到 0 残留**。线上 https 证书无效（`ERR_CERT_DATE_INVALID`），而 `loadFavicon()` 会把 `http://` 统一升为 `https://`，导致已本地化的 `http://dh.pxyblog.top/uploads/icons/*.png` 被升级成 https 后整片裂（`naturalWidth=0`）。本版把站内 uploads 图片统一输出为**相对路径**，不再受协议升级影响。**只改一处 PHP 函数，前端 `loadFavicon` 一行未动**。
+
+- **includes/functions.php `getLogoUrl()`**：在 `filter_var($logoPath, FILTER_VALIDATE_URL)` 之前插入——若 `ltrim($logoPath,'/')` 以 `uploads/` 开头，直接返回 `'/' . ltrim($logoPath,'/')`，不拼协议与域名。外链与默认图逻辑保持不变。
+- **一处改、全站生效**：`getLogoDisplayUrl()` → `getLogoUrl()`，首页卡片链（`site_card_build.php`）、`detail.php` 的 OG/图标、`api/search_index.php`、`api/share.php` 全部走同一函数，一改全好。
+- **验证**：即使 `HTTPS=on` 请求下，`uploads/*` 仍输出 `/uploads/*`；浏览器实测绝对 http 与相对路径均 `naturalWidth=90`，绝对 https 失败（`ERR_SSL_UNRECOGNIZED_NAME_ALERT`），确认相对路径修复对症。
+- **无数据库变更**：本版不改表结构。数据侧继续本地化（跑 CLI 到 0 残留）由站长在主机执行，见数值报告。
+- 资源 `?v=` 与 PWA 缓存名同步升到 2.19.4。
+
 ## v2.19.3（2026-11-25）
 
 **图标本地化（数据变更，不改加载逻辑）**。把历史「外链 logo」下载到 `uploads/icons/` 并回写 logo，原外链存进 `logo_remote` 供回滚。前端 `loadFavicon()` 三级回退一行未动。
@@ -14,7 +24,7 @@
 - **admin/icon_backfill.php**：加 `mode=external` 分派，默认 `empty` 行为不变。
 - **admin/tools.php**：新增「本地化已有外链图标」按钮与循环 JS（mode=external，失败原因/进度复用）。执行顺序：先「批量补齐本地图标」补空 logo，再点本按钮。
 - **bin/localize-icons.php（新增）**：CLI 版，避免浏览器 30 秒超时，`php bin/localize-icons.php` 一批跑完。
-- 资源 `?v=` 与 PWA 缓存名同步升到 2.19.3。
+- 资源 `?v=` 与 PWA 缓存名同步升到 2.19.4。
 
 ## v2.19.2（2026-11-25）
 

@@ -689,8 +689,8 @@ $tableLabels = [
     <title>系统工具 - 后台管理</title>
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/font-awesome.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css';">
-    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.19.3">
-    <link href="../assets/css/admin.css?v=2.19.3" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/apple-tokens.css?v=2.19.4">
+    <link href="../assets/css/admin.css?v=2.19.4" rel="stylesheet">
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -1639,7 +1639,7 @@ $tableLabels = [
                         </div>
                     </div>
 
-                    <!-- v2.19.3 · 本地化已有外链图标 -->
+                    <!-- v2.19.4 · 本地化已有外链图标 -->
                     <div class="card mt-3">
                         <div class="card-header">
                             <i class="fas fa-file-import me-2"></i>本地化已有外链图标
@@ -2035,7 +2035,7 @@ $tableLabels = [
     </script>
 
     <script>
-    /* v2.19.3 · 本地化已有外链图标：mode=external，每次 10 条，循环到 done。
+    /* v2.19.4 · 本地化已有外链图标：mode=external，每次 10 条，循环到 done。
        逻辑复用上面的「批量补齐本地图标」，仅请求参数与返回字段名适配 external 模式。 */
     (function () {
         var startBtn = document.getElementById('iconLocalizeStart');

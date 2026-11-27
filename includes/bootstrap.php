@@ -30,7 +30,7 @@ if (is_file($navSiteFile)) {
 }
 
 if (!defined('APP_VERSION')) {
-    define('APP_VERSION', '2.19.3');
+    define('APP_VERSION', '2.19.4');
 }
 
 if (!defined('APP_RELEASE')) {
